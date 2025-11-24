@@ -5,6 +5,10 @@ tmt::Engine tmt::engine;
 
 namespace tmt {
 
+Engine::Engine() {}
+
+Engine::~Engine() {}
+
 void Engine::init() {}
 
 void Engine::run() {}

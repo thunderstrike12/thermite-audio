@@ -1,8 +1,39 @@
 #pragma once
 
-#include <string>
-
 namespace tmt {
+
+class Engine {
+   public:
+    Engine();
+    ~Engine();
+
+    /* No copies allowed */
+    Engine(const Engine&) = delete;
+    Engine& operator=(const Engine&) = delete;
+
+    void init();
+    void run();
+    void end();
+
+    /*
+    How to declare a system:
+    MySystem& my_system;
+
+    Then in constructor:
+
+    Engine() : my_system(*new MySystem()) {};
+
+    **IMPORTANT**
+    Also in the destructor
+
+    ~Engine() { delete &my_system; };
+    */
+};
+
+/* Singleton */
+extern Engine engine;
+
+}  // namespace tmt
 
 #if THERMITE_EDITOR
 #pragma message(" THERMITE_EDITOR=1 ")
@@ -15,15 +46,3 @@ namespace tmt {
 #else
 #pragma message("THERMITE_DEBUG=0")
 #endif
-
-class Engine {
-   public:
-    void init();
-    void run();
-    void end();
-};
-
-/* Singleton */
-extern Engine engine;
-
-}  // namespace tmt
