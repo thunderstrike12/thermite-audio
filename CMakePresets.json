@@ -1,0 +1,110 @@
+{
+  "version": 5,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25
+  },
+
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_CXX_COMPILER": "cl"
+      }
+    },
+
+    {
+      "name": "Debug-Editor",
+      "inherits": "base",
+      "displayName": "Debug Editor",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "THERMITE_EDITOR_BUILD": "ON",
+        "THERMITE_DEBUG_BUILD":  "ON"
+      }
+    },
+    {
+      "name": "Release-Editor",
+      "inherits": "base",
+      "displayName": "Release Editor",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "THERMITE_EDITOR_BUILD": "ON",
+        "THERMITE_DEBUG_BUILD": "OFF"
+      }
+    },
+    {
+      "name": "RelWithDebInfo-Editor",
+      "inherits": "base",
+      "displayName": "RelWithDebInfo Editor",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "THERMITE_EDITOR_BUILD": "ON",
+        "THERMITE_DEBUG_BUILD": "OFF"
+      }
+    },
+
+    {
+      "name": "Debug-Game",
+      "inherits": "base",
+      "displayName": "Debug Game",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "THERMITE_EDITOR_BUILD": "OFF",
+        "THERMITE_DEBUG_BUILD": "ON"
+      }
+    },
+    {
+      "name": "Release-Game",
+      "inherits": "base",
+      "displayName": "Release Game",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "THERMITE_EDITOR_BUILD": "OFF",
+        "THERMITE_DEBUG_BUILD": "OFF"
+      }
+    },
+    {
+      "name": "RelWithDebInfo-Game",
+      "inherits": "base",
+      "displayName": "RelWithDebInfo Game",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "THERMITE_EDITOR_BUILD": "OFF",
+        "THERMITE_DEBUG_BUILD": "OFF"
+      }
+    }
+  ],
+
+  "buildPresets": [
+    {
+      "name": "Debug-Editor",
+      "configurePreset": "Debug-Editor"
+    },
+    {
+      "name": "Release-Editor",
+      "configurePreset": "Release-Editor"
+    },
+    {
+      "name": "RelWithDebInfo-Editor",
+      "configurePreset": "RelWithDebInfo-Editor"
+    },
+    {
+      "name": "Debug-Game",
+      "configurePreset": "Debug-Game"
+    },
+    {
+      "name": "Release-Game",
+      "configurePreset": "Release-Game"
+    },
+    {
+      "name": "RelWithDebInfo-Game",
+      "configurePreset": "RelWithDebInfo-Game"
+    }
+  ]
+}
