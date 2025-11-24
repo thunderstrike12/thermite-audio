@@ -1,7 +1,7 @@
 #include "animation_system.hpp"
 #include <iostream>
 
-namespace thermite {
+namespace tmt {
 
 void AnimationSystem::init() {
     std::cout << "[Thermite][Animation] Initialized.\n";
@@ -12,4 +12,4 @@ void AnimationSystem::update(float dt) {
               << " seconds.\n";
 }
 
-}  // namespace thermite
+}  // namespace tmt

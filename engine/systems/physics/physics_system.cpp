@@ -1,7 +1,7 @@
 #include "physics_system.hpp"
 #include <iostream>
 
-namespace thermite {
+namespace tmt {
 
 void PhysicsSystem::init() {
     std::cout << "[Thermite][Physics] Initialized.\n";
@@ -12,4 +12,4 @@ void PhysicsSystem::update(float dt) {
               << " seconds.\n";
 }
 
-}  // namespace thermite
+}  // namespace tmt

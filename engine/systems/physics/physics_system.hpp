@@ -1,6 +1,6 @@
 #pragma once
 
-namespace thermite {
+namespace tmt {
 
 class PhysicsSystem {
    public:
@@ -8,4 +8,4 @@ class PhysicsSystem {
     void update(float dt);
 };
 
-}  // namespace thermite
+}  // namespace tmt

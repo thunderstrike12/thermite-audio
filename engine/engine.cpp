@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-namespace thermite {
+namespace tmt {
 
 Engine::Engine(std::string name) : name(std::move(name)) {}
 
@@ -27,4 +27,4 @@ void Engine::run() {
     std::cout << "[Thermite] Application \"" << name << "\" shutting down.\n";
 }
 
-}  // namespace thermite
+}  // namespace tmt

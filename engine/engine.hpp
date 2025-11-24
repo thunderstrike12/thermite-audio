@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace thermite {
+namespace tmt {
 
 #if THERMITE_EDITOR
 #pragma message(" THERMITE_EDITOR=1 ")
@@ -28,4 +28,4 @@ class Engine {
     std::string name {};
 };
 
-}  // namespace thermite
+}  // namespace tmt
