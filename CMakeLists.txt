@@ -21,11 +21,11 @@ option(WARNINGS_AS_ERRORS "Enable warnings as errors" OFF)
 option(THERMITE_EDITOR_BUILD "Build editor configuration" OFF)
 option(THERMITE_DEBUG_BUILD "Build debug-style config (extra asserts/logging)" OFF)
 
-# Add externals
-add_subdirectory("extern")
-
 # Engine sub-directory
 add_subdirectory("engine")
+
+# Add externals
+add_subdirectory("extern")
 
 # Editor and Debug defines
 if (THERMITE_EDITOR_BUILD)

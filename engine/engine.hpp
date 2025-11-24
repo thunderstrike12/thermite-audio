@@ -1,6 +1,7 @@
 #pragma once
 
 namespace tmt {
+class Window;
 
 class Engine {
    public:
@@ -28,6 +29,8 @@ class Engine {
 
     ~Engine() { delete &my_system; };
     */
+
+    Window& window;
 };
 
 /* Singleton */
