@@ -16,16 +16,14 @@ namespace tmt {
 #pragma message("THERMITE_DEBUG=0")
 #endif
 
-// Example engine class
 class Engine {
    public:
-    explicit Engine(std::string name);
-
+    void init();
     void run();
-    const std::string& get_name() const;
-
-   private:
-    std::string name {};
+    void end();
 };
+
+/* Singleton */
+extern Engine engine;
 
 }  // namespace tmt
