@@ -22,9 +22,7 @@ class Log {
 
         std::shared_ptr<spdlog::sinks::basic_file_sink_mt> file_sink = nullptr;
         if (!log_file.empty()) {
-            file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
-                log_file, true
-            );
+            file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_file, true);
             file_sink->set_pattern("[%n] %^[%l]%$ %v");
         }
         for (const auto& logger : loggers) {
@@ -44,23 +42,17 @@ class Log {
     };
 
     template <typename... Args>
-    static void info(
-        Scope scope, spdlog::format_string_t<Args...> fmt, Args&&... args
-    ) {
+    static void info(Scope scope, spdlog::format_string_t<Args...> fmt, Args&&... args) {
         loggers[scope]->info(fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    static void warn(
-        Scope scope, spdlog::format_string_t<Args...> fmt, Args&&... args
-    ) {
+    static void warn(Scope scope, spdlog::format_string_t<Args...> fmt, Args&&... args) {
         loggers[scope]->warn(fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    static void error(
-        Scope scope, spdlog::format_string_t<Args...> fmt, Args&&... args
-    ) {
+    static void error(Scope scope, spdlog::format_string_t<Args...> fmt, Args&&... args) {
         loggers[scope]->error(fmt, std::forward<Args>(args)...);
     }
 
@@ -80,8 +72,7 @@ class Log {
     }
 
    private:
-    static inline std::unordered_map<Scope, std::shared_ptr<spdlog::logger>>
-        loggers;
+    static inline std::unordered_map<Scope, std::shared_ptr<spdlog::logger>> loggers;
 };
 
 }  // namespace tmt

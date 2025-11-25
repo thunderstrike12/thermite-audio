@@ -18,9 +18,7 @@ void Window::init(const ApplicationSpecs& specs) {
         return;
     }
 
-    if (!SDL_CreateWindow(
-            specs.name.c_str(), width, height, SDL_WINDOW_VULKAN
-        )) {
+    if (!SDL_CreateWindow(specs.name.c_str(), width, height, SDL_WINDOW_VULKAN)) {
         SDL_Log("Couldn't create window: %s", SDL_GetError());
         return;
     }

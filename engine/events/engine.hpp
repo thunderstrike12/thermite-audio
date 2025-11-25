@@ -10,9 +10,7 @@ class OnEngineInit : public EventListenerBase<OnEngineInit, ApplicationSpecs> {
     virtual void on_engine_init(const ApplicationSpecs& specs) = 0;
 
     void on_event(ApplicationSpecs&) final override { /* Empty */ };
-    void on_event(const ApplicationSpecs& specs) final override {
-        on_engine_init(specs);
-    }
+    void on_event(const ApplicationSpecs& specs) final override { on_engine_init(specs); }
 };
 
 class OnEngineEnd : public EventListenerBase<OnEngineEnd, void> {

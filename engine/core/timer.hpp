@@ -21,9 +21,7 @@ class Timer {
         return delta;
     }
 
-    float elapsed() const {
-        return std::chrono::duration<float>(Clock::now() - start_time).count();
-    }
+    float elapsed() const { return std::chrono::duration<float>(Clock::now() - start_time).count(); }
 
     void reset() { start_time = last_time = Clock::now(); }
 };

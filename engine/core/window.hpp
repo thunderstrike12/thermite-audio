@@ -25,7 +25,6 @@ class Window {
 
     Window(const Window&) = delete;
     Window& operator=(const Window&) = delete;
-
 };
 
 }  // namespace tmt

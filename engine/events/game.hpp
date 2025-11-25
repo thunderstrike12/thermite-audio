@@ -28,9 +28,7 @@ class OnFixedUpdate : public EventListenerBase<OnFixedUpdate, FrameData> {
     virtual void on_fixed_update(const FrameData& time) = 0;
 
     void on_event(FrameData&) final override { /* Empty */ };
-    void on_event(const FrameData& time) final override {
-        on_fixed_update(time);
-    }
+    void on_event(const FrameData& time) final override { on_fixed_update(time); }
 };
 
 class OnEnd : public EventListenerBase<OnEnd, void> {

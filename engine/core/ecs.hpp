@@ -10,19 +10,14 @@
 
 namespace tmt {
 
-class Ecs : public OnStart,
-            public OnUpdate,
-            public OnFixedUpdate,
-            public OnEnd {
+class Ecs : public OnStart, public OnUpdate, public OnFixedUpdate, public OnEnd {
    public:
     Ecs() = default;
     ~Ecs() = default;
 
     template <typename T, typename... Args>
     T& register_system(Args&&... args) {
-        static_assert(
-            std::is_base_of_v<ISystem, T>, "T must inherit from ISystem"
-        );
+        static_assert(std::is_base_of_v<ISystem, T>, "T must inherit from ISystem");
 
         auto system = std::make_unique<T>(std::forward<Args>(args)...);
         T& ref = *system;

@@ -20,14 +20,7 @@ class EventListenerBase {
    public:
     EventListenerBase() { listeners.push_back(static_cast<T*>(this)); }
 
-    virtual ~EventListenerBase() {
-        listeners.erase(
-            std::remove(
-                listeners.begin(), listeners.end(), static_cast<T*>(this)
-            ),
-            listeners.end()
-        );
-    }
+    virtual ~EventListenerBase() { listeners.erase(std::remove(listeners.begin(), listeners.end(), static_cast<T*>(this)), listeners.end()); }
 
     virtual void on_event(E& event) = 0;
     virtual void on_event(const E& event) = 0;
@@ -58,9 +51,7 @@ class EventListenerBase {
 
    private:
     static void sort_listeners() {
-        std::sort(listeners.begin(), listeners.end(), [](T* a, T* b) {
-            return a->priority > b->priority;
-        });
+        std::sort(listeners.begin(), listeners.end(), [](T* a, T* b) { return a->priority > b->priority; });
     }
 
     inline static std::vector<T*> listeners;
@@ -72,14 +63,7 @@ class EventListenerBase<T, void> {
    public:
     EventListenerBase() { listeners.push_back(static_cast<T*>(this)); }
 
-    virtual ~EventListenerBase() {
-        listeners.erase(
-            std::remove(
-                listeners.begin(), listeners.end(), static_cast<T*>(this)
-            ),
-            listeners.end()
-        );
-    }
+    virtual ~EventListenerBase() { listeners.erase(std::remove(listeners.begin(), listeners.end(), static_cast<T*>(this)), listeners.end()); }
 
     virtual void on_event() = 0;
 
@@ -96,9 +80,7 @@ class EventListenerBase<T, void> {
 
    private:
     static void sort_listeners() {
-        std::sort(listeners.begin(), listeners.end(), [](T* a, T* b) {
-            return a->priority > b->priority;
-        });
+        std::sort(listeners.begin(), listeners.end(), [](T* a, T* b) { return a->priority > b->priority; });
     }
 
     inline static std::vector<T*> listeners;
