@@ -1,3 +1,5 @@
 # build directory
 build/
 /.vs
+/scripts/__pycache__
+tidy_results/report.txt
