@@ -10,7 +10,7 @@ Window::~Window() {
     }
 }
 
-void Window::init() const {
+void Window::init(const ApplicationSpecs& specs) {
     SDL_SetAppMetadata("Thermite Engine", "0.1", "com.thermite.engine");
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -18,7 +18,9 @@ void Window::init() const {
         return;
     }
 
-    if (!SDL_CreateWindow(title.data(), width, height, SDL_WINDOW_VULKAN)) {
+    if (!SDL_CreateWindow(
+            specs.name.c_str(), width, height, SDL_WINDOW_VULKAN
+        )) {
         SDL_Log("Couldn't create window: %s", SDL_GetError());
         return;
     }
@@ -29,7 +31,9 @@ void Window::update() {
 
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
-        case SDL_EVENT_QUIT: { is_running = false; }
+            case SDL_EVENT_QUIT: {
+                is_running = false;
+            }
         }
     }
 }

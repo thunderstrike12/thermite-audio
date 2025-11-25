@@ -9,7 +9,9 @@ int main(int argc, char** argv) {
     std::cout << "Thermite Editor not included.\n";
 #endif
 
-    tmt::engine.init();
+    tmt::ApplicationSpecs specs {.name = "Game", .command_args = {argc, argv}};
+
+    tmt::engine.init(specs);
 
     tmt::engine.run();
 
