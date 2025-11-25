@@ -1,0 +1,84 @@
+name: build
+on:
+  pull_request:
+    branches: 'main'
+
+jobs:
+  build:
+    name: "Build ${{ matrix.preset }}"
+    strategy:
+      matrix:
+        preset: 
+          - Debug-Editor
+          - Release-Editor
+          - RelWithDebInfo-Editor
+          - Debug-Game
+          - Release-Game
+          - RelWithDebInfo-Game
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+      
+      - name: Configure with preset
+        shell: pwsh
+        run: |
+          cmake --preset ${{ matrix.preset }}
+      
+      - name: Build with preset
+        shell: pwsh
+        run: |
+          cmake --build --preset ${{ matrix.preset }} -j
+  
+  cpp-linter-windows:
+    name: "Run cpp-linter (Windows)"
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+      
+      - name: Generate compile_commands.json
+        shell: pwsh
+        run: |
+          cmake --preset Debug-Editor
+      
+      - name: Copy compile_commands.json
+        shell: pwsh
+        run: |
+          Copy-Item "build/Debug-Editor/compile_commands.json" "compile_commands.json" -Force
+      
+      - name: Upload compile_commands.json (Windows)
+        uses: actions/upload-artifact@v4
+        with:
+          name: compile-commands-windows
+          path: compile_commands.json
+          retention-days: 7
+      
+      - name: Run cpp-linter
+        uses: cpp-linter/cpp-linter-action@main
+        id: linter
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          ignore: '.github | extern | build'
+          style: file
+          files-changed-only: false
+          step-summary: true
+          thread-comments: true
+          tidy-checks: ''
+      
+      - name: Fail if linter found issues
+        if: steps.linter.outputs.checks-failed != 0
+        shell: pwsh
+        run: exit 1
