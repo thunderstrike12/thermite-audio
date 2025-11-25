@@ -23,12 +23,6 @@ target_include_directories(thermite-engine
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# Link spdlog
-target_link_libraries(thermite-engine
-    PUBLIC spdlog::spdlog
-)
-
-
 # TODO: Precompiled header(s)
 # target_precompile_headers(thermite-engine PRIVATE Thermite/pch.h)
 
