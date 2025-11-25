@@ -35,11 +35,11 @@ void Engine::run() {
 void Engine::init() {
     window.init();
 
-    Log::init();
+    Log::init("somefile.txt");
     tmt::Log::info("No scope here!");
     tmt::Log::warn(Log::LoggerScope::GAME, "Game scope here!");
     tmt::Log::warn(Log::LoggerScope::RENDERER, "Renderer scope here!");
-    tmt::Log::warn(Log::LoggerScope::ENGINE, "THERMITE scope here!");
+    tmt::Log::error(Log::LoggerScope::ENGINE, "THERMITE scope here!");
 }
 
 }  // namespace tmt
