@@ -28,6 +28,18 @@ add_subdirectory(glm)
 # https://github.com/skypjack/entt
 add_subdirectory(entt)
 
+# visit_struct - struct reflection
+# https://github.com/cbeck88/visit_struct
+add_library(visit_struct INTERFACE)
+target_include_directories(visit_struct
+    INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/visit_struct/
+)
+
+# nlohmann json - json parsing
+# https://github.com/nlohmann/json
+add_subdirectory(nlohmann_json)
+
 # Link libraries publicly
 target_link_libraries(thermite-engine
     PUBLIC 
@@ -40,4 +52,6 @@ target_link_libraries(thermite-engine
 target_link_libraries(thermite-engine 
 	PRIVATE
 	SDL3::SDL3-static
+    visit_struct
+    nlohmann_json::nlohmann_json
 )
