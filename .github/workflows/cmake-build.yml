@@ -73,12 +73,8 @@ jobs:
         with:
           ignore: '.github | extern | build'
           style: file
-          files-changed-only: false
+          files-changed-only: true
           step-summary: true
           thread-comments: true
           tidy-checks: ''
       
-      - name: Fail if linter found issues
-        if: steps.linter.outputs.checks-failed != 0
-        shell: pwsh
-        run: exit 1

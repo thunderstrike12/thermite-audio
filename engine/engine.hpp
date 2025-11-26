@@ -38,7 +38,7 @@ class Engine {
     Ecs& ecs;
 
     struct Config {
-        constexpr static float fixed_time_step = 1.0f / 60.0f;
+        constexpr static float FIXED_TIME_STEP = 1.0f / 60.0f;
     };
 
     uint64_t get_frame_count() const { return frame_count; }

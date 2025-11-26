@@ -19,7 +19,7 @@ class ISystem {
     virtual void on_update(const FrameData& time) = 0;
     virtual void on_end() = 0;
     /* [Optional] */
-    virtual void on_fixed_update(const FrameData& time) {};
+    virtual void on_fixed_update(const FrameData&) {};
 };
 
 }  // namespace tmt

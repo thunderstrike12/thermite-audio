@@ -4,7 +4,7 @@
 
 #include "core/application.hpp"
 
-class SDL_Window;
+struct SDL_Window;
 
 namespace tmt {
 

@@ -1,7 +1,11 @@
 #pragma once
+
+#pragma warning(push)
+#pragma warning(disable : 4459)
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks-inl.h"
+#pragma warning(pop)
 
 namespace tmt {
 
