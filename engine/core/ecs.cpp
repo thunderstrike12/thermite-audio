@@ -26,4 +26,11 @@ void Ecs::on_end() {
     }
 }
 
+void Ecs::on_end_frame() {
+    auto view = registry.view<Delete>();
+    for (auto entity : view) {
+        registry.destroy(entity);
+    }
+}
+
 }  // namespace tmt

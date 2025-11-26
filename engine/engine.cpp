@@ -44,6 +44,7 @@ void Engine::init(const ApplicationSpecs& specs) {
 
 // Example stuff
 void Engine::run() {
+    timer.reset();
     OnStart::dispatch();
 
     float accumulator = 0.0f;
@@ -63,6 +64,7 @@ void Engine::run() {
             OnFixedUpdate::dispatch(frame_data);
         }
 
+        OnEndFrame::dispatch();
         frame_count++;
     }
 
