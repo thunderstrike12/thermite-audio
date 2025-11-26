@@ -14,6 +14,10 @@ class Log {
     // Call once at the beginning of the setup
 
     static void init(const std::string& log_file = "") {
+        static bool initialized = false;
+        assert(initialized == false);
+        initialized = true;
+
         // This prints: [info] message for the global function
         // the info part is the colored output which can be info, warning,
         // error, etc check

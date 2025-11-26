@@ -71,10 +71,39 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          ignore: '.github | extern | build'
+          ignore: '.github | extern | build | tests'
           style: file
           files-changed-only: true
           step-summary: true
           thread-comments: true
           tidy-checks: ''
+  test:
+    name: "Test ${{ matrix.preset }}"
+    strategy:
+      matrix:
+        include:
+          - preset: Debug-Editor
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
       
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+      
+      - name: Configure with tests enabled
+        shell: pwsh
+        run: |
+          cmake --preset ${{ matrix.preset }} -DTHERMITE_BUILD_TESTS=ON
+      
+      - name: Build with tests
+        shell: pwsh
+        run: |
+          cmake --build --preset ${{ matrix.preset }} -j --target UnitTests
+      
+      - name: Run tests
+        shell: pwsh
+        run: |
+          ./build/${{ matrix.preset }}/bin/UnitTests
