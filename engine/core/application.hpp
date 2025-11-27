@@ -1,5 +1,7 @@
 #pragma once
 #include <stdexcept>
+#include <string>
+#include <filesystem>
 
 namespace tmt {
 
@@ -18,6 +20,7 @@ struct CommandLineArgs {
 struct ApplicationSpecs {
     std::string name = "Thermite App";
     CommandLineArgs command_args;
+    std::filesystem::path log_file;
 };
 
 }  // namespace tmt

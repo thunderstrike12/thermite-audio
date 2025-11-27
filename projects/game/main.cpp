@@ -4,7 +4,8 @@
 
 #include "engine/core/logger.hpp"
 #include "engine/core/ecs.hpp"
-#include "engine/core/components.hpp"
+#include "engine/core/components/transform.hpp"
+#include "engine/core/components/name.hpp"
 #include "engine/tools/fmt_defines.hpp"
 
 void ecs_testing();
@@ -42,9 +43,6 @@ void ecs_testing() {
         tmt::Log::info("Added Name component: {}", name_comp);
 
         auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
-        transform.position = {0.0f, 1.0f, 2.0f};
-        transform.rotation = {0.0f, 90.0f, 0.0f};
-        transform.scale = {1.0f, 1.0f, 1.0f};
 
         tmt::Log::info("Added Transform component: {}", transform);
 
@@ -69,7 +67,6 @@ void ecs_testing() {
 
         auto comps = tmt::engine.ecs.add_component<tmt::Name, tmt::Transform>(entity);
         std::get<tmt::Name>(comps).name = "Enemy";
-        std::get<tmt::Transform>(comps).position = {5.0f, 0.0f, -3.0f};
         tmt::Log::info("Added multiple components: {}, {}", std::get<tmt::Name>(comps), std::get<tmt::Transform>(comps));
 
         auto [name_comp, transform_comp] = tmt::engine.ecs.get_component<tmt::Name, tmt::Transform>(entity);

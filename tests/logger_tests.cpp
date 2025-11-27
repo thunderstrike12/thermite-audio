@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "engine/core/logger.hpp"
+#include "engine/engine.hpp"
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -23,7 +24,7 @@ class LogTestWithInit : public ::testing::Test {
         if (std::filesystem::exists(log_file)) {
             std::filesystem::remove(log_file);
         }
-        tmt::Log::init(log_file);
+        tmt::engine.init({.log_file = log_file});
 
         // Verify file was created
         EXPECT_TRUE(std::filesystem::exists(log_file))

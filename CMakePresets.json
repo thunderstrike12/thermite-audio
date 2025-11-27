@@ -25,7 +25,18 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "THERMITE_EDITOR_BUILD": "ON",
-        "THERMITE_DEBUG_BUILD":  "ON"
+        "THERMITE_DEBUG_BUILD": "ON"
+      }
+    },
+    {
+      "name": "Unit-tests",
+      "inherits": "base",
+      "displayName": "Unit Tests",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "THERMITE_EDITOR_BUILD": "ON",
+        "THERMITE_DEBUG_BUILD": "ON",
+        "THERMITE_BUILD_TESTS": "ON"
       }
     },
     {
@@ -85,6 +96,10 @@
     {
       "name": "Debug-Editor",
       "configurePreset": "Debug-Editor"
+    },
+    {
+      "name": "Unit-tests",
+      "configurePreset": "Unit-tests"
     },
     {
       "name": "Release-Editor",

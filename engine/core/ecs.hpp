@@ -70,8 +70,8 @@ class Ecs : public OnStart, public OnUpdate, public OnFixedUpdate, public OnEnd,
     /* Single + Multiple add */
     template <typename... Component>
     decltype(auto) add_component(Entity entity) {
-        constexpr size_t count = sizeof...(Component);
-        if constexpr (count == 1) {
+        constexpr size_t COUNT = sizeof...(Component);
+        if constexpr (COUNT == 1) {
             return registry.emplace<Component...>(entity);
         } else {
             return std::make_tuple(registry.emplace<Component>(entity)...);
@@ -87,8 +87,8 @@ class Ecs : public OnStart, public OnUpdate, public OnFixedUpdate, public OnEnd,
     /* Single + Multiple get */
     template <typename... Component>
     decltype(auto) get_component(const Entity entity) {
-        constexpr size_t count = sizeof...(Component);
-        if constexpr (count == 1) {
+        constexpr size_t COUNT = sizeof...(Component);
+        if constexpr (COUNT == 1) {
             return registry.get<Component...>(entity);
         } else {
             return std::make_tuple(registry.get<Component>(entity)...);
@@ -98,12 +98,18 @@ class Ecs : public OnStart, public OnUpdate, public OnFixedUpdate, public OnEnd,
     /* Single + Multiple try_get */
     template <typename... Component>
     decltype(auto) try_get_component(const Entity entity) {
-        constexpr size_t count = sizeof...(Component);
-        if constexpr (count == 1) {
+        constexpr size_t COUNT = sizeof...(Component);
+        if constexpr (COUNT == 1) {
             return registry.try_get<Component...>(entity);
         } else {
             return std::make_tuple(registry.try_get<Component>(entity)...);
         }
+    }
+
+    template <typename Component>
+    Entity get_entity(const Component& instance) {
+        const auto& storage = registry.storage<Component>();
+        return entt::to_entity(storage, instance);
     }
 
     void destroy_entity(const Entity entity, bool force = false) {
@@ -113,6 +119,8 @@ class Ecs : public OnStart, public OnUpdate, public OnFixedUpdate, public OnEnd,
             registry.emplace<Delete>(entity);
         }
     }
+
+    void clear() { registry.clear(); }
 
    private:
     std::vector<std::unique_ptr<ISystem>> systems;

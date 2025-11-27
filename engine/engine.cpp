@@ -28,7 +28,7 @@ Engine::~Engine() {
 }
 
 void Engine::init(const ApplicationSpecs& specs) {
-    Log::init("somefile.txt");
+    Log::init(specs.log_file.string());
     tmt::Log::info("No scope here!");
     tmt::Log::warn(Log::Scope::GAME, "Game scope here!");
     tmt::Log::warn(Log::Scope::RENDERER, "Renderer scope here!");
