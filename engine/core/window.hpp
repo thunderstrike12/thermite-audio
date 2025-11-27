@@ -2,6 +2,9 @@
 
 #include <string_view>
 
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
 #include "core/application.hpp"
 
 struct SDL_Window;
@@ -20,11 +23,13 @@ class Window {
     Window() = default;
     ~Window();
 
+    Window(const Window&) = delete;
+    Window& operator=(const Window&) = delete;
+
     void init(const ApplicationSpecs& specs);
     void update();
 
-    Window(const Window&) = delete;
-    Window& operator=(const Window&) = delete;
+    HWND get_window_handle() const;
 };
 
 }  // namespace tmt

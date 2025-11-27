@@ -28,6 +28,13 @@ add_subdirectory(glm)
 # https://github.com/skypjack/entt
 add_subdirectory(entt)
 
+# Vulkan Headers are a dependency for volk which is used in graphite
+add_subdirectory(Vulkan-Headers)
+set(ENV{VULKAN_SDK} "${CMAKE_CURRENT_SOURCE_DIR}/Vulkan-Headers")
+# graphite - render graph library
+# https://github.com/mxcop/graphite
+add_subdirectory(graphite)
+
 # visit_struct - struct reflection
 # https://github.com/cbeck88/visit_struct
 add_library(visit_struct INTERFACE)
@@ -52,6 +59,7 @@ target_link_libraries(thermite-engine
 target_link_libraries(thermite-engine 
 	PRIVATE
 	SDL3::SDL3-static
+    graphite
     visit_struct
     nlohmann_json::nlohmann_json
 )

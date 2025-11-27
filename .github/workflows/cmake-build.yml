@@ -2,7 +2,6 @@ name: build
 on:
   pull_request:
     branches: 'main'
-
 jobs:
   build:
     name: "Build ${{ matrix.preset }}"
@@ -77,6 +76,7 @@ jobs:
           step-summary: true
           thread-comments: true
           tidy-checks: ''
+          
   test:
     name: "Test ${{ matrix.preset }}"
     strategy:

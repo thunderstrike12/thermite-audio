@@ -1,5 +1,12 @@
 # build directory
 build/
+
+# caches
 /.vs
 /scripts/__pycache__
+
+# clang tidy
 tidy_results/report.txt
+
+# binary files
+*.spv
