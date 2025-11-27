@@ -119,6 +119,7 @@ void Renderer::update() {
     RasterNode& graphics_pass = render_graph.add_raster_pass("graphics pass", "test-vert", "test-frag")
         .topology(Topology::TriangleList)
         .attribute(AttrFormat::XYZ32_SFloat)  // Position
+        .load_op(LoadOp::Clear)
         .attach(render_target)
         .raster_extent(engine.window.width, engine.window.height);
     graphics_pass.draw(vertex_buffer, 3);
