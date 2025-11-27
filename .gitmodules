@@ -10,9 +10,13 @@
 [submodule "extern/graphite"]
 	path = extern/graphite
 	url = https://github.com/mxcop/graphite
+	branch = thermite-engine
 [submodule "extern/nlohmann_json"]
 	path = extern/nlohmann_json
 	url = https://github.com/nlohmann/json
 [submodule "extern/Vulkan-Headers"]
 	path = extern/Vulkan-Headers
 	url = https://github.com/KhronosGroup/Vulkan-Headers
+[submodule "extern/imgui"]
+	path = extern/imgui
+	url = https://github.com/ocornut/imgui

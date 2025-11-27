@@ -4,6 +4,7 @@ build/
 # caches
 /.vs
 /scripts/__pycache__
+imgui.ini
 
 # clang tidy
 tidy_results/report.txt

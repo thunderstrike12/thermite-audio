@@ -1,6 +1,7 @@
 #pragma once
 
 #include <graphite/vram_bank.hh>
+#include <graphite/imgui.hh>
 
 class GPUAdapter;
 class RenderGraph;
@@ -11,6 +12,7 @@ class Renderer {
     GPUAdapter& gpu;
     RenderGraph& render_graph;
     RenderTarget render_target {};
+    ImGUI imgui {};
 
     Renderer();
     ~Renderer();
