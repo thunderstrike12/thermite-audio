@@ -23,8 +23,8 @@ target_include_directories(thermite-engine
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# TODO: Precompiled header(s)
-# target_precompile_headers(thermite-engine PRIVATE Thermite/pch.h)
+# Add the precompiled header
+target_precompile_headers(thermite-engine PRIVATE "shared/pch.hpp")
 
 # Set warning level
 target_compile_options(thermite-engine PRIVATE /W4 /permissive-)

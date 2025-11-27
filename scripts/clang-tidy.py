@@ -19,7 +19,9 @@ def glob_recursive_files(path, extensions):
     ret = []
     path_obj = pathlib.Path(path)
     for file_path in path_obj.rglob("*"):
-        if file_path.is_file() and file_path.suffix in extensions:
+        if (file_path.is_file() 
+            and file_path.suffix in extensions 
+            and file_path.name != "pch.hpp"):
             ret.append(file_path)
     return ret
 
