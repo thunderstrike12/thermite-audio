@@ -28,9 +28,6 @@ add_subdirectory(glm)
 # https://github.com/skypjack/entt
 add_subdirectory(entt)
 
-# Vulkan Headers are a dependency for volk which is used in graphite
-add_subdirectory(Vulkan-Headers)
-set(ENV{VULKAN_SDK} "${CMAKE_CURRENT_SOURCE_DIR}/Vulkan-Headers")
 # graphite - render graph library
 # https://github.com/mxcop/graphite
 add_subdirectory(graphite)
@@ -63,7 +60,6 @@ target_include_directories(thermite-engine
     PRIVATE "./imgui"
     PRIVATE "./imgui/backends"
 )
-target_compile_definitions(thermite-engine PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK)
 
 # Link libraries publicly
 target_link_libraries(thermite-engine
