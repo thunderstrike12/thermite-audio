@@ -14,6 +14,8 @@ COMPILE_DATABASE = 'build/Debug-Editor'
 OPTIONS = '--config-file=.clang-tidy'
 # Default directories to check
 DEFAULT_DIRECTORIES = ['engine', 'projects']
+# Directories to ignore (from root)
+IGNORED_DIRECTORIES = ['extern', 'tests']
 
 def glob_recursive_files(path, extensions):
     ret = []
@@ -21,9 +23,15 @@ def glob_recursive_files(path, extensions):
     for file_path in path_obj.rglob("*"):
         if (file_path.is_file() 
             and file_path.suffix in extensions 
-            and file_path.name != "pch.hpp"):
+            and file_path.name != "pch.hpp"
+            and not any(ignored in file_path.parts for ignored in IGNORED_DIRECTORIES)):
             ret.append(file_path)
     return ret
+
+def should_ignore_path(file_path):
+    """Check if a file path should be ignored based on IGNORED_DIRECTORIES"""
+    path_obj = pathlib.Path(file_path)
+    return any(ignored in path_obj.parts for ignored in IGNORED_DIRECTORIES)
 
 def parse_clang_tidy_output(output):
     """Parse clang-tidy output to extract meaningful errors/warnings"""
@@ -31,10 +39,11 @@ def parse_clang_tidy_output(output):
     lines = output.split('\n')
     
     for line in lines:
-        # Match lines with file:line:col: severity: message
         match = re.match(r'^(.+?):(\d+):(\d+):\s+(warning|error|note):\s+(.+)$', line)
         if match:
             file_path, line_num, col, severity, message = match.groups()
+            if should_ignore_path(file_path):
+                continue
             issues.append({
                 'file': file_path,
                 'line': line_num,
@@ -50,7 +59,6 @@ def format_output(issues, summary=True):
     if not issues:
         return "No issues found!\n"
     
-    # Group by file
     by_file = defaultdict(list)
     severity_count = defaultdict(int)
     
@@ -64,7 +72,6 @@ def format_output(issues, summary=True):
     output.append("=" * 80)
     output.append("")
     
-    # Print issues by file
     for file_path in sorted(by_file.keys()):
         file_issues = by_file[file_path]
         output.append(f"\n{file_path}")
@@ -76,12 +83,11 @@ def format_output(issues, summary=True):
             output.append(f"     {issue['message']}")
             output.append("")
     
-    # Summary
     if summary:
         output.append("\n" + "=" * 80)
         output.append("SUMMARY")
         output.append("=" * 80)
-        output.append(f"Total files checked: {len(by_file)}")
+        output.append(f"Total files with issues: {len(by_file)}")
         output.append(f"Errors: {severity_count.get('error', 0)}")
         output.append(f"Warnings: {severity_count.get('warning', 0)}")
         output.append("")
@@ -103,20 +109,13 @@ def run_clang_tidy_on_files(files, output_file=None, quiet=False):
             check=False
         )
         
-        # Combine stdout and stderr
         full_output = result.stdout + result.stderr
-        
-        # Parse output
         issues = parse_clang_tidy_output(full_output)
-        
-        # Format output
         formatted = format_output(issues)
         
-        # Print to console
         if not quiet:
             print(formatted)
         
-        # Save to file if requested
         if output_file:
             with open(output_file, 'w', encoding='utf-8') as f:
                 f.write(formatted)
@@ -147,7 +146,6 @@ def main():
     start_time = time.time()
     
     files = []
-    # Use default directories if none specified
     directories_to_check = args.directory if args.directory else DEFAULT_DIRECTORIES
     
     for directory in directories_to_check:
@@ -162,12 +160,12 @@ def main():
     
     if not args.quiet:
         print(f"Checking directories: {', '.join(directories_to_check)}")
+        print(f"Ignoring directories: {', '.join(IGNORED_DIRECTORIES)}")
     
-    # Ensure output directory exists
     if args.output:
         pathlib.Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     
-    error_count = run_clang_tidy_on_files(files, args.output, args.quiet)
+    error_count = run_clang_tidy_on_files([str(f) for f in files], args.output, args.quiet)
     
     end_time = time.time()
     elapsed_time = end_time - start_time
