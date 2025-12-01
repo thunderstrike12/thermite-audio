@@ -67,13 +67,13 @@ target_link_libraries(thermite-engine
     spdlog::spdlog
     glm::glm
     EnTT::EnTT
+    graphite
 )
 
 # Link libraries privately
 target_link_libraries(thermite-engine 
 	PRIVATE
 	SDL3::SDL3-static
-    graphite
     visit_struct
     nlohmann_json::nlohmann_json
 )

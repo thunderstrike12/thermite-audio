@@ -4,22 +4,26 @@
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_vulkan.h>
 
+#include <graphite/vram_bank.hh>
 #include <graphite/gpu_adapter.hh>
 #include <graphite/render_graph.hh>
-
 #include <graphite/nodes/raster_node.hh>
 
-#include "engine/engine.hpp"
 #include "core/window.hpp"
 #include "core/logger.hpp"
 
+#include "engine/engine.hpp"
+
+#include "pipelines/debug_pipeline.hpp"
+
 namespace tmt {
 
-Renderer::Renderer() : gpu(*new GPUAdapter()), render_graph(*new RenderGraph()) {}
+Renderer::Renderer() : gpu(*new GPUAdapter()), render_graph(*new RenderGraph()), debug_pipeline(*new DebugPipeline()) {}
 
 Renderer::~Renderer() {
-    delete &gpu;
+    delete &debug_pipeline;
     delete &render_graph;
+    delete &gpu;
 }
 
 /* Custom thermite logger function for graphite. */
@@ -72,6 +76,9 @@ void Renderer::init() {
         Log::error(Log::Scope::RENDERER, "failed to initialize imgui.\nreason: {}", r.unwrap_err());
         return;
     }
+
+    /* Initialize Pipelines */
+    debug_pipeline.init(gpu);
 }
 
 static bool is_init = false;
@@ -84,9 +91,10 @@ struct Vertex {
 };
 
 void Renderer::update() {
+    VRAMBank& bank = gpu.get_vram_bank();
     if (!is_init) {
         /* Initialise a vertex buffer */
-        VRAMBank& bank = gpu.get_vram_bank();
+
         if (const Result r = bank.create_buffer(BufferUsage::Vertex | BufferUsage::TransferDst, 1, sizeof(Vertex) * 3); r.is_err()) {
             Log::error(Log::Scope::RENDERER, "failed to initialise constant buffer.\nreason: {}", r.unwrap_err());
             return;
@@ -100,6 +108,10 @@ void Renderer::update() {
         bank.upload_buffer(vertex_buffer, vertices.data(), 0, sizeof(Vertex) * 3);
         is_init = true;
     }
+    // Temporary
+    draw_line({-0.5f, 0.5f, 0.0f}, {0.0f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f});
+    draw_line({0.0f, -0.5f, 0.0f}, {0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f});
+    draw_line({0.5f, 0.5f, 0.0f}, {-0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f});
 
     /* Start a new imgui frame */
     imgui.new_frame();
@@ -124,6 +136,9 @@ void Renderer::update() {
         .raster_extent(engine.window.width, engine.window.height);
     graphics_pass.draw(vertex_buffer, 3);
 
+    /* Pipelines Enqueue */
+    debug_pipeline.enqueue(render_graph);
+
     /* Add the immediate mode GUI to the render graph */
     render_graph.add_imgui(imgui, render_target);
 
@@ -144,9 +159,15 @@ void Renderer::end() {
     bank.destroy(render_target);
     bank.destroy(vertex_buffer);
 
+    /* Pipelines Cleanup */
+    debug_pipeline.deinit(gpu);
+
     /* Cleanup the VRAM bank & GPU adapter */
     render_graph.deinit().expect("failed to destroy render graph.");
     bank.deinit().expect("failed to destroy vram bank.");
     gpu.deinit().expect("failed to destroy gpu adapter.");
 }
+
+void Renderer::draw_line(const glm::vec3 start, const glm::vec3 end, const glm::vec3 color) { debug_pipeline.draw_line(start, end, color); }
+
 }  // namespace tmt
