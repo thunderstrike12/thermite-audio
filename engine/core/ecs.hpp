@@ -18,16 +18,17 @@ using Entity = entt::entity;
 
 struct Delete {};
 
+template <typename T>
+concept System = std::is_base_of_v<ISystem, T>;
+
 class Ecs : public OnStart, public OnUpdate, public OnFixedUpdate, public OnEnd, public OnEndFrame {
    public:
     Ecs() = default;
     ~Ecs() = default;
 
     /* Systems */
-    template <typename T, typename... Args>
+    template <System T, typename... Args>
     T& register_system(Args&&... args) {
-        static_assert(std::is_base_of_v<ISystem, T>, "T must inherit from ISystem");
-
         auto system = std::make_unique<T>(std::forward<Args>(args)...);
         T& ref = *system;
 
@@ -35,7 +36,7 @@ class Ecs : public OnStart, public OnUpdate, public OnFixedUpdate, public OnEnd,
         return ref;
     }
 
-    template <typename T>
+    template <System T>
     T& get_system() {
         for (auto& system : systems) {
             if (T* casted = dynamic_cast<T*>(system.get())) {
@@ -45,7 +46,7 @@ class Ecs : public OnStart, public OnUpdate, public OnFixedUpdate, public OnEnd,
         throw std::runtime_error("System not found");
     }
 
-    template <typename T>
+    template <System T>
     T* try_get_system() {
         for (auto& system : systems) {
             if (T* casted = dynamic_cast<T*>(system.get())) {
