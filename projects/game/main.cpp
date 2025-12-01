@@ -37,7 +37,7 @@ void ecs_testing() {
         tmt::Entity entity = tmt::engine.ecs.create_entity();
         tmt::Log::info("Created entity with ID: {}", entity);
 
-        auto& name_comp = tmt::engine.ecs.add_component<tmt::Name>(entity);
+        auto& name_comp = tmt::engine.ecs.add_or_get_component<tmt::Name>(entity);
         name_comp.name = "Player";
 
         tmt::Log::info("Added Name component: {}", name_comp);

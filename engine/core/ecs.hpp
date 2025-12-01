@@ -96,6 +96,16 @@ class Ecs : public OnStart, public OnUpdate, public OnFixedUpdate, public OnEnd,
         }
     }
 
+    template <typename... Component>
+    decltype(auto) add_or_get_component(const Entity entity) {
+        constexpr size_t COUNT = sizeof...(Component);
+        if constexpr (COUNT == 1) {
+            return registry.emplace_or_replace<Component...>(entity);
+        } else {
+            return std::make_tuple(registry.emplace_or_replace<Component>(entity)...);
+        }
+    }
+
     /* Single + Multiple try_get */
     template <typename... Component>
     decltype(auto) try_get_component(const Entity entity) {
