@@ -98,10 +98,6 @@
       "configurePreset": "Debug-Editor"
     },
     {
-      "name": "Unit-tests",
-      "configurePreset": "Unit-tests"
-    },
-    {
       "name": "Release-Editor",
       "configurePreset": "Release-Editor"
     },
@@ -120,6 +116,20 @@
     {
       "name": "RelWithDebInfo-Game",
       "configurePreset": "RelWithDebInfo-Game"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "Unit-tests",
+      "configurePreset": "Unit-tests",
+      "output": {
+        "outputOnFailure": true,
+        "verbosity": "verbose"
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": false
+      }
     }
   ]
 }

@@ -38,5 +38,6 @@ find_and_add_targets()
 
 # Add unit tests
 if(THERMITE_BUILD_TESTS)
+    enable_testing()
     add_subdirectory("tests")
 endif()

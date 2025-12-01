@@ -1,5 +1,4 @@
-message(STATUS "### Unit Tests are enabled")
-
+message(STATUS "Unit Tests are enabled")
 # Fetch GoogleTest
 include(FetchContent)
 FetchContent_Declare(
@@ -20,21 +19,17 @@ target_sources(UnitTests PRIVATE ${TEST_SOURCES})
 # Link against GoogleTest and your engine
 target_link_libraries(UnitTests 
     PRIVATE 
-    GTest::gtest_main
+    GTest::gtest
     thermite-engine
 )
 
-# Include directories (if needed - thermite-engine should provide these)
-# Uncomment if you need explicit include paths
-# target_include_directories(UnitTests PRIVATE 
-#     ${CMAKE_SOURCE_DIR}/engine
-# )
 
-# Set output directory
 set_target_properties(UnitTests PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
-# Discover tests for CTest
 include(GoogleTest)
-gtest_discover_tests(UnitTests)
+gtest_discover_tests(UnitTests
+    DISCOVERY_MODE PRE_TEST
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)

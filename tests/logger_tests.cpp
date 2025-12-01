@@ -15,57 +15,26 @@ TEST(LogTest, DoubleInitAsserts) {
     );
 }
 
-class LogTestWithInit : public ::testing::Test {
-   protected:
-    static void SetUpTestSuite() {  // NOLINT(readability-identifier-naming)
-        log_file =
-            (std::filesystem::temp_directory_path() / "test_log_suite.txt")
-                .string();
-        if (std::filesystem::exists(log_file)) {
-            std::filesystem::remove(log_file);
-        }
-        tmt::engine.init({.log_file = log_file});
+TEST(LogTest, GlobalLoggingToConsoleOnly) { ASSERT_NO_THROW(tmt::Log::info("No scope here!")); }
+std::string log_file {"log_tests.txt"};
+std::string read_log_file() {
+    spdlog::apply_all([](const std::shared_ptr<spdlog::logger>& l) { l->flush(); });
 
-        // Verify file was created
-        EXPECT_TRUE(std::filesystem::exists(log_file))
-            << "Log file not created at: " << log_file;
-    }
+    EXPECT_TRUE(std::filesystem::exists(log_file)) << "Log file missing: " << log_file;
 
-    static void TearDownTestSuite() {  // NOLINT(readability-identifier-naming)
-        spdlog::drop_all();
-        spdlog::shutdown();
-    }
+    std::ifstream file(log_file);
+    EXPECT_TRUE(file.is_open()) << "Failed to open: " << log_file;
+    std::stringstream buffer;
+    buffer << file.rdbuf();
 
-    static std::string log_file;
+    std::string content = buffer.str();
+    std::cout << "=== Log file content ===\n" << content << "\n=== End ===" << std::endl;
 
-    std::string read_log_file() const {
-        spdlog::apply_all([](const std::shared_ptr<spdlog::logger>& l) {
-            l->flush();
-        });
-
-        EXPECT_TRUE(std::filesystem::exists(log_file))
-            << "Log file missing: " << log_file;
-
-        std::ifstream file(log_file);
-        EXPECT_TRUE(file.is_open()) << "Failed to open: " << log_file;
-        std::stringstream buffer;
-        buffer << file.rdbuf();
-
-        std::string content = buffer.str();
-        std::cout << "=== Log file content ===\n"
-                  << content << "\n=== End ===" << std::endl;
-
-        return content;
-    }
-};
-
-std::string LogTestWithInit::log_file;
-
-TEST_F(LogTestWithInit, GlobalLoggingToConsoleOnly) {
-    ASSERT_NO_THROW(tmt::Log::info("No scope here!"));
+    return content;
 }
 
-TEST_F(LogTestWithInit, ScopedLogging) {
+;
+TEST(LogTest, ScopedLogging) {
     tmt::Log::warn(tmt::Log::Scope::GAME, "Game scope here!");
     tmt::Log::warn(tmt::Log::Scope::RENDERER, "Renderer scope here!");
     tmt::Log::warn(tmt::Log::Scope::ENGINE, "Engine scope here!");
@@ -76,7 +45,7 @@ TEST_F(LogTestWithInit, ScopedLogging) {
     EXPECT_TRUE(content.find("Engine scope here!") != std::string::npos);
 }
 
-TEST_F(LogTestWithInit, AllScopesWork) {
+TEST(LogTest, AllScopesWork) {
     ASSERT_NO_THROW(tmt::Log::info(tmt::Log::Scope::ENGINE, "Engine info"));
     ASSERT_NO_THROW(tmt::Log::info(tmt::Log::Scope::GAME, "Game info"));
     ASSERT_NO_THROW(tmt::Log::info(tmt::Log::Scope::RENDERER, "Renderer info"));
