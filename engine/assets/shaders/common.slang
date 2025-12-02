@@ -9,3 +9,5 @@ public struct VertexInput {
     public float3 position : POSITION;
     public float3 color : COLOR;
 };
+
+public static const float3 Color = float3(0.0f, 1.0f, 1.0f);

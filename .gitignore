@@ -10,4 +10,4 @@ imgui.ini
 tidy_results/report.txt
 
 # binary files
-*.spv
+engine/assets/shaders/bin
