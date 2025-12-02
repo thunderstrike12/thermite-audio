@@ -40,6 +40,15 @@ target_include_directories(visit_struct
     ${CMAKE_CURRENT_SOURCE_DIR}/visit_struct/
 )
 
+# JsonReflect - json reflection
+# https://github.com/Sven-vh/JsonReflect
+add_library(JsonReflect INTERFACE)
+target_include_directories(JsonReflect
+    INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/JsonReflect/
+    ${CMAKE_CURRENT_SOURCE_DIR}/JsonReflect/extern
+)
+
 # nlohmann json - json parsing
 # https://github.com/nlohmann/json
 add_subdirectory(nlohmann_json)
@@ -68,6 +77,7 @@ target_link_libraries(thermite-engine
     spdlog::spdlog
     glm::glm
     EnTT::EnTT
+    JsonReflect
     graphite
 )
 

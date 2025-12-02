@@ -3,7 +3,9 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "engine/core/ecs.hpp"
+
 #include "engine/tools/fmt_helpers.hpp"
+#include "engine/tools/serializer.hpp"
 
 namespace tmt {
 
@@ -67,6 +69,8 @@ struct Transform {
     const std::set<Entity>& get_children() const;
 
    private:
+    BEFRIEND_VISITABLE();
+
     glm::vec3 local_position {0.0f, 0.0f, 0.0f};
     glm::quat local_rotation {1.0f, 0.0f, 0.0f, 0.0f};
     glm::vec3 local_scale {1.0f, 1.0f, 1.0f};
@@ -89,3 +93,4 @@ struct Transform {
 }  // namespace tmt
 
 FMT_LOGGING(tmt::Transform, "Position: {}, Rotation: {}, Scale: {}", obj.get_world_position(), obj.get_world_rotation(), obj.get_world_scale());
+JSON_REFLECT(tmt::Transform, local_position, local_rotation, local_scale, parent, children);
