@@ -1,5 +1,7 @@
 #include "engine/entry_point.hpp"
-#include "engine/core/logger.hpp"
+#include "engine/core/ecs.hpp"
+#include "engine/core/components/transform.hpp"
+#include "engine/core/components/camera.hpp"
 
 class Game : public tmt::Application {
    public:
@@ -22,7 +24,12 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     return std::make_unique<Game>(specs);
 }
 
-void Game::on_start() {}
+void Game::on_start() {
+    tmt::Entity entity = tmt::engine.ecs.create_entity();
+    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
+    transform.set_world_position(glm::vec3(0.0f, 0.0f, -2.0f));
+}
 
 void Game::on_update(const tmt::FrameData& time) {}
 

@@ -16,6 +16,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Compile Slang shaders to SPIR-V")
     parser.add_argument("--input", required=True, help="Input shader file (.slang)")
     parser.add_argument("--output", required=True, help="Output SPIR-V file (.spv)")
+    parser.add_argument("--root", required=True, help="Shader root directory")
     parser.add_argument("--depfile", required=False, help="Optional depfile for incremental build")
     return parser.parse_args()
 
@@ -36,6 +37,7 @@ def main():
 
     shader_path = Path(args.input)
     output_file = Path(args.output)
+    shader_dir = Path(args.root)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     stage = detect_stage(shader_path)
@@ -48,6 +50,7 @@ def main():
     cmd = [
         SLANGC,
         str(shader_path),
+        "-I", f"{str(shader_dir)}/shared",
         "-target", "spirv",
         "-profile", info["profile"],
         "-entry", "main",

@@ -35,6 +35,7 @@ function(compile_shaders)
                     ${SHADER_SCRIPT}
                     --input ${SHADER}
                     --output ${OUTPUT_SPV}
+                    --root ${SHADER_SOURCE_DIR}
                     --depfile ${DEPFILE}
             DEPENDS ${SHADER}
             ${DEPFILE_OPT}

@@ -30,7 +30,7 @@ class DebugPipeline {
     DebugPipeline& operator=(const DebugPipeline&) = delete;
 
     void init(GPUAdapter& gpu);
-    void enqueue(RenderGraph& render_graph);
+    void enqueue(RenderGraph& render_graph, RenderTarget render_target);
     void deinit(GPUAdapter& gpu);
 
     void draw_line(const glm::vec3 start, const glm::vec3 end, const glm::vec3 color = {1.0f, 0.0f, 0.0f});
