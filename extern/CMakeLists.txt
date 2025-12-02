@@ -70,6 +70,14 @@ target_include_directories(thermite-engine
     PRIVATE "./imgui/backends"
 )
 
+# ufbx - single source fbx loading
+# https://github.com/ufbx/ufbx
+target_sources(thermite-engine
+    PRIVATE "./ufbx/ufbx.cpp"
+)
+target_include_directories(thermite-engine
+    PRIVATE "./ufbx"
+)
 
 # Link libraries publicly
 target_link_libraries(thermite-engine
