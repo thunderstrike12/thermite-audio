@@ -3,6 +3,10 @@
 #include <string>
 #include <filesystem>
 
+#include "engine/events/game.hpp"
+
+int main(int argc, char** argv);
+
 namespace tmt {
 
 struct CommandLineArgs {
@@ -21,6 +25,18 @@ struct ApplicationSpecs {
     std::string name = "Thermite App";
     CommandLineArgs command_args;
     std::filesystem::path log_file;
+};
+
+class Application : public IGameEvents {
+   public:
+    Application(ApplicationSpecs specs) : specs(std::move(specs)) {};
+    virtual ~Application() = default;
+
+   private:
+    const ApplicationSpecs specs;
+
+    /* Befriend main to get specs */
+    friend int ::main(int argc, char** argv);
 };
 
 }  // namespace tmt

@@ -21,7 +21,7 @@ struct Delete {};
 template <typename T>
 concept System = std::is_base_of_v<ISystem, T>;
 
-class Ecs : public OnStart, public OnUpdate, public OnFixedUpdate, public OnEnd, public OnEndFrame {
+class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, public OnGameEnd, public OnEndFrame {
    public:
     Ecs() = default;
     ~Ecs() = default;
@@ -138,13 +138,13 @@ class Ecs : public OnStart, public OnUpdate, public OnFixedUpdate, public OnEnd,
 
     Registry registry;
 
-    void on_start() override;
+    void on_game_start() override;
 
-    void on_update(const FrameData& time) override;
+    void on_game_update(const FrameData& time) override;
 
-    void on_fixed_update(const FrameData& time) override;
+    void on_game_fixed_update(const FrameData& time) override;
 
-    void on_end() override;
+    void on_game_end() override;
 
     void on_end_frame() override;
 };

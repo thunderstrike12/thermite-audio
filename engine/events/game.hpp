@@ -4,38 +4,51 @@
 
 namespace tmt {
 
-class OnStart : public EventListenerBase<OnStart, void> {
+class IGameEvents {
    public:
-    OnStart() : EventListenerBase() {}
+    virtual ~IGameEvents() = default;
+
+    /* Events */
+    /* [Required] */
     virtual void on_start() = 0;
-    void on_event() final override { on_start(); }
-};
-
-class OnUpdate : public EventListenerBase<OnUpdate, FrameData> {
-   public:
-    OnUpdate() : EventListenerBase() {}
-
-    virtual void on_update(const FrameData& time) = 0;
-
-    void on_event(FrameData&) final override { /* Empty */ };
-    void on_event(const FrameData& time) final override { on_update(time); }
-};
-
-class OnFixedUpdate : public EventListenerBase<OnFixedUpdate, FrameData> {
-   public:
-    OnFixedUpdate() : EventListenerBase() {}
-
-    virtual void on_fixed_update(const FrameData& time) = 0;
-
-    void on_event(FrameData&) final override { /* Empty */ };
-    void on_event(const FrameData& time) final override { on_fixed_update(time); }
-};
-
-class OnEnd : public EventListenerBase<OnEnd, void> {
-   public:
-    OnEnd() : EventListenerBase() {}
+    virtual void on_update(const tmt::FrameData& time) = 0;
     virtual void on_end() = 0;
-    void on_event() final override { on_end(); }
+    /* [Optional] */
+    virtual void on_fixed_update(const tmt::FrameData&) {};
+};
+
+class OnGameStart : public EventListenerBase<OnGameStart, void> {
+   public:
+    OnGameStart() : EventListenerBase() {}
+    virtual void on_game_start() = 0;
+    void on_event() final override { on_game_start(); }
+};
+
+class OnGameUpdate : public EventListenerBase<OnGameUpdate, FrameData> {
+   public:
+    OnGameUpdate() : EventListenerBase() {}
+
+    virtual void on_game_update(const FrameData& time) = 0;
+
+    void on_event(FrameData&) final override { /* Empty */ };
+    void on_event(const FrameData& time) final override { on_game_update(time); }
+};
+
+class OnGameFixedUpdate : public EventListenerBase<OnGameFixedUpdate, FrameData> {
+   public:
+    OnGameFixedUpdate() : EventListenerBase() {}
+
+    virtual void on_game_fixed_update(const FrameData& time) = 0;
+
+    void on_event(FrameData&) final override { /* Empty */ };
+    void on_event(const FrameData& time) final override { on_game_fixed_update(time); }
+};
+
+class OnGameEnd : public EventListenerBase<OnGameEnd, void> {
+   public:
+    OnGameEnd() : EventListenerBase() {}
+    virtual void on_game_end() = 0;
+    void on_event() final override { on_game_end(); }
 };
 
 }  // namespace tmt

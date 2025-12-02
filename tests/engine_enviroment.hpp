@@ -3,6 +3,14 @@
 #include "engine/engine.hpp"
 #include <filesystem>
 
+class TestApp : public tmt::Application {
+   public:
+    TestApp(const tmt::ApplicationSpecs& specs) : tmt::Application(specs) {}
+    void on_start() override {}
+    void on_update(const tmt::FrameData& time) override {}
+    void on_end() override {}
+};
+
 class EngineEnvironment : public ::testing::Environment {
    public:
     void SetUp() override {
@@ -12,7 +20,7 @@ class EngineEnvironment : public ::testing::Environment {
         }
 
         tmt::ApplicationSpecs specs {.name = "UnitTests", .log_file = log_file};
-        tmt::engine.init(specs);
+        tmt::engine.init(specs, std::make_unique<TestApp>(specs));
     }
 
     void TearDown() override { tmt::engine.end(); }
