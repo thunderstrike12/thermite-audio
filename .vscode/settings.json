@@ -1,7 +1,4 @@
 {
-    "cmake.debugConfig": {
-        "cwd": "${workspaceFolder}"
-    },
     "cmake.options.advanced": {
         "configurePreset": {
             "statusBarVisibility": "visible"

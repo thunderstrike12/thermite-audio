@@ -32,7 +32,7 @@ void DebugPipeline::enqueue(RenderGraph& render_graph) {
     }
     debug_points.clear();
 
-    RasterNode& line_pass = render_graph.add_raster_pass("debug line pass", "debug-line-vert", "debug-line-frag")
+    RasterNode& line_pass = render_graph.add_raster_pass("debug line pass", "debug_line.vx", "debug_line.px")
                                 .topology(Topology::LineList)
                                 .attribute(AttrFormat::XYZ32_SFloat)  // Position
                                 .attribute(AttrFormat::XYZ32_SFloat)  // Color

@@ -128,7 +128,7 @@ void Renderer::update() {
     /* clang-format off */
 
     /* Test Rasterisation Pass */
-    RasterNode& graphics_pass = render_graph.add_raster_pass("graphics pass", "test-vert", "test-frag")
+    RasterNode& graphics_pass = render_graph.add_raster_pass("graphics pass", "test.vx", "test.px")
         .topology(Topology::TriangleList)
         .attribute(AttrFormat::XYZ32_SFloat)  // Position
         .load_op(LoadOp::Clear)
