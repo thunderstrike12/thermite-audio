@@ -29,20 +29,6 @@ void Window::init(const ApplicationSpecs&) {
     }
 }
 
-void Window::update() {
-    SDL_Event event {};
-
-    while (SDL_PollEvent(&event)) {
-        ImGui_ImplSDL3_ProcessEvent(&event);
-
-        switch (event.type) {
-            case SDL_EVENT_QUIT: {
-                is_running = false;
-            }
-        }
-    }
-}
-
 HWND Window::get_window_handle() const {
     const SDL_PropertiesID props = SDL_GetWindowProperties(window);
 

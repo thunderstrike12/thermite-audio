@@ -1,0 +1,88 @@
+#pragma once
+
+#include "SDL3/SDL_scancode.h"
+
+namespace tmt {
+
+// AI generated
+enum class Key : int32_t {
+    UNKNOWN = SDL_SCANCODE_UNKNOWN,
+
+    // Letters
+    A = SDL_SCANCODE_A,
+    B = SDL_SCANCODE_B,
+    C = SDL_SCANCODE_C,
+    D = SDL_SCANCODE_D,
+    E = SDL_SCANCODE_E,
+    F = SDL_SCANCODE_F,
+    G = SDL_SCANCODE_G,
+    H = SDL_SCANCODE_H,
+    I = SDL_SCANCODE_I,
+    J = SDL_SCANCODE_J,
+    K = SDL_SCANCODE_K,
+    L = SDL_SCANCODE_L,
+    M = SDL_SCANCODE_M,
+    N = SDL_SCANCODE_N,
+    O = SDL_SCANCODE_O,
+    P = SDL_SCANCODE_P,
+    Q = SDL_SCANCODE_Q,
+    R = SDL_SCANCODE_R,
+    S = SDL_SCANCODE_S,
+    T = SDL_SCANCODE_T,
+    U = SDL_SCANCODE_U,
+    V = SDL_SCANCODE_V,
+    W = SDL_SCANCODE_W,
+    X = SDL_SCANCODE_X,
+    Y = SDL_SCANCODE_Y,
+    Z = SDL_SCANCODE_Z,
+
+    // Numbers
+    NUM_0 = SDL_SCANCODE_0,
+    NUM_1 = SDL_SCANCODE_1,
+    NUM_2 = SDL_SCANCODE_2,
+    NUM_3 = SDL_SCANCODE_3,
+    NUM_4 = SDL_SCANCODE_4,
+    NUM_5 = SDL_SCANCODE_5,
+    NUM_6 = SDL_SCANCODE_6,
+    NUM_7 = SDL_SCANCODE_7,
+    NUM_8 = SDL_SCANCODE_8,
+    NUM_9 = SDL_SCANCODE_9,
+
+    // Function keys
+    F1 = SDL_SCANCODE_F1,
+    F2 = SDL_SCANCODE_F2,
+    F3 = SDL_SCANCODE_F3,
+    F4 = SDL_SCANCODE_F4,
+    F5 = SDL_SCANCODE_F5,
+    F6 = SDL_SCANCODE_F6,
+    F7 = SDL_SCANCODE_F7,
+    F8 = SDL_SCANCODE_F8,
+    F9 = SDL_SCANCODE_F9,
+    F10 = SDL_SCANCODE_F10,
+    F11 = SDL_SCANCODE_F11,
+    F12 = SDL_SCANCODE_F12,
+
+    // Arrow keys
+    RIGHT = SDL_SCANCODE_RIGHT,
+    LEFT = SDL_SCANCODE_LEFT,
+    DOWN = SDL_SCANCODE_DOWN,
+    UP = SDL_SCANCODE_UP,
+
+    // Modifiers
+    LEFT_CTRL = SDL_SCANCODE_LCTRL,
+    LEFT_SHIFT = SDL_SCANCODE_LSHIFT,
+    LEFT_ALT = SDL_SCANCODE_LALT,
+    RIGHT_CTRL = SDL_SCANCODE_RCTRL,
+    RIGHT_SHIFT = SDL_SCANCODE_RSHIFT,
+    RIGHT_ALT = SDL_SCANCODE_RALT,
+
+    // Common keys
+    RETURN = SDL_SCANCODE_RETURN,
+    ESCAPE = SDL_SCANCODE_ESCAPE,
+    BACKSPACE = SDL_SCANCODE_BACKSPACE,
+    TAB = SDL_SCANCODE_TAB,
+    SPACE = SDL_SCANCODE_SPACE
+
+};
+constexpr SDL_Scancode to_sdl(Key key) { return static_cast<SDL_Scancode>(key); }
+}  // namespace tmt
