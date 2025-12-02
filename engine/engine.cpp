@@ -15,16 +15,18 @@
 
 #include "events/engine.hpp"
 #include "events/game.hpp"
+#include "core/resources.hpp"
 
 /* Singleton */
 tmt::Engine tmt::engine;
 
 namespace tmt {
 
-Engine::Engine() : window(*new Window()), ecs(*new Ecs()), renderer(*new Renderer()) {}
+Engine::Engine() : window(*new Window()), ecs(*new Ecs()), renderer(*new Renderer()), resources(*new Resources()) {}
 
 Engine::~Engine() {
     /* Destruction should be in reverse order */
+    delete &resources;
     delete &renderer;
     delete &ecs;
     delete &window;

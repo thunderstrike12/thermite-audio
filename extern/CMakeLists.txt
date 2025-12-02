@@ -61,6 +61,7 @@ target_include_directories(thermite-engine
     PRIVATE "./imgui/backends"
 )
 
+
 # Link libraries publicly
 target_link_libraries(thermite-engine
     PUBLIC 

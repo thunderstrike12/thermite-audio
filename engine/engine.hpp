@@ -7,6 +7,7 @@ namespace tmt {
 class Window;
 class Renderer;
 class Ecs;
+class Resources;
 
 class Engine {
    public:
@@ -38,6 +39,7 @@ class Engine {
     Window& window;
     Ecs& ecs;
     Renderer& renderer;
+    Resources& resources;
 
     struct Config {
         constexpr static float FIXED_TIME_STEP = 1.0f / 60.0f;
