@@ -20,3 +20,6 @@
 [submodule "extern/imgui"]
 	path = extern/imgui
 	url = https://github.com/ocornut/imgui
+[submodule "extern/zlib"]
+	path = extern/zlib
+	url = https://github.com/madler/zlib
