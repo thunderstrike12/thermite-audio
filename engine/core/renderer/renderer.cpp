@@ -125,7 +125,7 @@ void Renderer::update() {
             render_view.origin = glm::vec4(transform.get_world_position(), 0.0f);
             ImGui::Begin("Camera");
             glm::vec3 pos = transform.get_world_position();
-            if (ImGui::InputFloat3("Origin", &pos.x)) {
+            if (ImGui::DragFloat3("Origin", &pos.x, 0.01f)) {
                 transform.set_world_position(pos);
             }
             ImGui::End();
