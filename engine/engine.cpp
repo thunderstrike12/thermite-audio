@@ -66,20 +66,6 @@ void Engine::run() {
         /* Update */
         update_game(frame_data);
 
-        // Testing code here, please move when scenes can be added elegantly
-        if (input.is_action_just_pressed("confirm")) {
-            tmt::Log::info(tmt::Log::Scope::ENGINE, "Confirm action pressed!");
-        }
-        if (input.is_action_just_pressed("cancel")) {
-            tmt::Log::info(tmt::Log::Scope::ENGINE, "Cancel action pressed!");
-        }
-        if (input.is_action_pressed("confirm")) {
-            tmt::Log::info(tmt::Log::Scope::ENGINE, "Confirm pressed continuously!");
-        }
-        if (input.is_action_just_released("confirm")) {
-            tmt::Log::info(tmt::Log::Scope::ENGINE, "Confirm released!");
-        }
-
         accumulator += frame_data.delta_time;
         while (accumulator >= Config::FIXED_TIME_STEP) {
             accumulator -= Config::FIXED_TIME_STEP;
