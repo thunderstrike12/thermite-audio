@@ -11,6 +11,8 @@
 #include "engine/events/game.hpp"
 #include "engine/events/engine.hpp"
 
+#include "engine/tools/fmt/helper.hpp"
+
 namespace tmt {
 
 using Registry = entt::registry;
@@ -150,3 +152,5 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
 };
 
 }  // namespace tmt
+
+FMT_LOGGING(tmt::Entity, "{}", static_cast<uint32_t>(obj));

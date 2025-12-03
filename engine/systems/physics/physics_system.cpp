@@ -6,7 +6,6 @@
 #include "core/components/transform.hpp"
 #include "components/voxel_body.hpp"
 
-#include "tools/fmt_defines.hpp"
 #include "glm/gtx/norm.hpp"
 #include <glm/gtx/quaternion.hpp>
 

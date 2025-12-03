@@ -1,7 +1,6 @@
 #pragma once
 #include <spdlog/fmt/fmt.h>
 
-// Updated macro with const format method
 #define FMT_LOGGING(T, format_string, ...)                                           \
     template <>                                                                      \
     struct fmt::formatter<T> {                                                       \
