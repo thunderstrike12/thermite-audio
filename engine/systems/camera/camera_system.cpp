@@ -5,17 +5,18 @@
 #include "core/logger.hpp"
 #include "core/components/camera.hpp"
 #include "core/components/transform.hpp"
+#include "engine/core/keys.hpp"
 
 namespace tmt {
 void CameraSystem::on_start() {
     // Setup Input Actions
-    engine.input.add_action(SPRINT, Key::LEFT_SHIFT);
-    engine.input.add_action(FORWARD, Key::W);
-    engine.input.add_action(BACKWARD, Key::S);
-    engine.input.add_action(RIGHT, Key::D);
-    engine.input.add_action(LEFT, Key::A);
-    engine.input.add_action(UP, Key::E);
-    engine.input.add_action(DOWN, Key::Q);
+    engine.input.add_action_keys(SPRINT, Key::LEFT_SHIFT);
+    engine.input.add_action_keys(FORWARD, Key::W);
+    engine.input.add_action_keys(BACKWARD, Key::S);
+    engine.input.add_action_keys(RIGHT, Key::D);
+    engine.input.add_action_keys(LEFT, Key::A);
+    engine.input.add_action_keys(UP, Key::E);
+    engine.input.add_action_keys(DOWN, Key::Q);
 }
 
 void CameraSystem::on_update(const FrameData& time) {

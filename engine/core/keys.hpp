@@ -1,88 +1,85 @@
 #pragma once
 
-#include "SDL3/SDL_scancode.h"
+#include <cstdint>
 
 namespace tmt {
 
-// AI generated
 enum class Key : int32_t {
-    UNKNOWN = SDL_SCANCODE_UNKNOWN,
+    UNKNOWN = 0,
 
-    // Letters
-    A = SDL_SCANCODE_A,
-    B = SDL_SCANCODE_B,
-    C = SDL_SCANCODE_C,
-    D = SDL_SCANCODE_D,
-    E = SDL_SCANCODE_E,
-    F = SDL_SCANCODE_F,
-    G = SDL_SCANCODE_G,
-    H = SDL_SCANCODE_H,
-    I = SDL_SCANCODE_I,
-    J = SDL_SCANCODE_J,
-    K = SDL_SCANCODE_K,
-    L = SDL_SCANCODE_L,
-    M = SDL_SCANCODE_M,
-    N = SDL_SCANCODE_N,
-    O = SDL_SCANCODE_O,
-    P = SDL_SCANCODE_P,
-    Q = SDL_SCANCODE_Q,
-    R = SDL_SCANCODE_R,
-    S = SDL_SCANCODE_S,
-    T = SDL_SCANCODE_T,
-    U = SDL_SCANCODE_U,
-    V = SDL_SCANCODE_V,
-    W = SDL_SCANCODE_W,
-    X = SDL_SCANCODE_X,
-    Y = SDL_SCANCODE_Y,
-    Z = SDL_SCANCODE_Z,
+    // Letters (USB HID: 0x04-0x1D)
+    A = 4,
+    B = 5,
+    C = 6,
+    D = 7,
+    E = 8,
+    F = 9,
+    G = 10,
+    H = 11,
+    I = 12,
+    J = 13,
+    K = 14,
+    L = 15,
+    M = 16,
+    N = 17,
+    O = 18,
+    P = 19,
+    Q = 20,
+    R = 21,
+    S = 22,
+    T = 23,
+    U = 24,
+    V = 25,
+    W = 26,
+    X = 27,
+    Y = 28,
+    Z = 29,
 
-    // Numbers
-    NUM_0 = SDL_SCANCODE_0,
-    NUM_1 = SDL_SCANCODE_1,
-    NUM_2 = SDL_SCANCODE_2,
-    NUM_3 = SDL_SCANCODE_3,
-    NUM_4 = SDL_SCANCODE_4,
-    NUM_5 = SDL_SCANCODE_5,
-    NUM_6 = SDL_SCANCODE_6,
-    NUM_7 = SDL_SCANCODE_7,
-    NUM_8 = SDL_SCANCODE_8,
-    NUM_9 = SDL_SCANCODE_9,
+    // Numbers (USB HID: 0x1E-0x27)
+    NUM_1 = 30,
+    NUM_2 = 31,
+    NUM_3 = 32,
+    NUM_4 = 33,
+    NUM_5 = 34,
+    NUM_6 = 35,
+    NUM_7 = 36,
+    NUM_8 = 37,
+    NUM_9 = 38,
+    NUM_0 = 39,
 
-    // Function keys
-    F1 = SDL_SCANCODE_F1,
-    F2 = SDL_SCANCODE_F2,
-    F3 = SDL_SCANCODE_F3,
-    F4 = SDL_SCANCODE_F4,
-    F5 = SDL_SCANCODE_F5,
-    F6 = SDL_SCANCODE_F6,
-    F7 = SDL_SCANCODE_F7,
-    F8 = SDL_SCANCODE_F8,
-    F9 = SDL_SCANCODE_F9,
-    F10 = SDL_SCANCODE_F10,
-    F11 = SDL_SCANCODE_F11,
-    F12 = SDL_SCANCODE_F12,
+    RETURN = 40,
+    ESCAPE = 41,
+    BACKSPACE = 42,
+    TAB = 43,
+    SPACE = 44,
+
+    // Function keys (USB HID: 0x3A-0x45)
+    F1 = 58,
+    F2 = 59,
+    F3 = 60,
+    F4 = 61,
+    F5 = 62,
+    F6 = 63,
+    F7 = 64,
+    F8 = 65,
+    F9 = 66,
+    F10 = 67,
+    F11 = 68,
+    F12 = 69,
 
     // Arrow keys
-    RIGHT = SDL_SCANCODE_RIGHT,
-    LEFT = SDL_SCANCODE_LEFT,
-    DOWN = SDL_SCANCODE_DOWN,
-    UP = SDL_SCANCODE_UP,
+    RIGHT = 79,
+    LEFT = 80,
+    DOWN = 81,
+    UP = 82,
 
     // Modifiers
-    LEFT_CTRL = SDL_SCANCODE_LCTRL,
-    LEFT_SHIFT = SDL_SCANCODE_LSHIFT,
-    LEFT_ALT = SDL_SCANCODE_LALT,
-    RIGHT_CTRL = SDL_SCANCODE_RCTRL,
-    RIGHT_SHIFT = SDL_SCANCODE_RSHIFT,
-    RIGHT_ALT = SDL_SCANCODE_RALT,
-
-    // Common keys
-    RETURN = SDL_SCANCODE_RETURN,
-    ESCAPE = SDL_SCANCODE_ESCAPE,
-    BACKSPACE = SDL_SCANCODE_BACKSPACE,
-    TAB = SDL_SCANCODE_TAB,
-    SPACE = SDL_SCANCODE_SPACE
-
+    LEFT_CTRL = 224,
+    LEFT_SHIFT = 225,
+    LEFT_ALT = 226,
+    RIGHT_CTRL = 228,
+    RIGHT_SHIFT = 229,
+    RIGHT_ALT = 230,
 };
-constexpr SDL_Scancode to_sdl(Key key) { return static_cast<SDL_Scancode>(key); }
+
 }  // namespace tmt
