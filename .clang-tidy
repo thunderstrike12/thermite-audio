@@ -10,7 +10,6 @@ readability-make-member-function-const,\
 avoid-const-params-in-decls,\
 move-const-arg,\
 cppcoreguidelines-pro-type-const-cast,\
-cppcoreguidelines-avoid-const-or-ref-data-members,\
 portability-std-allocator-const,\
 bugprone-unused-return-value,\
 

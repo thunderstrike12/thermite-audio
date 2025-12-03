@@ -80,7 +80,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          ignore: '.github | extern | build | tests'
+          ignore: '.github | extern | build | tests | pch.hpp'
           style: file
           files-changed-only: true
           step-summary: true
