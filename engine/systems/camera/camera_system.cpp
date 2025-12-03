@@ -1,0 +1,49 @@
+#include "camera_system.hpp"
+
+#include "engine.hpp"
+#include "core/input.hpp"
+#include "core/logger.hpp"
+#include "core/components/camera.hpp"
+#include "core/components/transform.hpp"
+
+namespace tmt {
+void CameraSystem::on_start() {
+    // Setup Input Actions
+    engine.input.add_action(SPRINT, Key::LEFT_SHIFT);
+    engine.input.add_action(FORWARD, Key::W);
+    engine.input.add_action(BACKWARD, Key::S);
+    engine.input.add_action(RIGHT, Key::D);
+    engine.input.add_action(LEFT, Key::A);
+    engine.input.add_action(UP, Key::E);
+    engine.input.add_action(DOWN, Key::Q);
+}
+
+void CameraSystem::on_update(const FrameData& time) {
+    // bool enableMouseLook = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+
+    auto& input = engine.input;
+    Entity camera_entity = Camera::get_active_camera();
+    if (camera_entity == entt::null) Log::error(Log::Scope::ENGINE, "Camera Entity is NULL. Are there any active cameras in the scene?");
+    Camera& camera = engine.ecs.get_component<Camera>(camera_entity);
+    Transform& transform = engine.ecs.get_component<Transform>(camera_entity);
+
+    base_speed = 4.0f;
+    // Movement (WASD + QE)
+    if (input.is_action_pressed(SPRINT)) base_speed *= sprint_mult;
+
+    glm::vec3 move_dir = {0.0f, 0.0f, 0.0f};
+    if (input.is_action_pressed(FORWARD)) move_dir += transform.get_forward();
+    if (input.is_action_pressed(BACKWARD)) move_dir -= transform.get_forward();
+    if (input.is_action_pressed(LEFT)) move_dir -= transform.get_right();
+    if (input.is_action_pressed(RIGHT)) move_dir += transform.get_right();
+    if (input.is_action_pressed(UP)) move_dir += transform.get_up();
+    if (input.is_action_pressed(DOWN)) move_dir -= transform.get_up();
+
+    glm::vec3 pos = transform.get_world_position();
+    if (glm::length(move_dir) > 0.0f) pos += glm::normalize(move_dir) * base_speed * time.delta_time;
+
+    transform.set_world_position(pos);
+}
+
+void CameraSystem::on_end() {}
+}  // namespace tmt

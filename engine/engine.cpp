@@ -14,6 +14,7 @@
 
 #include "systems/physics/physics_system.hpp"
 #include "systems/animation/animation_system.hpp"
+#include "systems/camera/camera_system.hpp"
 
 #include "events/engine.hpp"
 #include "events/game.hpp"
@@ -47,6 +48,7 @@ void Engine::init(const ApplicationSpecs& specs, std::unique_ptr<Application> us
 
     ecs.register_system<Physics>();
     ecs.register_system<Animation>();
+    ecs.register_system<CameraSystem>();
 
     OnEngineInit::dispatch(specs);
 }

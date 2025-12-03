@@ -132,7 +132,7 @@ void Transform::rotate_world(const glm::vec3& axis, float angle) { set_local_rot
 
 void Transform::scale(const glm::vec3& factor) { set_local_scale(local_scale * factor); }
 
-glm::vec3 Transform::get_forward() const { return glm::normalize(get_world_rotation() * glm::vec3(0, 0, -1)); }
+glm::vec3 Transform::get_forward() const { return glm::normalize(get_world_rotation() * glm::vec3(0, 0, 1)); }
 
 glm::vec3 Transform::get_up() const { return glm::normalize(get_world_rotation() * glm::vec3(0, 1, 0)); }
 

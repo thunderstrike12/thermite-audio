@@ -108,30 +108,29 @@ void Renderer::update() {
 
     render_graph.new_graph().unwrap();
 
-    /* Capture all cameras in the scene */
-    const entt::basic_group group = engine.ecs.get_registry().group<const Camera>(entt::get<Transform>);
+    /* Get active camera */
+    Entity cam_entity = Camera::get_active_camera();
+    if (cam_entity == entt::null) Log::error(Log::Scope::RENDERER, "Camera Entity is NULL. Are there any active cameras in the scene?");
+    Camera& camera = engine.ecs.get_component<Camera>(cam_entity);
+    Transform& transform = engine.ecs.get_component<Transform>(cam_entity);
+
     render_view.resolution = glm::uvec2(engine.window.width, engine.window.height);
     const float aspect_ratio = (float)engine.window.width / (float)engine.window.height;
 
     /* Iterate over all cameras to find an active one to use as render view */
     static float rotation = 0.0f;
     rotation += 0.01f;
-    for (auto&& [entity, camera, transform] : group.each()) {
-        if (camera.active == true) {
-            const glm::mat4 p = glm::perspectiveLH(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
-            const glm::mat4 v = glm::inverse(transform.get_world_matrix());
-            render_view.world_to_clip = p * v;
-            render_view.clip_to_world = glm::inverse(render_view.world_to_clip);
-            render_view.origin = glm::vec4(transform.get_world_position(), 0.0f);
-            ImGui::Begin("Camera");
-            glm::vec3 pos = transform.get_world_position();
-            if (ImGui::DragFloat3("Origin", &pos.x, 0.01f)) {
-                transform.set_world_position(pos);
-            }
-            ImGui::End();
-            break;
-        }
+    const glm::mat4 p = glm::perspectiveLH(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
+    const glm::mat4 v = glm::inverse(transform.get_world_matrix());
+    render_view.world_to_clip = p * v;
+    render_view.clip_to_world = glm::inverse(render_view.world_to_clip);
+    render_view.origin = glm::vec4(transform.get_world_position(), 0.0f);
+    ImGui::Begin("Camera");
+    glm::vec3 pos = transform.get_world_position();
+    if (ImGui::DragFloat3("Origin", &pos.x, 0.01f)) {
+        transform.set_world_position(pos);
     }
+    ImGui::End();
 
     /* Upload the active render view */
     render_graph.upload_buffer(render_view_buffer, &render_view, 0u, sizeof(RenderView));
