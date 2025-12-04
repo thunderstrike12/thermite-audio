@@ -22,7 +22,7 @@ public struct Ray {
 /* Convert a pixel coordinate to a normalized device coordinate. */
 public inline float2 pixel_to_ndc(int2 pixel, uint2 resolution) {
     const float2 ndc = ((float2(pixel) + 0.5f) / resolution) * 2.0f - 1.0f;
-    return ndc * float2(1.0f, -1.0f);
+    return ndc;
 }
 
 /* Generate a ray for a pin hole camera. */

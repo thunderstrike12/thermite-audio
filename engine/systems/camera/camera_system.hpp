@@ -23,5 +23,6 @@ class CameraSystem : public ISystem {
 
     float base_speed = 4.0f;
     float sprint_mult = 3.0f;
+    float cam_sensitivity = 0.1f;
 };
 }  // namespace tmt

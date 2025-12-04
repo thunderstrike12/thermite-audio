@@ -106,9 +106,9 @@ void Renderer::update() {
     /* Iterate over all cameras to find an active one to use as render view */
     static float rotation = 0.0f;
     rotation += 0.01f;
-    const glm::mat4 p = glm::perspective(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
-    glm::mat4 v = glm::inverse(transform.get_world_matrix());
-    v[1][1] *= -1.0f;
+    glm::mat4 p = glm::perspective(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
+    const glm::mat4 v = glm::inverse(transform.get_world_matrix());
+    p[1][1] *= -1.0f;
     render_view.world_to_clip = p * v;
     render_view.clip_to_world = glm::inverse(render_view.world_to_clip);
     render_view.origin = glm::vec4(transform.get_world_position(), 0.0f);

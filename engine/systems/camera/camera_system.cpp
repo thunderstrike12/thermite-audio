@@ -17,11 +17,12 @@ void CameraSystem::on_start() {
     engine.input.add_action_keys(LEFT, Key::A);
     engine.input.add_action_keys(UP, Key::E);
     engine.input.add_action_keys(DOWN, Key::Q);
+    engine.input.add_action_keys(UP, Key::SPACE);
+    engine.input.add_action_keys(DOWN, Key::LEFT_CTRL);
 }
 
 void CameraSystem::on_update(const FrameData& time) {
-    // bool enableMouseLook = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
-
+    // Gather Variables to be used
     auto& input = engine.input;
     Entity camera_entity = Camera::get_active_camera();
     if (camera_entity == entt::null) {
@@ -30,6 +31,31 @@ void CameraSystem::on_update(const FrameData& time) {
     }
     Camera& camera = engine.ecs.get_component<Camera>(camera_entity);
     Transform& transform = engine.ecs.get_component<Transform>(camera_entity);
+
+    bool enable_mouse_look = input.is_action_pressed(action::RIGHT_CLICK);
+
+    if (enable_mouse_look) {
+        float dx = input.get_mouse_delta_x();
+        float dy = input.get_mouse_delta_y();
+
+        camera.yaw -= dx * cam_sensitivity;
+        camera.pitch -= dy * cam_sensitivity;
+        camera.pitch = glm::clamp(camera.pitch, -89.0f, 89.0f);
+
+        // Compute Vectors
+        glm::vec3 front = {};
+        front.x = cos(glm::radians(camera.yaw)) * cos(glm::radians(camera.pitch));
+        front.y = sin(glm::radians(camera.pitch));
+        front.z = sin(glm::radians(camera.yaw)) * cos(glm::radians(camera.pitch));
+        front = glm::normalize(front);
+        glm::vec3 right = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
+        glm::vec3 up = glm::normalize(glm::cross(right, front));
+
+        // Compute world matrix
+        const glm::mat4 world = glm::inverse(glm::lookAt(transform.get_world_position(), transform.get_world_position() + front, up));
+
+        transform.set_world_matrix(world);
+    }
 
     base_speed = 4.0f;
     // Movement (WASD + QE)

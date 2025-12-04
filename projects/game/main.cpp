@@ -71,38 +71,6 @@ void Game::on_update(const tmt::FrameData& time) {
     transform.set_world_position(glm::vec3(1.0f, sinf(time_passed), 1.0f));
     transform.set_world_rotation(glm::vec3(0.0f, cosf(time_passed), 0.0f));
     transform.set_world_scale(glm::vec3(1.0f, 1.5f + sinf(time_passed), 1.0f));
-
-    // Testing code here, please move when scenes can be added elegantly
-    if (tmt::engine.input.is_action_just_pressed("confirm")) {
-        tmt::Log::info(tmt::Log::Scope::GAME, "Confirm action pressed!");
-    }
-    if (tmt::engine.input.is_action_just_pressed("cancel")) {
-        tmt::Log::info(tmt::Log::Scope::GAME, "Cancel action pressed!");
-    }
-    if (tmt::engine.input.is_action_pressed("confirm")) {
-        tmt::Log::info(tmt::Log::Scope::GAME, "Confirm pressed continuously!");
-    }
-    if (tmt::engine.input.is_action_just_released("confirm")) {
-        tmt::Log::info(tmt::Log::Scope::GAME, "Confirm released!");
-    }
-    if (tmt::engine.input.is_action_just_pressed("left_click")) {
-        tmt::Log::info(tmt::Log::Scope::ENGINE, "Left click!");
-    }
-    if (tmt::engine.input.is_action_just_released("right_click")) {
-        tmt::Log::info(tmt::Log::Scope::ENGINE, "Right click!");
-    }
-    if (tmt::engine.input.is_action_pressed("middle_click")) {
-        tmt::Log::info(tmt::Log::Scope::ENGINE, "Middle click!");
-    }
-
-    // Mouse motion test
-
-    if (tmt::engine.input.is_action_pressed("left_click")) {
-        tmt::Log::info(
-            tmt::Log::Scope::ENGINE, "Mouse moved: pos({}, {}) delta({}, {})", tmt::engine.input.get_mouse_x(), tmt::engine.input.get_mouse_y(), tmt::engine.input.get_mouse_delta_x(),
-            tmt::engine.input.get_mouse_delta_y()
-        );
-    }
 }
 
 void Game::on_end() {}
