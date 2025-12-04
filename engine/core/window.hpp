@@ -4,6 +4,8 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#undef min
+#undef max
 
 #include "core/application.hpp"
 
@@ -17,7 +19,7 @@ class Window {
 
     int width = 1280;
     int height = 720;
-    std::string_view title {};
+    std::string_view title = "Thermite Engine";
 
     Window() = default;
     ~Window();

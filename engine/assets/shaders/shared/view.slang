@@ -21,15 +21,15 @@ public struct Ray {
 
 /* Convert a pixel coordinate to a normalized device coordinate. */
 public inline float2 pixel_to_ndc(int2 pixel, uint2 resolution) {
-    const float2 ndc = ((float2(pixel) + 0.5) / resolution) * 2.0 - 1.0;
-    return ndc * float2(1.0, -1.0);
+    const float2 ndc = ((float2(pixel) + 0.5f) / resolution) * 2.0f - 1.0f;
+    return ndc * float2(1.0f, -1.0f);
 }
 
 /* Generate a ray for a pin hole camera. */
 public inline Ray pinhole_ray(RenderView view, int2 pixel) {
     const float2 ndc = pixel_to_ndc(pixel, view.resolution);
 
-    float4 world_pos = mul(view.clip_to_world, float4(ndc, 1.0, 1.0));
+    float4 world_pos = mul(view.clip_to_world, float4(ndc, 1.0f, 1.0f));
     world_pos.xyz /= world_pos.w;
     const float3 world_dir = normalize(world_pos.xyz - view.origin.xyz);
 

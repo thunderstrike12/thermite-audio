@@ -20,13 +20,11 @@ void GeometryPipeline::init(GPUAdapter& gpu) {
     /* Get VRAM Bank */
     VRAMBank& bank = gpu.get_vram_bank();
 
-    /* Create the objects buffer */
-    if (const Result r = bank.create_buffer(BufferUsage::Storage | BufferUsage::TransferDst, MAX_VOXEL_OBJECTS, sizeof(VoxelObject)); r.is_err()) {
-        Log::error(Log::Scope::RENDERER, "failed to create objects buffer.\nreason: {}", r.unwrap_err().c_str());
-        return;
-    } else {
-        object_buffer = r.unwrap();
-    }
+    /* Create GPU resources */
+    const BufferUsage usage = BufferUsage::Storage | BufferUsage::TransferDst;
+    bvh_nodes = bank.create_buffer(usage, MAX_VOXEL_OBJECTS * 2u + 1u, sizeof(AilaLaineNode)).expect("failed to create bvh nodes buffer.");
+    object_indices = bank.create_buffer(usage, MAX_VOXEL_OBJECTS, sizeof(uint32_t)).expect("failed to create object indices buffer.");
+    object_data = bank.create_buffer(usage, MAX_VOXEL_OBJECTS, sizeof(VoxelObject)).expect("failed to create object data buffer.");
 }
 
 void GeometryPipeline::enqueue(RenderGraph& render_graph, Buffer render_view, RenderTarget render_target) {
@@ -35,25 +33,37 @@ void GeometryPipeline::enqueue(RenderGraph& render_graph, Buffer render_view, Re
 
     /* Allocate space for all voxel objects */
     std::vector<VoxelObject> objects {};
-    objects.reserve(min(group.size(), (size_t)MAX_VOXEL_OBJECTS));
+    objects.reserve(std::min(group.size(), (size_t)MAX_VOXEL_OBJECTS));
 
     /* Iterate over all voxel renderers */
     for (auto&& [entity, renderer, transform] : group.each()) {
         /* Convert the entity to a voxel object */
         VoxelObject object {};
-        object.world_to_local = glm::inverse(transform.get_world_matrix());
+        object.local_to_world = transform.get_world_matrix();
+        object.world_to_local = glm::inverse(object.local_to_world);
         object.size = renderer.size;
+        objects.push_back(std::move(object));
     }
 
-    /* Update objects buffer */
-    render_graph.upload_buffer(object_buffer, objects.data(), 0u, sizeof(VoxelObject) * objects.size());
+    /* Build a BVH over the scene */
+    bvh.build(objects.data(), (uint32_t)objects.size());
+
+    /* Upload the object buffers */
+    render_graph.upload_buffer(bvh_nodes, bvh.gpu_nodes, 0u, bvh.node_count * sizeof(AilaLaineNode));
+    render_graph.upload_buffer(object_indices, bvh.indices, 0u, bvh.prim_count * sizeof(uint32_t));
+    render_graph.upload_buffer(object_data, bvh.prims, 0u, bvh.prim_count * sizeof(VoxelObject));
 
     /* clang-format off */
 
     /* Enqueue the geometry compute pass */
     render_graph.add_compute_pass("geometry pass", "geometry.cs")
+        /* Render view */
         .read(render_view)
-        .read(object_buffer)
+        /* Object buffers */
+        .read(bvh_nodes)
+        .read(object_indices)
+        .read(object_data)
+        /* Render target */
         .write(render_target)
         .group_size(16, 8)
         .work_size(engine.window.width, engine.window.height);
@@ -63,7 +73,9 @@ void GeometryPipeline::enqueue(RenderGraph& render_graph, Buffer render_view, Re
 
 void GeometryPipeline::deinit(GPUAdapter& gpu) {
     VRAMBank& bank = gpu.get_vram_bank();
-    bank.destroy(object_buffer);
+    bank.destroy(bvh_nodes);
+    bank.destroy(object_indices);
+    bank.destroy(object_data);
 }
 
 }  // namespace tmt

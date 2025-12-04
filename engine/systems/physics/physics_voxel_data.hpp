@@ -56,8 +56,8 @@ struct PhysicsVoxelData {
 
     const std::vector<PhysicsVoxel>& get_data() const { return data; }
     const glm::uvec3& get_size() const { return size; }
-    //std::vector<PhysicsVoxel>& set_data() { return data; }
-    //glm::uvec3& set_size() { return size; }
+    // std::vector<PhysicsVoxel>& set_data() { return data; }
+    // glm::uvec3& set_size() { return size; }
 
     void upload_voxel_texture_if_dirty() {}
 

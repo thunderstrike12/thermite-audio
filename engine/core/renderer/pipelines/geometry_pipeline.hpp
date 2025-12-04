@@ -2,16 +2,26 @@
 
 #include <graphite/resources/handle.hh>
 
+#include "engine/shared/bvh2.hpp"
+
 class GPUAdapter;
 class RenderGraph;
 
 namespace tmt {
 
-constexpr uint32_t MAX_VOXEL_OBJECTS = 1;
+struct VoxelObject;
+
+constexpr uint32_t MAX_VOXEL_OBJECTS = 256u;
 
 class GeometryPipeline {
    private:
-    Buffer object_buffer {};
+    /* GPU resources */
+    Buffer bvh_nodes {};
+    Buffer object_indices {};
+    Buffer object_data {};
+
+    /* Acceleration structure */
+    Bvh2<VoxelObject> bvh {};
 
    public:
     GeometryPipeline() {}
