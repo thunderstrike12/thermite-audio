@@ -92,11 +92,15 @@ void Renderer::update() {
 
     draw_line({0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
 
+    Entity cam_entity = Camera::get_active_camera();
+    if (cam_entity == entt::null) {
+        Log::error(Log::Scope::RENDERER, "Camera Entity is NULL. Are there any active cameras in the scene?");
+        return;
+    }
+
     render_graph.new_graph().unwrap();
 
     /* Get active camera */
-    Entity cam_entity = Camera::get_active_camera();
-    if (cam_entity == entt::null) Log::error(Log::Scope::RENDERER, "Camera Entity is NULL. Are there any active cameras in the scene?");
     Camera& camera = engine.ecs.get_component<Camera>(cam_entity);
     Transform& transform = engine.ecs.get_component<Transform>(cam_entity);
 
