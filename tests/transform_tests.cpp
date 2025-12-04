@@ -439,21 +439,21 @@ TEST_F(TransformTest, LookAt) {
     transform.look_at(target, up);
 
     glm::vec3 forward = transform.get_forward();
-    glm::vec3 expected_dir = glm::normalize(transform.get_local_position() - target);
+    glm::vec3 expected_dir = glm::normalize(target - transform.get_local_position());
     EXPECT_TRUE(vec3_approx_equal(forward, expected_dir, 0.01f));
 
     // Look at target to the right
     target = glm::vec3(10.0f, 0.0f, 0.0f);
     transform.look_at(target, up);
     forward = transform.get_forward();
-    expected_dir = glm::normalize(transform.get_local_position() - target);
+    expected_dir = glm::normalize(target - transform.get_local_position());
     EXPECT_TRUE(vec3_approx_equal(forward, expected_dir, 0.01f));
 
     // Look at target above
     target = glm::vec3(0.0f, 10.0f, 0.0f);
     transform.look_at(target, glm::vec3(0.0f, 0.0f, 1.0f));
     forward = transform.get_forward();
-    expected_dir = glm::normalize(transform.get_local_position() - target);
+    expected_dir = glm::normalize(target - transform.get_local_position());
     EXPECT_TRUE(vec3_approx_equal(forward, expected_dir, 0.01f));
 }
 

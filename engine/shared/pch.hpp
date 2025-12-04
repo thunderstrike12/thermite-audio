@@ -5,6 +5,7 @@
 #include <utility> /* std::swap */
 
 #define GLM_ENABLE_EXPERIMENTAL
+#define GLM_FORCE_LEFT_HANDED
 #include <glm/glm.hpp> /* vector math */
 
 /* Large 32-bit floating point constant. */

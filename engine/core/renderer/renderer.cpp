@@ -83,6 +83,9 @@ void Renderer::init() {
         return;
     }
 
+    /* Initialize Pipelines */
+    debug_pipeline.init(gpu);
+
     /* Create the active render view buffer */
     if (const Result r = bank.create_buffer(BufferUsage::Constant | BufferUsage::TransferDst, sizeof(RenderView)); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to create render view buffer.\nreason: {}", r.unwrap_err().c_str());
@@ -101,6 +104,8 @@ void Renderer::update() {
     draw_line({-0.5f, 0.5f, 0.0f}, {0.0f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f});
     draw_line({0.0f, -0.5f, 0.0f}, {0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f});
     draw_line({0.5f, 0.5f, 0.0f}, {-0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f});
+
+    draw_line({0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
 
     /* Start a new imgui frame */
     imgui.new_frame();
@@ -121,8 +126,9 @@ void Renderer::update() {
     /* Iterate over all cameras to find an active one to use as render view */
     static float rotation = 0.0f;
     rotation += 0.01f;
-    const glm::mat4 p = glm::perspectiveLH(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
-    const glm::mat4 v = glm::inverse(transform.get_world_matrix());
+    const glm::mat4 p = glm::perspective(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
+    glm::mat4 v = glm::inverse(transform.get_world_matrix());
+    v[1][1] *= -1.0f;
     render_view.world_to_clip = p * v;
     render_view.clip_to_world = glm::inverse(render_view.world_to_clip);
     render_view.origin = glm::vec4(transform.get_world_position(), 0.0f);
@@ -138,7 +144,7 @@ void Renderer::update() {
 
     /* Pipelines enqueue */
     geometry_pipeline.enqueue(render_graph, render_view_buffer, render_target);
-    debug_pipeline.enqueue(render_graph, render_target);
+    debug_pipeline.enqueue(render_graph, render_view_buffer, render_target);
 
     /* Add the immediate mode GUI to the render graph */
     render_graph.add_imgui(imgui, render_target);

@@ -24,7 +24,7 @@ void DebugPipeline::init(GPUAdapter& gpu) {
         point_buffer = r.unwrap();
 }
 
-void DebugPipeline::enqueue(RenderGraph& render_graph, RenderTarget render_target) {
+void DebugPipeline::enqueue(RenderGraph& render_graph, Buffer render_view, RenderTarget render_target) {
     /* Update Point Buffer */
     num_points = (u32)debug_points.size();
     if (num_points > 0) {
@@ -36,6 +36,7 @@ void DebugPipeline::enqueue(RenderGraph& render_graph, RenderTarget render_targe
                                 .topology(Topology::LineList)
                                 .attribute(AttrFormat::XYZ32_SFloat)  // Position
                                 .attribute(AttrFormat::XYZ32_SFloat)  // Color
+                                .read(render_view, ShaderStages::Vertex)
                                 .attach(render_target)
                                 .raster_extent(engine.window.width, engine.window.height);
     line_pass.draw(point_buffer, num_points);
