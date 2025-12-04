@@ -32,9 +32,6 @@ class Renderer {
     GeometryPipeline& geometry_pipeline;
 
    public:
-    /* Active camera in the scene. */
-    Entity active_camera {};
-
     Renderer();
     ~Renderer();
 
