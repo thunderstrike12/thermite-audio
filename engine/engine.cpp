@@ -84,7 +84,10 @@ void Engine::run() {
     end_game();
 }
 
-void Engine::end() { OnEngineEnd::dispatch(); }
+void Engine::end() {
+    OnEngineEnd::dispatch();
+    renderer.end();
+}
 
 /* Engine events */
 void Engine::update_engine(const FrameData& frame_data) {

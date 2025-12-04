@@ -57,7 +57,7 @@ void Renderer::init() {
 
     /* Initialize the Render Graph */
     render_graph.set_shader_path("assets/engine/shaders/bin");
-    render_graph.set_staging_limit(10000000u/* 10mb */);
+    render_graph.set_staging_limit(10000000u /* 10mb */);
     render_graph.set_max_graphs_in_flight(2u); /* Double buffering */
     if (const Result r = render_graph.init(gpu); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to initialize render graph.\nreason: {}", r.unwrap_err());
@@ -82,9 +82,6 @@ void Renderer::init() {
         Log::error(Log::Scope::RENDERER, "failed to initialize imgui.\nreason: {}", r.unwrap_err());
         return;
     }
-
-    /* Initialize Pipelines */
-    debug_pipeline.init(gpu);
 
     /* Create the active render view buffer */
     if (const Result r = bank.create_buffer(BufferUsage::Constant | BufferUsage::TransferDst, sizeof(RenderView)); r.is_err()) {
@@ -173,6 +170,7 @@ void Renderer::end() {
 
     /* Cleanup the VRAM bank & GPU adapter */
     render_graph.deinit().expect("failed to destroy render graph.");
+    imgui.deinit().expect("failed to destroy imgui.");
     bank.deinit().expect("failed to destroy vram bank.");
     gpu.deinit().expect("failed to destroy gpu adapter.");
 }
