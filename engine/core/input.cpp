@@ -6,6 +6,7 @@
 #include "engine.hpp"
 #include "keys.hpp"
 #include "logger.hpp"
+#include "window.hpp"
 
 #include "engine/events/sdl.hpp"
 
@@ -109,6 +110,8 @@ bool Input::is_action_just_released(const std::string& name) const {
 
     return false;
 }
+void Input::set_mouse_relative_to_window(bool value) { SDL_SetWindowRelativeMouseMode(engine.window.window, value); }
+bool Input::get_mouse_relative_to_window() { return SDL_GetWindowRelativeMouseMode(engine.window.window); }
 void Input::setup_default_action() {
     add_action(action::CONFIRM);
     add_action_keys(action::CONFIRM, Key::SPACE, Key::RETURN);

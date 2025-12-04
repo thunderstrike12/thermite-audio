@@ -55,6 +55,9 @@ class Input {
     float get_mouse_delta_x() const { return mouse_dx; }
     float get_mouse_delta_y() const { return mouse_dy; }
 
+    void set_mouse_relative_to_window(bool value);
+    bool get_mouse_relative_to_window();
+
    private:
     void setup_default_action();
     // do not free this manually
