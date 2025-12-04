@@ -105,3 +105,9 @@ void Engine::end_game() {
 }
 
 }  // namespace tmt
+
+#if THERMITE_DEBUG
+#pragma message("THERMITE_DEBUG=1")
+#else
+#pragma message("THERMITE_DEBUG=0")
+#endif

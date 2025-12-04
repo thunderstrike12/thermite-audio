@@ -36,7 +36,7 @@ function(find_and_add_targets)
 			message(STATUS "Auto-adding project target: ${target_name}")
 		
 			# Glob all the source files
-			file(GLOB_RECURSE PROJECT_SOURCES
+			file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
 				${project_dir}/*.cpp
 				${project_dir}/*.hpp
 			)
@@ -73,6 +73,11 @@ function(find_and_add_targets)
 			# Link with the Thermite Engine
 			target_link_libraries(${target_name} PRIVATE thermite-engine)
 		
+			# If this is an editor build, also link the editor library
+			if(THERMITE_EDITOR_BUILD)
+				target_link_libraries(${target_name} PRIVATE thermite-editor)
+			endif()
+
 			# Add some build state macros for code
 			if (THERMITE_EDITOR_BUILD)
 				target_compile_definitions(${target_name} PRIVATE THERMITE_EDITOR=1)
