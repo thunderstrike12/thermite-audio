@@ -1,6 +1,8 @@
 #pragma once
 #include <gtest/gtest.h>
 #include "engine/engine.hpp"
+#include "engine/core/logger.hpp"
+
 #include <filesystem>
 
 class TestApp : public tmt::Application {
@@ -19,9 +21,8 @@ class EngineEnvironment : public ::testing::Environment {
             std::filesystem::remove(log_file);
         }
 
-        tmt::ApplicationSpecs specs {.name = "UnitTests", .log_file = log_file};
-        tmt::engine.init(specs, std::make_unique<TestApp>(specs));
+        tmt::Log::init(log_file);
     }
 
-    void TearDown() override { tmt::engine.end(); }
+    void TearDown() override {}
 };
