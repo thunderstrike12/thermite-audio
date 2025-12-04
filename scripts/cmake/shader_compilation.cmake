@@ -4,6 +4,7 @@ function(compile_shaders)
     # Python interpreter
     find_package(Python3 REQUIRED)
 
+    set(SHADER_COMPILER ${CMAKE_SOURCE_DIR}/extern/vulkan_sdk/bin/slangc.exe)
     set(SHADER_SOURCE_DIR ${CMAKE_SOURCE_DIR}/engine/assets/shaders)
     set(SHADER_OUTPUT_DIR ${CMAKE_SOURCE_DIR}/engine/assets/shaders/bin)
     set(SHADER_SCRIPT ${CMAKE_SOURCE_DIR}/scripts/compile_shaders.py)
@@ -33,6 +34,7 @@ function(compile_shaders)
             OUTPUT ${OUTPUT_SPV}
             COMMAND ${Python3_EXECUTABLE}
                     ${SHADER_SCRIPT}
+                    --compiler ${SHADER_COMPILER}
                     --input ${SHADER}
                     --output ${OUTPUT_SPV}
                     --root ${SHADER_SOURCE_DIR}

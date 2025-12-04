@@ -28,6 +28,10 @@ add_subdirectory(glm)
 # https://github.com/skypjack/entt
 add_subdirectory(entt)
 
+# Vulkan SDK - Graphics API
+# https://vulkan.lunarg.com/sdk/home
+set(VULKAN_HEADERS_INSTALL_DIR "${CMAKE_SOURCE_DIR}/extern/vulkan_sdk/")
+
 # graphite - render graph library
 # https://github.com/mxcop/graphite
 add_subdirectory(graphite)
