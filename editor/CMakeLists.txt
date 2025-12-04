@@ -26,7 +26,7 @@ target_include_directories(thermite-editor
 )
 
 # Add the precompiled header
-# target_precompile_headers(thermite-editor PRIVATE "shared/pch.hpp")
+target_precompile_headers(thermite-editor PRIVATE "shared/pch.hpp")
 
 # Set warning level
 target_compile_options(thermite-editor PRIVATE /W4 /permissive-)

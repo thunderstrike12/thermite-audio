@@ -21,10 +21,18 @@ Editor::Editor() {}
 
 Editor::~Editor() {}
 
-void Editor::start() {
+void Editor::init() { Log::info("Thermite Editor initialized."); }
+
+void Editor::on_engine_init(const ApplicationSpecs& specs) {
     tmt::Log::info("Starting Thermite Editor...");
 
     tmt::engine.ecs.create_entity();
 }
+
+void Editor::on_engine_update(const FrameData&) { Log::info("Thermite Editor updating..."); }
+
+void Editor::on_engine_fixed_update(const FrameData&) {}
+
+void Editor::on_engine_end() { tmt::Log::info("Shutting down Thermite Editor..."); }
 
 }  // namespace tmt

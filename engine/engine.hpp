@@ -60,6 +60,11 @@ class Engine {
     bool is_running {true};
     std::unique_ptr<Application> app;
 
+    /* Engine events */
+    void update_engine(const FrameData& frame_data);
+    void fixed_update_engine(const FrameData& frame_data);
+
+    /* Game events */
     void start_game();
     void update_game(const FrameData& frame_data);
     void fixed_update_game(const FrameData& frame_data);
