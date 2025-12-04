@@ -7,7 +7,7 @@
 #undef min
 #undef max
 
-#include "core/application.hpp"
+#include "engine/core/application.hpp"
 
 struct SDL_Window;
 

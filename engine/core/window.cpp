@@ -1,7 +1,6 @@
 #include "window.hpp"
 
 #include <SDL3/SDL.h>
-#include <imgui_impl_sdl3.h>
 
 #include "logger.hpp"
 

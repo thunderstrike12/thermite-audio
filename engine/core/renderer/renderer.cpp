@@ -1,9 +1,5 @@
 #include "renderer.hpp"
 
-#include <imgui.h>
-#include <imgui_impl_sdl3.h>
-#include <imgui_impl_vulkan.h>
-
 #include <graphite/vram_bank.hh>
 #include <graphite/gpu_adapter.hh>
 #include <graphite/render_graph.hh>
@@ -75,14 +71,6 @@ void Renderer::init() {
         render_target = r.unwrap();
     }
 
-    /* Initialize the immediate mode GUI */
-    ImGui::CreateContext();
-    ImGui_ImplSDL3_InitForVulkan(engine.window.window);
-    if (const Result r = imgui.init(gpu, render_target, IMGUI_FUNCTIONS); r.is_err()) {
-        Log::error(Log::Scope::RENDERER, "failed to initialize imgui.\nreason: {}", r.unwrap_err());
-        return;
-    }
-
     /* Create the active render view buffer */
     if (const Result r = bank.create_buffer(BufferUsage::Constant | BufferUsage::TransferDst, sizeof(RenderView)); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to create render view buffer.\nreason: {}", r.unwrap_err().c_str());
@@ -104,11 +92,6 @@ void Renderer::update() {
 
     draw_line({0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
 
-    /* Start a new imgui frame */
-    imgui.new_frame();
-    ImGui_ImplSDL3_NewFrame();
-    ImGui::NewFrame();
-
     render_graph.new_graph().unwrap();
 
     /* Get active camera */
@@ -129,12 +112,6 @@ void Renderer::update() {
     render_view.world_to_clip = p * v;
     render_view.clip_to_world = glm::inverse(render_view.world_to_clip);
     render_view.origin = glm::vec4(transform.get_world_position(), 0.0f);
-    ImGui::Begin("Camera");
-    glm::vec3 pos = transform.get_world_position();
-    if (ImGui::DragFloat3("Origin", &pos.x, 0.01f)) {
-        transform.set_world_position(pos);
-    }
-    ImGui::End();
 
     /* Upload the active render view */
     render_graph.upload_buffer(render_view_buffer, &render_view, 0u, sizeof(RenderView));
@@ -144,10 +121,9 @@ void Renderer::update() {
     debug_pipeline.enqueue(render_graph, render_view_buffer, render_target);
 
     /* Add the immediate mode GUI to the render graph */
-    render_graph.add_imgui(imgui, render_target);
-
-    /* End the imgui frame */
-    ImGui::Render();
+    if (imgui != nullptr) {
+        render_graph.add_imgui(*imgui, render_target);
+    }
 
     /* Compile the render graph */
     if (const Result r = render_graph.end_graph(); r.is_err()) {
@@ -170,9 +146,17 @@ void Renderer::end() {
 
     /* Cleanup the VRAM bank & GPU adapter */
     render_graph.deinit().expect("failed to destroy render graph.");
-    imgui.deinit().expect("failed to destroy imgui.");
     bank.deinit().expect("failed to destroy vram bank.");
     gpu.deinit().expect("failed to destroy gpu adapter.");
+}
+
+void Renderer::set_imgui(ImGUI* imgui, ImGUIFunctions functions) {
+    this->imgui = imgui;
+    /* Initialize the immediate mode GUI */
+    if (const Result r = imgui->init(gpu, render_target, functions); r.is_err()) {
+        Log::error(Log::Scope::RENDERER, "failed to initialize imgui.\nreason: {}", r.unwrap_err());
+        return;
+    }
 }
 
 void Renderer::draw_line(const glm::vec3 start, const glm::vec3 end, const glm::vec3 color) { debug_pipeline.draw_line(start, end, color); }

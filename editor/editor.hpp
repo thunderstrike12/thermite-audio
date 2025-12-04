@@ -1,11 +1,13 @@
 #pragma once
+#include <graphite/imgui.hh>
+
 #include "engine/events/engine.hpp"
 
 namespace tmt {
 class Editor : public OnEngineInit, public OnEngineUpdate, public OnEngineFixedUpdate, public OnEngineEnd {
    public:
-    Editor();
-    ~Editor();
+    Editor() = default;
+
     void init();
 
    private:
@@ -13,6 +15,8 @@ class Editor : public OnEngineInit, public OnEngineUpdate, public OnEngineFixedU
     void on_engine_update(const FrameData& time) override;
     void on_engine_fixed_update(const FrameData& time) override;
     void on_engine_end() override;
+
+    ImGUI imgui {};
 };
 
 /* Singleton */

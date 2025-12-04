@@ -61,7 +61,6 @@ void Engine::run() {
     float accumulator = 0.0f;
     while (is_running) {
         input.update();
-        renderer.update();
 
         const FrameData frame_data = {.delta_time = timer.tick()};
 
@@ -79,6 +78,8 @@ void Engine::run() {
         }
 
         OnEndFrame::dispatch();
+
+        renderer.update();
         frame_count++;
     }
     end_game();

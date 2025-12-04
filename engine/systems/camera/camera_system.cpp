@@ -24,7 +24,10 @@ void CameraSystem::on_update(const FrameData& time) {
 
     auto& input = engine.input;
     Entity camera_entity = Camera::get_active_camera();
-    if (camera_entity == entt::null) Log::error(Log::Scope::ENGINE, "Camera Entity is NULL. Are there any active cameras in the scene?");
+    if (camera_entity == entt::null) {
+        Log::error(Log::Scope::ENGINE, "Camera Entity is NULL. Are there any active cameras in the scene?");
+        return;
+    }
     Camera& camera = engine.ecs.get_component<Camera>(camera_entity);
     Transform& transform = engine.ecs.get_component<Transform>(camera_entity);
 
