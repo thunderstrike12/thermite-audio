@@ -1,5 +1,5 @@
 #pragma once
-#include "core/ecs.hpp"
+#include "engine/core/ecs.hpp"
 #include "world_state.hpp"
 
 namespace tmt {
@@ -23,7 +23,8 @@ class GoapAction {
 
     // action execuion helpers
     virtual void on_start(entt::entity agent, entt::registry& ecs) {}
-    // VIRTUAL FUNCTION FOR ON_UPDATE
+    virtual void on_update(entt::entity agent, entt::registry& ecs, float dt) {}
+    // virtual bool is_finished(entt::entity agent, entt::registry& ecs) const { return true; }
 };
 
 }  // namespace tmt

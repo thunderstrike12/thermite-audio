@@ -15,6 +15,7 @@
 #include "systems/physics/physics_system.hpp"
 #include "systems/animation/animation_system.hpp"
 #include "systems/camera/camera_system.hpp"
+#include "systems/ai/goap_system.hpp"
 
 #include "events/engine.hpp"
 #include "events/game.hpp"
@@ -49,6 +50,7 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     ecs.systems.add<Physics>();
     ecs.systems.add<Animation>();
     ecs.systems.add<CameraSystem>();
+    ecs.systems.add<Goap>();
 
     OnEngineInit::dispatch(app->specs);
 }

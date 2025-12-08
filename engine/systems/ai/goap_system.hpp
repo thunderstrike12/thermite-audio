@@ -1,5 +1,5 @@
 #pragma once
-#include "core/system.hpp"
+#include "engine/core/system.hpp"
 #include "components/goap_goal.hpp"
 #include "components/world_state.hpp"
 #include "components/goap_agent.hpp"
@@ -18,16 +18,16 @@ class Goap : public ISystem {
     void on_end() override;
 
    private:
-    void process_agent(Registry& ecs, Entity entity, float dt);
+    void process_agent(Entity entity, WorldState& ws, float dt);
 
     // Step 1: Assign goal if needed
-    void update_goal(Registry& ecs, Entity entity, GoapAgent& agent, GoapGoal& goal, WorldState& ws);
+    void update_goal(Entity entity, GoapAgent& agent, WorldState& ws);
 
     // Step 2: Build plan if needed
-    void update_plan(Registry& ecs, Entity entity, GoapAgent& agent, GoapGoal& goal, WorldState& ws);
+    void update_plan(Entity entity, GoapAgent& agent, WorldState& ws);
 
     // Step 3: Execute current action
-    void update_action(Registry& ecs, Entity entity, GoapAgent& agent, float dt);
+    void update_action(Entity entity, GoapAgent& agent, float dt);
 };
 
 }  // namespace tmt
