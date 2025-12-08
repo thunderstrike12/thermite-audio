@@ -92,6 +92,16 @@ void Renderer::update() {
 
     draw_line({0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
 
+    if (engine.window.resized)
+    {
+        if (const Result r = gpu.get_vram_bank().resize_render_target(render_target, engine.window.width, engine.window.height); r.is_err()) {
+            Log::error(Log::Scope::RENDERER, "failed to resize the swapchain.\nreason: {}", r.unwrap_err().c_str());
+        } else {
+            engine.window.resized = false;
+            Log::info(Log::Scope::RENDERER, "Swapchain has been resized.");
+        }
+    }
+
     Entity cam_entity = Camera::get_active_camera();
     if (cam_entity == entt::null) {
         Log::error(Log::Scope::RENDERER, "Camera Entity is NULL. Are there any active cameras in the scene?");

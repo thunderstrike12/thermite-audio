@@ -21,9 +21,13 @@ void Window::init(const ApplicationSpecs&) {
     }
 
     window = SDL_CreateWindow(title.data(), width, height, SDL_WINDOW_VULKAN);
-
     if (!window) {
         Log::error(Log::Scope::ENGINE, "Couldn't create window: %s", SDL_GetError());
+        return;
+    }
+
+    if (!SDL_SetWindowResizable(window, true)) {
+        Log::error(Log::Scope::ENGINE, "Couldn't set the window to resize %s", SDL_GetError());
         return;
     }
 }
