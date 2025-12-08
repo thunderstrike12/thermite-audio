@@ -19,7 +19,7 @@ class Engine {
     Engine(const Engine&) = delete;
     Engine& operator=(const Engine&) = delete;
 
-    void init(const ApplicationSpecs& specs, std::unique_ptr<Application> user_app);
+    void init(std::unique_ptr<Application> user_app);
     void run();
     void end();
 

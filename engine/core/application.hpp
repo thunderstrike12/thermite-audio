@@ -32,11 +32,7 @@ class Application : public IGameEvents {
     Application(ApplicationSpecs specs) : specs(std::move(specs)) {};
     virtual ~Application() = default;
 
-   private:
     const ApplicationSpecs specs;
-
-    /* Befriend main to get specs */
-    friend int ::main(int argc, char** argv);
 };
 
 }  // namespace tmt
