@@ -52,6 +52,8 @@ class Input {
 
     float get_mouse_x() const { return mouse_x; }
     float get_mouse_y() const { return mouse_y; }
+    float get_mouse_wheel_x() const { return scroll_dx; }
+    float get_mouse_wheel_y() const { return scroll_dy; }
     float get_mouse_delta_x() const { return mouse_dx; }
     float get_mouse_delta_y() const { return mouse_dy; }
 
@@ -66,9 +68,14 @@ class Input {
     uint32_t prev_mouse_buttons = 0u;
     float mouse_x = 0.0f;
     float mouse_y = 0.0f;
-    // relative positions
+
+    // relative
     float mouse_dx = 0.0f;
     float mouse_dy = 0.0f;
+
+    float scroll_dx = 0.0f;
+    float scroll_dy = 0.0f;
+
     std::vector<bool> prev_keys {};
     std::unordered_map<std::string, InputAction> actions {};
 };

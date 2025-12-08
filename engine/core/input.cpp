@@ -25,8 +25,12 @@ void Input::update() {
 
     mouse_dx = 0;
     mouse_dy = 0;
+
+    scroll_dx = 0;
+    scroll_dy = 0;
     // Get current mouse state
     mouse_buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
+
     while (SDL_PollEvent(&event)) {
         internal::OnSdlEvent::dispatch(event);
 
@@ -38,6 +42,10 @@ void Input::update() {
             case SDL_EVENT_MOUSE_MOTION:
                 mouse_dx += event.motion.xrel;
                 mouse_dy += event.motion.yrel;
+                break;
+            case SDL_EVENT_MOUSE_WHEEL:
+                scroll_dx = event.wheel.x;
+                scroll_dy = event.wheel.y;
                 break;
             default:
                 break;
