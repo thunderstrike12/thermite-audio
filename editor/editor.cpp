@@ -16,6 +16,8 @@
 
 #include "editor/imgui/manager.hpp"
 
+#include "editor/windows/hierarchy.hpp"
+
 /* Singleton */
 tmt::Editor tmt::editor;
 
@@ -30,23 +32,41 @@ void Editor::init() { Log::info("Thermite Editor initialized."); }
 void Editor::on_engine_init(const ApplicationSpecs&) {
     tmt::Log::info("Starting Thermite Editor...");
     imgui_manager.init();
+
+    systems.add<Hierarchy>();
+
+    for (auto& system : systems) {
+        system->on_editor_start();
+    }
 }
 
-void Editor::on_engine_update(const FrameData&) {
+void Editor::on_engine_update(const FrameData& time) {
     imgui_manager.new_frame();
 
-    ImGui::Begin("Hierarchy");
+    for (auto& system : systems) {
+        system->on_editor_update(time);
+    }
 
-    hierarchy.display();
-
-    ImGui::End();
+    for (auto& system : systems) {
+        ImGui::Begin(system->get_title().c_str());
+        system->display();
+        ImGui::End();
+    }
 
     imgui_manager.end_frame();
 }
 
-void Editor::on_engine_fixed_update(const FrameData&) {}
+void Editor::on_engine_fixed_update(const FrameData& time) {
+    for (auto& system : systems) {
+        system->on_editor_fixed_update(time);
+    }
+}
 
 void Editor::on_engine_end() {
+    for (auto& system : systems) {
+        system->on_editor_end();
+    }
+
     tmt::Log::info("Shutting down Thermite Editor...");
     imgui_manager.deinit();
 }

@@ -8,11 +8,24 @@
 #include "engine/core/components/transform.hpp"
 #include "engine/core/components/name.hpp"
 
+#include "editor/core/window.hpp"
+
 namespace tmt {
-class Hierarchy {
+class Hierarchy : public IWindow {
    public:
+    Hierarchy() = default;
+    ~Hierarchy() = default;
+
+    void display() override;
+
+    constexpr std::string get_title() const override { return "Hierarchy"; };
+
+    void on_editor_start() override {};
+    void on_editor_update(const FrameData& time) override {};
+    void on_editor_end() override {};
+
     template <typename... Components>
-    void display() {
+    void render_hierarchy() {
         /* Enforce Transform and Name component */
         auto view = engine.ecs.get_registry().view<Transform, Name, Components...>();
 

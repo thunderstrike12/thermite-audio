@@ -38,6 +38,8 @@ void Hierarchy::end_section() {
     }
 }
 
+void Hierarchy::display() { render_hierarchy(); }
+
 bool Hierarchy::display_entity(const HierarchyState& state) {
     const bool root_indent = state.depth() == 0;
     const bool has_parent = state.transform.has_parent();

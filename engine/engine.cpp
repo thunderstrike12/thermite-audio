@@ -46,9 +46,9 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     window.init(app->specs);
     renderer.init();
 
-    ecs.register_system<Physics>();
-    ecs.register_system<Animation>();
-    ecs.register_system<CameraSystem>();
+    ecs.systems.add<Physics>();
+    ecs.systems.add<Animation>();
+    ecs.systems.add<CameraSystem>();
 
     OnEngineInit::dispatch(app->specs);
 }

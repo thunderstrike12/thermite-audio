@@ -12,6 +12,7 @@
 
 #include "engine/core/components/name.hpp"
 #include "engine/core/components/transform.hpp"
+#include "engine/core/system_collection.hpp"
 
 #include "engine/events/game.hpp"
 #include "engine/events/engine.hpp"
@@ -31,36 +32,6 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
    public:
     Ecs() = default;
     ~Ecs() = default;
-
-    /* Systems */
-    template <System T, typename... Args>
-    T& register_system(Args&&... args) {
-        auto system = std::make_unique<T>(std::forward<Args>(args)...);
-        T& ref = *system;
-
-        systems.push_back(std::move(system));
-        return ref;
-    }
-
-    template <System T>
-    T& get_system() {
-        for (auto& system : systems) {
-            if (T* casted = dynamic_cast<T*>(system.get())) {
-                return *casted;
-            }
-        }
-        throw std::runtime_error("System not found");
-    }
-
-    template <System T>
-    T* try_get_system() {
-        for (auto& system : systems) {
-            if (T* casted = dynamic_cast<T*>(system.get())) {
-                return casted;
-            }
-        }
-        return nullptr;
-    }
 
     /* Entities / Components */
     Registry& get_registry() { return registry; }
@@ -163,9 +134,9 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
 
     void clear() { registry.clear(); }
 
-   private:
-    std::vector<std::unique_ptr<ISystem>> systems;
+    SystemCollection<ISystem> systems;
 
+   private:
     Registry registry;
 
     void on_game_start() override;
