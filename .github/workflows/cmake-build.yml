@@ -12,10 +12,8 @@ jobs:
         preset: 
           - Debug-Editor
           - Release-Editor
-          - RelWithDebInfo-Editor
           - Debug-Game
           - Release-Game
-          - RelWithDebInfo-Game
     runs-on: windows-latest
     steps:
       - name: Checkout repository
