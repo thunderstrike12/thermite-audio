@@ -18,4 +18,17 @@ Entity Camera::get_active_camera() {
     return entt::null;
 }
 
+void Camera::set_active_camera(Entity camera_entity) {
+    /* Capture all cameras in the scene */
+    const entt::basic_group group = engine.ecs.get_registry().group<Camera>(entt::get<Transform>);
+
+    for (auto&& [entity, camera, transform] : group.each()) {
+        if (entity == camera_entity) {
+            camera.active = true;
+        } else {
+            camera.active = false;
+        }
+    }
+}
+
 }  // namespace tmt
