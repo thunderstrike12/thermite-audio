@@ -66,6 +66,7 @@ struct Transform {
     void add_child(const Entity child);
     void remove_child(const Entity child);
 
+    bool has_children() const;
     const std::set<Entity>& get_children() const;
 
    private:

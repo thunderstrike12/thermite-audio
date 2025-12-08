@@ -257,6 +257,8 @@ void Transform::remove_child(Entity child) {
     }
 }
 
+bool Transform::has_children() const { return !children.empty(); }
+
 const std::set<Entity>& Transform::get_children() const { return children; }
 
 void Transform::mark_dirty() {

@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/events/engine.hpp"
+#include "editor/windows/hierarchy.hpp"
 
 namespace tmt {
 
@@ -20,6 +21,7 @@ class Editor : public OnEngineInit, public OnEngineUpdate, public OnEngineFixedU
     void on_engine_end() override;
 
     ImGuiManager& imgui_manager;
+    Hierarchy hierarchy;
 };
 
 /* Singleton */

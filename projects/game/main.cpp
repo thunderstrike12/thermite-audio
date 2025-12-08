@@ -32,14 +32,14 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
 
 void Game::on_start() {
     { /* Camera entity */
-        tmt::Entity entity = tmt::engine.ecs.create_entity();
+        tmt::Entity entity = tmt::engine.ecs.create_entity("Camera");
         auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
         auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
         transform.set_world_position(glm::vec3(0.0f, 0.0f, -2.0f));
     }
 
     { /* Voxel entity */
-        voxel = tmt::engine.ecs.create_entity();
+        voxel = tmt::engine.ecs.create_entity("Moving Voxel");
         auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(voxel);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(voxel);
         renderer.size = glm::uvec3(20u, 10u, 10u);
