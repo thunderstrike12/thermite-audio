@@ -35,4 +35,10 @@ void ImGuiManager::deinit() { imgui.deinit().expect("Failed to deinitialize ImGu
 
 void ImGuiManager::on_sdl_event(SDL_Event& event) { ImGui_ImplSDL3_ProcessEvent(&event); }
 
+void ImGuiManager::on_engine_update(const FrameData& time) {
+    /* Todo: remove this once we have editor camera*/
+    const bool is_playig = engine.game_controller.is_playing();
+    imgui.set_clear_screen(!is_playig);
+}
+
 }  // namespace tmt

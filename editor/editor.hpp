@@ -23,7 +23,7 @@ class Editor : public OnEngineInit, public OnEngineUpdate, public OnEngineFixedU
     void on_engine_end() override;
 
     ImGuiManager& imgui_manager;
-    SystemCollection<IWindow> systems;
+    SystemCollection<IWindow> windows;
 };
 
 /* Singleton */

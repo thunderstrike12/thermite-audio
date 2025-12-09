@@ -104,34 +104,31 @@ void Renderer::update() {
     Entity cam_entity = Camera::get_active_camera();
     if (cam_entity == entt::null) {
         Log::error(Log::Scope::RENDERER, "Camera Entity is NULL. Are there any active cameras in the scene?");
-        return;
     }
 
     render_graph.new_graph().unwrap();
 
-    /* Get active camera */
-    Camera& camera = engine.ecs.get_component<Camera>(cam_entity);
-    Transform& transform = engine.ecs.get_component<Transform>(cam_entity);
+    if (cam_entity != entt::null) {
+        render_view.resolution = glm::uvec2(engine.window.width, engine.window.height);
+        const float aspect_ratio = (float)engine.window.width / (float)engine.window.height;
+        /* Get active camera */
+        Camera& camera = engine.ecs.get_component<Camera>(cam_entity);
+        Transform& transform = engine.ecs.get_component<Transform>(cam_entity);
 
-    render_view.resolution = glm::uvec2(engine.window.width, engine.window.height);
-    const float aspect_ratio = (float)engine.window.width / (float)engine.window.height;
+        /* Iterate over all cameras to find an active one to use as render view */
+        glm::mat4 p = glm::perspective(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
+        const glm::mat4 v = glm::inverse(transform.get_world_matrix());
+        p[1][1] *= -1.0f;
+        render_view.world_to_clip = p * v;
+        render_view.clip_to_world = glm::inverse(render_view.world_to_clip);
+        render_view.origin = glm::vec4(transform.get_world_position(), 0.0f);
 
-    /* Iterate over all cameras to find an active one to use as render view */
-    static float rotation = 0.0f;
-    rotation += 0.01f;
-    glm::mat4 p = glm::perspective(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
-    const glm::mat4 v = glm::inverse(transform.get_world_matrix());
-    p[1][1] *= -1.0f;
-    render_view.world_to_clip = p * v;
-    render_view.clip_to_world = glm::inverse(render_view.world_to_clip);
-    render_view.origin = glm::vec4(transform.get_world_position(), 0.0f);
-
-    /* Upload the active render view */
-    render_graph.upload_buffer(render_view_buffer, &render_view, 0u, sizeof(RenderView));
-
-    /* Pipelines enqueue */
-    geometry_pipeline.enqueue(render_graph, render_view_buffer, render_target);
-    debug_pipeline.enqueue(render_graph, render_view_buffer, render_target);
+        /* Upload the active render view */
+        render_graph.upload_buffer(render_view_buffer, &render_view, 0u, sizeof(RenderView));
+        /* Pipelines enqueue */
+        geometry_pipeline.enqueue(render_graph, render_view_buffer, render_target);
+        debug_pipeline.enqueue(render_graph, render_view_buffer, render_target);
+    }
 
     /* Add the immediate mode GUI to the render graph */
     if (imgui != nullptr) {

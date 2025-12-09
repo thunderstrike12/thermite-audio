@@ -17,6 +17,7 @@
 #include "editor/imgui/manager.hpp"
 
 #include "editor/windows/hierarchy.hpp"
+#include "editor/windows/game_flow.hpp"
 
 /* Singleton */
 tmt::Editor tmt::editor;
@@ -33,9 +34,10 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     tmt::Log::info("Starting Thermite Editor...");
     imgui_manager.init();
 
-    systems.add<Hierarchy>();
+    windows.add<Hierarchy>();
+    windows.add<GameFlow>();
 
-    for (auto& system : systems) {
+    for (auto& system : windows) {
         system->on_editor_start();
     }
 }
@@ -43,11 +45,11 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
 void Editor::on_engine_update(const FrameData& time) {
     imgui_manager.new_frame();
 
-    for (auto& system : systems) {
+    for (auto& system : windows) {
         system->on_editor_update(time);
     }
 
-    for (auto& system : systems) {
+    for (auto& system : windows) {
         ImGui::Begin(system->get_title().c_str());
         system->display();
         ImGui::End();
@@ -57,13 +59,13 @@ void Editor::on_engine_update(const FrameData& time) {
 }
 
 void Editor::on_engine_fixed_update(const FrameData& time) {
-    for (auto& system : systems) {
+    for (auto& system : windows) {
         system->on_editor_fixed_update(time);
     }
 }
 
 void Editor::on_engine_end() {
-    for (auto& system : systems) {
+    for (auto& system : windows) {
         system->on_editor_end();
     }
 
