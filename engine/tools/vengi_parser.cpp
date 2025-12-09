@@ -195,15 +195,15 @@ bool BinaryParser::parse_voxel_data(vengi::Node& node) {
 
     // Store in our X, Y, Z order
     node.voxel_data->region.lower = glm::ivec3(lower_x, lower_y, lower_z);
-    node.voxel_data->region.upper = glm::ivec3(upper_x, upper_y, upper_z);
+    node.voxel_data->region.upper = glm::ivec3(upper_x, upper_y, upper_z) + 1;
 
     int64_t volume = node.voxel_data->region.volume();
     node.voxel_data->voxels.reserve(volume);
 
     // Voxels are also stored in Z->Y->X order (not X->Y->Z)
-    for (int32_t z = node.voxel_data->region.lower.z; z <= node.voxel_data->region.upper.z; z++) {
-        for (int32_t y = node.voxel_data->region.lower.y; y <= node.voxel_data->region.upper.y; y++) {
-            for (int32_t x = node.voxel_data->region.lower.x; x <= node.voxel_data->region.upper.x; x++) {
+    for (int32_t z = node.voxel_data->region.lower.z; z < node.voxel_data->region.upper.z; z++) {
+        for (int32_t y = node.voxel_data->region.lower.y; y < node.voxel_data->region.upper.y; y++) {
+            for (int32_t x = node.voxel_data->region.lower.x; x < node.voxel_data->region.upper.x; x++) {
                 bool is_air = read_bool();
                 if (is_air) {
                     node.voxel_data->voxels.emplace_back();

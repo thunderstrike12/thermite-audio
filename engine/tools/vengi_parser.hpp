@@ -13,9 +13,9 @@ struct Region {
     Region() {}
     Region(const glm::ivec3& lower, const glm::ivec3& upper) : lower(lower), upper(upper) {}
 
-    int32_t width() const { return upper.x - lower.x + 1; }
-    int32_t height() const { return upper.y - lower.y + 1; }
-    int32_t depth() const { return upper.z - lower.z + 1; }
+    int32_t width() const { return upper.x - lower.x; }
+    int32_t height() const { return upper.y - lower.y; }
+    int32_t depth() const { return upper.z - lower.z; }
     int64_t volume() const { return static_cast<int64_t>(width() * height() * depth()); }
 };
 
