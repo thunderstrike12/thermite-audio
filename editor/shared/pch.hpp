@@ -8,6 +8,7 @@
 #define GLM_FORCE_LEFT_HANDED
 #include <glm/glm.hpp> /* vector math */
 
+#include "engine/tools/profiler.hpp" /* adds tracy profiling */
 /* Large 32-bit floating point constant. */
 constexpr float BIG_F32 = 1e30f;
 

@@ -15,6 +15,7 @@
 
 #include "pipelines/debug_pipeline.hpp"
 #include "pipelines/geometry_pipeline.hpp"
+#include "tools/profiler.hpp"
 
 namespace tmt {
 
@@ -85,6 +86,7 @@ void Renderer::init() {
 }
 
 void Renderer::update() {
+    TMT_ZONE_SCOPED_N("Rendering")
     // Temporary
     draw_line({-0.5f, 0.5f, 0.0f}, {0.0f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f});
     draw_line({0.0f, -0.5f, 0.0f}, {0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f});
@@ -143,6 +145,7 @@ void Renderer::update() {
     if (const Result r = render_graph.dispatch(); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to dispatch render graph.\nreason: {}", r.unwrap_err());
     }
+    TMT_FRAME_MARK;
 }
 
 void Renderer::end() {

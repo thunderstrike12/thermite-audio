@@ -9,6 +9,7 @@
 #include "window.hpp"
 
 #include "engine/events/sdl.hpp"
+#include "tools/profiler.hpp"
 
 using namespace tmt;
 void Input::init() {
@@ -18,6 +19,7 @@ void Input::init() {
     setup_default_action();
 }
 void Input::update() {
+    TMT_ZONE_SCOPED_N("Input")
     SDL_Event event {};
 
     std::copy_n(keys, prev_keys.size(), prev_keys.begin());
