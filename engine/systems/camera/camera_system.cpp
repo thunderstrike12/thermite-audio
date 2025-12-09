@@ -61,14 +61,15 @@ void CameraSystem::on_update(const FrameData& time) {
         transform.look_at(transform.get_world_position() + front, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
-    base_speed = 4.0f;
-    const bool sprint = input.is_action_pressed(SPRINT);
-    if (sprint) base_speed *= sprint_mult;
+    const float mouse_wheel_y_delta = input.get_mouse_wheel_y();
+    base_speed *= std::pow(2.0f, mouse_wheel_y_delta * 0.15f);
+    base_speed = glm::clamp(base_speed, Config::MIN_BASE_SPEED, Config::MAX_BASE_SPEED);
 
     glm::vec3 pos = transform.get_world_position();
 
     if (is_2d_axis_movement) {
         // 2D Axis Movement
+        const bool sprint = input.is_action_pressed(SPRINT);
         const glm::vec3 horizontal_move = transform.get_right() * dx * cam_sensitivity * 0.1f;
         const glm::vec3 direction = sprint ? transform.get_forward() : transform.get_up();
         const glm::vec3 vertical_move = direction * -dy * cam_sensitivity * 0.1f;
