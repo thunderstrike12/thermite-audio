@@ -2,6 +2,7 @@
 
 #include "engine/core/io.hpp"
 #include "glm/fwd.hpp"
+#include "core/components/transform.hpp"
 
 namespace vengi {
 
@@ -129,6 +130,7 @@ struct Node {
     bool locked;
     RGBA color;
     glm::vec3 pivot;
+    tmt::Transform transform;  // local transform
 
     std::unordered_map<std::string, std::string> properties;
     std::unique_ptr<Palette> palette;
@@ -160,7 +162,7 @@ class BinaryParser {
    public:
     BinaryParser(const std::vector<char>& data) : data(data), pos(0) {}
 
-    bool parse_node(vengi::Node& node);
+    bool parse_node(vengi::Node& node, vengi::Node* parent = nullptr);
 
     int32_t read_version() { return read_uint32(); }
 
@@ -228,15 +230,13 @@ class BinaryParser {
 
     uint32_t read_four_cc() { return read_uint32(); }
 
-    glm::vec3 read_vec3f() { return glm::vec3(read_float(), read_float(), read_float()); }
-
-    glm::ivec3 read_vec3i() { return glm::ivec3(read_int32(), read_int32(), read_int32()); }
+    glm::vec3 read_vec3f() { return glm::vec3 {read_float(), read_float(), read_float()}; }
 
     glm::mat4 read_matrix4x4() {
         glm::mat4 mat;
         for (int c = 0; c < 4; c++) {
             for (int r = 0; r < 4; r++) {
-                mat[r][c] = read_float();
+                mat[c][r] = read_float();
             }
         }
         return mat;
@@ -260,4 +260,5 @@ class VengiParser {
 
    private:
     static std::vector<char> zlib_decompress_vengi_file(std::vector<char>& compressed_data);
+    static void compute_ref_world_transforms(vengi::Node& node, const glm::mat4& parent_matrix);
 };
