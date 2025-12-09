@@ -28,7 +28,7 @@ public struct Bvh2Node {
 };
 
 /* Trace a ray through a BVH2. */
-public inline float trace_bvh2(
+public inline Hit trace_bvh2<let DEBUG : bool>(
     StructuredBuffer<float4> nodes,
     StructuredBuffer<uint> indices,
     StructuredBuffer<VoxelObject> prims,
@@ -40,6 +40,7 @@ public inline float trace_bvh2(
     /* Traversal state */
     float min_t = 1e30f;
     uint node_index = 0u, stack[24], stack_ptr = 0u;
+    uint steps = 0u;
     for (;;) {
         const float4 rmax_prim_count = nodes[node_index + 3u];
         const float4 rmin_prim_index = nodes[node_index + 2u];
@@ -51,9 +52,9 @@ public inline float trace_bvh2(
             const uint prim_index = asuint(rmin_prim_index.w);
             for (uint i = 0u; i < prim_count; ++i) {
                 const VoxelObject prim = prims[indices[prim_index + i]];
-                float hit_t;
-                intersect_voxel_object(ray, prim, hit_t);
-                min_t = min(min_t, hit_t);
+                const Hit hit = intersect_voxel_object<DEBUG>(ray, prim);
+                if (DEBUG) steps += hit.steps;
+                min_t = min(min_t, hit.t);
             }
 
             /* Pop the node stack */
@@ -77,6 +78,7 @@ public inline float trace_bvh2(
         const float tmaxb = min(min(min(maxtb.x, maxtb.y), maxtb.z), min_t);
         float dist1 = tmina > tmaxa ? 1e30f : tmina;
         float dist2 = tminb > tmaxb ? 1e30f : tminb;
+        if (DEBUG) steps++;
 
         /* Swap traversal order to traverse nearest node first */
         if (dist1 > dist2) {
@@ -96,5 +98,9 @@ public inline float trace_bvh2(
             if (dist2 != 1e30f) stack[stack_ptr++] = right;
         }
     }
-    return min_t;
+
+    Hit hit;
+    hit.t = min_t;
+    if (DEBUG) hit.steps = steps;
+    return hit;
 }

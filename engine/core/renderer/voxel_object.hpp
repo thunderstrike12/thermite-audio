@@ -15,16 +15,19 @@ struct alignas(16) VoxelObject {
 
     /* Size of the object in voxels. */
     glm::uvec3 size {};
-    uint8_t padding : 8;
+    uint32_t blas_handle = 0u;
+    uint32_t voxels_handle = 0u;
+
+    /* Padding */
+    uint32_t : 32;
+    uint32_t : 32;
+    uint32_t : 32;
 
     /* Get the axis-aligned bounding box of this voxel object. */
     inline Aabb aabb() const {
         const glm::vec3 center = glm::vec3(local_to_world[3]);
-        const glm::vec3 unit_extent = glm::vec3(size) * UNITS_PER_VOXEL;
-        const glm::vec3 x_extent = glm::abs(glm::vec3(local_to_world[0]) * unit_extent);
-        const glm::vec3 y_extent = glm::abs(glm::vec3(local_to_world[1]) * unit_extent);
-        const glm::vec3 z_extent = glm::abs(glm::vec3(local_to_world[2]) * unit_extent);
-        const glm::vec3 extent = x_extent + y_extent + z_extent;
+        const glm::vec3 unit_extent = glm::vec3(size) * UNITS_PER_VOXEL * 0.5f;
+        const glm::vec3 extent = glm::mat3(glm::abs(glm::vec3(local_to_world[0])), glm::abs(glm::vec3(local_to_world[1])), glm::abs(glm::vec3(local_to_world[2]))) * unit_extent;
         return Aabb(center - extent, center + extent);
     }
 

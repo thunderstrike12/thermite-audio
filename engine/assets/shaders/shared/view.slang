@@ -1,5 +1,7 @@
 module view;
 
+import math;
+
 /* Represents a renderable view in the scene. */
 public struct RenderView {
     /* World-space to clip-space transformation matrix. */
@@ -17,6 +19,19 @@ public struct Ray {
     public float3 origin;
     public float3 dir;
     public float3 rcp_dir;
+};
+
+/* Represents a hit resulted from tracing a ray. */
+public struct Hit {
+    public float t;
+    public uint steps;
+
+    public inline static Hit miss() {
+        Hit hit;
+        hit.t = BIG_F32;
+        hit.steps = 0u;
+        return hit;
+    }
 };
 
 /* Convert a pixel coordinate to a normalized device coordinate. */
