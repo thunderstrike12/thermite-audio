@@ -170,7 +170,7 @@ class BinaryParser {
     size_t pos;
 
     size_t tell() const { return pos; }
-    void seek(size_t pos) { this->pos = pos; }
+    void seek(size_t npos) { pos = npos; }
     size_t size() const { return data.size(); }
     bool eof() const { return pos >= data.size(); }
 

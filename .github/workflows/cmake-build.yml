@@ -27,7 +27,7 @@ jobs:
       - name: Configure with preset
         shell: pwsh
         run: |
-          cmake --preset ${{ matrix.preset }}
+          cmake --preset ${{ matrix.preset }} -DTHERMITE_CI=ON
       
       - name: Build with preset
         shell: pwsh

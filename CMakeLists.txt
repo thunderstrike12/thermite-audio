@@ -17,6 +17,7 @@ option(WARNINGS_AS_ERRORS "Enable warnings as errors" OFF)
 option(THERMITE_EDITOR_BUILD "Build editor configuration" OFF)
 option(THERMITE_DEBUG_BUILD "Build debug-style config (extra asserts/logging)" OFF)
 option(THERMITE_BUILD_TESTS "Build unit tests" OFF)
+option(THERMITE_CI "Treat the build as CI" OFF)
 
 # Engine sub-directory
 add_subdirectory("engine")

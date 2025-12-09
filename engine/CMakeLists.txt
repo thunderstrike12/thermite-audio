@@ -31,4 +31,8 @@ compile_shaders()
 target_precompile_headers(thermite-engine PRIVATE "shared/pch.hpp")
 
 # Set warning level
-target_compile_options(thermite-engine PRIVATE /W4 /permissive-)
+if(THERMITE_CI)
+    target_compile_options(thermite-engine PRIVATE /W4 /permissive- /WX)
+else()
+    target_compile_options(thermite-engine PRIVATE /W4 /permissive-)
+endif()

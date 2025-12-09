@@ -85,6 +85,13 @@ function(find_and_add_targets)
 			if (THERMITE_DEBUG_BUILD)
 				target_compile_definitions(${target_name} PRIVATE THERMITE_DEBUG=1)
 			endif()
+
+			# Set warning level
+			# if(THERMITE_CI)
+			# 	target_compile_options(${target_name} PRIVATE /W4 /permissive- /WX)
+			# else()
+			# 	target_compile_options(${target_name} PRIVATE /W4 /permissive-)
+			# endif()
 		endif()
 	endforeach()
 endfunction()

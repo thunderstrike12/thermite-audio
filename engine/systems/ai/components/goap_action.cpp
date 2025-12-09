@@ -43,4 +43,7 @@ void GoapAction::apply_effects(WorldState& ws) const {
     ws.apply(effects_vec);
 }
 
+void GoapAction::on_start(entt::entity, entt::registry&) {}
+void GoapAction::on_update(entt::entity, entt::registry&, float) {}
+
 }  // namespace tmt

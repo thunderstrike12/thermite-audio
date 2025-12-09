@@ -208,7 +208,7 @@ void Goap::update_plan(Entity entity, GoapAgent& agent, WorldState& ws) {
 // ------------------------------------------------------
 // Step 3: action execution
 // ------------------------------------------------------
-void Goap::update_action(Entity entity, GoapAgent& agent, float dt) {
+void Goap::update_action(Entity, GoapAgent& agent, float) {
     GoapAction* action = agent.get_current_action();
     if (!action) return;  // no plan yet
 

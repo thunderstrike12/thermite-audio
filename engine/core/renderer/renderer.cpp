@@ -92,8 +92,7 @@ void Renderer::update() {
 
     draw_line({0.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
 
-    if (engine.window.resized)
-    {
+    if (engine.window.resized) {
         if (const Result r = gpu.get_vram_bank().resize_render_target(render_target, engine.window.width, engine.window.height); r.is_err()) {
             Log::error(Log::Scope::RENDERER, "failed to resize the swapchain.\nreason: {}", r.unwrap_err().c_str());
         } else {
@@ -164,8 +163,8 @@ void Renderer::end() {
     gpu.deinit().expect("failed to destroy gpu adapter.");
 }
 
-void Renderer::set_imgui(ImGUI* imgui, ImGUIFunctions functions) {
-    this->imgui = imgui;
+void Renderer::set_imgui(ImGUI* new_imgui, ImGUIFunctions functions) {
+    imgui = new_imgui;
     /* Initialize the immediate mode GUI */
     if (const Result r = imgui->init(gpu, render_target, functions); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to initialize imgui.\nreason: {}", r.unwrap_err());

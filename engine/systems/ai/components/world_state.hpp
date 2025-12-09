@@ -10,8 +10,8 @@ namespace tmt {
 struct FactId {
     uint32_t id;  // hash of the fact name
 
-    FactId() : id(0) {}
-    FactId(const std::string& name) : id(std::hash<std::string> {}(name)) {}
+    FactId() : id(0u) {}
+    FactId(const std::string& name) : id((uint32_t)std::hash<std::string> {}(name)) {}
 
     bool operator==(const FactId& other) const { return id == other.id; }
 };
