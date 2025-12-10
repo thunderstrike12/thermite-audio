@@ -24,9 +24,9 @@ void DebugPipeline::init(GPUAdapter& gpu) {
         point_buffer = r.unwrap();
 }
 
-void DebugPipeline::enqueue(RenderGraph& render_graph, Buffer render_view) {
+void DebugPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
     /* Get Render Image */
-    const BindHandle render_image = engine.renderer.get_render_image();
+    const BindHandle render_image = render_view.get_render_image();
 
     /* Update Point Buffer */
     num_points = (u32)debug_points.size();
@@ -35,12 +35,12 @@ void DebugPipeline::enqueue(RenderGraph& render_graph, Buffer render_view) {
     }
     debug_points.clear();
 
-    const glm::uvec2 render_res = engine.renderer.render_view.resolution;
+    const glm::uvec2 render_res = render_view.gpu_view.resolution;
     RasterNode& line_pass = render_graph.add_raster_pass("debug line pass", "debug_line.vx", "debug_line.px")
                                 .topology(Topology::LineList)
                                 .attribute(AttrFormat::XYZ32_SFloat)  // Position
                                 .attribute(AttrFormat::XYZ32_SFloat)  // Color
-                                .read(render_view, ShaderStages::Vertex)
+                                .read(render_view.render_view_buffer, ShaderStages::Vertex)
                                 .attach(render_image)
                                 .raster_extent(render_res.x, render_res.y);
     line_pass.draw(point_buffer, num_points);

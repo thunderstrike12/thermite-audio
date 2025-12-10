@@ -28,12 +28,12 @@ void GeometryPipeline::init(GPUAdapter& gpu) {
     object_data = bank.create_buffer(usage, MAX_VOXEL_OBJECTS, sizeof(VoxelObject)).expect("failed to create object data buffer.");
 }
 
-void GeometryPipeline::enqueue(RenderGraph& render_graph, Buffer render_view) {
+void GeometryPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
     /* Capture all voxel renderers in the scene */
     const entt::basic_group group = engine.ecs.get_registry().group<const VoxelRenderer>(entt::get<Transform>);
 
     /* Get Render Image */
-    const BindHandle render_image = engine.renderer.get_render_image();
+    const BindHandle render_image = render_view.get_render_image();
 
     /* Allocate space for all voxel objects */
     std::vector<VoxelObject> objects {};
@@ -66,11 +66,11 @@ void GeometryPipeline::enqueue(RenderGraph& render_graph, Buffer render_view) {
     /* clang-format off */
 
     /* Enqueue the geometry compute pass */
-    const glm::uvec2 render_res = engine.renderer.render_view.resolution;
+    const glm::uvec2 render_res = render_view.gpu_view.resolution;
 
     render_graph.add_compute_pass("geometry pass", "geometry.cs")
         /* Render view */
-        .read(render_view)
+        .read(render_view.render_view_buffer)
         /* Object buffers */
         .read(bvh_nodes)
         .read(object_indices)

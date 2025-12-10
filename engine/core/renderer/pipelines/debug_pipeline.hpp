@@ -4,6 +4,8 @@
 
 #include <graphite/resources/handle.hh>
 
+#include "core/renderer/render_view.hpp"
+
 class GPUAdapter;
 class RenderGraph;
 
@@ -30,7 +32,7 @@ class DebugPipeline {
     DebugPipeline& operator=(const DebugPipeline&) = delete;
 
     void init(GPUAdapter& gpu);
-    void enqueue(RenderGraph& render_graph, Buffer render_view);
+    void enqueue(RenderGraph& render_graph, RenderView render_view);
     void deinit(GPUAdapter& gpu);
 
     void draw_line(const glm::vec3 start, const glm::vec3 end, const glm::vec3 color = {1.0f, 0.0f, 0.0f});

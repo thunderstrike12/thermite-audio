@@ -2,6 +2,8 @@
 
 #include <graphite/resources/handle.hh>
 
+#include "core/renderer/render_view.hpp"
+
 #include "engine/shared/bvh2.hpp"
 #include "engine/shared/svt64.hpp"
 
@@ -32,7 +34,7 @@ class GeometryPipeline {
     GeometryPipeline& operator=(const GeometryPipeline&) = delete;
 
     void init(GPUAdapter& gpu);
-    void enqueue(RenderGraph& render_graph, Buffer render_view);
+    void enqueue(RenderGraph& render_graph, RenderView render_view);
     void deinit(GPUAdapter& gpu);
 };
 
