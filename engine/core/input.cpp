@@ -49,6 +49,10 @@ void Input::update() {
                 engine.window.width = event.window.data1;
                 engine.window.height = event.window.data2;
                 engine.window.resized = true;
+                break;
+            case SDL_EVENT_WINDOW_RESTORED:
+                engine.window.resized = true;
+                break;
             case SDL_EVENT_MOUSE_WHEEL:
                 scroll_dx = event.wheel.x;
                 scroll_dy = event.wheel.y;

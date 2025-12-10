@@ -72,6 +72,22 @@ void Renderer::init() {
         render_target = r.unwrap();
     }
 
+    /* Viewport Texture */
+    if (const Result r = bank.create_texture(
+            TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA8Unorm, {(uint32_t)engine.window.width, (uint32_t)engine.window.height, 0}
+        );
+        r.is_err()) {
+        Log::error(Log::Scope::RENDERER, "failed to initialize attachment texture.\nreason: {}", r.unwrap_err());
+        return;
+    } else
+        viewport_texture = r.unwrap();
+    /* Viewport Image */
+    if (const Result r = bank.create_image(viewport_texture); r.is_err()) {
+        Log::error(Log::Scope::RENDERER, "failed to initialize attachment image.\nreason: {}", r.unwrap_err());
+        return;
+    } else
+        viewport_image = r.unwrap();
+
     /* Create the active render view buffer */
     if (const Result r = bank.create_buffer(BufferUsage::Constant | BufferUsage::TransferDst, sizeof(RenderView)); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to create render view buffer.\nreason: {}", r.unwrap_err().c_str());
@@ -110,9 +126,11 @@ void Renderer::update() {
 
     render_graph.new_graph().unwrap();
 
+#ifndef THERMITE_EDITOR
+    render_view.resolution = glm::uvec2(engine.window.width, engine.window.height);
+#endif  // !THERMITE_EDITOR
     if (cam_entity != entt::null) {
-        render_view.resolution = glm::uvec2(engine.window.width, engine.window.height);
-        const float aspect_ratio = (float)engine.window.width / (float)engine.window.height;
+        const float aspect_ratio = (float)render_view.resolution.x / (float)render_view.resolution.y;
         /* Get active camera */
         Camera& camera = engine.ecs.get_component<Camera>(cam_entity);
         Transform& transform = engine.ecs.get_component<Transform>(cam_entity);
@@ -128,8 +146,8 @@ void Renderer::update() {
         /* Upload the active render view */
         render_graph.upload_buffer(render_view_buffer, &render_view, 0u, sizeof(RenderView));
         /* Pipelines enqueue */
-        geometry_pipeline.enqueue(render_graph, render_view_buffer, render_target);
-        debug_pipeline.enqueue(render_graph, render_view_buffer, render_target);
+        geometry_pipeline.enqueue(render_graph, render_view_buffer);
+        debug_pipeline.enqueue(render_graph, render_view_buffer);
     }
 
     /* Add the immediate mode GUI to the render graph */
@@ -151,6 +169,8 @@ void Renderer::update() {
 void Renderer::end() {
     VRAMBank& bank = gpu.get_vram_bank();
     bank.destroy(render_view_buffer);
+    bank.destroy(viewport_texture);
+    bank.destroy(viewport_image);
     bank.destroy(render_target);
 
     /* Pipelines cleanup */
@@ -169,6 +189,33 @@ void Renderer::set_imgui(ImGUI* new_imgui, ImGUIFunctions functions) {
     if (const Result r = imgui->init(gpu, render_target, functions); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to initialize imgui.\nreason: {}", r.unwrap_err());
         return;
+    }
+
+    imgui_viewport = imgui->add_image(viewport_image);
+}
+
+BindHandle Renderer::get_render_image() const {
+#ifdef THERMITE_EDITOR
+    return viewport_image;
+#else
+    return render_target;
+#endif  // THERMITE_EDITOR
+}
+
+u64 Renderer::get_imgui_viewport() const { return imgui_viewport; }
+
+void Renderer::set_viewport_size(uint32_t width, uint32_t height) {
+    if (width != render_view.resolution.x || height != render_view.resolution.y) {
+        render_view.resolution = {width, height};
+
+        if (const Result r = gpu.get_vram_bank().resize_texture(viewport_texture, {width, height, 0}); r.is_err()) {
+            Log::error(Log::Scope::RENDERER, "failed to resize the viewport texture.\nreason: {}", r.unwrap_err().c_str());
+        } else {
+            Log::info(Log::Scope::RENDERER, "viewport texture has been resized.");
+        }
+
+        imgui->remove_image(viewport_image);
+        imgui_viewport = imgui->add_image(viewport_image);
     }
 }
 

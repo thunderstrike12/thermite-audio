@@ -55,6 +55,16 @@ void Editor::on_engine_update(const FrameData& time) {
         ImGui::End();
     }
 
+    ImGui::Begin("Viewport");
+
+    auto size = ImGui::GetContentRegionAvail();
+
+    engine.renderer.set_viewport_size(size.x, size.y);
+
+    ImGui::Image((ImTextureRef)engine.renderer.get_imgui_viewport(), size);
+
+    ImGui::End();
+
     imgui_manager.end_frame();
 }
 

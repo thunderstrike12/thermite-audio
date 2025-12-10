@@ -9,6 +9,7 @@
 #include "core/ecs.hpp"
 #include "core/logger.hpp"
 #include "core/window.hpp"
+#include "core/renderer/renderer.hpp"
 
 #include "core/components/transform.hpp"
 #include "core/components/voxel_renderer.hpp"
@@ -41,9 +42,12 @@ void GeometryPipeline::init(GPUAdapter& gpu) {
     voxel_data = bank.create_buffer(usage, 1024u, sizeof(MaterialIndex)).expect("failed to create voxel data buffer.");
 }
 
-void GeometryPipeline::enqueue(RenderGraph& render_graph, Buffer render_view, RenderTarget render_target) {
+void GeometryPipeline::enqueue(RenderGraph& render_graph, Buffer render_view) {
     /* Capture all voxel renderers in the scene */
     const entt::basic_group group = engine.ecs.get_registry().group<const VoxelRenderer>(entt::get<Transform>);
+
+    /* Get Render Image */
+    const BindHandle render_image = engine.renderer.get_render_image();
 
     /* Allocate space for all voxel objects */
     std::vector<VoxelObject> objects {};
@@ -75,6 +79,8 @@ void GeometryPipeline::enqueue(RenderGraph& render_graph, Buffer render_view, Re
     /* clang-format off */
 
     /* Enqueue the geometry compute pass */
+    const glm::uvec2 render_res = engine.renderer.render_view.resolution;
+
     render_graph.add_compute_pass("geometry pass", "geometry.cs")
         /* Render view */
         .read(render_view)
@@ -83,9 +89,9 @@ void GeometryPipeline::enqueue(RenderGraph& render_graph, Buffer render_view, Re
         .read(object_indices)
         .read(object_data)
         /* Render target */
-        .write(render_target)
+        .write(render_image)
         .group_size(16, 8)
-        .work_size(engine.window.width, engine.window.height);
+        .work_size(render_res.x, render_res.y);
 
     /* clang-format on */
 }
