@@ -11,6 +11,7 @@ class Window;
 class Renderer;
 class Ecs;
 class Resources;
+class JobManager;
 
 class Engine {
    public:
@@ -45,6 +46,7 @@ class Engine {
     Ecs& ecs;
     Renderer& renderer;
     Resources& resources;
+    JobManager& job_manager;
 
     GameController game_controller;
 
