@@ -61,6 +61,12 @@ void Bvh2<T>::build(const T* input_prims, const uint32_t input_count) {
         root.max_bounds.z = fmaxf(root.max_bounds.z, bounds[i].max.z);
     }
 
+    /* If there are no primitives, set root bounds to zero */
+    if (prim_count == 0u) {
+        root.min_bounds = glm::vec3(0.0f);
+        root.max_bounds = glm::vec3(0.0f);
+    }
+
     /* Build the node hierarchy */
     uint32_t build_tasks[256] {}, task_count = 0u, node_ptr = 0u;
     const glm::vec3 min_extent = (root.max_bounds - root.min_bounds) * 1e-20f;
@@ -175,7 +181,7 @@ void Bvh2<T>::build(const T* input_prims, const uint32_t input_count) {
         const Bvh2Node& node = nodes[node_index];
         const uint32_t idx = alt_node++;
         /* Handle case where the tree is only a root node */
-        if (node.is_leaf()) {
+        if ((node_index == 0u && node.left_first == 0u) || node.is_leaf()) {
             gpu_nodes[idx].prim_count = node.prim_count;
             gpu_nodes[idx].prim_index = node.left_first;
             if (!stack_ptr) break;
