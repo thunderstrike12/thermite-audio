@@ -20,13 +20,13 @@ inline float half_area(const glm::vec3& v) { return v.x < -BIG_F32 ? 0.0f : (v.x
 template <typename T>
 void Bvh2<T>::build(const T* input_prims, const uint32_t input_count) {
     /* Delete old BVH data if it exists */
-    if (nodes) {
+    if (node_count > 0u) {
         delete[] nodes;
         delete[] prims;
         delete[] bounds;
         delete[] indices;
         delete[] gpu_nodes;
-        nodes = nullptr;
+        node_count = 0u;
     }
 
     /* Allocate space for nodes */
@@ -266,12 +266,14 @@ Hit Bvh2<T>::trace(const Ray& ray) const {
 
 template <typename T>
 Bvh2<T>::~Bvh2() {
-    if (nodes == nullptr) return;
-    delete[] nodes;
-    delete[] prims;
-    delete[] bounds;
-    delete[] indices;
-    delete[] gpu_nodes;
+    if (node_count > 0u) {
+        delete[] nodes;
+        delete[] prims;
+        delete[] bounds;
+        delete[] indices;
+        delete[] gpu_nodes;
+        node_count = 0u;
+    }
 }
 
 /* Explicit template instantiations */

@@ -2,6 +2,16 @@ module svt64;
 
 import view;
 import math;
+import material;
+
+public struct Svt64Hit {
+    public float3 point;
+    public float3 albedo;
+    public uint steps;
+
+    /* Returns true if this was a miss. */
+    public bool miss() { return point.x == 1e30f; }
+};
 
 public struct Svt64Node {
     uint child_ptr;
@@ -17,9 +27,9 @@ public struct Svt64Node {
     /* Is a given child node index active? */
     [ForceInline] bool child_active(uint child_index) {
         if (child_index < 32u) {
-            return (child_mask_lo >> child_index & 1u) != 0u;
+            return (child_mask_hi >> child_index & 1u) != 0u;
         } else {
-            return (child_mask_hi >> (child_index - 32u) & 1u) != 0u;
+            return (child_mask_lo >> (child_index - 32u) & 1u) != 0u;
         }
     }
 
@@ -27,9 +37,9 @@ public struct Svt64Node {
     [ForceInline] bool child_coalesced_skip(uint child_index) {
         child_index = child_index & 0b101010;
         if (child_index < 32u) {
-            return (child_mask_lo >> child_index & 0x00330033u) == 0u;
+            return (child_mask_hi >> child_index & 0x00330033u) == 0u;
         } else {
-            return (child_mask_hi >> (child_index - 32u) & 0x00330033u) == 0u;
+            return (child_mask_lo >> (child_index - 32u) & 0x00330033u) == 0u;
         }
     }
 };
@@ -76,9 +86,10 @@ public struct Svt64Node {
 }
 
 /* Trace a ray through a SVT64. */
-public inline Hit trace_svt64<let DEBUG : bool>(
+public inline Svt64Hit trace_svt64<let DEBUG : bool>(
     StructuredBuffer<Svt64Node> nodes,
-    StructuredBuffer<uint8_t> voxels,
+    StructuredBuffer<uint> voxels,
+    StructuredBuffer<Material> palette,
     Ray ray
 ) {
     const uint group_id = spirv_asm {
@@ -153,14 +164,21 @@ public inline Hit trace_svt64<let DEBUG : bool>(
         if (DEBUG) steps++;
     }
 
-    Hit hit;
-    hit.t = BIG_F32;
+    Svt64Hit hit;
+    hit.point = 1e30f;
     if (DEBUG) hit.steps = steps;
 
     /* If we hit a leaf node, return the voxel we hit */
     if (node.is_leaf() && scale_exp <= 21) {
+        /* Find the hit position & calculate the hit distance */
         pos = mirror_pos(pos, ray.dir, false);
-        hit.t = distance(ray.origin, pos);
+        hit.point = pos; // distance(ray.origin, pos);
+
+        /* Fetch the material of the voxel we hit */
+        const uint child_index = get_node_cell_index(pos, scale_exp);
+        const uint voxel_index = node.abs_ptr() + popcnt_var64(node.child_mask_lo, node.child_mask_hi, child_index);
+        const uint palette_index = (voxels[voxel_index >> 2u] >> ((4u - (voxel_index % 4u)) << 3u)) & 0xFFu;
+        hit.albedo = palette[palette_index].albedo;
     }
 
     return hit;

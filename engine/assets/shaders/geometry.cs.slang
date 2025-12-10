@@ -47,14 +47,21 @@ void main(int2 thread_id: SV_DispatchThreadID, int group_id: SV_GroupIndex) {
     const Ray ray = pinhole_ray(render_view, thread_id);
 
     /* Trace the scene BVH */
-    const Hit hit = trace_bvh2<true>(bvh_nodes, object_indices, object_data, ray);
+    const Hit hit = trace_bvh2<false>(bvh_nodes, object_indices, object_data, ray);
     // const float hit_t = trace_svt64(blas, voxels, ray, group_id);
     // render_target[thread_id] = float4(hit_t, hit_t, hit_t, 1.0f);
 
     if (hit.t < BIG_F32) {
-        render_target[thread_id] = float4(1.0f - (hit.t * 0.01f).xxx, 1.0f);
+        render_target[thread_id] = float4(hit.albedo, 1.0f);
     } else {
-        const float3 color = heat_color((float)hit.steps / 128.0f);
-        render_target[thread_id] = float4(color, 1.0f);
+        render_target[thread_id] = float4(0.075f, 0.075f, 0.075f, 1.0f);
     }
+    
+    // render_target[thread_id] = float4((hit.t * 0.01f).xxx, 1.0f);
+    // if (hit.t < BIG_F32) {
+    //     render_target[thread_id] = float4(1.0f - (hit.t * 0.01f).xxx, 1.0f);
+    // } else {
+    //     const float3 color = heat_color((float)hit.steps / 128.0f);
+    //     render_target[thread_id] = float4(color, 1.0f);
+    // }
 }

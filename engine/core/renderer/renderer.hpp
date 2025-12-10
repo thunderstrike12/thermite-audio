@@ -9,6 +9,7 @@
 
 class GPUAdapter;
 class RenderGraph;
+class VRAMBank;
 
 namespace tmt {
 
@@ -52,6 +53,8 @@ class Renderer {
     void set_viewport_size(uint32_t width, uint32_t height);
 
     void draw_line(const glm::vec3 start, const glm::vec3 end, const glm::vec3 color = {1.0f, 0.0f, 0.0f});
+
+    VRAMBank& vram_bank();
 
     void set_imgui(ImGUI* imgui, ImGUIFunctions functions);
 };

@@ -7,10 +7,14 @@ struct Material {
     float albedo_r = 0.0f;
     float albedo_g = 0.0f;
     float albedo_b = 0.0f;
+    /* Padding */
+    uint32_t : 32;
 };
 
 /* Material palette index. */
 using MaterialIndex = uint8_t;
+
+constexpr MaterialIndex AIR_INDEX = 0xFFu;
 
 /* Voxel material palette with 255 entries. */
 struct MaterialPalette {

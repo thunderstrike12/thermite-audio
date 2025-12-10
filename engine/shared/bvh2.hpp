@@ -60,6 +60,10 @@ class Bvh2 {
     Bvh2() = default;
     ~Bvh2();
 
+    /* No copies allowed */
+    Bvh2(Bvh2&) = delete;
+    Bvh2& operator=(Bvh2&) = delete;
+
     /* Build the acceleration structure. */
     void build(const T* input_prims, const uint32_t input_count);
 

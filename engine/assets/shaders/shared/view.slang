@@ -24,6 +24,7 @@ public struct Ray {
 /* Represents a hit resulted from tracing a ray. */
 public struct Hit {
     public float t;
+    public float3 albedo;
     public uint steps;
 
     public inline static Hit miss() {

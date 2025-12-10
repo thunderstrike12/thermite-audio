@@ -118,6 +118,9 @@ void Engine::end() {
     TMT_ZONE_SCOPED_N("Engine::end")
 
     OnEngineEnd::dispatch();
+
+    ecs.clear();
+    resources.unload_unused();
     renderer.end();
 }
 

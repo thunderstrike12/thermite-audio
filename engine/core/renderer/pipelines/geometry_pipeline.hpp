@@ -21,12 +21,8 @@ class GeometryPipeline {
     Buffer object_indices {};
     Buffer object_data {};
 
-    Buffer blas_nodes {};
-    Buffer voxel_data {};
-
     /* Acceleration structures */
     Bvh2<VoxelObject> bvh {};
-    Svt64 svt {};
 
    public:
     GeometryPipeline() {}

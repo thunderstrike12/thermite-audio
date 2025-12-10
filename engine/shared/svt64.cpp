@@ -8,7 +8,7 @@ inline uint32_t log_base(const uint32_t x, const uint32_t b) { return (uint32_t)
 /* Calculate the depth of a SVT64 based on its input voxel grid size. */
 inline uint32_t tree_depth(uint32_t width, uint32_t height, uint32_t depth) {
     const float max_axis = (float)std::max(std::max(width, height), depth);
-    return (uint32_t)(logf(max_axis) / logf(4.0f));
+    return (uint32_t)ceilf(logf(max_axis) / logf(4.0f));
 }
 
 /* Calculate the maximum number of nodes a SVT64 can have given its depth. */
@@ -44,26 +44,26 @@ Svt64Node::Svt64Node(const bool is_leaf, const uint32_t ptr, const uint64_t mask
 }
 
 /* Recursive tree subdivide function. */
-Svt64Node Svt64::subdivide(const RawVoxels& raw_data, int scale, glm::ivec3 index) {
+Svt64Node Svt64::subdivide(const RawVoxels& raw_data, uint32_t scale, glm::uvec3 index) {
     /* Create a leaf node */
-    if (scale == 2) {
+    if (scale == 2u) {
         Svt64Node leaf_node = Svt64Node(true, voxel_count, 0x00);
 
         /* Check if the node is outside the voxel grid bounds */
-        if (index.x + 3u >= raw_data.w || index.y + 3u >= raw_data.h || index.z + 3u >= raw_data.d) return leaf_node;
-        if (index.x < 0 || index.y < 0 || index.z < 0) return leaf_node;
+        if (index.x >= raw_data.w || index.y >= raw_data.h || index.z >= raw_data.d) return leaf_node;
 
-        const int wh = raw_data.h * raw_data.w;
+        const uint32_t wh = raw_data.h * raw_data.w;
 
-        for (int i = 0; i < 64; ++i) {
+        for (uint32_t i = 0u; i < 64u; ++i) {
             /* Fetch the voxel data */
-            const int voxel_x = index.x + ((i >> 0) & 3);
-            const int voxel_y = index.y + ((i >> 4) & 3);
-            const int voxel_z = index.z + ((i >> 2) & 3);
-            const int voxel_offset = voxel_z * wh + voxel_y * raw_data.w + voxel_x;
+            const uint32_t voxel_x = index.x + ((i >> 0u) & 3u);
+            const uint32_t voxel_y = index.y + ((i >> 4u) & 3u);
+            const uint32_t voxel_z = index.z + ((i >> 2u) & 3u);
+            if (voxel_x >= raw_data.w || voxel_y >= raw_data.h || voxel_z >= raw_data.d) continue;
+            const uint32_t voxel_offset = voxel_z * wh + voxel_y * raw_data.w + voxel_x;
             const MaterialIndex material = raw_data.voxels[voxel_offset];
 
-            if (material > 0u) {
+            if (material != AIR_INDEX) {
                 voxels[voxel_count++] = material;
                 leaf_node.child_mask |= (1ull << i);
             }
@@ -73,16 +73,16 @@ Svt64Node Svt64::subdivide(const RawVoxels& raw_data, int scale, glm::ivec3 inde
     }
 
     /* Descend */
-    scale -= 2;
+    scale -= 2u;
 
     /* Collect child nodes */
     Svt64Node child_nodes[64] {};
     uint64_t child_mask = 0x00u;
     uint32_t child_count = 0u;
 
-    for (int i = 0; i < 64; ++i) {
+    for (uint32_t i = 0u; i < 64u; ++i) {
         /* Subdivide the child node */
-        const glm::ivec3 child_index = glm::ivec3(i >> 0 & 3, i >> 4 & 3, i >> 2 & 3);
+        const glm::uvec3 child_index = glm::uvec3(i >> 0u & 3u, i >> 4u & 3u, i >> 2u & 3u);
         const Svt64Node child = subdivide(raw_data, scale, index + (child_index << scale));
 
         /* If the child is not empty */
@@ -103,8 +103,11 @@ Svt64Node Svt64::subdivide(const RawVoxels& raw_data, int scale, glm::ivec3 inde
 
 void Svt64::build(const RawVoxels& raw_data) {
     /* Delete old data */
-    if (nodes != nullptr) delete[] nodes;
-    if (voxels != nullptr) delete[] voxels;
+    if (depth > 0u) {
+        delete[] nodes;
+        delete[] voxels;
+        depth = 0u;
+    }
 
     /* Calculate the parameters of the 64 tree */
     depth = tree_depth(raw_data.w, raw_data.h, raw_data.d);
@@ -114,22 +117,25 @@ void Svt64::build(const RawVoxels& raw_data) {
     /* Allocate space for new tree */
     nodes = new Svt64Node[max_nodes];  // (Node*)malloc(1ull << 26);
     node_count = 1u;
-    voxels = new MaterialIndex[raw_voxels];  // (MaterialIndex*)malloc(1ull << 26);
+    voxels = new MaterialIndex[raw_voxels + SVT64_BUFFER_MEMORY];  // (MaterialIndex*)malloc(1ull << 26);
     voxel_count = 0u;
 
     /* Copy the material palette */
     palette = raw_data.palette;
 
     /* Begin the recursive build */
-    nodes[0] = subdivide(raw_data, depth * 2u, glm::ivec3(0));
+    nodes[0] = subdivide(raw_data, depth * 2u, glm::uvec3(0u));
 
     /* Reallocate the nodes to save memory */
-    // nodes = (Svt64Node*)realloc(nodes, node_count * sizeof(Svt64Node) + SVT64_BUFFER_MEMORY);
+    nodes = (Svt64Node*)realloc(nodes, node_count * sizeof(Svt64Node) + SVT64_BUFFER_MEMORY);
 }
 
 Svt64::~Svt64() {
-    if (nodes != nullptr) delete[] nodes;
-    if (voxels != nullptr) delete[] voxels;
+    if (depth > 0u) {
+        delete[] nodes;
+        delete[] voxels;
+        depth = 0u;
+    }
 }
 
 }  // namespace tmt

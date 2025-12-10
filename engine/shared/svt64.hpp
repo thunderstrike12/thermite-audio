@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "core/renderer/material.hpp"
+#include "engine/core/renderer/material.hpp"
 
 namespace tmt {
 
@@ -48,7 +48,7 @@ struct Svt64Node {
 /* 64-wide Sparse Voxel Tree. */
 class Svt64 {
     /* Recursive tree subdivide function. */
-    Svt64Node subdivide(const RawVoxels& raw_data, int scale, glm::ivec3 index);
+    Svt64Node subdivide(const RawVoxels& raw_data, uint32_t scale, glm::uvec3 index);
 
    public:
     /* List of tree nodes. */
@@ -63,6 +63,29 @@ class Svt64 {
 
     Svt64() = default;
     ~Svt64();
+
+    /* No copies allowed */
+    Svt64(const Svt64& src) {
+        node_count = src.node_count;
+        voxel_count = src.voxel_count;
+        depth = src.depth;
+        nodes = new Svt64Node[node_count + SVT64_BUFFER_MEMORY / sizeof(Svt64Node)];
+        voxels = new MaterialIndex[voxel_count + SVT64_BUFFER_MEMORY / sizeof(MaterialIndex)];
+        memcpy(nodes, src.nodes, node_count * sizeof(Svt64Node));
+        memcpy(voxels, src.voxels, voxel_count * sizeof(MaterialIndex));
+        palette = src.palette;
+    }
+    Svt64& operator=(const Svt64& src) {
+        node_count = src.node_count;
+        voxel_count = src.voxel_count;
+        depth = src.depth;
+        nodes = new Svt64Node[node_count + SVT64_BUFFER_MEMORY / sizeof(Svt64Node)];
+        voxels = new MaterialIndex[voxel_count + SVT64_BUFFER_MEMORY / sizeof(MaterialIndex)];
+        memcpy(nodes, src.nodes, node_count * sizeof(Svt64Node));
+        memcpy(voxels, src.voxels, voxel_count * sizeof(MaterialIndex));
+        palette = src.palette;
+        return *this;
+    }
 
     /* Build the Sparse Voxel Tree. */
     void build(const RawVoxels& raw_data);
