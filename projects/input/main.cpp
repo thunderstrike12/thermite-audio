@@ -1,7 +1,7 @@
 #include "engine/entry_point.hpp"
 #include "engine/core/ecs.hpp"
 #include "engine/core/components/transform.hpp"
-#include "engine/core/input.hpp"
+#include "engine/core/input/input.hpp"
 #include "engine/core/logger.hpp"
 #include "engine/core/components/camera.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
@@ -51,7 +51,8 @@ void Game::on_start() {
 void Game::on_update(const tmt::FrameData& time) {
     time_passed += time.delta_time;
 
-    // Testing code here, please move when scenes can be added elegantly
+    // AI generated for testing inputs
+    //  Testing code here, please move when scenes can be added elegantly
     if (tmt::engine.input.is_action_just_pressed("confirm")) {
         tmt::Log::info(tmt::Log::Scope::GAME, "Confirm action pressed!");
         tmt::engine.input.set_mouse_relative_to_window(true);
@@ -77,9 +78,7 @@ void Game::on_update(const tmt::FrameData& time) {
     if (tmt::engine.input.is_action_pressed("middle_click")) {
         tmt::Log::info(tmt::Log::Scope::ENGINE, "Middle click!");
     }
-
     // Mouse motion test
-
     if (tmt::engine.input.is_action_pressed("left_click")) {
         tmt::Log::info(
             tmt::Log::Scope::ENGINE, "Mouse moved: pos({}, {}) delta({}, {})", tmt::engine.input.get_mouse_x(), tmt::engine.input.get_mouse_y(), tmt::engine.input.get_mouse_delta_x(),
@@ -87,6 +86,52 @@ void Game::on_update(const tmt::FrameData& time) {
         );
         tmt::Log::info(tmt::Log::Scope::ENGINE, "Mouse scroll wheel: wheel({}, {})", tmt::engine.input.get_mouse_wheel_x(), tmt::engine.input.get_mouse_wheel_y());
     }
+
+    // Gamepad tests
+
+    // Gamepad axes (log when stick is moved past deadzone)
+    float lx = tmt::engine.input.get_gamepad_axis(tmt::GamepadAxis::LEFT_X);
+    float ly = tmt::engine.input.get_gamepad_axis(tmt::GamepadAxis::LEFT_Y);
+    float rx = tmt::engine.input.get_gamepad_axis(tmt::GamepadAxis::RIGHT_X);
+    float ry = tmt::engine.input.get_gamepad_axis(tmt::GamepadAxis::RIGHT_Y);
+    float lt = tmt::engine.input.get_gamepad_axis(tmt::GamepadAxis::LEFT_TRIGGER);
+    float rt = tmt::engine.input.get_gamepad_axis(tmt::GamepadAxis::RIGHT_TRIGGER);
+
+    constexpr float DEADZONE = 0.15f;
+    if (std::abs(lx) > DEADZONE || std::abs(ly) > DEADZONE) {
+        tmt::Log::info(tmt::Log::Scope::ENGINE, "Left stick: ({:.2f}, {:.2f})", lx, ly);
+    }
+    if (std::abs(rx) > DEADZONE || std::abs(ry) > DEADZONE) {
+        tmt::Log::info(tmt::Log::Scope::ENGINE, "Right stick: ({:.2f}, {:.2f})", rx, ry);
+    }
+    if (lt > DEADZONE) {
+        tmt::Log::info(tmt::Log::Scope::ENGINE, "Left trigger: {:.2f}", lt);
+    }
+    if (rt > DEADZONE) {
+        tmt::Log::info(tmt::Log::Scope::ENGINE, "Right trigger: {:.2f}", rt);
+    }
+
+    // Gamepad buttons
+    auto log_button = [](tmt::GamepadButton btn) {
+        if (tmt::engine.input.is_gamepad_button_just_pressed(btn)) {
+            tmt::Log::info(tmt::Log::Scope::ENGINE, "Gamepad: {} pressed", tmt::engine.input.get_gamepad_button_name(btn));
+        }
+    };
+
+    log_button(tmt::GamepadButton::SOUTH);
+    log_button(tmt::GamepadButton::EAST);
+    log_button(tmt::GamepadButton::WEST);
+    log_button(tmt::GamepadButton::NORTH);
+    log_button(tmt::GamepadButton::LEFT_SHOULDER);
+    log_button(tmt::GamepadButton::RIGHT_SHOULDER);
+    log_button(tmt::GamepadButton::BACK);
+    log_button(tmt::GamepadButton::START);
+    log_button(tmt::GamepadButton::LEFT_STICK);
+    log_button(tmt::GamepadButton::RIGHT_STICK);
+    log_button(tmt::GamepadButton::DPAD_UP);
+    log_button(tmt::GamepadButton::DPAD_DOWN);
+    log_button(tmt::GamepadButton::DPAD_LEFT);
+    log_button(tmt::GamepadButton::DPAD_RIGHT);
 }
 
 void Game::on_end() {}

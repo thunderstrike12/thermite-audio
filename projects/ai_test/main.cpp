@@ -3,7 +3,7 @@
 #include "engine/core/components/transform.hpp"
 #include "engine/core/components/camera.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
-#include "engine/core/input.hpp"
+#include "engine/core/input/input.hpp"
 #include "engine/core/logger.hpp"
 
 #include "engine/systems/ai/goap_system.hpp"

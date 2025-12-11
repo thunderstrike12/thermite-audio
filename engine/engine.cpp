@@ -4,7 +4,7 @@
 #include <chrono>
 
 #include "core/logger.hpp"
-#include "core/input.hpp"
+#include "core/input/input.hpp"
 
 #include "core/window.hpp"
 #include "core/ecs.hpp"
@@ -38,8 +38,8 @@ Engine::~Engine() {
     delete &resources;
     delete &renderer;
     delete &ecs;
-    delete &window;
     delete &input;
+    delete &window;
 }
 
 void Engine::init(std::unique_ptr<Application> user_app) {
@@ -48,8 +48,8 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     app = std::move(user_app);
     Log::init(app->specs.log_file.string());
 
-    input.init();
     window.init(app->specs);
+    input.init();
     renderer.init();
     salvo.init();
 

@@ -2,11 +2,11 @@
 
 #include "engine.hpp"
 #include "core/ecs.hpp"
-#include "core/input.hpp"
+#include "core/input//input.hpp"
 #include "core/logger.hpp"
 #include "core/components/camera.hpp"
 #include "core/components/transform.hpp"
-#include "engine/core/keys.hpp"
+#include "engine/core/input/keys.hpp"
 
 namespace tmt {
 void CameraSystem::on_start() {

@@ -4,6 +4,7 @@
 
 namespace tmt {
 
+// these are SDL values, which might be wrong. This is done like this so SDL include can be avoided.
 enum class Key : int32_t {
     UNKNOWN = 0,
 
@@ -81,5 +82,38 @@ enum class Key : int32_t {
     RIGHT_SHIFT = 229,
     RIGHT_ALT = 230,
 };
+enum class GamepadButton : int32_t {
+    SOUTH = 0,  // A / Cross
+    EAST = 1,   // B / Circle
+    WEST = 2,   // X / Square
+    NORTH = 3,  // Y / Triangle
+    BACK = 4,
+    GUIDE = 5,
+    START = 6,
+    LEFT_STICK = 7,
+    RIGHT_STICK = 8,
+    LEFT_SHOULDER = 9,
+    RIGHT_SHOULDER = 10,
+    DPAD_UP = 11,
+    DPAD_DOWN = 12,
+    DPAD_LEFT = 13,
+    DPAD_RIGHT = 14,
+    MISC1 = 15,
+    RIGHT_PADDLE1 = 16,
+    LEFT_PADDLE1 = 17,
+    RIGHT_PADDLE2 = 18,
+    LEFT_PADDLE2 = 19,
+    TOUCHPAD = 20,
+    COUNT = 21,
+};
 
+enum class GamepadAxis : int32_t {
+    LEFT_X = 0,
+    LEFT_Y = 1,
+    RIGHT_X = 2,
+    RIGHT_Y = 3,
+    LEFT_TRIGGER = 4,
+    RIGHT_TRIGGER = 5,
+    COUNT = 6,
+};
 }  // namespace tmt

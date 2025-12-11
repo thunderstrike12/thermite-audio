@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/core/keys.hpp"
+#include "engine/core/input/keys.hpp"
 
 namespace tmt {
 class Input;
@@ -32,7 +32,7 @@ enum class MouseButton : int32_t {
     X2 = 5,
 };
 
-class InputEventMouse : public InputEvent {
+class InputEventMouseMotion : public InputEvent {
    public:
     // These will be overriden by InputEventMouseButton
 
@@ -63,7 +63,7 @@ class InputEventMouse : public InputEvent {
     float relative_y {0};
 };
 
-class InputEventMouseButton : public InputEventMouse {
+class InputEventMouseButton : public InputEventMouseMotion {
    public:
     explicit InputEventMouseButton(MouseButton button) : button(button) {}
 
@@ -72,5 +72,31 @@ class InputEventMouseButton : public InputEventMouse {
     bool is_just_released() const override;
 
     MouseButton button;
+};
+class InputEventGamepadButton : public InputEvent {
+   public:
+    explicit InputEventGamepadButton(GamepadButton button, int32_t device_id = -1) : button(button), device_id(device_id) {}
+
+    bool is_pressed() const override;
+    bool is_just_pressed() const override;
+    bool is_just_released() const override;
+
+    GamepadButton button;
+    int32_t device_id = -1;
+};
+
+class InputEventGamepadMotion : public InputEvent {
+   public:
+    explicit InputEventGamepadMotion(GamepadAxis axis, int32_t device_id = -1) : axis(axis), device_id(device_id) {}
+
+    // TODO add a configurable way to define when an axis is pressed
+    bool is_pressed() const override;
+    bool is_just_pressed() const override;
+    bool is_just_released() const override;
+
+    float get_axis_value() const;
+
+    GamepadAxis axis;
+    int32_t device_id = -1;
 };
 }  // namespace tmt

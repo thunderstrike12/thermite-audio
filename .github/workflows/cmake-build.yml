@@ -92,7 +92,11 @@ jobs:
       
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
-      
+      - name: Cache FetchContent downloads
+        uses: actions/cache@v4
+        with:
+            path: build/${{ matrix.preset }}/_deps
+            key: fetchcontent-${{ runner.os }}-${{ hashFiles('tests/CMakeLists.txt') }}
       - name: Configure with tests enabled
         shell: pwsh
         run: |

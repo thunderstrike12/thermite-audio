@@ -15,7 +15,7 @@ Window::~Window() {
 void Window::init(const ApplicationSpecs&) {
     SDL_SetAppMetadata("Thermite Engine", "0.1", "com.thermite.engine");
 
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
         Log::error(Log::Scope::ENGINE, "Couldn't initialize SDL: %s", SDL_GetError());
         return;
     }

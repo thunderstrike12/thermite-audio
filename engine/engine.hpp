@@ -40,9 +40,8 @@ class Engine {
     ~Engine() { delete &my_system; };
     */
 
-    Input& input;
     Window& window;
-
+    Input& input;
     Ecs& ecs;
     Renderer& renderer;
     Resources& resources;
