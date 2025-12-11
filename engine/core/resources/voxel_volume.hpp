@@ -4,6 +4,8 @@
 
 #include "voxel_scene.hpp"
 
+#include "engine/core/reflection.hpp"
+
 namespace tmt {
 
 /* Voxel volume run-time resource, created from a Voxel model resource. */
@@ -27,3 +29,5 @@ class VoxelVolume : public tmt::RuntimeResource<VoxelScene> {
 };
 
 }  // namespace tmt
+
+TMT_OBJECT(tmt::VoxelVolume, (size));

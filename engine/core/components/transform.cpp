@@ -7,6 +7,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "engine/engine.hpp"
+#include "engine/core/ecs.hpp"
 
 namespace tmt {
 

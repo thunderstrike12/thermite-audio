@@ -1,6 +1,7 @@
 #pragma once
+#include "engine/core/reflection.hpp"
 
-#include "engine/core/ecs.hpp"
+#include "engine/core/entity.hpp"
 
 namespace tmt {
 
@@ -20,3 +21,5 @@ struct Camera {
 };
 
 }  // namespace tmt
+
+TMT_COMPONENT(tmt::Camera, "Camera", (fov, pitch, yaw, active));

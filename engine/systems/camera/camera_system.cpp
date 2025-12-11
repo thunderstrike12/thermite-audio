@@ -1,6 +1,7 @@
 #include "camera_system.hpp"
 
 #include "engine.hpp"
+#include "core/ecs.hpp"
 #include "core/input.hpp"
 #include "core/logger.hpp"
 #include "core/components/camera.hpp"

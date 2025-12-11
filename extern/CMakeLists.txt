@@ -93,6 +93,15 @@ target_include_directories(JsonReflect
     ${CMAKE_CURRENT_SOURCE_DIR}/JsonReflect/extern
 )
 
+# ImReflect - ImGui reflection
+# https://github.com/Sven-vh/ImReflect
+add_library(ImReflect INTERFACE)
+target_include_directories(JsonReflect
+    INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/ImReflect/
+    ${CMAKE_CURRENT_SOURCE_DIR}/ImReflect/extern
+)
+
 # nlohmann json - json parsing
 # https://github.com/nlohmann/json
 add_subdirectory(nlohmann_json)
@@ -109,10 +118,12 @@ if (THERMITE_EDITOR_BUILD)
         PRIVATE "./imgui/backends/imgui_impl_sdl3.cpp"
         PRIVATE "./imgui/backends/imgui_impl_vulkan.cpp"
         PRIVATE "./imgui/backends/imgui_impl_win32.cpp"
+        PRIVATE "./imgui/misc/cpp/imgui_stdlib.cpp"
     )
     target_include_directories(thermite-editor
         PRIVATE "./imgui"
         PRIVATE "./imgui/backends"
+        PRIVATE "./imgui/misc/cpp"
     )
 
     target_compile_definitions(thermite-editor PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK)

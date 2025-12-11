@@ -12,6 +12,9 @@ JSON_REFLECT(glm::quat, w, x, y, z);
 JSON_REFLECT(glm::ivec2, x, y);
 JSON_REFLECT(glm::ivec3, x, y, z);
 JSON_REFLECT(glm::ivec4, x, y, z, w);
+JSON_REFLECT(glm::uvec2, x, y);
+JSON_REFLECT(glm::uvec3, x, y, z);
+JSON_REFLECT(glm::uvec4, x, y, z, w);
 
 #include "engine/core/ecs.hpp"
 

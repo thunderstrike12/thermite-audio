@@ -2,10 +2,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-#include "engine/core/ecs.hpp"
-
-#include "engine/tools/fmt/helper.hpp"
-#include "engine/tools/serializer.hpp"
+#include "engine/core/entity.hpp"
+#include "engine/core/reflection.hpp"
 
 namespace tmt {
 
@@ -94,4 +92,4 @@ struct Transform {
 }  // namespace tmt
 
 FMT_LOGGING(tmt::Transform, "Position: {}, Rotation: {}, Scale: {}", obj.get_world_position(), obj.get_world_rotation(), obj.get_world_scale());
-JSON_REFLECT(tmt::Transform, local_position, local_rotation, local_scale, parent, children);
+TMT_COMPONENT_EX(tmt::Transform, "Transform", (local_position, local_rotation, local_scale, parent, children, is_dirty), (local_position, local_rotation, local_scale, is_dirty));

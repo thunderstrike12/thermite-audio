@@ -53,8 +53,8 @@ class Hierarchy : public IWindow, public IGameEvents {
         return first_selected_entity;
     };
 
-    const std::unordered_set<Entity>& get_all_selected_entities() { return selected_entities; };
-    bool is_entity_selected() { return !selected_entities.empty(); }
+    const std::unordered_set<Entity>& get_selected_entities() const { return selected_entities; };
+    bool is_entity_selected() const { return !selected_entities.empty(); }
 
    private:
     std::unordered_set<Entity> selected_entities;

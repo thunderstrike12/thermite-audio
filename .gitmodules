@@ -27,3 +27,6 @@
 [submodule "extern/zlib"]
 	path = extern/zlib
 	url = https://github.com/madler/zlib
+[submodule "extern/ImReflect"]
+	path = extern/ImReflect
+	url = https://github.com/Sven-vh/ImReflect

@@ -78,7 +78,7 @@ void tmt::Viewport::gizmo_manip() {
 
     auto& hierarchy = editor.windows.get<Hierarchy>();
 
-    auto& selected_entities = hierarchy.get_all_selected_entities();
+    auto& selected_entities = hierarchy.get_selected_entities();
 
     if (!selected_entities.empty()) {
         Transform& transform = engine.ecs.get_component<Transform>(cam_entity);

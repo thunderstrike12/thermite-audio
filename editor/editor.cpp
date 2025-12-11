@@ -15,9 +15,11 @@
 
 #include "editor/imgui/manager.hpp"
 
+/* Windows */
 #include "editor/windows/hierarchy.hpp"
 #include "editor/windows/viewport.hpp"
 #include "editor/windows/game_flow.hpp"
+#include "editor/windows/inspector.hpp"
 
 #include "windows/profiler_tracy.hpp"
 
@@ -38,6 +40,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
 
     windows.add<Hierarchy>();
     windows.add<GameFlow>();
+    windows.add<Inspector>();
     windows.add<Viewport>();
     windows.add<Profiler>();
 

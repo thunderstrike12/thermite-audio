@@ -2,6 +2,7 @@
 
 #include "engine.hpp"
 #include "transform.hpp"
+#include "engine/core/ecs.hpp"
 
 namespace tmt {
 
