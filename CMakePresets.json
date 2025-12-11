@@ -29,12 +29,12 @@
       }
     },
     {
-      "name": "Unit-tests",
+      "name": "Unit-Tests",
       "inherits": "base",
       "displayName": "Unit Tests",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "THERMITE_EDITOR_BUILD": "ON",
+        "THERMITE_EDITOR_BUILD": "OFF",
         "THERMITE_DEBUG_BUILD": "ON",
         "THERMITE_BUILD_TESTS": "ON"
       }
@@ -120,8 +120,8 @@
   ],
   "testPresets": [
     {
-      "name": "Unit-tests",
-      "configurePreset": "Unit-tests",
+      "name": "Unit-Tests",
+      "configurePreset": "Unit-Tests",
       "output": {
         "outputOnFailure": true,
         "verbosity": "verbose"

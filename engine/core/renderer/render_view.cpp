@@ -117,8 +117,10 @@ void RenderView::set_viewport_size(uint32_t width, uint32_t height) {
             Log::info(Log::Scope::RENDERER, "viewport texture has been resized.");
         }
 
+#ifdef THERMITE_EDITOR
         engine.renderer.imgui->remove_image(viewport_image);
         imgui_viewport = engine.renderer.imgui->add_image(viewport_image);
+#endif
     }
 }
 

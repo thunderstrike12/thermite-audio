@@ -48,7 +48,33 @@ set(VULKAN_HEADERS_INSTALL_DIR "${CMAKE_SOURCE_DIR}/extern/vulkan_sdk/")
 
 # graphite - render graph library
 # https://github.com/mxcop/graphite
+set(GRAPHITE_SAMPLES OFF CACHE BOOL "" FORCE)
+if (THERMITE_EDITOR_BUILD)
+    set(GRAPHITE_IMGUI_DIR "${CMAKE_SOURCE_DIR}/extern/imgui/")
+endif()
 add_subdirectory(graphite)
+
+# IMGUI - Immediate Mode GUI
+# https://github.com/ocornut/imgui
+if (THERMITE_EDITOR_BUILD)
+    # Sources
+    target_sources(thermite-editor
+        PRIVATE "./imgui/imgui_demo.cpp"
+        PRIVATE "./imgui/imgui_draw.cpp"
+        PRIVATE "./imgui/imgui_tables.cpp"
+        PRIVATE "./imgui/imgui_widgets.cpp"
+        PRIVATE "./imgui/imgui.cpp"
+        PRIVATE "./imgui/backends/imgui_impl_sdl3.cpp"
+        PRIVATE "./imgui/backends/imgui_impl_vulkan.cpp"
+        PRIVATE "./imgui/backends/imgui_impl_win32.cpp"
+    )
+
+    # Includes
+    target_include_directories(thermite-editor
+        PRIVATE "./imgui"
+        PRIVATE "./imgui/backends"
+    )
+endif()
 
 # visit_struct - struct reflection
 # https://github.com/cbeck88/visit_struct
@@ -71,26 +97,6 @@ target_include_directories(JsonReflect
 # https://github.com/nlohmann/json
 add_subdirectory(nlohmann_json)
 
-if (THERMITE_EDITOR_BUILD)
-    # ImGUI - immediate mode gui
-    # https://github.com/ocornut/imgui
-    target_sources(thermite-editor
-        PRIVATE "./imgui/imgui_demo.cpp"
-        PRIVATE "./imgui/imgui_draw.cpp"
-        PRIVATE "./imgui/imgui_tables.cpp"
-        PRIVATE "./imgui/imgui_widgets.cpp"
-        PRIVATE "./imgui/imgui.cpp"
-        PRIVATE "./imgui/backends/imgui_impl_sdl3.cpp"
-        PRIVATE "./imgui/backends/imgui_impl_vulkan.cpp"
-        PRIVATE "./imgui/backends/imgui_impl_win32.cpp"
-    )
-    target_include_directories(thermite-editor
-        PRIVATE "./imgui"
-        PRIVATE "./imgui/backends"
-    )
-
-    target_compile_definitions(thermite-editor PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK)
-endif()
 # tracy - profiler integration
 # https://github.com/wolfpld/tracy
 option(TRACY_ENABLE "" OFF)
@@ -100,7 +106,6 @@ if(THERMITE_EDITOR_BUILD)
     set(TRACY_ENABLE ON CACHE BOOL "" FORCE)
 endif()
 add_subdirectory(tracy)
-
 
 # ufbx - single source fbx loading
 # https://github.com/ufbx/ufbx

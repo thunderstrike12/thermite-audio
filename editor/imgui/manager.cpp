@@ -17,7 +17,7 @@ void ImGuiManager::init() {
     ImGui::CreateContext();
     ImGui_ImplSDL3_InitForVulkan(engine.window.window);
     imgui.set_clear_screen(true);
-    tmt::engine.renderer.set_imgui(&imgui, IMGUI_FUNCTIONS);
+    tmt::engine.renderer.set_imgui(&imgui);
 }
 
 void ImGuiManager::new_frame() {

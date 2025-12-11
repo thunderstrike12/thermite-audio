@@ -25,7 +25,9 @@ class Renderer {
 
    public:
     RenderView render_view {};
+#ifdef THERMITE_EDITOR
     ImGUI* imgui = nullptr;
+#endif
 
     Renderer();
     ~Renderer();
@@ -41,7 +43,9 @@ class Renderer {
 
     VRAMBank& vram_bank();
 
-    void set_imgui(ImGUI* imgui, ImGUIFunctions functions);
+#ifdef THERMITE_EDITOR
+    void set_imgui(ImGUI* imgui);
+#endif
 };
 
 }  // namespace tmt

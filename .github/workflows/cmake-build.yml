@@ -82,7 +82,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - preset: Debug-Editor
+          - preset: Debug-Game
     runs-on: windows-latest
     steps:
       - name: Checkout repository

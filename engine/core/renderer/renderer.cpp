@@ -95,10 +95,12 @@ void Renderer::update() {
         debug_pipeline.enqueue(render_graph, render_view);
     }
 
+#ifdef THERMITE_EDITOR
     /* Add the immediate mode GUI to the render graph */
     if (imgui != nullptr) {
         render_graph.add_imgui(*imgui, render_view.render_target);
     }
+#endif
 
     /* Compile the render graph */
     if (const Result r = render_graph.end_graph(); r.is_err()) {
@@ -125,16 +127,18 @@ void Renderer::end() {
     gpu.deinit().expect("failed to destroy gpu adapter.");
 }
 
-void Renderer::set_imgui(ImGUI* new_imgui, ImGUIFunctions functions) {
+#ifdef THERMITE_EDITOR
+void Renderer::set_imgui(ImGUI* new_imgui) {
     imgui = new_imgui;
     /* Initialize the immediate mode GUI */
-    if (const Result r = imgui->init(gpu, render_view.render_target, functions); r.is_err()) {
+    if (const Result r = imgui->init(gpu, render_view.render_target); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to initialize imgui.\nreason: {}", r.unwrap_err());
         return;
     }
 
     render_view.imgui_viewport = imgui->add_image(render_view.viewport_image);
 }
+#endif
 
 void Renderer::draw_line(const glm::vec3 start, const glm::vec3 end, const glm::vec3 color) { debug_pipeline.draw_line(start, end, color); }
 
