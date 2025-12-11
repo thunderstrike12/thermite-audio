@@ -11,7 +11,7 @@
 #include "editor/core/window.hpp"
 
 namespace tmt {
-class Hierarchy : public IWindow {
+class Hierarchy : public IWindow, public IGameEvents {
    public:
     Hierarchy() = default;
     ~Hierarchy() = default;
@@ -21,7 +21,7 @@ class Hierarchy : public IWindow {
     constexpr std::string get_title() const override { return "Hierarchy"; };
 
     void on_editor_start() override {};
-    void on_editor_update(const FrameData& time) override {};
+    void on_editor_update(const FrameData&) override {};
     void on_editor_end() override {};
 
     template <typename... Components>
@@ -44,8 +44,21 @@ class Hierarchy : public IWindow {
         end_section();
     }
 
+    Entity get_last_selected_entity() const {
+        if (selected_entities.empty()) return entt::null;
+        return *selected_entities.end();
+    };
+    Entity get_first_selected_entity() const {
+        if (selected_entities.empty()) return entt::null;
+        return first_selected_entity;
+    };
+
+    const std::unordered_set<Entity>& get_all_selected_entities() { return selected_entities; };
+    bool is_entity_selected() { return !selected_entities.empty(); }
+
    private:
     std::unordered_set<Entity> selected_entities;
+    Entity first_selected_entity = entt::null;
 
     static constexpr glm::uvec2 NULL_INDEX {std::numeric_limits<uint32_t>::max()};
 
@@ -94,5 +107,10 @@ class Hierarchy : public IWindow {
 
     bool drag_drop_source(const Entity dragged_entity) const;
     bool drag_drop_target(const Entity dropped_entity);
+
+    // Inherited via IGameEvents
+    void on_start() override;
+    void on_update(const tmt::FrameData& time) override;
+    void on_end() override;
 };
 }  // namespace tmt

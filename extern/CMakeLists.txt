@@ -97,6 +97,43 @@ target_include_directories(JsonReflect
 # https://github.com/nlohmann/json
 add_subdirectory(nlohmann_json)
 
+if (THERMITE_EDITOR_BUILD)
+    # ImGUI - immediate mode gui
+    # https://github.com/ocornut/imgui
+    target_sources(thermite-editor
+        PRIVATE "./imgui/imgui_demo.cpp"
+        PRIVATE "./imgui/imgui_draw.cpp"
+        PRIVATE "./imgui/imgui_tables.cpp"
+        PRIVATE "./imgui/imgui_widgets.cpp"
+        PRIVATE "./imgui/imgui.cpp"
+        PRIVATE "./imgui/backends/imgui_impl_sdl3.cpp"
+        PRIVATE "./imgui/backends/imgui_impl_vulkan.cpp"
+        PRIVATE "./imgui/backends/imgui_impl_win32.cpp"
+    )
+    target_include_directories(thermite-editor
+        PRIVATE "./imgui"
+        PRIVATE "./imgui/backends"
+    )
+
+    target_compile_definitions(thermite-editor PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK)
+
+    # ImGuizmo - ImGui based gizmo manipulation
+    # https://github.com/CedricGuillemet/ImGuizmo
+    target_sources(thermite-editor
+        PRIVATE "./imguizmo/GraphEditor.cpp"
+        PRIVATE "./imguizmo/ImCurveEdit.cpp"
+        PRIVATE "./imguizmo/ImGradient.cpp"
+        PRIVATE "./imguizmo/ImSequencer.cpp"
+        PRIVATE "./imguizmo/GraphEditor.cpp"
+        PRIVATE "./imguizmo/ImGuizmo.cpp"
+    )
+    target_include_directories(thermite-editor
+        PRIVATE "./imguizmo"
+    )
+
+endif()
+
+
 # tracy - profiler integration
 # https://github.com/wolfpld/tracy
 option(TRACY_ENABLE "" OFF)

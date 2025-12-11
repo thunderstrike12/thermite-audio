@@ -162,7 +162,7 @@ class BinaryParser {
    public:
     BinaryParser(const std::vector<char>& data) : data(data), pos(0) {}
 
-    bool parse_node(vengi::Node& node, vengi::Node* parent = nullptr);
+    bool parse_node(vengi::Node& node);
 
     int32_t read_version() { return read_uint32(); }
 

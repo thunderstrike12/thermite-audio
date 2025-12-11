@@ -96,6 +96,7 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
             if (is_first_selected) {
                 selected_index_begin = state.position;
                 selection_parent = parent;
+                first_selected_entity = state.entity;
                 selected_index_end_above = state.position;
                 selected_index_end_below = state.position;
             } else {
@@ -118,6 +119,7 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
             selection_parent = state.transform.get_parent();
             selected_index_end_above = state.position;
             selected_index_end_below = state.position;
+            first_selected_entity = state.entity;
         }
     }
 
@@ -216,5 +218,11 @@ bool Hierarchy::drag_drop_target(const Entity dropped_entity) {
     }
     return false;
 }
+
+void Hierarchy::on_start() {}
+
+void Hierarchy::on_update(const tmt::FrameData& time) {}
+
+void Hierarchy::on_end() { selected_entities.clear(); }
 
 }  // namespace tmt

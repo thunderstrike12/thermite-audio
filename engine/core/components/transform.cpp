@@ -104,8 +104,19 @@ glm::quat Transform::get_world_rotation() const {
     if (has_parent() == false) {
         return local_rotation;
     }
+    const glm::mat4& wm = get_world_matrix();
 
-    return glm::normalize(glm::quat(get_world_matrix()));
+    // Extract scale from matrix columns
+    glm::vec3 scale(glm::length(glm::vec3(wm[0])), glm::length(glm::vec3(wm[1])), glm::length(glm::vec3(wm[2])));
+
+    // Build pure rotation matrix by removing scale
+    glm::mat4 rotation_matrix = wm;
+    if (scale.x != 0.0f) rotation_matrix[0] /= scale.x;
+    if (scale.y != 0.0f) rotation_matrix[1] /= scale.y;
+    if (scale.z != 0.0f) rotation_matrix[2] /= scale.z;
+
+    // Now extract quaternion from pure rotation matrix
+    return glm::normalize(glm::quat_cast(rotation_matrix));
 }
 
 glm::vec3 Transform::get_world_scale() const {
@@ -203,7 +214,7 @@ void Transform::set_parent(Entity new_parent) {
     glm::quat world_rot;
     glm::vec3 world_scale;
     const bool unparenting = (new_parent == entt::null && has_parent());
-    const bool changing_parent = (new_parent != parent && parent != entt::null);
+    const bool changing_parent = (new_parent != parent || parent != entt::null);
 
     if (unparenting || changing_parent) {
         world_pos = get_world_position();

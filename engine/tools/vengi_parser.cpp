@@ -105,7 +105,7 @@ vengi::NodeType BinaryParser::parse_node_type(const std::string& type_str) {
     return NodeType::NONE;
 }
 
-bool BinaryParser::parse_node(vengi::Node& node, vengi::Node* parent) {
+bool BinaryParser::parse_node(vengi::Node& node) {
     // Read NODE FourCC
     uint32_t four_cc = read_four_cc();
     if (four_cc != 0x45444F4E) {  // "NODE"
@@ -157,7 +157,7 @@ bool BinaryParser::parse_node(vengi::Node& node, vengi::Node* parent) {
                 // Rewind to read NODE again
                 seek(tell() - 4);
                 auto child = std::make_unique<Node>();
-                if (!parse_node(*child, &node)) return false;
+                if (!parse_node(*child)) return false;
                 node.children.push_back(std::move(child));
                 break;
             }

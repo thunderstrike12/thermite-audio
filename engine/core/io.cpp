@@ -77,32 +77,12 @@ std::vector<char> IO::read_file(const FileLocation& file_location) {
 }
 
 std::string IO::read_text_file(const FileLocation& file_location) {
-    std::filesystem::path absolute = get_absolute_path(file_location.sub_location, file_location.relative_path);
-
-    std::string data;
-
-    if (!std::filesystem::exists(absolute)) {
-        tmt::Log::error(tmt::Log::Scope::ENGINE, "Could not find file at: {}", absolute.string());
-        return data;
+    std::vector<char> bytes = read_file(file_location);
+    if (bytes.empty()) {
+        return {};
     }
 
-    std::fstream input_file;
-    if (!stream_open(input_file, absolute, std::ios::in)) return data;
-
-    try {
-        // find out size of input_file contents
-        input_file.seekg(0, std::ios::end);
-        std::ifstream::pos_type filesize = input_file.tellg();
-        input_file.seekg(0, std::ios::beg);
-        data.resize(filesize);
-
-        input_file >> data;
-
-    } catch (const std::exception& exception) {
-        tmt::Log::error(tmt::Log::Scope::ENGINE, "Exception when reading file: {}\nreason: {}", absolute.string(), exception.what());
-    }
-
-    return data;
+    return std::string(bytes.data(), bytes.size());
 }
 
 std::filesystem::path IO::get_absolute_path(Location sub_cat, const std::filesystem::path& relative_path) {
