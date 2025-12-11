@@ -18,6 +18,8 @@ void ImGuiManager::init() {
     ImGui_ImplSDL3_InitForVulkan(engine.window.window);
     imgui.set_clear_screen(true);
     tmt::engine.renderer.set_imgui(&imgui);
+
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 }
 
 void ImGuiManager::new_frame() {
@@ -25,6 +27,9 @@ void ImGuiManager::new_frame() {
     imgui.new_frame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
+
+    /* main docking window*/
+    ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 }
 
 void ImGuiManager::end_frame() {

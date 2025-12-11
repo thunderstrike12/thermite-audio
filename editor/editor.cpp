@@ -61,6 +61,7 @@ void Editor::on_engine_update(const FrameData& time) {
     ImGui::Begin("Viewport");
 
     auto size = ImGui::GetContentRegionAvail();
+    size = ImVec2(std::max(size.x, 1.0f), std::max(size.y, 1.0f));
 
     engine.renderer.render_view.set_viewport_size(size.x, size.y);
 

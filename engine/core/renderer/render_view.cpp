@@ -107,6 +107,7 @@ BindHandle RenderView::get_render_image() const {
 
 void RenderView::set_viewport_size(uint32_t width, uint32_t height) {
     if (width != gpu_view.resolution.x || height != gpu_view.resolution.y) {
+        height = height <= 0 ? 1 : height;
         gpu_view.resolution = {width, height};
 
         VRAMBank& bank = engine.renderer.vram_bank();
