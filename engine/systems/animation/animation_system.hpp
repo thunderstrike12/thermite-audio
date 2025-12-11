@@ -1,14 +1,18 @@
 #pragma once
-#include "core/system.hpp"
+#include <variant>
+#include <cstdint>
+#include "engine/core/ecs.hpp"
+#include "rig_model.hpp"
 
 namespace tmt {
 
-class Animation : public ISystem {
-    // Inherited via ISystem
-    constexpr virtual std::string get_name() { return "Animation System"; }
+class RigModelManager : public ISystem {
+   public:
+    std::string get_name() override;
+
     void on_start() override;
     void on_update(const FrameData& time) override;
+    void inspect(float);
     void on_end() override;
 };
-
 }  // namespace tmt
