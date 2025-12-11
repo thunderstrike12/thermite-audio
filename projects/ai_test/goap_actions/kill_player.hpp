@@ -6,18 +6,29 @@ namespace tmt {
 class KillPlayer : public GoapAction {
    public:
     KillPlayer() {
-        // Preconditions: player must be in range and alive
         preconditions["player_in_range"] = true;
         preconditions["player_alive"] = true;
 
-        // Effects: player dead, area secure
         effects["player_alive"] = false;
-        effects["area_secure"] = true;
+        effects["player_in_range"] = false;
+        effects["player_visible"] = false;
 
         cost = 2.f;
     }
 
     const char* get_name() const override { return "KillPlayer"; }
+
+    void on_start(Entity /*agent*/, Registry& /*ecs*/) override {}
+
+    bool is_done(Entity /*agent*/, Registry& /*ecs*/) const override {
+        return true;  // Done instantly for testing purposes
+    }
+
+    void on_tick(Entity /*agent*/, Registry& /*ecs*/, float /*dt*/) override {}
+
+    void on_finished(Entity /*agent*/, Registry& /*ecs*/) override {}
+
+    void on_interrupt(Entity /*agent*/, Registry& /*ecs*/) override {}
 };
 
 }  // namespace tmt

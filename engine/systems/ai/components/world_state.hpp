@@ -6,18 +6,33 @@
 
 namespace tmt {
 
-// Represents a unique identifier for a world state fact.
+/**
+ * Struct FactId
+ * Represents a unique identifier for a world-state variable.
+ *
+ * FactId uses a hash of a string.
+ */
 struct FactId {
     uint32_t id;  // hash of the fact name
 
-    FactId() : id(0u) {}
-    FactId(const std::string& name) : id((uint32_t)std::hash<std::string> {}(name)) {}
+    FactId() : id(0) {}
+    FactId(const std::string& name) : id(std::hash<std::string> {}(name)) {}
 
     bool operator==(const FactId& other) const { return id == other.id; }
 };
 
-// Represents the value of a fact.
-// Can be extended to support multiple types. Currently supports boolean, integer, and float.
+/**
+ * Struct FactValue
+ * Represents the stored type and data for a world state fact.
+ *
+ * Supports:
+ *   - bool
+ *   - int
+ *   - float
+ *
+ * Currently only bool types are supported by GoapAction::check_preconditions.
+ * Could be extended to support more complex types.
+ */
 struct FactValue {
     enum class Type { BOOL_TYPE, INT_TYPE, FLOAT_TYPE } value_type;
 
@@ -33,26 +48,45 @@ struct FactValue {
     FactValue(float f) : value_type(Type::FLOAT_TYPE), float_val(f) {}
 };
 
-// A simple pair of fact_id and its value.
-// Used in preconditions, effects, and when applying changes to the world state.
+/**
+ * Struct FactPair
+ * A single fact assignment (ID + value).
+ *
+ * Used for preconditions, effects and world state application.
+ */
 struct FactPair {
     FactId id;
     FactValue value;
 };
 
-// Container for the agent's knowledge of the world state.
+/**
+ * Struct WorldState
+ * A container storing an agent’s local perception of the world.
+ *
+ * WorldState drives:
+ *   - goal relevance checks,
+ *   - action preconditions,
+ *   - planning,
+ *   - dynamic reaction and interrupts.
+ */
 struct WorldState {
     std::unordered_map<uint32_t, FactValue> facts;
 
-    // Apply a set of effects to the world state. Adds new facts if they don't exist, or updates existing ones.
+    /**
+     * Applies a collection of effects to the world state.
+     * Param: effects, a List of facts to modify.
+     */
     void apply(const std::vector<FactPair>& effects) {
         for (const auto& e : effects) {
             facts[e.id.id] = e.value;
         }
     }
 
-    // Checks whether the world state satisfies a given set of conditions.
-    // Returns true if all facts in `conditions` exist in the world state and have matching values.
+    /**
+     * Checks whether the world state satisfies a given set of conditions.
+     * Returns true if all conditions are satisfied.
+     * Param: conditions, A list of required facts.
+     */
     bool satisfies(const std::vector<FactPair>& conditions) const {
         for (const auto& cond : conditions) {
             auto it = facts.find(cond.id.id);
@@ -65,7 +99,10 @@ struct WorldState {
         return true;
     }
 
-    // Helper to get a fact value safely.
+    /**
+     * Retrieves a fact value if it exists.
+     * Returns pointer to FactValue or nullptr.
+     */
     const FactValue* try_get(const FactId& id) const {
         auto it = facts.find(id.id);
         if (it != facts.end()) return &it->second;

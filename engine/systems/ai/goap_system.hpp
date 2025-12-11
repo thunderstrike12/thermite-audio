@@ -4,6 +4,21 @@
 #include "components/world_state.hpp"
 #include "components/goap_agent.hpp"
 
+/**
+ * Class Goap
+ * Main GOAP (Goal-Oriented Action Planning) system.
+ *
+ * This system:
+ *  - Selects goals for agents based on world state.
+ *  - Builds plans using GOAP A*.
+ *  - Executes actions, handles interruptions, and detects completion.
+ *
+ * The system runs automatically inside the engine’s ECS update loop.
+ *
+ * Logging information is optional, can set show_logging to true.
+ * Warnings will always be shown, like planning fails etc.
+ */
+
 namespace tmt {
 
 class Goap : public ISystem {
@@ -18,16 +33,27 @@ class Goap : public ISystem {
     void on_end() override;
 
    private:
+    /**
+     * Executes the full GOAP update for a single agent.
+     *
+     * Steps:
+     *  1. Evaluate and assign goals.
+     *  2. Replan if required.
+     *  3. Tick and manage action execution.
+     */
     void process_agent(Entity entity, WorldState& ws, float dt);
 
-    // Step 1: Assign goal if needed
+    // Selects or updates the active goal for an agent.
     void update_goal(Entity entity, GoapAgent& agent, WorldState& ws);
 
-    // Step 2: Build plan if needed
+    // Builds a plan toward the current goal (A*).
     void update_plan(Entity entity, GoapAgent& agent, WorldState& ws);
 
-    // Step 3: Execute current action
-    void update_action(Entity entity, GoapAgent& agent, float dt);
+    // Executes or advances the current action.
+    void update_action(Entity entity, GoapAgent& agent, WorldState& ws, float dt);
+
+    // Set to true if you want more logging to see whats happening internally
+    bool show_logging = false;
 };
 
 }  // namespace tmt
