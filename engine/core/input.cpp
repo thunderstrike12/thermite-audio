@@ -130,6 +130,16 @@ bool Input::is_action_just_released(const std::string& name) const {
 }
 void Input::set_mouse_relative_to_window(bool value) { SDL_SetWindowRelativeMouseMode(engine.window.window, value); }
 bool Input::get_mouse_relative_to_window() { return SDL_GetWindowRelativeMouseMode(engine.window.window); }
+
+void Input::lock_mouse(bool value) const {
+    if (value) {
+        const SDL_Rect rect {static_cast<int32_t>(mouse_x), static_cast<int32_t>(mouse_y), 1, 1};
+        SDL_SetWindowMouseRect(engine.window.window, &rect);
+    } else {
+        SDL_SetWindowMouseRect(engine.window.window, nullptr);
+    }
+}
+
 void Input::setup_default_action() {
     add_action(action::CONFIRM);
     add_action_keys(action::CONFIRM, Key::SPACE, Key::RETURN);
