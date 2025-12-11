@@ -200,7 +200,7 @@ void Goap::update_plan(Entity entity, GoapAgent& agent, WorldState& ws) {
         if (closed.count(current->action)) continue;
         closed.insert(current->action);
 
-        // Simulate effects, by applying this action’s effects to get new world state
+        // Simulate effects, by applying this action's effects to get new world state
         WorldState temp = ws;
         current->action->apply_effects(temp);
 

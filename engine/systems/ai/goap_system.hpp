@@ -13,7 +13,7 @@
  *  - Builds plans using GOAP A*.
  *  - Executes actions, handles interruptions, and detects completion.
  *
- * The system runs automatically inside the engine’s ECS update loop.
+ * The system runs automatically inside the engine's ECS update loop.
  *
  * Logging information is optional, can set show_logging to true.
  * Warnings will always be shown, like planning fails etc.

@@ -61,7 +61,7 @@ struct FactPair {
 
 /**
  * Struct WorldState
- * A container storing an agent’s local perception of the world.
+ * A container storing an agent's local perception of the world.
  *
  * WorldState drives:
  *   - goal relevance checks,

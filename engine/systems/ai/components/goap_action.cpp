@@ -50,7 +50,7 @@ bool GoapAction::check_preconditions(const WorldState& ws) const {
  * Utility function to print all facts in a WorldState.
  *
  * This is used only for debugging so you can inspect how actions
- * modify the agent’s perceived world after each step.
+ * modify the agent's perceived world after each step.
  * You can't see actual names, just the "number" but it is useful for debugging.
  */
 void print_world_state(const WorldState& ws) {
