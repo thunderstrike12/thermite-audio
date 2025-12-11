@@ -9,10 +9,13 @@ class thread;
 
 namespace tmt {
 
-class JobManager {
+// A job system to handle multithreaded work, mostly intended to be used for physics.
+class Salvo {
    public:
-    JobManager();
-    ~JobManager();
+    Salvo();
+
+    void init();
+    void end();
 
     [[nodiscard]] size_t get_thread_count() const { return worker_threads.size(); }
 

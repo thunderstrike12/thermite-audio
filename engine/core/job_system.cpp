@@ -2,42 +2,48 @@
 
 #include <latch>
 #include <thread>
+
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#undef min
+#undef max
 
 #include "logger.hpp"
 
 namespace tmt {
 
-JobManager::JobManager() {
+Salvo::Salvo() {
     exit.clear();
 
     // Set the flags to not accidentally start the worker threads once they get created.
     worker_threads_active.clear();
     finished_working.test_and_set();
+}
 
-    Log::info("Start JobSystem module: creating worker threads");
+void Salvo::init() {
     // Threads in the pool will be the amount of hardware threads - 2 (to account for main thread and background tasks).
-    const size_t thread_count = std::thread::hardware_concurrency() - 2;
+    const size_t thread_count = std::max(std::thread::hardware_concurrency() - 2u, 1u);
+    Log::info(Log::Scope::ENGINE, "Starting Salvo job system module: creating {} worker threads", thread_count);
     for (size_t i = 0; i < thread_count; i++) {
-        std::thread& worker = worker_threads.emplace_back(&JobManager::run_worker, this);
+        std::thread& worker = worker_threads.emplace_back(&Salvo::run_worker, this);
         SetThreadAffinityMask(worker.native_handle(), 0b1 << (i + 2));
     }
 }
 
-JobManager::~JobManager() {
+void Salvo::end() {
     // Notify all threads to quit.
     activate_workers();
     exit.test_and_set();
 
     // Wait for all threads after we notify them to quit.
-    Log::info("Quiting job_manager module: joining worker threads");
+    Log::info(Log::Scope::ENGINE, "Quiting Salvo job system module: joining worker threads");
     for (std::thread& thread : worker_threads) {
         thread.join();
     }
     deactivate_workers();
 }
 
-void JobManager::parallel_for(const size_t count, const std::function<void(size_t)>& function) {
+void Salvo::parallel_for(const size_t count, const std::function<void(size_t)>& function) {
     // Set up the variables used when executing work.
     task_function = function;
     next_task_index = 0;
@@ -65,7 +71,7 @@ void JobManager::parallel_for(const size_t count, const std::function<void(size_
     if (workers_automatically_woken) deactivate_workers();
 }
 
-void JobManager::run_worker() {
+void Salvo::run_worker() {
     while (true) {
         // Wait for the thread to be woken up so that we don't infinitely spin-lock and take up all the PC's CPU time.
         worker_threads_active.wait(false);
@@ -82,7 +88,7 @@ void JobManager::run_worker() {
     }
 }
 
-void JobManager::execute_work() {
+void Salvo::execute_work() {
     if (next_task_index >= total_task_count) return;
     ++finished_thread_count;
 

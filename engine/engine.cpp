@@ -30,11 +30,11 @@ tmt::Engine tmt::engine;
 
 namespace tmt {
 
-Engine::Engine() : input(*new Input()), window(*new Window()), ecs(*new Ecs()), renderer(*new Renderer()), resources(*new Resources()), job_manager(*new JobManager()) {}
+Engine::Engine() : input(*new Input()), window(*new Window()), ecs(*new Ecs()), renderer(*new Renderer()), resources(*new Resources()), salvo(*new Salvo()) {}
 
 Engine::~Engine() {
     /* Destruction should be in reverse order */
-    delete &job_manager;
+    delete &salvo;
     delete &resources;
     delete &renderer;
     delete &ecs;
@@ -51,6 +51,7 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     input.init();
     window.init(app->specs);
     renderer.init();
+    salvo.init();
 
     ecs.systems.add<Physics>();
     ecs.systems.add<RigModelManager>();
@@ -119,6 +120,7 @@ void Engine::end() {
 
     OnEngineEnd::dispatch();
 
+    salvo.end();
     ecs.clear();
     resources.unload_unused();
     renderer.end();
