@@ -15,12 +15,15 @@ struct alignas(16) VoxelObject {
 
     /* Size of the object in voxels. */
     glm::uvec3 size {};
+    /* Depth of the voxel tree structure. */
+    float rcp_tree_width = 0.0f;
+
+    /* Bindless resource handles. */
     uint32_t blas_handle = 0u;
     uint32_t voxels_handle = 0u;
     uint32_t palette_handle = 0u;
 
     /* Padding */
-    uint32_t : 32;
     uint32_t : 32;
 
     /* Get the axis-aligned bounding box of this voxel object. */

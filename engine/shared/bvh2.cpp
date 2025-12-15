@@ -5,7 +5,7 @@
 namespace tmt {
 
 /* Number of bins to use during BVH construction. */
-constexpr int BVH_BINS = 4;
+constexpr int BVH_BINS = 8;
 constexpr int BVH_SPLITS = BVH_BINS - 1;
 
 /* Returns the surface area of a node. */

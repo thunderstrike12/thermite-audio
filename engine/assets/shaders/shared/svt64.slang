@@ -6,11 +6,11 @@ import material;
 
 public struct Svt64Hit {
     public float3 point;
-    public float3 albedo;
+    public uint voxel_index;
     public uint steps;
 
     /* Returns true if this was a miss. */
-    public bool miss() { return point.x == 1e30f; }
+    public bool miss() { return voxel_index == 0xFFFFFFFFu; }
 };
 
 public struct Svt64Node {
@@ -88,8 +88,6 @@ public struct Svt64Node {
 /* Trace a ray through a SVT64. */
 public inline Svt64Hit trace_svt64<let DEBUG : bool>(
     StructuredBuffer<Svt64Node> nodes,
-    StructuredBuffer<uint> voxels,
-    StructuredBuffer<Material> palette,
     Ray ray
 ) {
     const uint group_id = spirv_asm {
@@ -165,20 +163,19 @@ public inline Svt64Hit trace_svt64<let DEBUG : bool>(
     }
 
     Svt64Hit hit;
-    hit.point = 1e30f;
+    hit.voxel_index = 0xFFFFFFFFu;
     if (DEBUG) hit.steps = steps;
 
     /* If we hit a leaf node, return the voxel we hit */
     if (node.is_leaf() && scale_exp <= 21) {
         /* Find the hit position & calculate the hit distance */
         pos = mirror_pos(pos, ray.dir, false);
-        hit.point = pos; // distance(ray.origin, pos);
+        hit.point = pos;
 
         /* Fetch the material of the voxel we hit */
         const uint child_index = get_node_cell_index(pos, scale_exp);
         const uint voxel_index = node.abs_ptr() + popcnt_var64(node.child_mask_lo, node.child_mask_hi, child_index);
-        const uint palette_index = (voxels[voxel_index >> 2u] >> ((4u - (voxel_index % 4u)) << 3u)) & 0xFFu;
-        hit.albedo = palette[palette_index].albedo;
+        hit.voxel_index = voxel_index;
     }
 
     return hit;

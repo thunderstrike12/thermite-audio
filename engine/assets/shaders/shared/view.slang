@@ -24,7 +24,8 @@ public struct Ray {
 /* Represents a hit resulted from tracing a ray. */
 public struct Hit {
     public float t;
-    public float3 albedo;
+    public uint voxel_index;
+    public uint object_index;
     public uint steps;
 
     public inline static Hit miss() {
@@ -51,7 +52,7 @@ public inline Ray pinhole_ray(RenderView view, int2 pixel) {
 
     Ray ray; /* Fill in the ray struct */
     ray.origin = view.origin.xyz;
-    ray.dir = normalize(world_dir);
-    ray.rcp_dir = rcp(ray.dir);
+    ray.dir = world_dir;
+    ray.rcp_dir = clamp(rcp(ray.dir), -1e30f, 1e30f);
     return ray;
 }

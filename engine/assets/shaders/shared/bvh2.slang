@@ -51,12 +51,14 @@ public inline Hit trace_bvh2<let DEBUG : bool>(
             const uint prim_index = asuint(rmin_prim_index.w);
             for (uint i = 0u; i < prim_count; ++i) {
                 const VoxelObject prim = prims[indices[prim_index + i]];
-                const Hit prim_hit = intersect_voxel_object<DEBUG>(ray, prim);
+                const Hit prim_hit = intersect_voxel_object<DEBUG>(ray, prim, hit.t);
+                
                 if (DEBUG) hit.steps += prim_hit.steps;
-                if (prim_hit.t < hit.t) {
-                    hit.t = prim_hit.t;
-                    hit.albedo = prim_hit.albedo;
-                }
+                if (prim_hit.t >= hit.t) continue;
+
+                hit.t = prim_hit.t;
+                hit.voxel_index = prim_hit.voxel_index;
+                hit.object_index = indices[prim_index + i];
             }
 
             /* Pop the node stack */
@@ -69,11 +71,16 @@ public inline Hit trace_bvh2<let DEBUG : bool>(
         const float4 lmax_right = nodes[node_index + 1u];
 
         /* Interior node */
-        uint left = asuint(lmin_left.w) * 4u, right = asuint(lmax_right.w) * 4u;
-        const float3 t1a = fma(lmin_left.xyz, ray.rcp_dir, rcp_origin), t2a = fma(lmax_right.xyz, ray.rcp_dir, rcp_origin);
-        const float3 t1b = fma(rmin_prim_index.xyz, ray.rcp_dir, rcp_origin), t2b = fma(rmax_prim_count.xyz, ray.rcp_dir, rcp_origin);
-        const float3 minta = min(t1a, t2a), maxta = max(t1a, t2a);
-        const float3 mintb = min(t1b, t2b), maxtb = max(t1b, t2b);
+        uint left = asuint(lmin_left.w) * 4u; 
+        uint right = asuint(lmax_right.w) * 4u;
+        const float3 t1a = fma(lmin_left.xyz, ray.rcp_dir, rcp_origin);
+        const float3 t2a = fma(lmax_right.xyz, ray.rcp_dir, rcp_origin);
+        const float3 t1b = fma(rmin_prim_index.xyz, ray.rcp_dir, rcp_origin);
+        const float3 t2b = fma(rmax_prim_count.xyz, ray.rcp_dir, rcp_origin);
+        const float3 minta = min(t1a, t2a);
+        const float3 maxta = max(t1a, t2a);
+        const float3 mintb = min(t1b, t2b);
+        const float3 maxtb = max(t1b, t2b);
         const float tmina = max(max(max(minta.x, minta.y), minta.z), 0.0f);
         const float tminb = max(max(max(mintb.x, mintb.y), mintb.z), 0.0f);
         const float tmaxa = min(min(min(maxta.x, maxta.y), maxta.z), hit.t);
@@ -84,8 +91,8 @@ public inline Hit trace_bvh2<let DEBUG : bool>(
 
         /* Swap traversal order to traverse nearest node first */
         if (dist1 > dist2) {
-            float h = dist1; dist1 = dist2; dist2 = h;
-            uint t = left; left = right; right = t;
+            float t = dist1; dist1 = dist2; dist2 = t;
+            uint i = left; left = right; right = i;
         }
 
         /* If we missed both child nodes */

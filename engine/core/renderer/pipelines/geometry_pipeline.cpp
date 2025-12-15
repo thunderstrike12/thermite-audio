@@ -29,11 +29,11 @@ void GeometryPipeline::init(GPUAdapter& gpu) {
 }
 
 void GeometryPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
-    /* Capture all voxel renderers in the scene */
-    const entt::basic_group group = engine.ecs.get_registry().group<const VoxelRenderer>(entt::get<Transform>);
-
     /* Get Render Image */
     const BindHandle render_image = render_view.get_render_image();
+
+    /* Capture all voxel renderers in the scene */
+    const entt::basic_group group = engine.ecs.get_registry().group<const VoxelRenderer>(entt::get<Transform>);
 
     /* Allocate space for all voxel objects */
     std::vector<VoxelObject> objects {};
@@ -41,14 +41,18 @@ void GeometryPipeline::enqueue(RenderGraph& render_graph, RenderView render_view
 
     /* Iterate over all voxel renderers */
     for (auto&& [entity, renderer, transform] : group.each()) {
+        /* Respect the object limit */
         if (objects.size() >= (size_t)MAX_VOXEL_OBJECTS) break;
-        if (renderer.resource == nullptr) continue;
+
+        /* Don't render objects with a zero scale or null resource */
+        if (glm::any(glm::equal(transform.get_world_scale(), glm::vec3(0.0f))) || renderer.resource == nullptr) continue;
 
         /* Convert the entity to a voxel object */
         VoxelObject object {};
         object.local_to_world = transform.get_world_matrix();
         object.world_to_local = glm::inverse(object.local_to_world);
         object.size = renderer.resource->size;
+        object.rcp_tree_width = 1.0f / powf(4.0f, (float)renderer.resource->blas->depth);
         object.blas_handle = renderer.resource->blas_nodes.get_index();
         object.voxels_handle = renderer.resource->blas_voxels.get_index();
         object.palette_handle = renderer.resource->blas_palette.get_index();
