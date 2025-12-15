@@ -20,7 +20,6 @@ void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Transform& value, ImSett
         ImReflect::Input("Position", position, position_settings, position_response);
 
         if (position_response.is_changed()) {
-            position_response.debug_log();
             value.set_local_position(position);
         }
     }
@@ -37,7 +36,6 @@ void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Transform& value, ImSett
         ImReflect::Input("Rotation", euler, rotation_settings, rotation_response);
 
         if (rotation_response.is_changed()) {
-            rotation_response.debug_log();
             value.set_local_rotation(glm::radians(euler));
         }
     }
@@ -52,7 +50,6 @@ void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Transform& value, ImSett
         ImReflect::Input("Scale", scale, scale_settings, scale_response);
 
         if (scale_response.is_changed()) {
-            scale_response.debug_log();
             value.set_local_scale(scale);
         }
     }
