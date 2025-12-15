@@ -39,7 +39,7 @@ class Renderer {
     void update();
     void end();
 
-    void draw_line(const glm::vec3 start, const glm::vec3 end, const glm::vec3 color = {1.0f, 0.0f, 0.0f});
+    void draw_line(const glm::vec3 start, const glm::vec3 end, const glm::vec3 color = {1.0f, 0.0f, 0.0f}, const float time = 0.0f);
 
     VRAMBank& vram_bank();
 
