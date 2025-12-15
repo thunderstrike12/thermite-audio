@@ -11,9 +11,13 @@ class Viewport : public IWindow {
     void on_editor_start() override;
     void on_editor_update(const tmt::FrameData& time) override;
     void on_editor_end() override;
+
+    void before_begin() override;
     void display() override;
+    void end_display() override;
 
     constexpr std::string get_title() const override { return "Viewport"; };
+    constexpr bool is_closable() const override { return false; };
 
    private:
     void gizmo_manip();

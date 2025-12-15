@@ -4,6 +4,8 @@
 #include "editor/core/window.hpp"
 #include "engine/core/system_collection.hpp"
 
+#include "editor/shared/save_data.hpp"
+
 namespace tmt {
 
 /* Forward declares */
@@ -19,12 +21,15 @@ class Editor : public OnEngineInit, public OnEngineUpdate, public OnEngineFixedU
     SystemCollection<IWindow> windows;
 
    private:
+    ImGuiManager& imgui_manager;
+    SaveData save_data;
+
     void on_engine_init(const ApplicationSpecs& specs) override;
     void on_engine_update(const FrameData& time) override;
     void on_engine_fixed_update(const FrameData& time) override;
     void on_engine_end() override;
 
-    ImGuiManager& imgui_manager;
+    void main_menu_bar();
 };
 
 /* Singleton */

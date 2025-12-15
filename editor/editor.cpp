@@ -38,6 +38,7 @@ void Editor::init() { Log::info("Thermite Editor initialized."); }
 void Editor::on_engine_init(const ApplicationSpecs&) {
     tmt::Log::info("Starting Thermite Editor...");
     imgui_manager.init();
+    save_data.load();
 
     windows.add<Hierarchy>();
     windows.add<GameFlow>();
@@ -54,14 +55,27 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
 void Editor::on_engine_update(const FrameData& time) {
     imgui_manager.new_frame();
 
+    main_menu_bar();
+
     for (auto& system : windows) {
         system->on_editor_update(time);
     }
 
     for (auto& system : windows) {
-        ImGui::Begin(system->get_title().c_str());
-        system->display();
-        ImGui::End();
+        const ImGuiWindowFlags_ flags = static_cast<ImGuiWindowFlags_>(system->get_window_flags());
+        const auto& name = system->get_title();
+        if (editor.save_data.open_windows.contains(name) == false) {
+            editor.save_data.open_windows[name] = true;
+        }
+        bool& open = editor.save_data.open_windows[name];
+
+        if (open) {
+            system->before_begin();
+            ImGui::Begin(name.c_str(), system->is_closable() ? &open : nullptr, flags);
+            system->display();
+            ImGui::End();
+            system->end_display();
+        }
     }
 
     imgui_manager.end_frame();
@@ -80,6 +94,21 @@ void Editor::on_engine_end() {
 
     tmt::Log::info("Shutting down Thermite Editor...");
     imgui_manager.deinit();
+    save_data.save();
+}
+
+void Editor::main_menu_bar() {
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("Windows")) {
+            for (const auto& system : windows) {
+                const auto& name = system->get_title();
+                bool& open = save_data.open_windows[name];
+                ImGui::MenuItem(name.c_str(), nullptr, &open);
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
 }
 
 }  // namespace tmt

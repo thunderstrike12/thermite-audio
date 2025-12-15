@@ -10,7 +10,7 @@
 /* Used to reflect regular objects */
 #define TMT_REFLECTION_IMPL(Type, ImguiFields, JsonFields) \
     IMGUI_REFLECT(Type, EXPAND ImguiFields);               \
-    JSON_REFLECT(Type, EXPAND JsonFields);
+    JSON_REFLECT(Type, EXPAND JsonFields)
 
 #define TMT_OBJECT(Type, Fields) TMT_REFLECTION_IMPL(Type, Fields, Fields)
 

@@ -44,6 +44,8 @@ class IO {
     // Read text file (primarily for json)
     static std::string read_text_file(const FileLocation& file_location);
 
+    static std::string read_or_create_text_file(const FileLocation& file_location, const std::string& default_contents = "");
+
    private:
     static const char* path_str[3];
 

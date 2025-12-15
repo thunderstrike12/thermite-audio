@@ -18,9 +18,17 @@ void tmt::Viewport::on_editor_update(const tmt::FrameData&) {}
 
 void tmt::Viewport::on_editor_end() {}
 
-void tmt::Viewport::display() {
-    uint32_t flags = ImGuiWindowFlags_NoDecoration;
+void tmt::Viewport::before_begin() {
+    /*default min size*/
+    ImGui::SetNextWindowSize(ImVec2(960, 540), ImGuiCond_FirstUseEver);
 
+    /* Zero margin */
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+}
+
+void tmt::Viewport::end_display() { ImGui::PopStyleVar(); }
+
+void tmt::Viewport::display() {
     auto size = ImGui::GetContentRegionAvail();
     size = ImVec2(std::max(size.x, 1.0f), std::max(size.y, 1.0f));
     width = size.x;
@@ -34,7 +42,7 @@ void tmt::Viewport::display() {
 
     engine.renderer.render_view.set_viewport_size(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 
-    ImGui::BeginChild("viewport_render", ImVec2(0, 0), 0, flags | ImGuiWindowFlags_NoMove);
+    ImGui::BeginChild("viewport_render", ImVec2(0, 0), 0, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove);
     ImGui::Image((ImTextureRef)engine.renderer.render_view.imgui_viewport, size);
 
     ImGuizmo::SetDrawlist();

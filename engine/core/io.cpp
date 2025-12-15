@@ -85,6 +85,19 @@ std::string IO::read_text_file(const FileLocation& file_location) {
     return std::string(bytes.data(), bytes.size());
 }
 
+std::string IO::read_or_create_text_file(const FileLocation& file_location, const std::string& default_contents) {
+    std::filesystem::path absolute = get_absolute_path(file_location.sub_location, file_location.relative_path);
+    if (!std::filesystem::exists(absolute)) {
+        tmt::Log::warn(tmt::Log::Scope::ENGINE, "File not found at: {}\nCreating file with default contents.", absolute.string());
+        if (!write_text_file(file_location, default_contents, true)) {
+            tmt::Log::error(tmt::Log::Scope::ENGINE, "Failed to create file at: {}", absolute.string());
+            return {};
+        }
+        return default_contents;
+    }
+    return read_text_file(file_location);
+}
+
 std::filesystem::path IO::get_absolute_path(Location sub_cat, const std::filesystem::path& relative_path) {
     auto sub_path = std::filesystem::path(path_str[static_cast<uint8_t>(sub_cat)]);
 

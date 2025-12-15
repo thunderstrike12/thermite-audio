@@ -20,7 +20,9 @@ void ImGuiManager::init() {
     imgui.set_clear_screen(true);
     tmt::engine.renderer.set_imgui(&imgui);
 
-    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    auto& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigWindowsMoveFromTitleBarOnly = true;
 }
 
 void ImGuiManager::new_frame() {
