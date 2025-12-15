@@ -91,16 +91,15 @@ void Game::on_start() {
         agent.actions.push_back(std::make_unique<tmt::ChasePlayer>());
         agent.actions.push_back(std::make_unique<tmt::KillPlayer>());
 
-        // --- Give the agent some goals ---
         tmt::GoapGoal patrol_goal;
         patrol_goal.name = "patrol area";
-        patrol_goal.desired_state = {{{"area_secure"}, true}};
+        patrol_goal.desired_state = {{tmt::FactId("area_secure"), tmt::FactValue(true)}};
         patrol_goal.priority = 1;
         patrol_goal.valid = true;
 
         tmt::GoapGoal kill_goal;
         kill_goal.name = "kill player";
-        kill_goal.desired_state = {{{"player_alive"}, false}};
+        kill_goal.desired_state = {{tmt::FactId("player_alive"), tmt::FactValue(false)}};
         kill_goal.priority = 10;
         kill_goal.valid = true;
 

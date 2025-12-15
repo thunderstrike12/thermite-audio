@@ -20,6 +20,7 @@
 #include "editor/windows/viewport.hpp"
 #include "editor/windows/game_flow.hpp"
 #include "editor/windows/inspector.hpp"
+#include "editor/windows/goap_debugger.hpp"
 
 #include "windows/profiler_tracy.hpp"
 
@@ -43,6 +44,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     windows.add<Inspector>();
     windows.add<Viewport>();
     windows.add<Profiler>();
+    windows.add<GoapDebugger>();
 
     for (auto& system : windows) {
         system->on_editor_start();

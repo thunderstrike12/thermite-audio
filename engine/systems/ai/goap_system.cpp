@@ -71,6 +71,10 @@ void Goap::process_agent(Entity entity, WorldState& ws, float dt) {
  *   - If all goals are satisfied ? pick lowest priority as fallback.
  */
 void Goap::update_goal(Entity entity, GoapAgent& agent, WorldState& ws) {
+    // If current goal exists but is no longer relevant, invalidate it
+    if (agent.has_goal() && !agent.active_goal.is_relevant(ws)) {
+        agent.active_goal.valid = false;  // force reassignment
+    }
     if (agent.has_goal()) return;
 
     if (agent.available_goals.empty()) {
@@ -87,7 +91,9 @@ void Goap::update_goal(Entity entity, GoapAgent& agent, WorldState& ws) {
             agent.active_goal = goal;
             agent.needs_replan = true;
 
-            Log::info("GOAP Agent {} selected goal '{}' with priority {}", entity, agent.active_goal.name, goal.priority);
+            if (show_logging) {
+                Log::info("GOAP Agent {} selected goal '{}' with priority {}", entity, agent.active_goal.name, goal.priority);
+            }
             return;
         }
     }
@@ -96,7 +102,9 @@ void Goap::update_goal(Entity entity, GoapAgent& agent, WorldState& ws) {
     agent.active_goal = agent.available_goals.back();
     agent.needs_replan = true;
 
-    Log::info("GOAP Agent {} selected fallback goal.", entity);
+    if (show_logging) {
+        Log::info("GOAP Agent {} selected fallback goal.", entity);
+    }
 }
 
 // ------------------------------------------------------

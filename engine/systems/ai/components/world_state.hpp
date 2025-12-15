@@ -7,16 +7,65 @@
 namespace tmt {
 
 /**
- * Struct FactId
- * Represents a unique identifier for a world-state variable.
+ * Class FactRegistry
  *
- * FactId uses a hash of a string.
+ *   - Allows editor and debug systems (ImGui, logging, inspectors)
+ *     to display fact names instead of numeric hashes.
+ *   - Keeps the runtime GOAP planner fast by still using hashed IDs.
+ *   - WorldState and planner logic never depend on strings.
+ *
+ * Note:
+ *   Hash collisions are possible but very unlikely
+ *   for short, well-defined gameplay fact names.
+ */
+class FactRegistry {
+   public:
+    /**
+     * Returns the global FactRegistry instance.
+     */
+    static FactRegistry& instance() {
+        static FactRegistry inst;
+        return inst;
+    }
+
+    /**
+     * Registers a fact name and returns its hashed ID.
+     * If the fact already exists, the existing mapping is reused.
+     */
+    uint32_t register_fact(const std::string& name) {
+        uint32_t id = std::hash<std::string> {}(name);
+        id_to_name[id] = name;
+        return id;
+    }
+
+    /**
+     * Retrieves the human-readable name for a fact ID.
+     * Returns "<unknown>" if the ID was never registered.
+     */
+    const std::string& get_name(uint32_t id) const {
+        static const std::string unknown = "<unknown>";
+        auto it = id_to_name.find(id);
+        return it != id_to_name.end() ? it->second : unknown;
+    }
+
+   private:
+    std::unordered_map<uint32_t, std::string> id_to_name;
+};
+
+/**
+ * Struct FactId
+ * Represents a unique identifier for a world-state fact.
+ *
+ * Internally stores a hashed string ID for fast comparisons.
+ * When constructed from a string, the name is automatically
+ * registered with the FactRegistry for debug and editor use.
  */
 struct FactId {
-    uint32_t id;  // hash of the fact name
+    uint32_t id;
 
     FactId() : id(0) {}
-    FactId(const std::string& name) : id(std::hash<std::string> {}(name)) {}
+
+    explicit FactId(const std::string& name) { id = FactRegistry::instance().register_fact(name); }
 
     bool operator==(const FactId& other) const { return id == other.id; }
 };

@@ -18,19 +18,9 @@ class PatrolArea : public GoapAction {
 
     void on_start(Entity /*agent*/, Registry& /*ecs*/) override { timer = 0.f; }
 
-    void on_tick(Entity agent, Registry& ecs, float dt) override {
-        // random early interruption (5% chance per tick)
-        timer += dt;
-        if (rand() % 100 < 5) {
-            // Log::info("PatrolArea random interrupt triggered");
-            on_interrupt(agent, ecs);  // on_interrupt usually gets called outside of its own action,
-                                       // when something changes the world state that doesnt make the preconditions true anymore
-        }
-    }
+    void on_tick(Entity /*agent*/, Registry& /*ecs*/, float /*dt*/) override {}
 
-    bool is_done(Entity /*agent*/, Registry& /*ecs*/) const override {
-        return timer >= 3.0f;  // takes 3 seconds
-    }
+    bool is_done(Entity /*agent*/, Registry& /*ecs*/) const override { return false; }
 
     void on_finished(Entity /*agent*/, Registry& /*ecs*/) override {}
 
