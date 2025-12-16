@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/systems/ai/components/goap_action.hpp"
+#include "engine/systems/ai/goap/components/goap_action.hpp"
 #include <cstdlib>
 
 namespace tmt {

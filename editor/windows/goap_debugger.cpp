@@ -4,8 +4,8 @@
 
 #include "engine/engine.hpp"
 
-#include "engine/systems/ai/components/goap_agent.hpp"
-#include "engine/systems/ai/components/world_state.hpp"
+#include "engine/systems/ai/goap/components/goap_agent.hpp"
+#include "engine/systems/ai/goap/components/world_state.hpp"
 
 namespace tmt {
 

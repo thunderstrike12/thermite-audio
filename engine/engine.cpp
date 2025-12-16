@@ -15,7 +15,7 @@
 #include "systems/physics/physics_system.hpp"
 #include "systems/animation/animation_system.hpp"
 #include "systems/camera/camera_system.hpp"
-#include "systems/ai/goap_system.hpp"
+#include "systems/ai/goap/goap_system.hpp"
 
 #include "events/engine.hpp"
 #include "events/game.hpp"

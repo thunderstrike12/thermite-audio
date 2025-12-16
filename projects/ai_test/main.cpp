@@ -6,8 +6,8 @@
 #include "engine/core/input/input.hpp"
 #include "engine/core/logger.hpp"
 
-#include "engine/systems/ai/goap_system.hpp"
-#include "engine/systems/ai/components/goap_agent.hpp"
+#include "engine/systems/ai/goap/goap_system.hpp"
+#include "engine/systems/ai/goap/components/goap_agent.hpp"
 #include "goap_actions/chase_player.hpp"
 #include "goap_actions/kill_player.hpp"
 #include "goap_actions/patrol_area.hpp"
