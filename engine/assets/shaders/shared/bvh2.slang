@@ -34,6 +34,11 @@ public inline Hit trace_bvh2<let DEBUG : bool>(
     StructuredBuffer<VoxelObject> prims,
     Ray ray
 ) {
+    /* Check to make sure the root node of the BVH is valid */
+    if (asuint(nodes[0].w) == 0u && asuint(nodes[3].w) == 0u) {
+        return Hit::miss();
+    }
+
     /* Prepare for slab tests */
     const float3 rcp_origin = ray.origin * -ray.rcp_dir;
 
