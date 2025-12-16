@@ -17,7 +17,7 @@ class Viewport : public IWindow {
     void display() override;
     void end_display() override;
 
-    constexpr std::string get_title() const override { return "Viewport"; };
+    constexpr std::string get_title() const override { return ICON_MS_VISIBILITY " Viewport"; };
     constexpr bool is_closable() const override { return false; };
 
    private:
@@ -33,6 +33,7 @@ class Viewport : public IWindow {
     static constexpr uint8_t GIZMO_OP_COUNT = 3;
 
     uint32_t gizmo_operations[GIZMO_OP_COUNT] = {7, 120, 896};
+    const char* gizmo_op_icons[GIZMO_OP_COUNT] = {ICON_MS_DRAG_PAN, ICON_MS_ROTATE_RIGHT, ICON_MS_ZOOM_OUT_MAP};
 
     float width = -1;
     float height = -1;

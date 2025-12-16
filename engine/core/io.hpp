@@ -46,10 +46,10 @@ class IO {
 
     static std::string read_or_create_text_file(const FileLocation& file_location, const std::string& default_contents = "");
 
+    static std::filesystem::path get_absolute_path(Location sub_cat, const std::filesystem::path& relative_path);
+
    private:
     static const char* path_str[3];
-
-    static std::filesystem::path get_absolute_path(Location sub_cat, const std::filesystem::path& relative_path);
 
     static bool stream_open(std::fstream& file_stream, const std::filesystem::path& absolute, std::ios::openmode open_mode);
     static bool create_directories(const std::filesystem::path& absolute);

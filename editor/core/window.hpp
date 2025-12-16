@@ -1,7 +1,6 @@
 #pragma once
 #include "editor/events/editor.hpp"
 #include <string>
-
 namespace tmt {
 class IWindow : public IEditorEvents {
    public:

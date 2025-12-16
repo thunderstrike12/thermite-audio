@@ -22,7 +22,7 @@ class Profiler : public IWindow {
     void on_editor_update(const tmt::FrameData& time) override;
     void on_editor_end() override;
     void display() override;
-    constexpr std::string get_title() const override { return "Profiler"; }
+    constexpr std::string get_title() const override { return ICON_MS_BAR_CHART_4_BARS " Profiler"; }
 };
 
 }  // namespace tmt

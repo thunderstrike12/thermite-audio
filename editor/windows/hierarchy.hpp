@@ -18,7 +18,7 @@ class Hierarchy : public IWindow, public IGameEvents {
 
     void display() override;
 
-    constexpr std::string get_title() const override { return "Hierarchy"; };
+    constexpr std::string get_title() const override { return ICON_MS_FLOWCHART " Hierarchy"; };
 
     void on_editor_start() override {};
     void on_editor_update(const FrameData&) override {};

@@ -74,9 +74,7 @@ void tmt::Viewport::display() {
 void tmt::Viewport::toolbar(const glm::vec2& image_pos) {
     ImGuiStyle& style = ImGui::GetStyle();
 
-    float w_space = ImGui::CalcTextSize("switch space").x + style.FramePadding.x * 2.0f;
-    float w_mode = ImGui::CalcTextSize("switch mode").x + style.FramePadding.x * 2.0f;
-    float btn_w = std::max(w_space, w_mode);
+    float btn_w = ImGui::CalcTextSize(ICON_MS_LANGUAGE).x + style.FramePadding.x * 2.0f;
     float btn_h = ImGui::GetFrameHeight();
     float total_w = btn_w * 3.0f + style.ItemSpacing.x;
 
@@ -85,18 +83,21 @@ void tmt::Viewport::toolbar(const glm::vec2& image_pos) {
     ImVec2 btn_pos = ImVec2(image_pos.x + width - total_w - pad, image_pos.y + pad);
 
     ImGui::SetCursorScreenPos(btn_pos);
-    if (ImGui::Button("switch space", ImVec2(btn_w, btn_h))) {
+    const char* space_button_icon = gizmo_space ? ICON_MS_LANGUAGE : ICON_MS_VIEW_IN_AR;
+    if (ImGui::Button(space_button_icon, ImVec2(btn_w, btn_h))) {
         gizmo_space = static_cast<uint8_t>(!gizmo_space);
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("switch mode", ImVec2(btn_w, btn_h))) {
+    const char* mode_button_icon = gizmo_op_icons[gizmo_operation];
+    if (ImGui::Button(mode_button_icon, ImVec2(btn_w, btn_h))) {
         ++gizmo_operation;
         if (gizmo_operation == GIZMO_OP_COUNT) gizmo_operation = 0;
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("ms-mode", ImVec2(btn_w, btn_h))) {
+    const char* multi_button_icon = gizmo_multiselect_mode ? ICON_MS_FILTER_NONE : ICON_MS_FILTER_1;
+    if (ImGui::Button(multi_button_icon, ImVec2(btn_w, btn_h))) {
         gizmo_multiselect_mode = static_cast<uint8_t>(!gizmo_multiselect_mode);
     }
 }

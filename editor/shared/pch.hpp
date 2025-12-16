@@ -10,6 +10,9 @@
 
 #include "engine/tools/profiler.hpp" /* adds tracy profiling */
 /* Large 32-bit floating point constant. */
+
+#include "font/icon_lookups.hpp"
+
 constexpr float BIG_F32 = 1e30f;
 
 /* Number of voxels per unit in world-space. */
