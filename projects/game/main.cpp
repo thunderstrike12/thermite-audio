@@ -37,11 +37,14 @@ void Game::on_start() {
     tmt::engine.ecs.systems.add<tmt::CameraSystem>();
 
     { /* Camera entity */
-        tmt::Entity entity = tmt::engine.ecs.create_entity("Camera");
-        auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
-        auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
-        transform.set_world_position(glm::vec3(0.0f, 0.0f, -16.0f));
+        // tmt::Entity entity = tmt::engine.ecs.create_entity("Camera");
+        // auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+        // auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity).active = true;
+        // transform.set_world_position(glm::vec3(0.0f, 0.0f, -16.0f));
     }
+    const tmt::Entity entity = tmt::engine.ecs.create_entity<tmt::Transform, tmt::Camera>("Camera entity");
+    tmt::Camera::set_active_camera(entity);
+    // tmt::engine.ecs.get_component<tmt::Transform>(entity).set_local_position({0.0f, 1.0f, 0.0f});
 
     auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "dragon128.vengi"});
     auto voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);

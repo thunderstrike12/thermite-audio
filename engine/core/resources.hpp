@@ -1,5 +1,7 @@
 #pragma once
 #include <memory>
+#include <unordered_set>
+
 #include "resource.hpp"
 #include "logger.hpp"
 
@@ -13,7 +15,7 @@ class Resources {
     std::shared_ptr<T> load_resource(const IO::FileLocation& file_location, Args&&... args) {
         // duplicate checking
         if (resources.contains(file_location)) {
-            auto& collection = resources.at(file_location);
+            const auto& collection = resources.at(file_location);
             auto casted = std::dynamic_pointer_cast<T>(collection.file_resource);
             if (!casted) {
                 Log::error(Log::Scope::ENGINE, "Type mismatch: resource at '{}' already loaded as different type", file_location);
@@ -32,7 +34,9 @@ class Resources {
         }
         resource->loaded = true;
 
-        resources.emplace(file_location, resource);
+        const size_t type_hash = typeid(T).hash_code();
+        resources.emplace(std::piecewise_construct, std::forward_as_tuple(file_location), std::forward_as_tuple(resource, type_hash));
+        resource_type_locations[type_hash].emplace(file_location);
 
         return std::dynamic_pointer_cast<T>(resource);
     }
@@ -80,10 +84,18 @@ class Resources {
 
     size_t resource_count() const;
 
+    /* Get a set containing the file locations of all the resources with the provided type */
+    template <ResourceType T>
+    const std::unordered_set<IO::FileLocation, IO::FileLocationHash>& get_resource_locations() {
+        return resource_type_locations[typeid(T).hash_code()];
+    }
+
    private:
+    std::unordered_map<size_t, std::unordered_set<IO::FileLocation, IO::FileLocationHash>> resource_type_locations;
+
     class ResourceCollection {
        public:
-        ResourceCollection(std::shared_ptr<FileResource> file_resource) : file_resource(std::move(file_resource)) {}
+        ResourceCollection(std::shared_ptr<FileResource> file_resource, const size_t type_hash) : file_resource(std::move(file_resource)), type_hash(type_hash) {}
 
         /* Remove expired runtime resources */
         void clean_up();
@@ -96,6 +108,7 @@ class Resources {
         auto end() { return runtime_resources.end(); }
 
         const std::shared_ptr<FileResource> file_resource;
+        const size_t type_hash;
 
        private:
         std::vector<std::weak_ptr<Resource>> runtime_resources;
