@@ -25,6 +25,9 @@ class Renderer {
     DebugPipeline& debug_pipeline;
     GeometryPipeline& geometry_pipeline;
 
+    Transform debug_transform;
+    Camera debug_camera;
+
    public:
     RenderView render_view {};
 #ifdef THERMITE_EDITOR
@@ -64,6 +67,9 @@ class Renderer {
     );
 
     VRAMBank& vram_bank();
+
+    Transform& get_debug_transform() { return debug_transform; }
+    Camera& get_debug_camera() { return debug_camera; }
 
 #ifdef THERMITE_EDITOR
     void set_imgui(ImGUI* imgui);

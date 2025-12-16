@@ -55,7 +55,6 @@ void Engine::init(std::unique_ptr<Application> user_app) {
 
     ecs.systems.add<Physics>();
     ecs.systems.add<RigModelManager>();
-    ecs.systems.add<CameraSystem>();
     ecs.systems.add<Goap>();
 
     OnEngineInit::dispatch(app->specs);

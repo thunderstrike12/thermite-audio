@@ -6,6 +6,9 @@
 
 #include "engine/core/entity.hpp"
 
+#include "engine/core/components/camera.hpp"
+#include "engine/core/components/transform.hpp"
+
 class RenderGraph;
 
 namespace tmt {
@@ -29,7 +32,7 @@ class RenderView {
 
     void init();
     void update();
-    void update_gpu_view(RenderGraph& render_graph, Entity cam_entity);
+    void update_gpu_view(RenderGraph& render_graph, const Camera& camera, const Transform& transform);
     void deinit();
 
     /* If we are running the editor, we render to the viewport_image, otherwise we render directly to the render_target */

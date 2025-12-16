@@ -71,11 +71,8 @@ void RenderView::update() {
 #endif  // !THERMITE_EDITOR
 }
 
-void RenderView::update_gpu_view(RenderGraph& render_graph, Entity cam_entity) {
+void RenderView::update_gpu_view(RenderGraph& render_graph, const Camera& camera, const Transform& transform) {
     const float aspect_ratio = (float)gpu_view.resolution.x / (float)gpu_view.resolution.y;
-    /* Get active camera */
-    Camera& camera = engine.ecs.get_component<Camera>(cam_entity);
-    Transform& transform = engine.ecs.get_component<Transform>(cam_entity);
 
     /* Iterate over all cameras to find an active one to use as render view */
     glm::mat4 p = glm::perspective(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);

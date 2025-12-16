@@ -7,14 +7,30 @@
 #include "engine/core/logger.hpp"
 #include "engine/core/window.hpp"
 #include "engine/core/renderer/renderer.hpp"
+#include "engine/core/input/input.hpp"
 
 void tmt::Viewport::on_editor_start() {
     ImGuizmo::AllowAxisFlip(false);
 
+    // Setup Input Actions
+    register_input_actions();
+
     setup_gizmo_style();
 }
 
-void tmt::Viewport::on_editor_update(const tmt::FrameData&) {}
+void tmt::Viewport::register_input_actions() {
+    engine.input.add_action_keys(Config::SPRINT, Key::LEFT_SHIFT);
+    engine.input.add_action_keys(Config::FORWARD, Key::W);
+    engine.input.add_action_keys(Config::BACKWARD, Key::S);
+    engine.input.add_action_keys(Config::RIGHT, Key::D);
+    engine.input.add_action_keys(Config::LEFT, Key::A);
+    engine.input.add_action_keys(Config::UP, Key::E);
+    engine.input.add_action_keys(Config::DOWN, Key::Q);
+    engine.input.add_action_keys(Config::UP, Key::SPACE);
+    engine.input.add_action_keys(Config::DOWN, Key::LEFT_CTRL);
+}
+
+void tmt::Viewport::on_editor_update(const tmt::FrameData& frame_data) { update_debug_camera(frame_data); }
 
 void tmt::Viewport::on_editor_end() {}
 
@@ -34,7 +50,7 @@ void tmt::Viewport::display() {
     width = size.x;
     height = size.y;
 
-    auto image_pos = ImGui::GetCursorScreenPos();
+    const glm::vec2 image_pos = glm::vec2(ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y);
 
     ImGuizmo::SetRect(image_pos.x, image_pos.y, width, height);
 
@@ -44,11 +60,18 @@ void tmt::Viewport::display() {
 
     ImGui::BeginChild("viewport_render", ImVec2(0, 0), 0, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove);
     ImGui::Image((ImTextureRef)engine.renderer.render_view.imgui_viewport, size);
+    is_hovered = ImGui::IsItemHovered();
 
     ImGuizmo::SetDrawlist();
 
     gizmo_manip();
 
+    toolbar(image_pos);
+
+    ImGui::EndChild();
+}
+
+void tmt::Viewport::toolbar(const glm::vec2& image_pos) {
     ImGuiStyle& style = ImGui::GetStyle();
 
     float w_space = ImGui::CalcTextSize("switch space").x + style.FramePadding.x * 2.0f;
@@ -76,8 +99,6 @@ void tmt::Viewport::display() {
     if (ImGui::Button("ms-mode", ImVec2(btn_w, btn_h))) {
         gizmo_multiselect_mode = static_cast<uint8_t>(!gizmo_multiselect_mode);
     }
-
-    ImGui::EndChild();
 }
 
 void tmt::Viewport::gizmo_manip() {
@@ -150,6 +171,73 @@ void tmt::Viewport::gizmo_manip() {
             }
         }
     }
+}
+
+void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {
+    if (engine.game_controller.is_running() || is_hovered == false) return;
+    // Gather Variables to be used
+    auto& input = engine.input;
+
+    const bool enable_mouse_look = input.is_action_pressed(action::RIGHT_CLICK);
+    const bool is_2d_axis_movement = input.is_action_pressed(action::LEFT_CLICK);
+
+    if (!enable_mouse_look) {
+        /* Show mouse cursor */
+        input.set_mouse_relative_to_window(false);
+        input.lock_mouse(false);
+        return;
+    }
+    /* Hide mouse cursor */
+    input.set_mouse_relative_to_window(true);
+    input.lock_mouse(true);
+
+    Camera& camera = engine.renderer.get_debug_camera();
+    Transform& transform = engine.renderer.get_debug_transform();
+
+    const float dx = input.get_mouse_delta_x();
+    const float dy = input.get_mouse_delta_y();
+
+    if (is_2d_axis_movement == false) {
+        // Mouse Look
+        camera.yaw -= dx * Config::MOUSE_SENSITIVITY;
+        camera.pitch -= dy * Config::MOUSE_SENSITIVITY;
+        camera.pitch = glm::clamp(camera.pitch, -89.0f, 89.0f);
+
+        glm::vec3 front = {};
+        front.x = cos(glm::radians(camera.yaw)) * cos(glm::radians(camera.pitch));
+        front.y = sin(glm::radians(camera.pitch));
+        front.z = sin(glm::radians(camera.yaw)) * cos(glm::radians(camera.pitch));
+        front = glm::normalize(front);
+        transform.look_at(transform.get_world_position() + front, glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+
+    const float mouse_wheel_y_delta = input.get_mouse_wheel_y();
+    camera_speed *= std::pow(2.0f, mouse_wheel_y_delta * 0.15f);
+    camera_speed = glm::clamp(camera_speed, Config::MIN_BASE_SPEED, Config::MAX_BASE_SPEED);
+
+    glm::vec3 pos = transform.get_world_position();
+
+    if (is_2d_axis_movement) {
+        // 2D Axis Movement
+        const bool sprint = input.is_action_pressed(Config::SPRINT);
+        const glm::vec3 horizontal_move = transform.get_right() * dx * Config::MOUSE_SENSITIVITY * 0.1f;
+        const glm::vec3 direction = sprint ? transform.get_forward() : transform.get_up();
+        const glm::vec3 vertical_move = direction * -dy * Config::MOUSE_SENSITIVITY * 0.1f;
+        pos += (horizontal_move + vertical_move);
+    } else {
+        // Movement (WASD + QE)
+        glm::vec3 move_dir = {0.0f, 0.0f, 0.0f};
+        if (input.is_action_pressed(Config::FORWARD)) move_dir += transform.get_forward();
+        if (input.is_action_pressed(Config::BACKWARD)) move_dir -= transform.get_forward();
+        if (input.is_action_pressed(Config::LEFT)) move_dir -= transform.get_right();
+        if (input.is_action_pressed(Config::RIGHT)) move_dir += transform.get_right();
+        if (input.is_action_pressed(Config::UP)) move_dir += transform.get_up();
+        if (input.is_action_pressed(Config::DOWN)) move_dir -= transform.get_up();
+
+        if (glm::length(move_dir) > 0.0f) pos += glm::normalize(move_dir) * camera_speed * time.delta_time;
+    }
+
+    transform.set_world_position(pos);
 }
 
 void tmt::Viewport::setup_gizmo_style() {

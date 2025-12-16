@@ -67,26 +67,27 @@ void Renderer::init() {
     /* Initialize pipelines */
     debug_pipeline.init(gpu);
     geometry_pipeline.init(gpu);
+
+    debug_transform.set_local_position({0.0f, 0.0f, -1.0f});
 }
 
 void Renderer::update() {
     TMT_ZONE_SCOPED_N("Rendering")
     render_view.update();
 
-    Entity cam_entity = Camera::get_active_camera();
-    if (cam_entity == entt::null) {
-        Log::error(Log::Scope::RENDERER, "Camera Entity is NULL. Are there any active cameras in the scene?");
-    }
-
     render_graph.new_graph().unwrap();
 
-    if (cam_entity != entt::null) {
-        render_view.update_gpu_view(render_graph, cam_entity);
-
-        /* Pipelines enqueue */
-        geometry_pipeline.enqueue(render_graph, render_view);
-        debug_pipeline.enqueue(render_graph, render_view);
+    Entity cam_entity = Camera::get_active_camera();
+    if (engine.game_controller.is_running() && cam_entity != entt::null) {
+        const Camera& camera = engine.ecs.get_component<Camera>(cam_entity);
+        const Transform& transform = engine.ecs.get_component<Transform>(cam_entity);
+        render_view.update_gpu_view(render_graph, camera, transform);
+    } else {
+        render_view.update_gpu_view(render_graph, debug_camera, debug_transform);
     }
+    /* Pipelines enqueue */
+    geometry_pipeline.enqueue(render_graph, render_view);
+    debug_pipeline.enqueue(render_graph, render_view);
 
 #ifdef THERMITE_EDITOR
     /* Add the immediate mode GUI to the render graph */
