@@ -9,11 +9,78 @@
 #include "glm/gtx/norm.hpp"
 #include <glm/gtx/quaternion.hpp>
 
+#include "core/renderer/renderer.hpp"
+#include <queue>
+
+#include "tools/profiler.hpp"
+
+#undef min
+#undef max
+
 namespace tmt {
 
-void Physics::on_start() { Log::info("Physics on_start"); }
+void Physics::on_start() {
+    Log::info("Physics on_start");
+    for (const auto& [entity, vb, transform] : engine.ecs.get_registry().view<VoxelBody, Transform>().each()) {
+        if (vb.type == VoxelBody::DYNAMIC) {
+            initialize_voxel_body(vb);
+            if (vb.gravity <= 0.0f) {
+                vb.type = VoxelBody::SLEEPING;
+                vb.accumulated_forces = 0.0f;
+            }
+        }
 
-void Physics::on_update(const FrameData&) {}
+        glm::uvec3 size = vb.resource->size;
+        vb.width = (float)size.x * UNITS_PER_VOXEL;
+        vb.height = (float)size.y * UNITS_PER_VOXEL;
+        vb.depth = (float)size.z * UNITS_PER_VOXEL;
+        vb.position = transform.get_world_position();
+        vb.rotation = transform.get_world_rotation();
+        vb.center_of_mass = vb.position + (vb.rotation * vb.com_local_offset);
+    }
+}
+
+void draw_node(tmt::Bvh2<VoxelObject>& bvh, uint32_t current_node) {
+    // Draw AABB of the node
+    glm::vec3 min = bvh.nodes[current_node].min_bounds;
+    glm::vec3 max = bvh.nodes[current_node].max_bounds;
+    glm::vec3 color(0, 0, 1);
+
+    // Bottom face (4 edges)
+    tmt::engine.renderer.draw_line(glm::vec3(min.x, min.y, min.z), glm::vec3(max.x, min.y, min.z), color);
+    tmt::engine.renderer.draw_line(glm::vec3(max.x, min.y, min.z), glm::vec3(max.x, min.y, max.z), color);
+    tmt::engine.renderer.draw_line(glm::vec3(max.x, min.y, max.z), glm::vec3(min.x, min.y, max.z), color);
+    tmt::engine.renderer.draw_line(glm::vec3(min.x, min.y, max.z), glm::vec3(min.x, min.y, min.z), color);
+
+    // Top face (4 edges)
+    tmt::engine.renderer.draw_line(glm::vec3(min.x, max.y, min.z), glm::vec3(max.x, max.y, min.z), color);
+    tmt::engine.renderer.draw_line(glm::vec3(max.x, max.y, min.z), glm::vec3(max.x, max.y, max.z), color);
+    tmt::engine.renderer.draw_line(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, max.y, max.z), color);
+    tmt::engine.renderer.draw_line(glm::vec3(min.x, max.y, max.z), glm::vec3(min.x, max.y, min.z), color);
+
+    // Vertical edges (4 edges connecting bottom to top)
+    tmt::engine.renderer.draw_line(glm::vec3(min.x, min.y, min.z), glm::vec3(min.x, max.y, min.z), color);
+    tmt::engine.renderer.draw_line(glm::vec3(max.x, min.y, min.z), glm::vec3(max.x, max.y, min.z), color);
+    tmt::engine.renderer.draw_line(glm::vec3(max.x, min.y, max.z), glm::vec3(max.x, max.y, max.z), color);
+    tmt::engine.renderer.draw_line(glm::vec3(min.x, min.y, max.z), glm::vec3(min.x, max.y, max.z), color);
+
+    if (bvh.nodes[current_node].is_leaf()) return;
+    draw_node(bvh, bvh.nodes[current_node].left_first);
+    draw_node(bvh, bvh.nodes[current_node].left_first + 1);
+}
+
+void Physics::on_update(const FrameData&) {
+    for (const auto& [entity, vb, transform] : engine.ecs.get_registry().view<VoxelBody, Transform>().each()) {
+        auto edges = vb.get_world_edges();
+        glm::vec3 color = vb.type == VoxelBody::DYNAMIC ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
+        for (size_t i = 0; i < edges.size(); i++) {
+            tmt::engine.renderer.draw_line(edges[i].start, edges[i].end, color);
+        }
+    }
+
+    // if (bvh.nodes) draw_node(bvh, 0u);
+    //  draw_node(bvh, bvh.nodes[0].left_first + 1u);
+}
 
 void Physics::on_fixed_update(const FrameData&) {
     // Update Forces
@@ -35,22 +102,23 @@ void Physics::on_fixed_update(const FrameData&) {
         vb.angular_velocity *= std::max(0.0f, 1.0f - vb.angular_drag * Engine::Config::FIXED_TIME_STEP);
 
         if (vb.type == VoxelBody::STATIC) continue;
-        if (vb.type == VoxelBody::SLEEPING) {
-            vb.velocity = glm::vec3(0);
-            vb.angular_velocity = glm::vec3(0);
-            continue;
-        }
 
         // Accumulate
         float forces = (glm::length2(vb.velocity / Engine::Config::FIXED_TIME_STEP) + glm::length2(vb.angular_velocity / Engine::Config::FIXED_TIME_STEP));
         if (std::isnan(forces)) forces = 0;
         vb.accumulated_forces = vb.accumulated_forces * 0.925f + forces * 0.075f;
 
+        if (vb.type == VoxelBody::SLEEPING) {
+            if (vb.accumulated_forces > 150.0f || forces > 150.0f) {
+                vb.type = VoxelBody::DYNAMIC;
+            } else {
+                vb.velocity = glm::vec3(0);
+                vb.angular_velocity = glm::vec3(0);
+            }
+        }
+
         // practicly not moving
-        if (vb.accumulated_forces <= 150.0f && forces <= 150.0f)
-            vb.type = VoxelBody::WANTS_SLEEP;
-        else
-            vb.type = VoxelBody::DYNAMIC;
+        if (vb.accumulated_forces <= 150.0f && forces <= 150.0f) vb.type = VoxelBody::SLEEPING;
     }
 
     // Detect Colllisions
@@ -72,48 +140,81 @@ void Physics::on_fixed_update(const FrameData&) {
 void Physics::on_end() { Log::info("Physics on_end"); }
 
 void Physics::generate_voxel_constraints_range(const int index, const int size) {
-    // auto& physics_layers = Engine.layers();
-    const int min = index * size;
-    const int max = (index + 1) * size;
-    auto vox_view = engine.ecs.get_registry().view<VoxelBody, Transform>();
+    // Build BVH
+    // NOTE: BVH needs to move to another function when multithreading is implemented
 
-    int curr = -1;
-    for (const auto& [entity, vb, transform] : vox_view.each()) {
-        // if (!transform.is_enabled()) continue;
-        curr++;
-        if (curr < min || curr >= max) continue;
-        if (vb.type == VoxelBody::STATIC || vb.type == VoxelBody::SLEEPING) continue;
-        for (const auto& [other_entity, other_vb, other_transform] : vox_view.each()) {
-            // if (!other_transform.is_enabled()) continue;
-            if (entity == other_entity) continue;
+    const entt::basic_group group = engine.ecs.get_registry().group<VoxelBody>(entt::get<Transform>);
+    std::vector<VoxelObject> objects {};
+    std::vector<Entity> entities {};
+    objects.reserve(group.size());
+    {
+        TMT_ZONE_SCOPED_N("Physics BVH Build")
+        for (auto&& [entity, vb, transform] : group.each()) {
+            /* Convert the entity to a voxel object */
+            VoxelObject object {};
+            object.local_to_world = transform.get_world_matrix();
+            object.world_to_local = glm::inverse(object.local_to_world);
+            object.size = vb.resource.get()->size;  // glm::uvec3(vb.width * VOXELS_PER_UNIT, vb.height * VOXELS_PER_UNIT, vb.depth * VOXELS_PER_UNIT)  // vb.voxels.size;
+            objects.push_back(std::move(object));
+            entities.push_back(entity);
+        }
 
-            // if (!(physics_layers.collides_with_layer(layer, other_layer))) continue;
+        bvh.build(objects.data(), (uint32_t)objects.size());
+    }
 
-            if (sat_early_out(vb, other_vb)) continue;
+    {
+        TMT_ZONE_SCOPED_N("Physics Collision Detection")
+        // auto& physics_layers = Engine.layers();
+        const int min = index * size;
+        const int max = (index + 1) * size;
+        auto vox_view = engine.ecs.get_registry().view<VoxelBody, Transform>();
 
-            Collision coll(entity, other_entity);
-            coll.contacts.reserve(64);
+        int curr = -1;
+        for (const auto& [entity, vb, transform] : vox_view.each()) {
+            // if (!transform.is_enabled()) continue;
+            curr++;
+            if (curr < min || curr >= max) continue;
+            if (vb.type == VoxelBody::STATIC || vb.type == VoxelBody::SLEEPING) continue;
 
-            // Find overlapping area's
-            // A's local collision overlap
-            glm::ivec3 min_a = {};
-            glm::ivec3 max_a = {};
-            get_overlap(vb, other_vb, min_a, max_a);
+            // Get current AABB
+            Aabb current_aabb = vb.aabb();
 
-            for (size_t z = min_a.z; z < max_a.z; z++) {
-                for (size_t y = min_a.y; y < max_a.y; y++) {
-                    for (size_t x = min_a.x; x < max_a.x; x++) {
-                        if (coll.contacts.size() >= max_contacts) continue;
-                        check_neighbors(vb, other_vb, x, y, z, coll);
+            // Check against BVH
+            std::vector<uint32_t> hits = bvh.overlap(current_aabb);
+
+            // Collision checks for entities in bvh_overlaps
+            for (uint32_t hit : hits) {
+                const Entity other_entity = entities[hit];
+                if (other_entity == entity) continue;
+                // Transform& other_transform = engine.ecs.get_component<Transform>(other_entity);
+                VoxelBody& other_vb = engine.ecs.get_component<VoxelBody>(other_entity);
+
+                if (sat_early_out(vb, other_vb)) continue;
+
+                Collision coll(entity, other_entity);
+                coll.contacts.reserve(64);
+
+                // Find overlapping area's
+                // A's local collision overlap
+                glm::ivec3 min_a = {};
+                glm::ivec3 max_a = {};
+                get_overlap(vb, other_vb, min_a, max_a);
+
+                for (size_t z = min_a.z; z < max_a.z; z++) {
+                    for (size_t y = min_a.y; y < max_a.y; y++) {
+                        for (size_t x = min_a.x; x < max_a.x; x++) {
+                            if (coll.contacts.size() >= max_contacts) continue;
+                            check_neighbors(vb, other_vb, x, y, z, coll);
+                        }
                     }
                 }
+
+                if (coll.contacts.size() <= 0) continue;
+
+                if (other_vb.type == VoxelBody::SLEEPING) other_vb.accumulated_forces = 10000;
+                coll.normal = glm::normalize(other_vb.position - vb.position);
+                solver.collisions.push_back(coll);
             }
-
-            if (coll.contacts.size() <= 0) continue;
-
-            coll.normal = glm::normalize(other_vb.position - vb.position);
-            solver.collisions.push_back(coll);
-            // thread_collisions[index].push_back(coll);
         }
     }
 }
@@ -317,8 +418,11 @@ bool Physics::is_separated(const glm::vec3& axis, const VoxelBody::Box& box_a, c
 }
 
 void Physics::check_neighbors(const VoxelBody& vb_a, const VoxelBody& vb_b, const size_t x, const size_t y, const size_t z, Collision& coll) const {
-    const PhysicsVoxel& voxel_a = vb_a.voxels.get_voxel(x, y, z);
-    if (voxel_a.type == PhysicsVoxelType::EMPTY) return;
+    auto voxels_a = vb_a.resource.get();
+    auto voxels_b = vb_b.resource.get();
+
+    const PhysicsVoxel* voxel_a = voxels_a->blas.get()->get_physics_voxel(x, y, z);  //.voxels.get_voxel(x, y, z);
+    if (voxel_a == nullptr) return;
 
     const glm::vec3 pos_a = vb_a.position;
     const glm::vec3 half_scale_a = glm::vec3(vb_a.width, vb_a.height, vb_a.depth) * 0.5f;
@@ -346,12 +450,12 @@ void Physics::check_neighbors(const VoxelBody& vb_a, const VoxelBody& vb_b, cons
                 if (coll.contacts.size() >= max_contacts || added_contact) continue;
                 const glm::uvec3 coord(voxel_coord + glm::ivec3(x_b, y_b, z_b));
                 // Check if in range
-                if (!(coord.x >= 0 && coord.x < vb_b.voxels.get_size().x && coord.y >= 0 && coord.y < vb_b.voxels.get_size().y && coord.z >= 0 && coord.z < vb_b.voxels.get_size().z)) continue;
+                if (!(coord.x >= 0 && coord.x < voxels_b->size.x && coord.y >= 0 && coord.y < voxels_b->size.y && coord.z >= 0 && coord.z < voxels_b->size.z)) continue;
 
-                const PhysicsVoxel& voxel_b = vb_b.voxels.get_voxel(coord.x, coord.y, coord.z);
-                if (voxel_b.type == PhysicsVoxelType::EMPTY) continue;
+                const PhysicsVoxel* voxel_b = voxels_b->blas.get()->get_physics_voxel(coord.x, coord.y, coord.z);
+                if (voxel_b == nullptr) continue;
 
-                if (voxel_a.type != PhysicsVoxelType::CORNER && !(voxel_a.type == PhysicsVoxelType::EDGE && voxel_b.type == PhysicsVoxelType::EDGE)) continue;
+                if (voxel_a->type != PhysicsVoxelType::CORNER && !(voxel_a->type == PhysicsVoxelType::EDGE && voxel_b->type == PhysicsVoxelType::EDGE)) continue;
 
                 // Transform the voxel from local voxel space B to world space
                 glm::vec3 local_pos_b = {coord.x, coord.y, coord.z};
@@ -369,21 +473,21 @@ void Physics::check_neighbors(const VoxelBody& vb_a, const VoxelBody& vb_b, cons
                 contact.point = world_pos_a;
 
                 // Decide penetration
-                if (voxel_a.type == PhysicsVoxelType::INSIDE || voxel_b.type == PhysicsVoxelType::INSIDE)
+                if (voxel_a->type == PhysicsVoxelType::INSIDE || voxel_b->type == PhysicsVoxelType::INSIDE)
                     contact.penetration = UNITS_PER_VOXEL;
                 else
                     contact.penetration = UNITS_PER_VOXEL - sqrtf(dist);
 
                 // Decide normal
-                if (voxel_a.type == PhysicsVoxelType::INSIDE || voxel_a.type == PhysicsVoxelType::FACE)
-                    contact.normal = glm::normalize((glm::vec3)voxel_a.get_normal() * glm::inverse(rot_a));
-                else if (voxel_b.type == PhysicsVoxelType::INSIDE || voxel_b.type == PhysicsVoxelType::FACE)
-                    contact.normal = -glm::normalize((glm::vec3)voxel_b.get_normal() * glm::inverse(rot_b));
-                else if (voxel_a.normal_index == 0)  // if there is no valid normal index
+                if (voxel_a->type == PhysicsVoxelType::INSIDE || voxel_a->type == PhysicsVoxelType::FACE)
+                    contact.normal = glm::normalize((glm::vec3)voxel_a->get_normal() * glm::inverse(rot_a));
+                else if (voxel_b->type == PhysicsVoxelType::INSIDE || voxel_b->type == PhysicsVoxelType::FACE)
+                    contact.normal = -glm::normalize((glm::vec3)voxel_b->get_normal() * glm::inverse(rot_b));
+                else if (voxel_a->normal_index == 0)  // if there is no valid normal index
                     contact.normal = glm::normalize(dir);
                 else {
                     // if there is a valid normal index use its value to check validity of normal
-                    const glm::vec3 lut_normal = (glm::vec3)voxel_a.get_normal() * glm::inverse(rot_a);
+                    const glm::vec3 lut_normal = (glm::vec3)voxel_a->get_normal() * glm::inverse(rot_a);
                     const glm::vec3 normal = glm::dot(dir, -lut_normal) < 0 ? glm::normalize(dir) : -glm::normalize(dir);
                     contact.normal = normal;
                 }
@@ -406,12 +510,16 @@ void Physics::apply_velocities() const {
         vb.position += vb.velocity * Engine::Config::FIXED_TIME_STEP;
         vb.center_of_mass += vb.velocity * Engine::Config::FIXED_TIME_STEP;
 
+        transform.set_world_position(vb.position);  // TEMP
+
         float angle = glm::length(vb.angular_velocity) * Engine::Config::FIXED_TIME_STEP;
         if (angle <= 0.0f) continue;
 
         glm::vec3 axis = glm::normalize(vb.angular_velocity);
         glm::quat incremental_rot = glm::angleAxis(angle, axis);
         vb.rotation = glm::normalize(incremental_rot * vb.rotation);
+
+        transform.set_world_rotation(vb.rotation);  // TEMP
     }
 }
 
@@ -421,10 +529,13 @@ void Physics::initialize_voxel_body(VoxelBody& vb) {
     glm::vec3 sum = {};
     const glm::vec3 half_scale = glm::vec3(vb.width, vb.height, vb.depth) * 0.5f;
 
-    for (size_t z = 0; z < vb.voxels.get_size().z; z++) {
-        for (size_t y = 0; y < vb.voxels.get_size().y; y++) {
-            for (size_t x = 0; x < vb.voxels.get_size().x; x++) {
-                if (vb.voxels.get_voxel(x, y, z).type == PhysicsVoxelType::EMPTY) continue;
+    auto voxels = vb.resource.get();
+
+    for (size_t z = 0; z < voxels->size.z; z++) {
+        for (size_t y = 0; y < voxels->size.y; y++) {
+            for (size_t x = 0; x < voxels->size.x; x++) {
+                if (voxels->blas.get()->get_voxel(x, y, z) == nullptr) continue;
+                // if (vb.voxels.get_voxel(x, y, z).type == PhysicsVoxelType::EMPTY) continue;
 
                 filled_counter++;
                 sum += glm::vec3(x, y, z) * UNITS_PER_VOXEL - half_scale + VOXEL_SIZE_HALF;
@@ -437,10 +548,10 @@ void Physics::initialize_voxel_body(VoxelBody& vb) {
     vb.inv_mass = 1.0f / (voxel_mass * filled_counter);
 
     glm::mat3 inertia_tensor(0.0f);
-    for (size_t z = 0; z < vb.voxels.get_size().z; z++) {
-        for (size_t y = 0; y < vb.voxels.get_size().y; y++) {
-            for (size_t x = 0; x < vb.voxels.get_size().x; x++) {
-                if (vb.voxels.get_voxel(x, y, z).type == PhysicsVoxelType::EMPTY) continue;
+    for (size_t z = 0; z < voxels->size.z; z++) {
+        for (size_t y = 0; y < voxels->size.y; y++) {
+            for (size_t x = 0; x < voxels->size.x; x++) {
+                if (voxels->blas.get()->get_voxel(x, y, z) == nullptr) continue;
 
                 const glm::vec3 pos = glm::vec3(x, y, z) * UNITS_PER_VOXEL - half_scale + VOXEL_SIZE_HALF;
                 const glm::vec3 r = pos - vb.com_local_offset;

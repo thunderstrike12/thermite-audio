@@ -18,6 +18,9 @@ struct Bvh2Node {
 
     /* Returns true if this node is a leaf node. */
     inline bool is_leaf() const { return prim_count > 0u; }
+
+    /* Returns the AABB of this node. */
+    inline Aabb aabb() const { return Aabb(min_bounds, max_bounds); }
 };
 
 /* 2-wide Bounding Volume Hierarchy Node as described by 2009 Aila & Laine. */
@@ -66,6 +69,9 @@ class Bvh2 {
 
     /* Build the acceleration structure. */
     void build(const T* input_prims, const uint32_t input_count);
+
+    /* Find all primitives overlapping an AABB. */
+    std::vector<uint32_t> overlap(const Aabb& aabb) const;
 
     /* Trace the acceleration structure. */
     Hit trace(const Ray& ray) const;

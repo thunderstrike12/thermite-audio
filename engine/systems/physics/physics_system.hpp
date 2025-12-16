@@ -5,6 +5,8 @@
 #include "collision.hpp"
 #include "constraint_solver.hpp"
 #include "components/voxel_body.hpp"
+#include "core/renderer/voxel_object.hpp"
+#include "engine/shared/bvh2.hpp"
 // #include "components/rigidbody.hpp"
 // #include "components/voxel_collider.hpp"
 
@@ -27,6 +29,7 @@ class Physics : public ISystem {
     int max_contacts = 256;
     bool simulating = true;
     ConstraintSolver solver = {};
+    Bvh2<VoxelObject> bvh {};
 
     // Simulation functions
     void generate_voxel_constraints_range(const int index, const int size);

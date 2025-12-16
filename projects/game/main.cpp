@@ -7,6 +7,7 @@
 #include "engine/core/components/voxel_renderer.hpp"
 #include "engine/core/input/input.hpp"
 #include "engine/core/logger.hpp"
+#include "engine/systems/physics/components/voxel_body.hpp"
 #include "engine/systems/camera/camera_system.hpp"
 
 class Game : public tmt::Application {
@@ -37,42 +38,43 @@ void Game::on_start() {
     tmt::engine.ecs.systems.add<tmt::CameraSystem>();
 
     { /* Camera entity */
-        // tmt::Entity entity = tmt::engine.ecs.create_entity("Camera");
-        // auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
-        // auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity).active = true;
-        // transform.set_world_position(glm::vec3(0.0f, 0.0f, -16.0f));
+        tmt::Entity entity = tmt::engine.ecs.create_entity("Camera");
+        auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+        auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
+        transform.set_world_position(glm::vec3(0.0f, 0.25f, -5.0f));
     }
-    const tmt::Entity entity = tmt::engine.ecs.create_entity<tmt::Transform, tmt::Camera>("Camera entity");
-    tmt::Camera::set_active_camera(entity);
-    // tmt::engine.ecs.get_component<tmt::Transform>(entity).set_local_position({0.0f, 1.0f, 0.0f});
 
     auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "dragon128.vengi"});
     auto voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
 
-    { /* Voxel entity */
-        voxel = tmt::engine.ecs.create_entity("Moving Voxel");
-        auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(voxel);
-        auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(voxel);
-        renderer.resource = voxel_volume;
-        transform.set_world_position(glm::vec3(0.0f, 0.0f, 0.0f));
-        transform.set_world_scale(glm::vec3(1.0f, 1.0f, 1.0f));
-    }
-
-    constexpr float PRIM_RANGE = 256.0f;
-    for (int i = 0; i < 255; ++i) {
+    { /* Voxel Physics Entity */
         auto entity = tmt::engine.ecs.create_entity();
         auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
         renderer.resource = voxel_volume;
-        float s = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 3.0f;
-        float rx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * PRIM_RANGE - (PRIM_RANGE / 2.0f);
-        float ry = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * PRIM_RANGE - (PRIM_RANGE / 2.0f);
-        float rz = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * PRIM_RANGE - (PRIM_RANGE / 2.0f);
-        float rrx = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 180.0f;
-        float rry = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 180.0f;
-        transform.set_world_position(glm::vec3(rx, ry, rz));
-        transform.set_world_rotation(glm::vec3(glm::radians(rrx), glm::radians(rry), 0.0f));
-        transform.set_world_scale(1.0f + glm::vec3(s, s, s));
+        auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
+        vb.resource = voxel_volume;
+
+        vb.gravity = 0.0f;
+        vb.type = tmt::VoxelBody::DYNAMIC;
+        // renderer.size = glm::uvec3(20u, 20u, 20u);
+        transform.set_world_position(glm::vec3(0.0f, 0.0f, 0.0f));
+        transform.set_world_rotation(glm::vec3(3.1415f, 0.0f, 0.0f));
+    }
+
+    { /* Voxel Physics Entity */
+        auto entity = tmt::engine.ecs.create_entity();
+        auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+        auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
+        renderer.resource = voxel_volume;
+
+        auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
+        vb.resource = voxel_volume;
+
+        vb.gravity = 2.0f;
+        vb.type = tmt::VoxelBody::DYNAMIC;
+        // renderer.size = glm::uvec3(20u, 20u, 20u);
+        transform.set_world_position(glm::vec3(0.5f, 30.0f, 0.0f));
     }
 }
 

@@ -70,7 +70,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          ignore: '.github | extern | build | tests | pch.hpp'
+          ignore: '.github | extern | build | tests | pch.hpp | const.hpp'
           style: file
           files-changed-only: true
           step-summary: true

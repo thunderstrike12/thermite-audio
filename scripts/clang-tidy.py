@@ -24,6 +24,7 @@ def glob_recursive_files(path, extensions):
         if (file_path.is_file() 
             and file_path.suffix in extensions 
             and file_path.name != "pch.hpp"
+            and file_path.name != "const.hpp"
             and not any(ignored in file_path.parts for ignored in IGNORED_DIRECTORIES)):
             ret.append(file_path)
     return ret

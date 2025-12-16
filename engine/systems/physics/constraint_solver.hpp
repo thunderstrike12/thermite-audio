@@ -11,6 +11,6 @@ class ConstraintSolver {
 
     std::vector<Collision> collisions = {};
     int velocity_iterations = 16;
-    int position_iterations = 8;
+    int position_iterations = 4;
 };
 }  // namespace tmt

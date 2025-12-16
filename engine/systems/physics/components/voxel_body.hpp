@@ -2,6 +2,8 @@
 #include "glm/gtc/quaternion.hpp"
 #include "engine/systems/physics/physics_voxel_data.hpp"
 #include "engine/tools/serializer.hpp"
+#include "engine/shared/aabb.hpp"
+#include "engine/core/resources/voxel_volume.hpp"
 
 namespace tmt {
 
@@ -25,15 +27,15 @@ struct VoxelBody {
     glm::vec3 stored_torque = glm::vec3(0);
 
     float inv_mass = -1.0f;
-    glm::mat3 inv_inertia {};
+    glm::mat3 inv_inertia = glm::mat3(0);
 
     glm::vec3 com_local_offset = glm::vec3(0);
     glm::vec3 center_of_mass = glm::vec3(0);
 
     glm::vec3 velocity = glm::vec3(0);
-    float linear_drag = 0.3f;
+    float linear_drag = 0.2f;
     glm::vec3 angular_velocity = glm::vec3(0);
-    float angular_drag = 0.6f;
+    float angular_drag = 0.4f;
 
     float gravity = 9.8f;
     float density = 1.0f;
@@ -58,8 +60,9 @@ struct VoxelBody {
     float height = 1.0f;
     float depth = 1.0f;
 
-    PhysicsVoxelData voxels = {};
+    std::shared_ptr<VoxelVolume> resource {};
 
+    Aabb aabb() const;
     Box get_local_bounds() const;
     Box get_world_bounds() const;
     Axes get_axes() const;

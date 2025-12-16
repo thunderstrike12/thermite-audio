@@ -2,13 +2,26 @@
 #include <glm/gtx/quaternion.hpp>
 #include <array>
 
-float tmt::VoxelBody::get_inv_mass() const { return type != DYNAMIC ? 0 : inv_mass; }
+float tmt::VoxelBody::get_inv_mass() const { return type == STATIC ? 0 : inv_mass; }
 
 glm::mat3 tmt::VoxelBody::get_inv_world_inertia() const {
-    if (type != DYNAMIC) return glm::mat3(0);
+    if (type == STATIC) return glm::mat3(0);
 
     const glm::mat3 r = glm::toMat3(rotation);
     return r * inv_inertia * glm::transpose(r);
+}
+
+tmt::Aabb tmt::VoxelBody::aabb() const {
+    Axes axes = get_axes();
+    glm::vec3 world_half_extends = glm::vec3(0);
+    for (int i = 0; i < 3; ++i) {
+        world_half_extends.x += std::abs(axes.axis[i].x) * (width * 0.5f);
+        world_half_extends.y += std::abs(axes.axis[i].y) * (height * 0.5f);
+        world_half_extends.z += std::abs(axes.axis[i].z) * (depth * 0.5f);
+    }
+
+    // Return AABB min and max
+    return {position - world_half_extends, position + world_half_extends};
 }
 
 tmt::VoxelBody::Box tmt::VoxelBody::get_local_bounds() const {
