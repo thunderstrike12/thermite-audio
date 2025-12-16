@@ -45,6 +45,11 @@ void thermite_logger(const DebugSeverity severity, const char* msg, void*) {
 
 void Renderer::init() {
     gpu.set_logger(thermite_logger, DebugLevel::Verbose);
+    gpu.set_max_render_targets(4u);
+    gpu.set_max_buffers(256u);
+    gpu.set_max_textures(256u);
+    gpu.set_max_images(256u);
+    gpu.set_max_samplers(32u);
 
     /* Initialize the GPU adapter */
     if (const Result r = gpu.init(true); r.is_err()) {
