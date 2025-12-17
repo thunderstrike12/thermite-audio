@@ -11,7 +11,7 @@
 #include "editor/core/window.hpp"
 
 namespace tmt {
-class Hierarchy : public IWindow, public IGameEvents {
+class Hierarchy : public IWindow, public OnGameEnd {
    public:
     Hierarchy() = default;
     ~Hierarchy() = default;
@@ -100,6 +100,8 @@ class Hierarchy : public IWindow, public IGameEvents {
     bool display_entity(const HierarchyState& state);
     void end_section();
 
+    void clear_selection();
+
     struct DragNDropPayload {
         bool multiple = false;
         Entity entity = entt::null;
@@ -109,8 +111,6 @@ class Hierarchy : public IWindow, public IGameEvents {
     bool drag_drop_target(const Entity dropped_entity);
 
     // Inherited via IGameEvents
-    void on_start() override;
-    void on_update(const tmt::FrameData& time) override;
-    void on_end() override;
+    void on_game_end() override;
 };
 }  // namespace tmt

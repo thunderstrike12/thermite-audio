@@ -78,14 +78,24 @@ void Engine::run() {
             game_controller.should_start_game = false;
             game_controller.is_game_playing = true;
         }
+        if (game_controller.should_game_pause()) {
+            pause_game();
+            game_controller.is_game_paused = true;
+            game_controller.should_pause_game = false;
+        }
+        if (game_controller.should_game_resume()) {
+            resume_game();
+            game_controller.is_game_paused = false;
+            game_controller.should_resume_game = false;
+        }
 
         input.update();
 
         const FrameData frame_data = {.delta_time = timer.tick()};
 
-        const bool shoulld_update = game_controller.is_playing() && !game_controller.is_paused();
+        const bool should_update = game_controller.is_playing() && !game_controller.is_paused();
         /* Update */
-        if (shoulld_update) {
+        if (should_update) {
             update_game(frame_data);
         }
         update_engine(frame_data);
@@ -97,7 +107,7 @@ void Engine::run() {
             TMT_ZONE_SCOPED_N("Fixed Update")
 
             /* Fixed Update */
-            if (shoulld_update) {
+            if (should_update) {
                 fixed_update_game(frame_data);
             }
             fixed_update_engine(frame_data);
@@ -160,7 +170,18 @@ void Engine::fixed_update_game(const FrameData& frame_data) {
     OnGameFixedUpdate::dispatch(frame_data);
 }
 
+void Engine::pause_game() {
+    TMT_ZONE_SCOPED_N("Engine::pause_game")
+    OnGamePause::dispatch();
+}
+
+void Engine::resume_game() {
+    TMT_ZONE_SCOPED_N("Engine::resume_game")
+    OnGameResume::dispatch();
+}
+
 void Engine::end_game() {
+    TMT_ZONE_SCOPED_N("Engine::end_game")
     app->on_end();
     OnGameEnd::dispatch();
 }

@@ -38,6 +38,20 @@ void Hierarchy::end_section() {
     }
 }
 
+void Hierarchy::clear_selection() {
+    selected_entities.clear();
+    first_selected_entity = entt::null;
+    selection_parent = entt::null;
+
+    selected_index_begin = NULL_INDEX;
+    selected_index_end_above = NULL_INDEX;
+    selected_index_end_below = NULL_INDEX;
+    end_above_next_frame = NULL_INDEX;
+    end_below_next_frame = NULL_INDEX;
+    previous_end_above = NULL_INDEX;
+    previous_end_below = NULL_INDEX;
+}
+
 void Hierarchy::display() { render_hierarchy(); }
 
 bool Hierarchy::display_entity(const HierarchyState& state) {
@@ -218,11 +232,6 @@ bool Hierarchy::drag_drop_target(const Entity dropped_entity) {
     }
     return false;
 }
-
-void Hierarchy::on_start() {}
-
-void Hierarchy::on_update(const tmt::FrameData& time) {}
-
-void Hierarchy::on_end() { selected_entities.clear(); }
+void Hierarchy::on_game_end() { clear_selection(); }
 
 }  // namespace tmt

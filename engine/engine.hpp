@@ -73,6 +73,8 @@ class Engine {
     void start_game();
     void update_game(const FrameData& frame_data);
     void fixed_update_game(const FrameData& frame_data);
+    void pause_game();
+    void resume_game();
     void end_game();
 };
 
