@@ -6,8 +6,24 @@
 namespace tmt {
 const char* IO::path_str[3] = {"assets/game/", "assets/engine/", "assets/editor/"};
 
+/* Relative to working directory */
+std::filesystem::path IO::FileLocation::get_relative_path() const { return std::filesystem::path(path_str[static_cast<uint8_t>(sub_location)]) / relative_path; }
+
+/* Absolute path */
+std::filesystem::path IO::FileLocation::get_absolute_path() const {
+    auto sub_path = std::filesystem::path(path_str[static_cast<uint8_t>(sub_location)]);
+
+    std::filesystem::path relative = relative_path.lexically_normal();
+    if (relative_path.has_root_path()) {
+        tmt::Log::warn(tmt::Log::Scope::ENGINE, "Possible incorrect path passed: {}\nTrying to fix path..", relative_path.string());
+
+        relative = relative_path.relative_path();
+    }
+    return sub_path / relative;
+}
+
 bool IO::write_file(const FileLocation& file_location, const char* data, size_t size) {
-    std::filesystem::path absolute = get_absolute_path(file_location.sub_location, file_location.relative_path);
+    std::filesystem::path absolute = file_location.get_absolute_path();
 
     if (!create_directories(absolute)) return false;
 
@@ -28,7 +44,7 @@ bool IO::write_file(const FileLocation& file_location, const char* data, size_t 
 }
 
 bool IO::write_text_file(const FileLocation& file_location, const std::string& text, bool overwrite) {
-    std::filesystem::path absolute = get_absolute_path(file_location.sub_location, file_location.relative_path);
+    std::filesystem::path absolute = file_location.get_absolute_path();
 
     if (!create_directories(absolute)) return false;
 
@@ -49,7 +65,7 @@ bool IO::write_text_file(const FileLocation& file_location, const std::string& t
 }
 
 std::vector<char> IO::read_file(const FileLocation& file_location) {
-    std::filesystem::path absolute = get_absolute_path(file_location.sub_location, file_location.relative_path);
+    std::filesystem::path absolute = file_location.get_absolute_path();
 
     std::vector<char> data;
 
@@ -86,7 +102,7 @@ std::string IO::read_text_file(const FileLocation& file_location) {
 }
 
 std::string IO::read_or_create_text_file(const FileLocation& file_location, const std::string& default_contents) {
-    std::filesystem::path absolute = get_absolute_path(file_location.sub_location, file_location.relative_path);
+    std::filesystem::path absolute = file_location.get_absolute_path();
     if (!std::filesystem::exists(absolute)) {
         tmt::Log::warn(tmt::Log::Scope::ENGINE, "File not found at: {}\nCreating file with default contents.", absolute.string());
         if (!write_text_file(file_location, default_contents, true)) {
@@ -96,18 +112,6 @@ std::string IO::read_or_create_text_file(const FileLocation& file_location, cons
         return default_contents;
     }
     return read_text_file(file_location);
-}
-
-std::filesystem::path IO::get_absolute_path(Location sub_cat, const std::filesystem::path& relative_path) {
-    auto sub_path = std::filesystem::path(path_str[static_cast<uint8_t>(sub_cat)]);
-
-    std::filesystem::path relative = relative_path.lexically_normal();
-    if (relative_path.has_root_path()) {
-        tmt::Log::warn(tmt::Log::Scope::ENGINE, "Possible incorrect path passed: {}\nTrying to fix path..", relative_path.string());
-
-        relative = relative_path.relative_path();
-    }
-    return sub_path / relative;
 }
 
 bool IO::stream_open(std::fstream& file_stream, const std::filesystem::path& absolute, std::ios::openmode open_mode) {

@@ -20,10 +20,9 @@ class Editor : public OnEngineInit, public OnEngineUpdate, public OnEngineFixedU
 
     SystemCollection<IWindow> windows;
 
-    FontManager& font_manager;
+    ImGuiManager& imgui_manager;
 
    private:
-    ImGuiManager& imgui_manager;
     SaveData save_data;
 
     void on_engine_init(const ApplicationSpecs& specs) override;

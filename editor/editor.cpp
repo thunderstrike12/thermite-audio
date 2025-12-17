@@ -29,23 +29,11 @@ tmt::Editor tmt::editor;
 
 namespace tmt {
 
-Editor::Editor() : imgui_manager(*new ImGuiManager()), font_manager(*new FontManager()) {}
+Editor::Editor() : imgui_manager(*new ImGuiManager()) {}
 
-Editor::~Editor() {
-    delete &font_manager;
-    delete &imgui_manager;
-}
+Editor::~Editor() { delete &imgui_manager; }
 
-void Editor::init() {
-    Log::info("Thermite Editor initialized.");
-
-    font_manager.load("Rubik", {IO::Location::EDITOR, "Rubik-Regular.ttf"}, 22.f);
-    const uint16_t glyph_ranges[] = {ICON_MIN_MS, ICON_MAX_MS, 0};
-    ImFontConfig config {};
-    config.MergeMode = true;
-    config.GlyphOffset.y = 9.f;
-    font_manager.load("MaterialSymbols", {IO::Location::EDITOR, "MaterialSymbolsRounded.ttf"}, 37.f, config, glyph_ranges);
-}
+void Editor::init() { Log::info("Thermite Editor initialized."); }
 
 void Editor::on_engine_init(const ApplicationSpecs&) {
     tmt::Log::info("Starting Thermite Editor...");
@@ -66,8 +54,6 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
 }
 
 void Editor::on_engine_update(const FrameData& time) {
-    if (font_manager.pending_reload) font_manager.reload_fonts();
-
     imgui_manager.new_frame();
 
     main_menu_bar();

@@ -30,6 +30,11 @@ void Window::init(const ApplicationSpecs&) {
         Log::error(Log::Scope::ENGINE, "Couldn't set the window to resize %s", SDL_GetError());
         return;
     }
+
+    if (!SDL_MaximizeWindow(window)) {
+        Log::error(Log::Scope::ENGINE, "Couldn't maximize the window %s", SDL_GetError());
+        return;
+    }
 }
 
 HWND Window::get_window_handle() const {

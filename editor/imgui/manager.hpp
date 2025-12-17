@@ -8,6 +8,8 @@
 #include "engine/events/engine.hpp"
 #include "engine/events/sdl.hpp"
 
+#include "editor/core/font_manager.hpp"
+
 namespace tmt {
 class ImGuiManager : public internal::OnSdlEvent, public OnEngineUpdate {
    public:
@@ -17,6 +19,8 @@ class ImGuiManager : public internal::OnSdlEvent, public OnEngineUpdate {
     void new_frame();
     void end_frame();
     void deinit();
+
+    FontManager font_manager;
 
    private:
     void on_sdl_event(SDL_Event& event) override;

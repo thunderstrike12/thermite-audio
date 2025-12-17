@@ -21,14 +21,12 @@ class FontManager {
         std::string name;
     };
 
+    void init();
     void load(const std::string& name, const IO::FileLocation& location, const float size, const ImFontConfig& config = {}, const uint16_t* glyph_ranges = nullptr);
     void queue_reload() { pending_reload = true; };
 
     std::vector<FontData> m_fonts;
     bool pending_reload = false;
-
-   private:
-    friend class Editor;
 
     void reload_fonts();
 };
