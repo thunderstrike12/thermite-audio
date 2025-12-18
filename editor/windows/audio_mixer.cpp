@@ -66,9 +66,9 @@ void AudioMixer::display() {
                 ImGui::TreePop();
             }
         }
-
-        ImGui::EndChild();
     }
+    ImGui::EndChild();
+
     ImGui::TableNextColumn();
     if (ImGui::BeginChild("Info")) {
         switch (selection.index()) {
@@ -126,9 +126,9 @@ void AudioMixer::display() {
             default:
                 break;
         }
-
-        ImGui::EndChild();
     }
+    ImGui::EndChild();
+
     ImGui::EndTable();
 }
 
