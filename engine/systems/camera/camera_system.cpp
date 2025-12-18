@@ -11,15 +11,15 @@
 namespace tmt {
 void CameraSystem::on_start() {
     // Setup Input Actions
-    engine.input.add_action_keys(SPRINT, Key::LEFT_SHIFT);
-    engine.input.add_action_keys(FORWARD, Key::W);
-    engine.input.add_action_keys(BACKWARD, Key::S);
-    engine.input.add_action_keys(RIGHT, Key::D);
-    engine.input.add_action_keys(LEFT, Key::A);
-    engine.input.add_action_keys(UP, Key::E);
-    engine.input.add_action_keys(DOWN, Key::Q);
-    engine.input.add_action_keys(UP, Key::SPACE);
-    engine.input.add_action_keys(DOWN, Key::LEFT_CTRL);
+    engine.input_map.add_action_keys(SPRINT, Key::LEFT_SHIFT);
+    engine.input_map.add_action_keys(FORWARD, Key::W);
+    engine.input_map.add_action_keys(BACKWARD, Key::S);
+    engine.input_map.add_action_keys(RIGHT, Key::D);
+    engine.input_map.add_action_keys(LEFT, Key::A);
+    engine.input_map.add_action_keys(UP, Key::E);
+    engine.input_map.add_action_keys(DOWN, Key::Q);
+    engine.input_map.add_action_keys(UP, Key::SPACE);
+    engine.input_map.add_action_keys(DOWN, Key::LEFT_CTRL);
 }
 
 void CameraSystem::on_update(const FrameData& time) {

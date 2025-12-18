@@ -6,6 +6,7 @@
 
 namespace tmt {
 /* Forward declarations */
+class InputMap;
 class Input;
 class Window;
 class Renderer;
@@ -45,6 +46,7 @@ class Engine {
     Window& window;
     Audio& audio;
 
+    InputMap& input_map;
     Input& input;
     Ecs& ecs;
     Renderer& renderer;

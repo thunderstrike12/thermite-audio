@@ -11,6 +11,7 @@ class InputEvent {
     virtual bool is_pressed() const = 0;
     virtual bool is_just_pressed() const = 0;
     virtual bool is_just_released() const = 0;
+    virtual float get_action_strength() const = 0;
 };
 
 class InputEventKey : public InputEvent {
@@ -20,25 +21,22 @@ class InputEventKey : public InputEvent {
     bool is_pressed() const override;
     bool is_just_pressed() const override;
     bool is_just_released() const override;
+    float get_action_strength() const override;
 
+    Key get_key() const { return key; }
+    void set_key(Key new_key) { key = new_key; }
+
+   private:
     Key key {Key::UNKNOWN};
-};
-
-enum class MouseButton : int32_t {
-    LEFT = 1,
-    MIDDLE = 2,
-    RIGHT = 3,
-    X1 = 4,
-    X2 = 5,
 };
 
 class InputEventMouseMotion : public InputEvent {
    public:
     // These will be overriden by InputEventMouseButton
-
-    bool is_pressed() const override;
-    bool is_just_pressed() const override;
-    bool is_just_released() const override;
+    bool is_pressed() const { return false; }
+    bool is_just_pressed() const { return false; }
+    bool is_just_released() const { return false; }
+    float get_action_strength() const override;
 
     float get_position_x() const;
     float get_position_y() const;
@@ -56,11 +54,11 @@ class InputEventMouseMotion : public InputEvent {
     }
 
    private:
-    float position_x {0};
-    float position_y {0};
+    float position_x = 0;
+    float position_y = 0;
 
-    float relative_x {0};
-    float relative_y {0};
+    float relative_x = 0;
+    float relative_y = 0;
 };
 
 class InputEventMouseButton : public InputEventMouseMotion {
@@ -70,7 +68,12 @@ class InputEventMouseButton : public InputEventMouseMotion {
     bool is_pressed() const override;
     bool is_just_pressed() const override;
     bool is_just_released() const override;
+    float get_action_strength() const override;
 
+    MouseButton get_button() const { return button; }
+    void set_button(MouseButton new_button) { button = new_button; }
+
+   private:
     MouseButton button;
 };
 class InputEventGamepadButton : public InputEvent {
@@ -80,23 +83,39 @@ class InputEventGamepadButton : public InputEvent {
     bool is_pressed() const override;
     bool is_just_pressed() const override;
     bool is_just_released() const override;
+    float get_action_strength() const override;
 
+    GamepadButton get_button() const { return button; }
+    void set_button(GamepadButton new_button) { button = new_button; }
+
+    int32_t get_device_id() const { return device_id; }
+    void set_device_id(int32_t new_device_id) { device_id = new_device_id; }
+
+   private:
     GamepadButton button;
     int32_t device_id = -1;
 };
 
 class InputEventGamepadMotion : public InputEvent {
    public:
-    explicit InputEventGamepadMotion(GamepadAxis axis, int32_t device_id = -1) : axis(axis), device_id(device_id) {}
+    explicit InputEventGamepadMotion(GamepadAxis axis, bool negative = false, int32_t device_id = -1) : axis(axis), negative(negative), device_id(device_id) {}
 
     // TODO add a configurable way to define when an axis is pressed
     bool is_pressed() const override;
     bool is_just_pressed() const override;
     bool is_just_released() const override;
+    float get_action_strength() const override;
 
     float get_axis_value() const;
+    GamepadAxis get_axis() const { return axis; }
+    void set_axis(GamepadAxis new_axis) { axis = new_axis; }
 
+    int32_t get_device_id() const { return device_id; }
+    void set_device_id(int32_t id) { device_id = id; }
+
+   private:
     GamepadAxis axis;
+    bool negative = false;
     int32_t device_id = -1;
 };
 }  // namespace tmt

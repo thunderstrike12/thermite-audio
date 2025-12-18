@@ -34,7 +34,15 @@ tmt::Engine tmt::engine;
 namespace tmt {
 
 Engine::Engine()
-    : window(*new Window()), audio(*new Audio()), input(*new Input()), ecs(*new Ecs()), renderer(*new Renderer()), resources(*new Resources()), salvo(*new Salvo()), scenes(*new Scenes()) {}
+    : window(*new Window()),
+      audio(*new Audio()),
+      input_map(*new InputMap()),
+      input(*new Input()),
+      ecs(*new Ecs()),
+      renderer(*new Renderer()),
+      resources(*new Resources()),
+      salvo(*new Salvo()),
+      scenes(*new Scenes()) {}
 
 Engine::~Engine() {
     /* Destruction should be in reverse order */
@@ -44,6 +52,7 @@ Engine::~Engine() {
     delete &renderer;
     delete &ecs;
     delete &input;
+    delete &input_map;
     delete &audio;
     delete &window;
 }

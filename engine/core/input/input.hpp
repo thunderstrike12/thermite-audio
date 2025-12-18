@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <memory>
 #include <unordered_map>
@@ -6,23 +7,14 @@
 
 #include "keys.hpp"
 #include "input_event.hpp"
+#include "input_map.hpp"
+
+// heavily inspired by Godot's input system
+
 struct SDL_Gamepad;
 
 namespace tmt {
-namespace action {
-constexpr const char* CONFIRM = "confirm";
-constexpr const char* CANCEL = "cancel";
-constexpr const char* LEFT_CLICK = "left_click";
-constexpr const char* RIGHT_CLICK = "right_click";
-constexpr const char* MIDDLE_CLICK = "middle_click";
-constexpr const char* MOUSE_MOTION = "mouse_motion";
-constexpr auto GAMEPAD_LEFT_STICK = "gamepad_left_stick";
-constexpr auto GAMEPAD_RIGHT_STICK = "gamepad_right_stick";
-constexpr auto GAMEPAD_TRIGGERS = "gamepad_triggers";
-}  // namespace action
-struct InputAction {
-    std::vector<std::unique_ptr<InputEvent>> events;
-};
+
 struct GamepadState {
     SDL_Gamepad* handle {nullptr};
     std::string name {};
@@ -37,32 +29,21 @@ class Input {
     void init();
     void update();
 
-    void add_action(const std::string& name);
-    template <typename... Keys>
-    void add_action_keys(const std::string& name, Keys... keys) {
-        auto& action = actions[name];
-        (action.events.push_back(std::make_unique<InputEventKey>(keys)), ...);
-    }
-    template <typename... Buttons>
-    void add_action_gamepad_buttons(const std::string& name, Buttons... buttons) {
-        auto& action = actions[name];
-        (action.events.push_back(std::make_unique<InputEventGamepadButton>(buttons)), ...);
-    }
-    template <typename... Axes>
-    void add_action_gamepad_axes(const std::string& name, Axes... axes) {
-        auto& action = actions[name];
-        (action.events.push_back(std::make_unique<InputEventGamepadMotion>(axes)), ...);
-    }
-    void add_action_event(const std::string& name, std::unique_ptr<InputEvent> event);
-
-    void add_key_to_action(const std::string& name, Key key);
-    void add_action_mouse(const std::string& name, MouseButton button);
-    void remove_action(const std::string& name);
-    void add_action_mouse_motion(const std::string& name);
-
-    bool is_action_pressed(std::string_view name) const;
-    bool is_action_just_pressed(std::string_view name) const;
-    bool is_action_just_released(std::string_view name) const;
+    float get_action_strength(std::string_view name);
+    float get_action_raw_strength(std::string_view name);
+    float get_axis(std::string_view negative_action, std::string_view positive_action);
+    /// <summary>
+    /// Takes 4 string identifiers for actions and returns a circular shape for the provided deadzone. If no deadzone is provided, an average is computed from the provided actions.
+    /// </summary>
+    /// <param name="negative_action_x"></param>
+    /// <param name="positive_action_x"></param>
+    /// <param name="negative_action_y"></param>
+    /// <param name="positive_action_y"></param>
+    /// <param name="deadzone"></param>
+    /// <returns></returns>
+    glm::vec2 get_vector(
+        std::string_view negative_action_x, std::string_view positive_action_x, std::string_view negative_action_y, std::string_view positive_action_y, float deadzone = -1.0f
+    );
 
     bool is_keyboard_button_just_pressed(Key key) const;
     bool is_keyboard_button_pressed(Key key) const;
@@ -92,8 +73,17 @@ class Input {
     int32_t get_default_gamepad_id() const;
     void lock_mouse(bool value) const;
 
+    void add_action_event(const std::string& name, std::unique_ptr<InputEvent> event);
+    void add_key_to_action(const std::string& name, Key key);
+    void add_action_mouse(const std::string& name, MouseButton button);
+    void add_action_mouse_motion(const std::string& name);
+    void remove_action(const std::string& name);
+
+    bool is_action_pressed(std::string_view name) const;
+    bool is_action_just_pressed(std::string_view name) const;
+    bool is_action_just_released(std::string_view name) const;
+
    private:
-    void setup_default_action();
     // do not free this manually
     const bool* keys_sdl = nullptr;
     uint32_t mouse_buttons = 0u;
@@ -109,7 +99,6 @@ class Input {
     float scroll_dy = 0.0f;
 
     std::vector<bool> prev_keys {};
-    std::unordered_map<std::string, InputAction> actions {};
     std::unordered_map<int32_t, GamepadState> gamepads {};
 };
 }  // namespace tmt

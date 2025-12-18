@@ -19,15 +19,15 @@ void tmt::Viewport::on_editor_start() {
 }
 
 void tmt::Viewport::register_input_actions() {
-    engine.input.add_action_keys(Config::SPRINT, Key::LEFT_SHIFT);
-    engine.input.add_action_keys(Config::FORWARD, Key::W);
-    engine.input.add_action_keys(Config::BACKWARD, Key::S);
-    engine.input.add_action_keys(Config::RIGHT, Key::D);
-    engine.input.add_action_keys(Config::LEFT, Key::A);
-    engine.input.add_action_keys(Config::UP, Key::E);
-    engine.input.add_action_keys(Config::DOWN, Key::Q);
-    engine.input.add_action_keys(Config::UP, Key::SPACE);
-    engine.input.add_action_keys(Config::DOWN, Key::LEFT_CTRL);
+    engine.input_map.add_action_keys(Config::SPRINT, Key::LEFT_SHIFT);
+    engine.input_map.add_action_keys(Config::FORWARD, Key::W);
+    engine.input_map.add_action_keys(Config::BACKWARD, Key::S);
+    engine.input_map.add_action_keys(Config::RIGHT, Key::D);
+    engine.input_map.add_action_keys(Config::LEFT, Key::A);
+    engine.input_map.add_action_keys(Config::UP, Key::E);
+    engine.input_map.add_action_keys(Config::DOWN, Key::Q);
+    engine.input_map.add_action_keys(Config::UP, Key::SPACE);
+    engine.input_map.add_action_keys(Config::DOWN, Key::LEFT_CTRL);
 }
 
 void tmt::Viewport::on_editor_update(const tmt::FrameData& frame_data) { update_debug_camera(frame_data); }

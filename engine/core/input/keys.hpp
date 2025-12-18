@@ -108,6 +108,7 @@ enum class GamepadButton : int32_t {
 };
 
 enum class GamepadAxis : int32_t {
+    INVALID = -1,
     LEFT_X = 0,
     LEFT_Y = 1,
     RIGHT_X = 2,
@@ -116,4 +117,16 @@ enum class GamepadAxis : int32_t {
     RIGHT_TRIGGER = 5,
     COUNT = 6,
 };
+struct GamepadAxisDirection {
+    GamepadAxis axis;
+    bool negative = false;
+};
+enum class MouseButton : int32_t {
+    LEFT = 1,
+    MIDDLE = 2,
+    RIGHT = 3,
+    X1 = 4,
+    X2 = 5,
+};
+
 }  // namespace tmt
