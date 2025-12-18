@@ -2,6 +2,7 @@
 
 #include "engine/core/resource.hpp"
 #include "engine/shared/svt64.hpp"
+#include "engine/core/reflection.hpp"
 
 namespace tmt {
 

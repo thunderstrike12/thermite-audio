@@ -125,6 +125,7 @@ void Engine::run() {
 
         renderer.update();
         scenes.update();
+        resources.unload_unused();
         frame_count++;
     }
 

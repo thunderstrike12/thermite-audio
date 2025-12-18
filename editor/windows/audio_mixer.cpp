@@ -42,8 +42,8 @@ void AudioMixer::display() {
             const std::string bank_path = ICON_MS_INVENTORY_2 " " + bank->get_path();
 
             const bool bank_is_leaf = audio_events.empty() && volume_controls.empty();
-            const bool bank_node_open = ImGui::TreeNodeEx(bank_path.c_str(), default_flags | (bank_is_leaf ? leaf_flags : 0) | get_selection_flags(std::weak_ptr {bank}));
-            if (ImGui::IsItemClicked()) selection = bank;
+            const bool bank_node_open = ImGui::TreeNodeEx(bank_path.c_str(), default_flags | (bank_is_leaf ? leaf_flags : 0) | get_selection_flags(std::weak_ptr {bank.resource}));
+            if (ImGui::IsItemClicked()) selection = bank.resource;
             if (bank_node_open) {
                 for (const AudioEvent& event : audio_events) {
                     const std::string event_path = ICON_MS_PLAYLIST_PLAY " " + event.get_path();

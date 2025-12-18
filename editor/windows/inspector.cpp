@@ -7,8 +7,9 @@
 
 #include "engine/core/collection.hpp"
 #include "engine/core/components/all.hpp"
+#include "engine/core/logger.hpp"
 
-#include "engine/tools/serialize_defines.hpp"
+#include "engine/tools/serializer/all.hpp"
 
 #include "editor/editor.hpp"
 
@@ -24,20 +25,102 @@ namespace tmt {
 
 void Inspector::display() {
     const auto& hierarchy = editor.windows.get<Hierarchy>();
-    const Entity selected_entity = hierarchy.get_first_selected_entity();
-    const std::unordered_set<Entity>& selected_entities = hierarchy.get_selected_entities();
 
-    AllComponents::for_each([selected_entity, selected_entities](auto type_tag) {
+    const MenuContext menu_context {
+        .primary_entity = hierarchy.get_first_selected_entity(),
+        .selected_entities = hierarchy.get_selected_entities(),
+    };
+
+    AllComponents::for_each([menu_context](auto type_tag) {
         using T = typename decltype(type_tag)::type;  // Extract type from tag
 
-        const bool has_component = tmt::engine.ecs.has_component<T>(selected_entity);
+        const bool has_component = tmt::engine.ecs.has_component<T>(menu_context.primary_entity);
         if (has_component == false) return;
 
-        const auto& name = tmt::Component<T>::get_name();
-        const bool is_header_open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen);
-        if (is_header_open == false) return;
+        T& component_instance = tmt::engine.ecs.get_component<T>(menu_context.primary_entity);
 
-        T& component_instance = tmt::engine.ecs.get_component<T>(selected_entity);
+        const auto& name = tmt::Component<T>::get_name();
+        ImReflect::Detail::scope_id scope_id {name};
+
+        const bool is_header_open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen);
+        const bool right_clicked = ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right);
+
+        const std::string popup_id = "ComponentOptionsPopup_" + std::string(name);
+        if (right_clicked) {
+            ImGui::OpenPopup(popup_id.c_str());
+        }
+
+        if (ImGui::BeginPopup(popup_id.c_str())) {
+            if (ImGui::MenuItem("Remove Component")) {
+                for (const Entity& entity : menu_context.selected_entities) {
+                    const bool has_comp = engine.ecs.has_component<T>(entity);
+                    if (has_comp == false) continue;
+                    tmt::engine.ecs.remove_component<T>(entity);
+                }
+                ImGui::CloseCurrentPopup();
+                ImGui::EndPopup();
+                return;
+            }
+            if (ImGui::MenuItem("Copy Component")) {
+                const json serialized = tmt::Serializer::serialize(component_instance);
+                json clipboard_json;
+                clipboard_json["component_type"] = name;
+                clipboard_json["data"] = serialized;
+                ImGui::SetClipboardText(clipboard_json.dump().c_str());
+                ImGui::CloseCurrentPopup();
+            }
+            if (ImGui::BeginMenu("Paste")) {
+                if (ImGui::MenuItem("Paste Component")) {
+                    const char* clipboard_text = ImGui::GetClipboardText();
+                    if (clipboard_text != nullptr) {
+                        const json deserialized = json::parse(clipboard_text, nullptr, false);
+                        if (deserialized.is_discarded()) {
+                            Log::error("Failed to parse clipboard JSON for component '{}'", name);
+                        } else {
+                            const auto name_in_clipboard = deserialized.value("component_type", "");
+                            AllComponents::for_each([&](auto type_tag_inner) {
+                                using T_inner = typename decltype(type_tag_inner)::type;  // Extract type from tag
+                                const auto name_of_type = tmt::Component<T_inner>::get_name();
+                                if (name_in_clipboard != name_of_type) return;
+                                const json data = deserialized.value("data", json::object());
+                                for (const Entity& entity : menu_context.selected_entities) {
+                                    T_inner& target_instance = tmt::engine.ecs.add_or_get_component<T_inner>(entity);
+                                    Serializer::deserialize(data, target_instance);
+                                }
+                            });
+                        }
+                    }
+                    ImGui::CloseCurrentPopup();
+                } else if (ImGui::MenuItem("Paste Values Only")) {
+                    const char* clipboard_text = ImGui::GetClipboardText();
+                    if (clipboard_text != nullptr) {
+                        const json deserialized = json::parse(clipboard_text, nullptr, false);
+                        if (deserialized.is_discarded()) {
+                            Log::error("Failed to parse clipboard JSON for component '{}'", name);
+                        } else {
+                            const auto name_in_clipboard = deserialized.value("component_type", "");
+                            AllComponents::for_each([&](auto type_tag_inner) {
+                                using T_inner = typename decltype(type_tag_inner)::type;  // Extract type from tag
+                                const auto name_of_type = tmt::Component<T_inner>::get_name();
+                                if (name_in_clipboard != name_of_type) return;
+                                const json data = deserialized.value("data", json::object());
+                                for (const Entity& entity : menu_context.selected_entities) {
+                                    const bool has_comp = tmt::engine.ecs.has_component<T_inner>(entity);
+                                    if (has_comp == false) continue;
+                                    T_inner& target_instance = tmt::engine.ecs.get_component<T_inner>(entity);
+                                    Serializer::deserialize(data, target_instance);
+                                }
+                            });
+                        }
+                    }
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndPopup();
+        }
+
+        if (is_header_open == false) return;
 
         const json before = tmt::Serializer::serialize(component_instance);
 
@@ -45,13 +128,13 @@ void Inspector::display() {
         const bool changed = response.get<T>().is_changed();
 
         if (changed == false) return;
-        if (selected_entities.size() == 1) return;
+        if (menu_context.selected_entities.size() <= 1) return;
 
         auto after = tmt::Serializer::serialize(component_instance);
         const json diff = nlohmann::json::diff(before, after);
 
-        for (const Entity& entity : selected_entities) {
-            if (entity == selected_entity) continue;
+        for (const Entity& entity : menu_context.selected_entities) {
+            if (entity == menu_context.primary_entity) continue;
 
             const bool has_component = tmt::engine.ecs.has_component<T>(entity);
             if (has_component == false) continue;
@@ -62,6 +145,33 @@ void Inspector::display() {
             tmt::Serializer::deserialize(other_json, other_instance);
         }
     });
+
+    add_component(menu_context);
+}
+
+void Inspector::add_component(const MenuContext& menu_context) {
+    if (menu_context.primary_entity == entt::null) return;
+
+    if (ImGui::Button("Add Component")) {
+        ImGui::OpenPopup("AddComponentPopup");
+    }
+
+    if (ImGui::BeginPopup("AddComponentPopup")) {
+        AllComponents::for_each([menu_context](auto type_tag) {
+            using T = typename decltype(type_tag)::type;  // Extract type from tag
+
+            for (const Entity& entity : menu_context.selected_entities) {
+                const bool has_component = tmt::engine.ecs.has_component<T>(entity);
+                if (has_component) return;
+                const auto& name = tmt::Component<T>::get_name();
+                if (ImGui::MenuItem(name)) {
+                    tmt::engine.ecs.add_component<T>(entity);
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+        });
+        ImGui::EndPopup();
+    }
 }
 
 void Inspector::on_editor_start() {}

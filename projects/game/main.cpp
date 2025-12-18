@@ -55,13 +55,13 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.ecs.systems.add<tmt::CameraSystem>();
 
     /* Register Scenes */
-    tmt::engine.scenes.register_scene<TableScene>();
     tmt::engine.scenes.register_scene<DragonScene>();
+    tmt::engine.scenes.register_scene<TableScene>();
 
     return std::make_unique<Game>(specs);
 }
 
-void generate_random_entities(std::shared_ptr<tmt::VoxelVolume>& voxel_volume);
+void generate_random_entities(tmt::ResourceRef<tmt::VoxelVolume>& voxel_volume);
 
 /* Dragon Scene */
 void DragonScene::on_start() {
@@ -72,8 +72,8 @@ void DragonScene::on_start() {
         transform.set_world_position(glm::vec3(0.0f, 0.25f, -5.0f));
     }
 
-    auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "dragon128.vengi"});
-    auto voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
+    tmt::ResourceRef<tmt::VoxelScene> voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "dragon128.vengi"});
+    tmt::ResourceRef<tmt::VoxelVolume> voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
 
     { /* Voxel entity */
         voxel = tmt::engine.ecs.create_entity("Moving Voxel");
@@ -126,7 +126,7 @@ void TableScene::on_update(const tmt::FrameData&) {
 void TableScene::on_end() {}
 
 /* Helper function */
-void generate_random_entities(std::shared_ptr<tmt::VoxelVolume>& voxel_volume) {
+void generate_random_entities(tmt::ResourceRef<tmt::VoxelVolume>& voxel_volume) {
     srand(0);  // Fixed seed for consistent results
     constexpr float PRIM_RANGE = 256.0f;
     for (int i = 0; i < 255; ++i) {

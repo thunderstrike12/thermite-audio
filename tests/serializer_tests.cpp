@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "engine/tools/serializer.hpp"
-#include "engine/tools/serialize_defines.hpp"
+#include "engine/tools/serializer/all.hpp"
 #include "engine/core/components/transform.hpp"
 
 TEST(SerializerTest, BasicSerialization) {

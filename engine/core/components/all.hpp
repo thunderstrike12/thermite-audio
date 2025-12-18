@@ -7,6 +7,8 @@
 #include "engine/core/components/voxel_renderer.hpp"
 #include "engine/core/components/camera.hpp"
 
+#include "engine/systems/physics/components/voxel_body.hpp"
+
 namespace tmt {
 
 // clang-format off
@@ -15,7 +17,8 @@ using AllComponents = ComponentRegistry<
 	Name, 
 	Transform, 
 	VoxelRenderer, 
-	Camera
+	Camera,
+	VoxelBody
 >;
 // clang-format on
 }  // namespace tmt

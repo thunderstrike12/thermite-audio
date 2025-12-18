@@ -28,7 +28,7 @@ class RigModel {
     std::vector<Entity> bone_entities;
     std::vector<Entity> voxel_entities;
     std::vector<Entity> pivot_entities;
-    std::shared_ptr<RigData> data;
+    ResourceRef<RigData> data;
     IO::FileLocation file_directory = {};
 
     // void attach_voxel_objects(const IO::FileLocation& directory);

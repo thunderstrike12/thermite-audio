@@ -1,5 +1,7 @@
 #pragma once
 
+#define JSON_REFLECT_ENABLE_CONST_CAST
+// #define JSON_REFLECT_INITIALIZE_SMART_POINTERS
 #include <JsonReflect.hpp>
 #include <ImReflect_macro.hpp>
 

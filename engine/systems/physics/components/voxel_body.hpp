@@ -60,7 +60,7 @@ struct VoxelBody {
     float height = 1.0f;
     float depth = 1.0f;
 
-    std::shared_ptr<VoxelVolume> resource {};
+    ResourceRef<VoxelVolume> resource {};
 
     Aabb aabb() const;
     Box get_local_bounds() const;
@@ -71,4 +71,4 @@ struct VoxelBody {
 
 }  // namespace tmt
 
-JSON_REFLECT(tmt::VoxelBody, linear_drag, angular_drag, gravity, density);
+TMT_COMPONENT(tmt::VoxelBody, "Voxel Body", (resource, type, gravity));

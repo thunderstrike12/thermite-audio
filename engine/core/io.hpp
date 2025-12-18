@@ -5,6 +5,7 @@
 
 #include "engine/tools/fmt/stl.hpp"
 #include "engine/tools/fmt/enum.hpp"
+#include "engine/core/reflection.hpp"
 
 namespace tmt {
 
@@ -59,3 +60,4 @@ class IO {
 }  // namespace tmt
 
 FMT_LOGGING(tmt::IO::FileLocation, "({}, \"{}\")", obj.sub_location, obj.relative_path);
+TMT_OBJECT(tmt::IO::FileLocation, (sub_location, relative_path));

@@ -10,7 +10,7 @@ namespace tmt {
 
 /* Voxel Renderer component used to visualize voxel data. */
 struct VoxelRenderer {
-    std::shared_ptr<VoxelVolume> resource {};
+    ResourceRef<VoxelVolume> resource {};
 };
 
 }  // namespace tmt

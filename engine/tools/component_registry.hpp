@@ -8,25 +8,23 @@ struct type_tag {
     using type = T;
 };
 
-template <typename... Components>
+template <typename... all_components>
 class ComponentRegistry {
    public:
-    using components = std::tuple<Components...>;
+    using Components = std::tuple<all_components...>;
 
-    static constexpr size_t COUNT = sizeof...(Components);
+    static constexpr size_t COUNT = sizeof...(all_components);
 
     template <size_t Index>
-    using get = std::tuple_element_t<Index, components>;
+    using get = std::tuple_element_t<Index, Components>;
 
-    template <typename Func, size_t... Is>
-    static void for_each_impl(Func&& func, std::index_sequence<Is...>) {
-        // Use void cast to force statement expression context
-        (void(func(type_tag<std::tuple_element_t<Is, components>> {})), ...);
-    }
-
-    template <typename Func>
+    template <typename Func, size_t Index = 0>
     static void for_each(Func&& func) {
-        for_each_impl(std::forward<Func>(func), std::make_index_sequence<COUNT> {});
+        if constexpr (Index < COUNT) {
+            func(type_tag<get<Index>> {});
+            /* Recurse to the next index */
+            for_each<Func, Index + 1>(std::forward<Func>(func));
+        }
     }
 };
 }  // namespace tmt
