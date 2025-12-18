@@ -12,7 +12,7 @@
 
 #include "engine/core/components/name.hpp"
 #include "engine/core/components/transform.hpp"
-#include "engine/core/system_collection.hpp"
+#include "engine/core/collection.hpp"
 
 #include "engine/events/game.hpp"
 #include "engine/events/engine.hpp"
@@ -134,7 +134,7 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
 
     void clear() { registry.clear(); }
 
-    SystemCollection<ISystem> systems;
+    Collection<ISystem> systems;
 
    private:
     Registry registry;

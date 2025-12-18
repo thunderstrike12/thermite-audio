@@ -2,7 +2,7 @@
 #include "engine/events/engine.hpp"
 
 #include "editor/core/window.hpp"
-#include "engine/core/system_collection.hpp"
+#include "engine/core/collection.hpp"
 #include "editor/shared/save_data.hpp"
 
 namespace tmt {
@@ -18,7 +18,7 @@ class Editor : public OnEngineInit, public OnEngineUpdate, public OnEngineFixedU
 
     void init();
 
-    SystemCollection<IWindow> windows;
+    Collection<IWindow> windows;
 
     ImGuiManager& imgui_manager;
 
