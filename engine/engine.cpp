@@ -21,6 +21,7 @@
 
 #include "events/engine.hpp"
 #include "events/game.hpp"
+#include "events/scene.hpp"
 #include "core/resources.hpp"
 #include "core/salvo.hpp"
 #include "tools/profiler.hpp"
@@ -164,8 +165,9 @@ void Engine::start_game() {
     TMT_ZONE_SCOPED_N("Engine::start_game")
 
     app->on_start();
-    if (scenes.get_active_scene()) scenes.get_active_scene()->on_start();
     OnGameStart::dispatch();
+    if (scenes.get_active_scene()) scenes.get_active_scene()->on_start();
+    OnSceneStart::dispatch();
 }
 
 void Engine::update_game(const FrameData& frame_data) {
@@ -196,8 +198,9 @@ void Engine::resume_game() {
 void Engine::end_game() {
     TMT_ZONE_SCOPED_N("Engine::end_game")
     app->on_end();
-    if (scenes.get_active_scene()) scenes.get_active_scene()->on_end();
     OnGameEnd::dispatch();
+    if (scenes.get_active_scene()) scenes.get_active_scene()->on_end();
+    OnSceneEnd::dispatch();
 }
 
 }  // namespace tmt

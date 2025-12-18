@@ -9,9 +9,10 @@
 #include "engine/core/components/name.hpp"
 
 #include "editor/core/window.hpp"
+#include "engine/events/scene.hpp"
 
 namespace tmt {
-class Hierarchy : public IWindow, public OnGameEnd {
+class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
    public:
     Hierarchy() = default;
     ~Hierarchy() = default;
@@ -112,5 +113,8 @@ class Hierarchy : public IWindow, public OnGameEnd {
 
     // Inherited via IGameEvents
     void on_game_end() override;
+
+    // Inherited via OnPreUnloadScene
+    void on_pre_unload_scene() override;
 };
 }  // namespace tmt

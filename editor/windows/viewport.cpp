@@ -103,73 +103,70 @@ void tmt::Viewport::toolbar(const glm::vec2& image_pos) {
 }
 
 void tmt::Viewport::gizmo_manip() {
-    Entity cam_entity = Camera::get_active_camera();
-    if (cam_entity == entt::null) return;
+    if (engine.game_controller.is_running()) return;
 
     auto& hierarchy = editor.windows.get<Hierarchy>();
-
     auto& selected_entities = hierarchy.get_selected_entities();
+    if (selected_entities.empty()) return;
 
-    if (!selected_entities.empty()) {
-        Transform& transform = engine.ecs.get_component<Transform>(cam_entity);
-        Camera& camera = engine.ecs.get_component<Camera>(cam_entity);
+    Transform& transform = engine.renderer.get_debug_transform();
+    Camera& camera = engine.renderer.get_debug_camera();
 
-        auto view = glm::inverse(transform.get_world_matrix());
-        const float aspect_ratio = width / height;
-        auto perspective = glm::perspective(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
+    auto view = glm::inverse(transform.get_world_matrix());
+    const float aspect_ratio = width / height;
+    auto perspective = glm::perspective(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
 
-        // relative to first
-        if (gizmo_multiselect_mode == 0) {
-            Entity selected_entity = hierarchy.get_first_selected_entity();
-            Transform& selected_transform = engine.ecs.get_component<Transform>(selected_entity);
-            auto& selected_matrix = selected_transform.get_world_matrix();
-            glm::mat4 imguizmo_input_matrix = selected_matrix;
+    // relative to first
+    if (gizmo_multiselect_mode == 0) {
+        Entity selected_entity = hierarchy.get_first_selected_entity();
+        Transform& selected_transform = engine.ecs.get_component<Transform>(selected_entity);
+        auto& selected_matrix = selected_transform.get_world_matrix();
+        glm::mat4 imguizmo_input_matrix = selected_matrix;
 
-            glm::mat4 delta;
-            ImGuizmo::Manipulate(
-                &view[0][0], &perspective[0][0], static_cast<ImGuizmo::OPERATION>(gizmo_operations[gizmo_operation]), static_cast<ImGuizmo::MODE>(gizmo_space), &imguizmo_input_matrix[0][0],
-                &delta[0][0]
-            );
-            selected_transform.set_world_matrix(imguizmo_input_matrix);
+        glm::mat4 delta;
+        ImGuizmo::Manipulate(
+            &view[0][0], &perspective[0][0], static_cast<ImGuizmo::OPERATION>(gizmo_operations[gizmo_operation]), static_cast<ImGuizmo::MODE>(gizmo_space), &imguizmo_input_matrix[0][0],
+            &delta[0][0]
+        );
+        selected_transform.set_world_matrix(imguizmo_input_matrix);
 
-            for (auto entity : selected_entities) {
-                if (entity == selected_entity) continue;
+        for (auto entity : selected_entities) {
+            if (entity == selected_entity) continue;
 
-                Transform& multi_select_transform = engine.ecs.get_component<Transform>(entity);
-                auto& multi_matrix = multi_select_transform.get_world_matrix();
+            Transform& multi_select_transform = engine.ecs.get_component<Transform>(entity);
+            auto& multi_matrix = multi_select_transform.get_world_matrix();
 
-                multi_select_transform.set_world_matrix(delta * multi_matrix);
-            }
-        } else {  // relative to average
-            uint32_t amount = static_cast<uint32_t>(selected_entities.size());
+            multi_select_transform.set_world_matrix(delta * multi_matrix);
+        }
+    } else {  // relative to average
+        uint32_t amount = static_cast<uint32_t>(selected_entities.size());
 
-            glm::vec3 avg_translation = glm::vec3(0.f);
-            glm::quat avg_rotation = glm::quat();
-            glm::vec3 scale = glm::vec3(1.f);
+        glm::vec3 avg_translation = glm::vec3(0.f);
+        glm::quat avg_rotation = glm::quat();
+        glm::vec3 scale = glm::vec3(1.f);
 
-            float weight = 1.f / static_cast<float>(amount);
+        float weight = 1.f / static_cast<float>(amount);
 
-            for (auto entity : selected_entities) {
-                Transform& multi_select_transform = engine.ecs.get_component<Transform>(entity);
-                auto& multi_matrix = multi_select_transform.get_world_matrix();
+        for (auto entity : selected_entities) {
+            Transform& multi_select_transform = engine.ecs.get_component<Transform>(entity);
+            auto& multi_matrix = multi_select_transform.get_world_matrix();
 
-                avg_translation += glm::vec3(multi_matrix[3]);
-                avg_rotation += weight * multi_select_transform.get_world_rotation();
-            }
-            avg_translation /= static_cast<float>(amount);
-            avg_rotation = glm::normalize(avg_rotation);
+            avg_translation += glm::vec3(multi_matrix[3]);
+            avg_rotation += weight * multi_select_transform.get_world_rotation();
+        }
+        avg_translation /= static_cast<float>(amount);
+        avg_rotation = glm::normalize(avg_rotation);
 
-            glm::mat4 avg = glm::translate(glm::mat4(1.f), avg_translation) * glm::mat4_cast(avg_rotation) * glm::scale(glm::mat4(1.f), scale);
-            glm::mat4 delta;
-            ImGuizmo::Manipulate(
-                &view[0][0], &perspective[0][0], static_cast<ImGuizmo::OPERATION>(gizmo_operations[gizmo_operation]), static_cast<ImGuizmo::MODE>(gizmo_space), &avg[0][0], &delta[0][0]
-            );
-            for (auto entity : selected_entities) {
-                Transform& multi_select_transform = engine.ecs.get_component<Transform>(entity);
-                auto& multi_matrix = multi_select_transform.get_world_matrix();
+        glm::mat4 avg = glm::translate(glm::mat4(1.f), avg_translation) * glm::mat4_cast(avg_rotation) * glm::scale(glm::mat4(1.f), scale);
+        glm::mat4 delta;
+        ImGuizmo::Manipulate(
+            &view[0][0], &perspective[0][0], static_cast<ImGuizmo::OPERATION>(gizmo_operations[gizmo_operation]), static_cast<ImGuizmo::MODE>(gizmo_space), &avg[0][0], &delta[0][0]
+        );
+        for (auto entity : selected_entities) {
+            Transform& multi_select_transform = engine.ecs.get_component<Transform>(entity);
+            auto& multi_matrix = multi_select_transform.get_world_matrix();
 
-                multi_select_transform.set_world_matrix(delta * multi_matrix);
-            }
+            multi_select_transform.set_world_matrix(delta * multi_matrix);
         }
     }
 }

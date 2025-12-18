@@ -234,4 +234,6 @@ bool Hierarchy::drag_drop_target(const Entity dropped_entity) {
 }
 void Hierarchy::on_game_end() { clear_selection(); }
 
+void Hierarchy::on_pre_unload_scene() { clear_selection(); }
+
 }  // namespace tmt
