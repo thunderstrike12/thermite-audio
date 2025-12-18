@@ -7,6 +7,7 @@
 #include "core/input/input.hpp"
 
 #include "core/window.hpp"
+#include "core/audio.hpp"
 #include "core/ecs.hpp"
 #include "core/scenes.hpp"
 #include "core/timer.hpp"
@@ -31,7 +32,8 @@ tmt::Engine tmt::engine;
 
 namespace tmt {
 
-Engine::Engine() : input(*new Input()), window(*new Window()), ecs(*new Ecs()), renderer(*new Renderer()), resources(*new Resources()), salvo(*new Salvo()), scenes(*new Scenes()) {}
+Engine::Engine()
+    : window(*new Window()), audio(*new Audio()), input(*new Input()), ecs(*new Ecs()), renderer(*new Renderer()), resources(*new Resources()), salvo(*new Salvo()), scenes(*new Scenes()) {}
 
 Engine::~Engine() {
     /* Destruction should be in reverse order */
@@ -41,6 +43,7 @@ Engine::~Engine() {
     delete &renderer;
     delete &ecs;
     delete &input;
+    delete &audio;
     delete &window;
 }
 
@@ -53,6 +56,7 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     window.init(app->specs);
     input.init();
     renderer.init();
+    audio.init();
     salvo.init();
 
     ecs.systems.add<Physics>();
@@ -101,6 +105,8 @@ void Engine::run() {
             update_game(frame_data);
         }
         update_engine(frame_data);
+
+        audio.update();
 
         accumulator += frame_data.delta_time;
         while (accumulator >= Config::FIXED_TIME_STEP) {

@@ -23,7 +23,17 @@ target_link_libraries(UnitTests
     thermite-engine
 )
 
-
+# Copy FMOD DLLs for UnitTests
+set(FMOD_POSTFIX "$<$<CONFIG:Debug>:L>")
+add_custom_command(
+    TARGET UnitTests POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_SOURCE_DIR}/extern/fmod/lib/fmod${FMOD_POSTFIX}.dll"
+            "${CMAKE_BINARY_DIR}/bin/fmod${FMOD_POSTFIX}.dll"
+    COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_SOURCE_DIR}/extern/fmod/lib/fmodstudio${FMOD_POSTFIX}.dll"
+            "${CMAKE_BINARY_DIR}/bin/fmodstudio${FMOD_POSTFIX}.dll"
+)
 set_target_properties(UnitTests PROPERTIES
      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )

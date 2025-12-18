@@ -171,6 +171,12 @@ set(ZLIB_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 set(ZLIB_BUILD_STATIC ON CACHE BOOL "" FORCE)
 add_subdirectory(zlib)
 
+# fmod - audio engine
+set(FMOD_POSTFIX "$<$<CONFIG:Debug>:L>")
+target_include_directories(thermite-engine
+    PUBLIC "./fmod/include"
+)
+
 # Link engine libraries publicly
 target_link_libraries(thermite-engine
     PUBLIC 
@@ -180,6 +186,8 @@ target_link_libraries(thermite-engine
     JsonReflect
     graphite
     Tracy::TracyClient
+    "${CMAKE_CURRENT_SOURCE_DIR}/fmod/lib/fmod${FMOD_POSTFIX}_vc.lib"
+    "${CMAKE_CURRENT_SOURCE_DIR}/fmod/lib/fmodstudio${FMOD_POSTFIX}_vc.lib"
 )
 
 # Link engine libraries privately

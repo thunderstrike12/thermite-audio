@@ -51,6 +51,19 @@ function(find_and_add_targets)
 				RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${target_name}"
 			)
 			
+			# Copy over dll files for FMOD
+			set(FMOD_POSTFIX "$<$<CONFIG:Debug>:L>")
+			add_custom_command(
+		        TARGET ${target_name} POST_BUILD
+		        COMMAND ${CMAKE_COMMAND} -E copy
+		                "${CMAKE_SOURCE_DIR}/extern/fmod/lib/fmod${FMOD_POSTFIX}.dll"
+		                "${CMAKE_BINARY_DIR}/bin/${target_name}/fmod${FMOD_POSTFIX}.dll"
+		
+		        COMMAND ${CMAKE_COMMAND} -E copy
+		                "${CMAKE_SOURCE_DIR}/extern/fmod/lib/fmodstudio${FMOD_POSTFIX}.dll"
+		                "${CMAKE_BINARY_DIR}/bin/${target_name}/fmodstudio${FMOD_POSTFIX}.dll"
+			)
+
 			# Make sure target has assets folder
 			file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${target_name}/assets")
 

@@ -23,6 +23,7 @@
 #include "editor/windows/inspector.hpp"
 #include "editor/windows/goap_debugger.hpp"
 #include "editor/windows/font_control.hpp"
+#include "editor/windows/audio_mixer.hpp"
 #include "editor/windows/profiler_tracy.hpp"
 #include "editor/windows/scenes.hpp"
 
@@ -49,6 +50,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     windows.add<Profiler>();
     windows.add<GoapDebugger>();
     windows.add<FontControl>();
+    windows.add<AudioMixer>();
     windows.add<ScenesWindow>();
 
     for (auto& system : windows) {
