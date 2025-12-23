@@ -6,6 +6,7 @@ class GameFlow : public IWindow {
    public:
     // Inherited via IWindow
     std::string get_title() const override { return ICON_MS_GAMEPAD "  Game Flow"; };
+    constexpr bool default_open() const override { return true; }
 
     void display() override;
 

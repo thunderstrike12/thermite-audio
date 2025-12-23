@@ -7,6 +7,7 @@ namespace tmt {
 class Inspector : public IWindow {
     // Inherited via IWindow
     std::string get_title() const { return ICON_MS_FRAME_INSPECT "  Inspector"; }
+    constexpr bool default_open() const override { return true; }
 
     void display() override;
 
