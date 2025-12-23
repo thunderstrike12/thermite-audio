@@ -42,6 +42,7 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
         Entity entity = registry.create(hint);
         /* Enforce Name component */
         registry.emplace<Name>(entity, name.empty() ? "Entity_" + EntityHelper::to_string(entity) : name);
+        registry.emplace<Transform>(entity);
         return entity;
     }
 

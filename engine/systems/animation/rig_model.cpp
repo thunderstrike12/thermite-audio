@@ -12,7 +12,6 @@ void RigModel::init_bones(const Bone& b, Entity p) {
     Log::info("init bones got called!");
     if (!engine.ecs.try_get_component<Transform>(p)) {
         Log::warn("Parent entity {} has no Transform!", static_cast<uint32_t>(p));
-        engine.ecs.add_component<Transform>(p);
     }
 
     auto bone = engine.ecs.create_entity();
@@ -20,7 +19,7 @@ void RigModel::init_bones(const Bone& b, Entity p) {
     auto& bone_comp = engine.ecs.add_component<BoneComp>(bone);
     bone_comp.id = b.index;
 
-    auto& trans_comp = engine.ecs.add_component<Transform>(bone);
+    auto& trans_comp = engine.ecs.get_component<Transform>(bone);
     trans_comp.set_parent(p);
     trans_comp.set_local_position(b.default_trans.get_local_position());
     trans_comp.set_local_rotation(b.default_trans.get_local_rotation());

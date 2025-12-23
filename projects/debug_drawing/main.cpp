@@ -32,7 +32,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
 void DebugDrawing::on_start() {
     { /* Camera entity */
         tmt::Entity entity = tmt::engine.ecs.create_entity("Camera");
-        auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
         transform.set_world_position(glm::vec3(0.0f, 0.0f, -16.0f));
     }

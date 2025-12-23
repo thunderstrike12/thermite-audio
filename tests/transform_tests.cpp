@@ -42,7 +42,7 @@ class TransformTest : public ::testing::Test {
 // ==================== Local Position Tests ====================
 TEST_F(TransformTest, LocalPositionGetterSetter) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // Default position
     EXPECT_TRUE(vec3_approx_equal(transform.get_local_position(), glm::vec3(0.0f)));
@@ -71,7 +71,7 @@ TEST_F(TransformTest, LocalPositionGetterSetter) {
 // ==================== Local Rotation Tests ====================
 TEST_F(TransformTest, LocalRotationQuaternion) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // Default rotation (identity)
     EXPECT_TRUE(quat_approx_equal(transform.get_local_rotation(), glm::quat(1.0f, 0.0f, 0.0f, 0.0f)));
@@ -94,7 +94,7 @@ TEST_F(TransformTest, LocalRotationQuaternion) {
 
 TEST_F(TransformTest, LocalRotationEuler) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // Zero euler angles
     glm::vec3 euler(0.0f, 0.0f, 0.0f);
@@ -122,7 +122,7 @@ TEST_F(TransformTest, LocalRotationEuler) {
 
 TEST_F(TransformTest, LocalRotationAxisAngle) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // 90 degrees around Y axis
     glm::vec3 axis(0.0f, 1.0f, 0.0f);
@@ -150,7 +150,7 @@ TEST_F(TransformTest, LocalRotationAxisAngle) {
 // ==================== Local Scale Tests ====================
 TEST_F(TransformTest, LocalScale) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // Default scale
     EXPECT_TRUE(vec3_approx_equal(transform.get_local_scale(), glm::vec3(1.0f)));
@@ -179,7 +179,7 @@ TEST_F(TransformTest, LocalScale) {
 // ==================== World Position Tests ====================
 TEST_F(TransformTest, WorldPositionNoParent) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // Without parent, world position should equal local position
     glm::vec3 pos(5.0f, 10.0f, 15.0f);
@@ -197,8 +197,8 @@ TEST_F(TransformTest, WorldPositionWithParent) {
     tmt::Entity parent_entity = tmt::engine.ecs.create_entity();
     tmt::Entity child_entity = tmt::engine.ecs.create_entity();
 
-    auto& parent = tmt::engine.ecs.add_component<tmt::Transform>(parent_entity);
-    auto& child = tmt::engine.ecs.add_component<tmt::Transform>(child_entity);
+    auto& parent = tmt::engine.ecs.get_component<tmt::Transform>(parent_entity);
+    auto& child = tmt::engine.ecs.get_component<tmt::Transform>(child_entity);
 
     // Set parent position
     parent.set_local_position(glm::vec3(10.0f, 20.0f, 30.0f));
@@ -221,7 +221,7 @@ TEST_F(TransformTest, WorldPositionWithParent) {
 // ==================== World Rotation Tests ====================
 TEST_F(TransformTest, WorldRotationNoParent) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // Without parent, world rotation should equal local rotation
     glm::quat rot = glm::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -245,7 +245,7 @@ TEST_F(TransformTest, WorldRotationNoParent) {
 // ==================== World Scale Tests ====================
 TEST_F(TransformTest, WorldScaleNoParent) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // Without parent, world scale should equal local scale
     glm::vec3 scale(2.0f, 3.0f, 4.0f);
@@ -261,7 +261,7 @@ TEST_F(TransformTest, WorldScaleNoParent) {
 // ==================== Transform Operations Tests ====================
 TEST_F(TransformTest, Translate) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     transform.set_local_position(glm::vec3(10.0f, 10.0f, 10.0f));
 
@@ -281,7 +281,7 @@ TEST_F(TransformTest, Translate) {
 
 TEST_F(TransformTest, RotateLocalQuaternion) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // Start with identity
     glm::quat initial = glm::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -297,7 +297,7 @@ TEST_F(TransformTest, RotateLocalQuaternion) {
 
 TEST_F(TransformTest, RotateLocalEuler) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     glm::quat initial = glm::angleAxis(glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     transform.set_local_rotation(initial);
@@ -314,7 +314,7 @@ TEST_F(TransformTest, RotateLocalEuler) {
 
 TEST_F(TransformTest, RotateLocalAxisAngle) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     glm::quat initial = glm::angleAxis(glm::radians(60.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     transform.set_local_rotation(initial);
@@ -331,7 +331,7 @@ TEST_F(TransformTest, RotateLocalAxisAngle) {
 
 TEST_F(TransformTest, RotateWorldQuaternion) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     glm::quat initial = glm::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     transform.set_local_rotation(initial);
@@ -346,7 +346,7 @@ TEST_F(TransformTest, RotateWorldQuaternion) {
 
 TEST_F(TransformTest, RotateWorldEuler) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     glm::quat initial = glm::angleAxis(glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     transform.set_local_rotation(initial);
@@ -361,7 +361,7 @@ TEST_F(TransformTest, RotateWorldEuler) {
 
 TEST_F(TransformTest, RotateWorldAxisAngle) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     glm::quat initial = glm::angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     transform.set_local_rotation(initial);
@@ -377,7 +377,7 @@ TEST_F(TransformTest, RotateWorldAxisAngle) {
 
 TEST_F(TransformTest, Scale) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     transform.set_local_scale(glm::vec3(2.0f, 3.0f, 4.0f));
 
@@ -397,7 +397,7 @@ TEST_F(TransformTest, Scale) {
 // ==================== Direction Vector Tests ====================
 TEST_F(TransformTest, ForwardUpRightVectors) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // Identity rotation
     transform.set_local_rotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
@@ -429,7 +429,7 @@ TEST_F(TransformTest, ForwardUpRightVectors) {
 
 TEST_F(TransformTest, LookAt) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     transform.set_local_position(glm::vec3(0.0f, 0.0f, 0.0f));
 
@@ -460,7 +460,7 @@ TEST_F(TransformTest, LookAt) {
 // ==================== Matrix Tests ====================
 TEST_F(TransformTest, WorldMatrix) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // Set TRS values
     glm::vec3 pos(1.0f, 2.0f, 3.0f);
@@ -490,7 +490,7 @@ TEST_F(TransformTest, WorldMatrix) {
 
 TEST_F(TransformTest, SetWorldMatrix) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // Create a matrix manually
     glm::mat4 matrix(1.0f);
@@ -515,8 +515,8 @@ TEST_F(TransformTest, ParentChildHierarchy) {
     tmt::Entity parent_entity = tmt::engine.ecs.create_entity();
     tmt::Entity child_entity = tmt::engine.ecs.create_entity();
 
-    auto& parent = tmt::engine.ecs.add_component<tmt::Transform>(parent_entity);
-    auto& child = tmt::engine.ecs.add_component<tmt::Transform>(child_entity);
+    auto& parent = tmt::engine.ecs.get_component<tmt::Transform>(parent_entity);
+    auto& child = tmt::engine.ecs.get_component<tmt::Transform>(child_entity);
 
     // Initially no parent
     EXPECT_FALSE(child.has_parent());
@@ -542,9 +542,9 @@ TEST_F(TransformTest, MultiLevelHierarchy) {
     tmt::Entity parent_entity = tmt::engine.ecs.create_entity();
     tmt::Entity child_entity = tmt::engine.ecs.create_entity();
 
-    auto& grandparent = tmt::engine.ecs.add_component<tmt::Transform>(grandparent_entity);
-    auto& parent = tmt::engine.ecs.add_component<tmt::Transform>(parent_entity);
-    auto& child = tmt::engine.ecs.add_component<tmt::Transform>(child_entity);
+    auto& grandparent = tmt::engine.ecs.get_component<tmt::Transform>(grandparent_entity);
+    auto& parent = tmt::engine.ecs.get_component<tmt::Transform>(parent_entity);
+    auto& child = tmt::engine.ecs.get_component<tmt::Transform>(child_entity);
 
     // Set up hierarchy: grandparent -> parent -> child
     parent.set_parent(grandparent_entity);
@@ -571,9 +571,9 @@ TEST_F(TransformTest, AddRemoveChildren) {
     tmt::Entity child1_entity = tmt::engine.ecs.create_entity();
     tmt::Entity child2_entity = tmt::engine.ecs.create_entity();
 
-    auto& parent = tmt::engine.ecs.add_component<tmt::Transform>(parent_entity);
-    auto& child1 = tmt::engine.ecs.add_component<tmt::Transform>(child1_entity);
-    auto& child2 = tmt::engine.ecs.add_component<tmt::Transform>(child2_entity);
+    auto& parent = tmt::engine.ecs.get_component<tmt::Transform>(parent_entity);
+    auto& child1 = tmt::engine.ecs.get_component<tmt::Transform>(child1_entity);
+    auto& child2 = tmt::engine.ecs.get_component<tmt::Transform>(child2_entity);
 
     // Add children manually
     parent.add_child(child1_entity);
@@ -602,8 +602,8 @@ TEST_F(TransformTest, HierarchyWithRotation) {
     tmt::Entity parent_entity = tmt::engine.ecs.create_entity();
     tmt::Entity child_entity = tmt::engine.ecs.create_entity();
 
-    auto& parent = tmt::engine.ecs.add_component<tmt::Transform>(parent_entity);
-    auto& child = tmt::engine.ecs.add_component<tmt::Transform>(child_entity);
+    auto& parent = tmt::engine.ecs.get_component<tmt::Transform>(parent_entity);
+    auto& child = tmt::engine.ecs.get_component<tmt::Transform>(child_entity);
 
     child.set_parent(parent_entity);
 
@@ -622,8 +622,8 @@ TEST_F(TransformTest, HierarchyWithScale) {
     tmt::Entity parent_entity = tmt::engine.ecs.create_entity();
     tmt::Entity child_entity = tmt::engine.ecs.create_entity();
 
-    auto& parent = tmt::engine.ecs.add_component<tmt::Transform>(parent_entity);
-    auto& child = tmt::engine.ecs.add_component<tmt::Transform>(child_entity);
+    auto& parent = tmt::engine.ecs.get_component<tmt::Transform>(parent_entity);
+    auto& child = tmt::engine.ecs.get_component<tmt::Transform>(child_entity);
 
     child.set_parent(parent_entity);
 
@@ -641,7 +641,7 @@ TEST_F(TransformTest, HierarchyWithScale) {
 // ==================== Edge Case Tests ====================
 TEST_F(TransformTest, EdgeCaseZeroScale) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     transform.set_local_scale(glm::vec3(0.0f));
 
@@ -654,7 +654,7 @@ TEST_F(TransformTest, EdgeCaseZeroScale) {
 
 TEST_F(TransformTest, EdgeCaseVeryLargeValues) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     glm::vec3 large_pos(1000000.0f, 2000000.0f, 3000000.0f);
     transform.set_local_position(large_pos);
@@ -668,7 +668,7 @@ TEST_F(TransformTest, EdgeCaseVeryLargeValues) {
 
 TEST_F(TransformTest, EdgeCaseNegativeScale) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // Negative scale (mirroring)
     glm::vec3 neg_scale(-1.0f, 2.0f, -3.0f);
@@ -685,7 +685,7 @@ TEST_F(TransformTest, EdgeCaseNegativeScale) {
 
 TEST_F(TransformTest, ComplexCombinedTransform) {
     tmt::Entity entity = tmt::engine.ecs.create_entity();
-    auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     // Apply all types of transformations
     transform.set_local_position(glm::vec3(10.0f, 20.0f, 30.0f));

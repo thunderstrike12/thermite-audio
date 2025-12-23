@@ -35,7 +35,7 @@ void Game::on_start() {
     using namespace tmt;
     { /* Camera entity */
         Entity entity = engine.ecs.create_entity("Camera");
-        auto& transform = engine.ecs.add_component<Transform>(entity);
+        auto& transform = engine.ecs.get_component<Transform>(entity);
         auto& camera = engine.ecs.add_component<Camera>(entity);
         transform.set_world_position(glm::vec3(0.0f, 0.0f, -16.0f));
     }
@@ -56,7 +56,7 @@ void Game::on_start() {
 
     { /* Voxel entity */
         voxel = tmt::engine.ecs.create_entity("Moving Voxel");
-        auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(voxel);
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(voxel);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(voxel);
         // renderer.size = glm::uvec3(64u, 64u, 64u);
         transform.set_world_position(glm::vec3(2.0f, 2.0f, 0.0f));

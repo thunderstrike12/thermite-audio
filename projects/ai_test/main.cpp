@@ -39,7 +39,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
 void Game::on_start() {
     { /* Camera entity */
         tmt::Entity entity = tmt::engine.ecs.create_entity();
-        auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
         transform.set_world_position(glm::vec3(0.0f, 0.0f, -2.0f));
     }
@@ -76,7 +76,7 @@ void Game::on_start() {
         tmt::Entity ai = tmt::engine.ecs.create_entity();
 
         // Give it whatever normal game components it needs
-        auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(ai);
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(ai);
 
         // Add GOAP agent
         auto& agent = tmt::engine.ecs.add_component<tmt::GoapAgent>(ai);

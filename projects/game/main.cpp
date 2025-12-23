@@ -67,8 +67,9 @@ void generate_random_entities(tmt::ResourceRef<tmt::VoxelVolume>& voxel_volume);
 void DragonScene::on_start() {
     { /* Camera entity */
         tmt::Entity entity = tmt::engine.ecs.create_entity("Camera");
-        auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
         auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
+
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         transform.set_world_position(glm::vec3(0.0f, 0.25f, -5.0f));
     }
 
@@ -77,7 +78,7 @@ void DragonScene::on_start() {
 
     { /* Voxel entity */
         voxel = tmt::engine.ecs.create_entity("Moving Voxel");
-        auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(voxel);
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(voxel);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(voxel);
         renderer.resource = voxel_volume;
         transform.set_world_position(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -106,7 +107,7 @@ void DragonScene::on_end() {}
 void TableScene::on_start() {
     { /* Camera entity */
         tmt::Entity entity = tmt::engine.ecs.create_entity("Camera");
-        auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
         transform.set_world_position(glm::vec3(0.0f, 0.25f, -5.0f));
     }
@@ -131,7 +132,7 @@ void generate_random_entities(tmt::ResourceRef<tmt::VoxelVolume>& voxel_volume) 
     constexpr float PRIM_RANGE = 256.0f;
     for (int i = 0; i < 255; ++i) {
         auto entity = tmt::engine.ecs.create_entity();
-        auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
         renderer.resource = voxel_volume;
         float s = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 3.0f;
