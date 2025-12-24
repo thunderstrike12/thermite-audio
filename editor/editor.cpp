@@ -27,6 +27,16 @@
 #include "editor/windows/profiler_tracy.hpp"
 #include "editor/windows/scenes.hpp"
 #include "editor/windows/imgui_demo.hpp"
+#ifdef ERROR
+#undef ERROR
+#endif
+#ifdef WARNING
+#undef WARNING
+#endif
+#ifdef INFO
+#undef INFO
+#endif
+#include "editor/windows/console.hpp"
 
 /* Singleton */
 tmt::Editor tmt::editor;
@@ -53,6 +63,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     windows.add<FontControl>();
     windows.add<AudioMixer>();
     windows.add<ScenesWindow>();
+    windows.add<Console>();
     windows.add<ImguiDemo>();
 
     for (auto& window : windows) {
