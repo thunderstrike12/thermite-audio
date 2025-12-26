@@ -4,26 +4,21 @@
 #include "logger.hpp"
 
 namespace tmt {
-const char* IO::path_str[3] = {"assets/game/", "assets/engine/", "assets/editor/"};
 
 /* Relative to working directory */
-std::filesystem::path IO::FileLocation::get_relative_path() const { return std::filesystem::path(path_str[static_cast<uint8_t>(sub_location)]) / relative_path; }
+std::filesystem::path IO::FileLocation::get_relative_path() const {
+    const std::filesystem::path& sub_path = get_sub_location_path(sub_location);
+    // The check avoids returning a path ending with a directory separator which can be annoying in some cases.
+    if (relative_path.empty()) return sub_path;
 
-/* Absolute path */
-std::filesystem::path IO::FileLocation::get_absolute_path() const {
-    auto sub_path = std::filesystem::path(path_str[static_cast<uint8_t>(sub_location)]);
-
-    std::filesystem::path relative = relative_path.lexically_normal();
-    if (relative_path.has_root_path()) {
-        tmt::Log::warn(tmt::Log::Scope::ENGINE, "Possible incorrect path passed: {}\nTrying to fix path..", relative_path.string());
-
-        relative = relative_path.relative_path();
-    }
-    return sub_path / relative;
+    return sub_path / relative_path;
 }
 
-bool IO::write_file(const FileLocation& file_location, const char* data, size_t size) {
-    std::filesystem::path absolute = file_location.get_absolute_path();
+/* Absolute path */
+std::filesystem::path IO::FileLocation::get_absolute_path() const { return absolute(get_relative_path()); }
+
+bool IO::write_file(const FileLocation& file_location, const char* data, const size_t size) {
+    const std::filesystem::path absolute = file_location.get_absolute_path();
 
     if (!create_directories(absolute)) return false;
 
@@ -31,7 +26,7 @@ bool IO::write_file(const FileLocation& file_location, const char* data, size_t 
     if (!stream_open(output_file, absolute, std::ios::out | std::ios::binary)) return false;
 
     try {
-        output_file.write(data, size);
+        output_file.write(data, static_cast<std::streamsize>(size));
     } catch (const std::exception& exception) {
         tmt::Log::error(tmt::Log::Scope::ENGINE, "Exception while writing file: {}\n reason: {}", absolute.string(), exception.what());
         output_file.close();
@@ -44,7 +39,7 @@ bool IO::write_file(const FileLocation& file_location, const char* data, size_t 
 }
 
 bool IO::write_text_file(const FileLocation& file_location, const std::string& text, bool overwrite) {
-    std::filesystem::path absolute = file_location.get_absolute_path();
+    const std::filesystem::path& absolute = file_location.get_absolute_path();
 
     if (!create_directories(absolute)) return false;
 
@@ -65,7 +60,7 @@ bool IO::write_text_file(const FileLocation& file_location, const std::string& t
 }
 
 std::vector<char> IO::read_file(const FileLocation& file_location) {
-    std::filesystem::path absolute = file_location.get_absolute_path();
+    const std::filesystem::path& absolute = file_location.get_absolute_path();
 
     std::vector<char> data;
 
@@ -80,11 +75,11 @@ std::vector<char> IO::read_file(const FileLocation& file_location) {
     try {
         // find out size of input_file contents
         input_file.seekg(0, std::ios::end);
-        std::ifstream::pos_type filesize = input_file.tellg();
+        const std::ifstream::pos_type file_size = input_file.tellg();
         input_file.seekg(0, std::ios::beg);
-        data.resize(filesize);
+        data.resize(file_size);
 
-        input_file.read(data.data(), filesize);
+        input_file.read(data.data(), file_size);
     } catch (const std::exception& exception) {
         tmt::Log::error(tmt::Log::Scope::ENGINE, "Exception when reading file: {}\nreason: {}", absolute.string(), exception.what());
     }
@@ -93,16 +88,16 @@ std::vector<char> IO::read_file(const FileLocation& file_location) {
 }
 
 std::string IO::read_text_file(const FileLocation& file_location) {
-    std::vector<char> bytes = read_file(file_location);
+    const std::vector<char> bytes = read_file(file_location);
     if (bytes.empty()) {
         return {};
     }
 
-    return std::string(bytes.data(), bytes.size());
+    return {bytes.data(), bytes.size()};
 }
 
 std::string IO::read_or_create_text_file(const FileLocation& file_location, const std::string& default_contents) {
-    std::filesystem::path absolute = file_location.get_absolute_path();
+    const std::filesystem::path& absolute = file_location.get_absolute_path();
     if (!std::filesystem::exists(absolute)) {
         tmt::Log::warn(tmt::Log::Scope::ENGINE, "File not found at: {}\nCreating file with default contents.", absolute.string());
         if (!write_text_file(file_location, default_contents, true)) {
@@ -128,8 +123,8 @@ bool IO::stream_open(std::fstream& file_stream, const std::filesystem::path& abs
 
 bool IO::create_directories(const std::filesystem::path& absolute) {
     try {
-        // create directiories if they didn't exist yet
-        bool created = std::filesystem::create_directories(absolute.parent_path());
+        // create directories if they didn't exist yet
+        const bool created = std::filesystem::create_directories(absolute.parent_path());
 
         if (created) tmt::Log::warn(tmt::Log::Scope::ENGINE, "Created directories while writing: {}", absolute.parent_path().string());
 
