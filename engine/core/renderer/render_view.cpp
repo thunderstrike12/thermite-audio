@@ -21,7 +21,7 @@ void RenderView::init() {
     VRAMBank& bank = engine.renderer.vram_bank();
 
     /* Initialize the Render Target */
-    const TargetDesc target {engine.window.get_window_handle()};
+    const TargetDesc target {static_cast<HWND>(engine.window.get_window_handle())};
     if (const Result r = bank.create_render_target(target); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to initialize render target.\nreason: {}", r.unwrap_err());
         return;

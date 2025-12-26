@@ -27,15 +27,6 @@
 #include "editor/windows/profiler_tracy.hpp"
 #include "editor/windows/scenes.hpp"
 #include "editor/windows/imgui_demo.hpp"
-#ifdef ERROR
-#undef ERROR
-#endif
-#ifdef WARNING
-#undef WARNING
-#endif
-#ifdef INFO
-#undef INFO
-#endif
 #include "editor/windows/console.hpp"
 
 /* Singleton */

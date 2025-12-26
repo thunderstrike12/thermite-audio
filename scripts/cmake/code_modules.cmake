@@ -97,6 +97,9 @@ function(find_and_add_targets)
 				target_link_libraries(${target_name} PRIVATE thermite-editor)
 			endif()
 
+			# Add compile definitons
+			target_compile_definitions(${target_name} PRIVATE NOMINMAX) # Makes windows.h not define min and max
+
 			# Add some build state macros for code
 			if (THERMITE_EDITOR_BUILD)
 				target_compile_definitions(${target_name} PRIVATE THERMITE_EDITOR=1)

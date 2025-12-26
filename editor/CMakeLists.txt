@@ -19,6 +19,9 @@ add_library(thermite-editor STATIC ${THERMITE_SOURCES})
 # Link editor to engine
 target_link_libraries(thermite-editor PRIVATE thermite-engine)
 
+# Add compile definitons
+target_compile_definitions(thermite-engine PRIVATE NOMINMAX) # Makes windows.h not define min and max
+
 # Add include paths
 target_include_directories(thermite-editor
     PUBLIC ${CMAKE_SOURCE_DIR}

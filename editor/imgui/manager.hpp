@@ -1,5 +1,4 @@
 #pragma once
-#include <graphite/imgui.hh>
 
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
@@ -9,6 +8,8 @@
 #include "engine/events/sdl.hpp"
 
 #include "editor/core/font_manager.hpp"
+
+class ImGUI;
 
 namespace tmt {
 class ImGuiManager : public internal::OnSdlEvent, public OnEngineUpdate {
@@ -25,7 +26,7 @@ class ImGuiManager : public internal::OnSdlEvent, public OnEngineUpdate {
    private:
     void on_sdl_event(SDL_Event& event) override;
 
-    ImGUI imgui {};
+    ImGUI* imgui {};
 
     // Inherited via OnEngineUpdate
     void on_engine_update(const FrameData& time) override;

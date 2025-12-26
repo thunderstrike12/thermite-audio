@@ -3,8 +3,9 @@
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_vulkan.h>
-#include "engine/events/sdl.hpp"
+#include <graphite/imgui.hh>
 
+#include "engine/events/sdl.hpp"
 #include "engine/engine.hpp"
 
 #include "engine/core/window.hpp"
@@ -15,11 +16,13 @@
 namespace tmt {
 
 void ImGuiManager::init() {
+    imgui = new ImGUI;
+
     /* Initialize the immediate mode GUI */
     ImGui::CreateContext();
     ImGui_ImplSDL3_InitForVulkan(engine.window.window);
-    imgui.set_clear_screen(true);
-    tmt::engine.renderer.set_imgui(&imgui);
+    imgui->set_clear_screen(true);
+    tmt::engine.renderer.set_imgui(imgui);
 
     /* Initialize font manager */
     font_manager.init();
@@ -39,7 +42,7 @@ void ImGuiManager::new_frame() {
     if (font_manager.pending_reload) font_manager.reload_fonts();
 
     /* Start a new imgui frame */
-    imgui.new_frame();
+    imgui->new_frame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
@@ -53,7 +56,11 @@ void ImGuiManager::end_frame() {
     ImGui::Render();
 }
 
-void ImGuiManager::deinit() { imgui.deinit().expect("Failed to deinitialize ImGui"); }
+void ImGuiManager::deinit() {
+    imgui->deinit().expect("Failed to deinitialize ImGui");
+
+    delete imgui;
+}
 
 void ImGuiManager::on_sdl_event(SDL_Event& event) { ImGui_ImplSDL3_ProcessEvent(&event); }
 

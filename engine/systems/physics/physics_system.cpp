@@ -14,9 +14,6 @@
 
 #include "tools/profiler.hpp"
 
-#undef min
-#undef max
-
 namespace tmt {
 
 void Physics::on_start() {

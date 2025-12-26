@@ -2,11 +2,6 @@
 
 #include <string_view>
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#undef min
-#undef max
-
 #include "engine/core/application.hpp"
 
 struct SDL_Window;
@@ -30,7 +25,7 @@ class Window {
 
     void init(const ApplicationSpecs& specs);
 
-    HWND get_window_handle() const;
+    void* get_window_handle() const;
 };
 
 }  // namespace tmt

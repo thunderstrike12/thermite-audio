@@ -37,10 +37,10 @@ void Window::init(const ApplicationSpecs&) {
     }
 }
 
-HWND Window::get_window_handle() const {
+void* Window::get_window_handle() const {
     const SDL_PropertiesID props = SDL_GetWindowProperties(window);
 
-    return (HWND)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+    return SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
 }
 
 }  // namespace tmt

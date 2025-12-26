@@ -4,13 +4,12 @@
 
 #include <glm/gtc/quaternion.hpp>
 
-#include <graphite/imgui.hh>
-
 #include "render_view.hpp"
 
 class GPUAdapter;
 class RenderGraph;
 class VRAMBank;
+class ImGUI;
 
 namespace tmt {
 

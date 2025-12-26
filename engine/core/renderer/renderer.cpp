@@ -1,5 +1,6 @@
 #include "renderer.hpp"
 
+#include <graphite/imgui.hh>
 #include <graphite/vram_bank.hh>
 #include <graphite/gpu_adapter.hh>
 #include <graphite/render_graph.hh>

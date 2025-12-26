@@ -187,7 +187,7 @@ void Profiler::display() {
             ImGui::SameLine();
             ImGui::SetNextItemWidth(100);
             ImGui::InputInt("seconds", &settings.duration);
-            settings.duration = max(1, settings.duration);
+            settings.duration = std::max<int32_t>(1, settings.duration);
         }
 
         bool running = is_capture_running();
