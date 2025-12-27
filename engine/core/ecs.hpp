@@ -82,9 +82,20 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
         (registry.remove<Component>(entity), ...);
     }
 
-    /* Single + Multiple get */
+    /* Single + Multiple get, mutable */
     template <typename... Component>
     decltype(auto) get_component(const Entity entity) {
+        constexpr size_t COUNT = sizeof...(Component);
+        if constexpr (COUNT == 1) {
+            return registry.get<Component...>(entity);
+        } else {
+            return std::make_tuple(registry.get<Component>(entity)...);
+        }
+    }
+
+    /* Single + Multiple get, const */
+    template <typename... Component>
+    decltype(auto) get_component(const Entity entity) const {
         constexpr size_t COUNT = sizeof...(Component);
         if constexpr (COUNT == 1) {
             return registry.get<Component...>(entity);
@@ -108,9 +119,20 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
         }
     }
 
-    /* Single + Multiple try_get */
+    /* Single + Multiple try_get, mutable */
     template <typename... Component>
     decltype(auto) try_get_component(const Entity entity) {
+        constexpr size_t COUNT = sizeof...(Component);
+        if constexpr (COUNT == 1) {
+            return registry.try_get<Component...>(entity);
+        } else {
+            return std::make_tuple(registry.try_get<Component>(entity)...);
+        }
+    }
+
+    /* Single + Multiple try_get, const */
+    template <typename... Component>
+    decltype(auto) try_get_component(const Entity entity) const {
         constexpr size_t COUNT = sizeof...(Component);
         if constexpr (COUNT == 1) {
             return registry.try_get<Component...>(entity);
