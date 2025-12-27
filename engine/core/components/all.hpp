@@ -12,8 +12,8 @@
 namespace tmt {
 
 // clang-format off
-using AllComponents = ComponentRegistry<
-	/* Components */
+using SerializeComponents = ComponentRegistry<
+	/* Order in which components are serialized */
 	Name, 
 	Transform, 
 	VoxelRenderer, 
@@ -21,4 +21,16 @@ using AllComponents = ComponentRegistry<
 	VoxelBody
 >;
 // clang-format on
+
+// clang-format off
+using InspectComponents = ComponentRegistry<
+	/* Order in which components are displayed in the editor */
+	Name, 
+	Transform, 
+	VoxelRenderer, 
+	Camera,
+	VoxelBody
+>;
+// clang-format on
+
 }  // namespace tmt
