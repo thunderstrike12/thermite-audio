@@ -166,6 +166,10 @@ VoxelSceneNode parse_hierarchy(const vengi::Node* file_node) {
 bool VoxelScene::load() {
     /* Parse the vengi file */
     const std::unique_ptr<vengi::Node> root = VengiParser::load(file_location);
+    if (!root) {
+        Log::error("Failed to load voxel scene from file: {}", file_location.get_relative_path().string());
+        return false;
+    }
 
     /* Traverse & parse the vengi scene */
     hierarchy = parse_hierarchy(root.get());

@@ -5,6 +5,10 @@
 std::unique_ptr<vengi::Node> VengiParser::load(const tmt::IO::FileLocation& vengi_file) {
     using namespace tmt;
     std::vector<char> data = IO::read_file(vengi_file);
+    if (data.empty()) {
+        Log::error(Log::Scope::ENGINE, "Failed to read .vengi file: {}", vengi_file.get_absolute_path().string());
+        return nullptr;
+    }
 
     std::unique_ptr<vengi::Node> ret_node = std::make_unique_for_overwrite<vengi::Node>();
     try {

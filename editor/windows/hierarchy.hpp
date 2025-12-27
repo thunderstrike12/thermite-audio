@@ -19,6 +19,7 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
 
     void display() override;
 
+    virtual int get_window_flags() const override;
     constexpr std::string get_title() const override { return ICON_MS_FLOWCHART " Hierarchy"; };
     constexpr bool default_open() const override { return true; }
 
@@ -77,6 +78,8 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
 
     Entity selection_parent = entt::null;
 
+    std::string filter = "";
+
     static inline bool is_between(const glm::uvec2& value, const glm::uvec2& begin, const glm::uvec2& end) {
         if (begin == NULL_INDEX || end == NULL_INDEX) return false;
         const bool between_begin_end = (value.y >= begin.y && value.y <= end.y);
@@ -98,6 +101,8 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
         uint32_t index() const { return position.y; }
     };
 
+    void top_bar();
+
     void start_section();
     bool display_entity(const HierarchyState& state);
     void end_section();
@@ -117,5 +122,8 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
 
     // Inherited via OnPreUnloadScene
     void on_pre_unload_scene() override;
+
+    void before_begin() override;
+    void end_display() override;
 };
 }  // namespace tmt

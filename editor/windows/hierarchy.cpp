@@ -1,6 +1,7 @@
 #include "hierarchy.hpp"
 
 #include <imgui.h>
+#include <imgui_stdlib.h>
 #include <imgui_internal.h>
 
 #include "engine/engine.hpp"
@@ -11,6 +12,21 @@
 
 namespace tmt {
 
+void Hierarchy::before_begin() {
+    /* zero margin */
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+}
+
+void Hierarchy::display() {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
+
+    top_bar();
+    render_hierarchy();
+    ImGui::PopStyleVar();
+}
+
+void Hierarchy::end_display() { ImGui::PopStyleVar(); }
+
 void Hierarchy::start_section() {
     /* Begin child section for hierarchy */
     ImGui::BeginChild("HierarchySection", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
@@ -18,6 +34,10 @@ void Hierarchy::start_section() {
 
 void Hierarchy::end_section() {
     ImGui::EndChild();
+
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered()) {
+        clear_selection();
+    }
 
     drag_drop_target(entt::null);
 
@@ -52,12 +72,40 @@ void Hierarchy::clear_selection() {
     previous_end_below = NULL_INDEX;
 }
 
-void Hierarchy::display() { render_hierarchy(); }
+int Hierarchy::get_window_flags() const { return ImGuiWindowFlags_MenuBar; }
+
+void Hierarchy::top_bar() {
+    /*menu bar*/
+    if (ImGui::BeginMenuBar()) {
+        if (ImGui::BeginMenu("Create")) {
+            if (ImGui::MenuItem("Empty Entity")) {
+                auto entity = engine.ecs.create_entity();
+                engine.ecs.add_or_get_component<Transform>(entity);
+                clear_selection();
+                first_selected_entity = entity;
+                selected_entities.insert(entity);
+            }
+            ImGui::EndMenu();
+        }
+
+        ImGui::Text(ICON_MS_FILTER_ALT);
+        ImGui::InputText("##" ICON_MS_FILTER_ALT, &filter);
+
+        ImGui::EndMenuBar();
+    }
+}
 
 bool Hierarchy::display_entity(const HierarchyState& state) {
-    const bool root_indent = state.depth() == 0;
-    const bool has_parent = state.transform.has_parent();
-    if (root_indent && has_parent) return false;
+    const bool filtering = filter.empty() == false;
+    if (filtering) {
+        if (state.name.name.find(filter) == std::string::npos) {
+            return false;
+        }
+    } else {
+        const bool root_indent = state.depth() == 0;
+        const bool has_parent = state.transform.has_parent();
+        if (root_indent && has_parent) return false;
+    }
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_None;
     flags |= ImGuiTreeNodeFlags_FramePadding;
@@ -68,7 +116,7 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
     if (is_selected) flags |= ImGuiTreeNodeFlags_Selected;
 
     const bool is_leaf = state.transform.has_children() == false;
-    if (is_leaf) flags |= ImGuiTreeNodeFlags_Leaf;
+    if (is_leaf || filtering) flags |= ImGuiTreeNodeFlags_Leaf;
 
     const Entity parent = state.transform.get_parent();
     const bool is_begin = state.position == selected_index_begin && selection_parent == parent;
@@ -76,16 +124,17 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
 
     /* Debug name */
     // const auto name = state.name.name + " " + std::to_string(state.position.x) + "-" + std::to_string(state.position.y);
-    const auto name = state.name.name;
+    const auto name = state.name.name.empty() ? "Entity_" + EntityHelper::to_string(state.entity) : state.name.name;
 
     const ImGuiID tree_node_id = ImGui::GetID(name.c_str());
     bool open_node = ImGui::TreeNodeBehavior(tree_node_id, flags, name.c_str(), NULL);
-    /* TODO: is a too early because it toggles when mouse down, but we use mouse released for selection */
 
     const bool is_hovered = ImGui::IsItemHovered();
     const bool is_left_mouse_released = ImGui::IsMouseReleased(ImGuiMouseButton_Left);
+    const bool is_right_mouse_released = ImGui::IsMouseReleased(ImGuiMouseButton_Right);
     const bool is_payload_being_dragged = ImGui::GetDragDropPayload() != nullptr;
     const bool is_left_clicked = is_hovered && is_left_mouse_released;
+    const bool is_right_clicked = is_hovered && is_right_mouse_released;
     const bool is_ctrl_held = ImGui::GetIO().KeyCtrl;
     const bool is_shift_held = ImGui::GetIO().KeyShift;
     const bool same_parent = selection_parent == parent;
@@ -103,7 +152,7 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
     }
 
     /* Selection logic */
-    const bool select_entity = !dropped && !hover_arrow && !is_payload_being_dragged && is_left_clicked;
+    const bool select_entity = !dropped && !hover_arrow && !is_payload_being_dragged && (is_left_clicked || is_right_clicked);
     if (select_entity) {
         if (is_shift_held && same_parent) {
             const bool is_first_selected = selected_entities.empty();
@@ -125,6 +174,17 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
                 selected_entities.erase(state.entity);
             } else {
                 selected_entities.insert(state.entity);
+            }
+        } else if (is_right_clicked) {
+            const bool already_selected = selected_entities.contains(state.entity);
+            if (already_selected == false) {
+                selected_entities.clear();
+                selected_entities.insert(state.entity);
+                selected_index_begin = state.position;
+                selection_parent = state.transform.get_parent();
+                selected_index_end_above = state.position;
+                selected_index_end_below = state.position;
+                first_selected_entity = state.entity;
             }
         } else {
             selected_entities.clear();
@@ -152,8 +212,30 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
         selected_entities.erase(state.entity);
     }
 
+    const std::string right_click_context_id = "RightContextPopUp" + name;
+    if (is_right_clicked) {
+        ImGui::OpenPopup(right_click_context_id.c_str());
+    }
+    if (ImGui::BeginPopup(right_click_context_id.c_str())) {
+        { /* Delete Entities */
+            const auto text = selected_entities.size() > 1 ? "Delete Entities" : "Delete Entity";
+            if (ImGui::MenuItem(text)) {
+                for (const auto selected : selected_entities) {
+                    tmt::engine.ecs.destroy_entity(selected);
+                }
+                clear_selection();
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndPopup();
+    }
+
     /* If the node is closed, don't display children */
     if (open_node == false) return true;
+    if (filtering) {
+        if (open_node) ImGui::TreePop();
+        return true;
+    }
 
     const bool has_children = state.transform.has_children();
     /* Display children */

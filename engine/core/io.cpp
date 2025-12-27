@@ -110,6 +110,10 @@ std::string IO::read_or_create_text_file(const FileLocation& file_location, cons
 }
 
 bool IO::stream_open(std::fstream& file_stream, const std::filesystem::path& absolute, std::ios::openmode open_mode) {
+    if (std::filesystem::is_directory(absolute)) {
+        tmt::Log::error(tmt::Log::Scope::ENGINE, "Tried to open a directory as a file: {}", absolute.string());
+        return false;
+    }
     file_stream.exceptions(std::ios::badbit | std::ios::failbit);
     try {
         file_stream.open(absolute, open_mode);

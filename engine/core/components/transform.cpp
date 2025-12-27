@@ -273,6 +273,15 @@ bool Transform::has_children() const { return !children.empty(); }
 
 const std::set<Entity>& Transform::get_children() const { return children; }
 
+std::set<Entity> Transform::get_all_children() const {
+    std::set<Entity> result = get_children();
+    for (const auto child : children) {
+        const auto& transform = tmt::engine.ecs.get_component<Transform>(child);
+        result.merge(transform.get_all_children());
+    }
+    return result;
+}
+
 void Transform::mark_dirty() {
     if (is_dirty) {
         return;

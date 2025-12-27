@@ -126,10 +126,15 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
     }
 
     void destroy_entity(const Entity entity, bool force = false) {
+        auto children = get_component<Transform>(entity).get_all_children();
         if (force) {
             registry.destroy(entity);
         } else {
             registry.emplace<Delete>(entity);
+        }
+
+        for (const auto child : children) {
+            destroy_entity(child, force);
         }
     }
 

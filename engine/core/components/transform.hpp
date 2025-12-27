@@ -66,6 +66,8 @@ struct Transform {
 
     bool has_children() const;
     const std::set<Entity>& get_children() const;
+    /* Get all children recursivly, aka children of children too */
+    std::set<Entity> get_all_children() const;
 
    private:
     BEFRIEND_VISITABLE();
