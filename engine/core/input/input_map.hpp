@@ -27,6 +27,7 @@ constexpr auto RIGHT_TRIGGER = "right_trigger";
 struct InputAction {
     std::vector<std::unique_ptr<InputEvent>> events;
     float deadzone = 0.5f;
+    float time_since_being_pressed = 0.0f;
 };
 class InputMap {
    public:

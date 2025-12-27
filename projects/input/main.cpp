@@ -5,6 +5,7 @@
 #include "engine/core/logger.hpp"
 #include "engine/core/components/camera.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
+#include "engine/core/input/input_map.hpp"
 
 class Game : public tmt::Application {
    public:
@@ -32,7 +33,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
 void Game::on_start() {
     { /* Camera entity */
         tmt::Entity entity = tmt::engine.ecs.create_entity();
-        auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
         transform.set_world_position(glm::vec3(0.0f, 0.0f, -2.0f));
     }
@@ -62,6 +63,9 @@ void Game::on_update(const tmt::FrameData& time) {
         tmt::engine.input.set_mouse_relative_to_window(false);
         tmt::Log::info(tmt::Log::Scope::GAME, "Cursor unlocked");
     }
+    if (tmt::engine.input.is_action_just_released(tmt::action::CANCEL)) {
+        tmt::Log::info(tmt::Log::Scope::GAME, "Cancel was held for {:.2f} seconds", tmt::engine.input.get_action_duration(tmt::action::CANCEL));
+    }
     if (tmt::engine.input.is_action_pressed(tmt::action::CONFIRM)) {
         tmt::Log::info(tmt::Log::Scope::GAME, "Confirm pressed continuously!");
     }
@@ -75,7 +79,10 @@ void Game::on_update(const tmt::FrameData& time) {
     }
     if (tmt::engine.input.is_action_just_released(tmt::action::RIGHT_CLICK)) {
         tmt::Log::info(tmt::Log::Scope::ENGINE, "Right click!");
+        float action_duration = tmt::engine.input.get_action_duration(tmt::action::RIGHT_CLICK);
+        tmt::Log::info(tmt::Log::Scope::ENGINE, "Right click was held for {:.2f} seconds", action_duration);
     }
+
     if (tmt::engine.input.is_action_pressed(tmt::action::MIDDLE_CLICK)) {
         tmt::Log::info(tmt::Log::Scope::ENGINE, "Middle click!");
     }

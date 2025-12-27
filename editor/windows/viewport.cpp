@@ -8,6 +8,7 @@
 #include "engine/core/window.hpp"
 #include "engine/core/renderer/renderer.hpp"
 #include "engine/core/input/input.hpp"
+#include "engine/core/input/input_map.hpp"
 
 void tmt::Viewport::on_editor_start() {
     ImGuizmo::AllowAxisFlip(false);

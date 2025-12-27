@@ -7,13 +7,13 @@
 
 #include "keys.hpp"
 #include "input_event.hpp"
-#include "input_map.hpp"
 
 // heavily inspired by Godot's input system
 
 struct SDL_Gamepad;
 
 namespace tmt {
+struct FrameData;
 
 struct GamepadState {
     SDL_Gamepad* handle {nullptr};
@@ -27,7 +27,7 @@ class Input {
     // Rule of 0
 
     void init();
-    void update();
+    void update(const tmt::FrameData& time);
 
     float get_action_strength(std::string_view name);
     float get_action_raw_strength(std::string_view name);
@@ -82,6 +82,8 @@ class Input {
     bool is_action_pressed(std::string_view name) const;
     bool is_action_just_pressed(std::string_view name) const;
     bool is_action_just_released(std::string_view name) const;
+
+    float get_action_duration(std::string_view name) const;
 
    private:
     // do not free this manually

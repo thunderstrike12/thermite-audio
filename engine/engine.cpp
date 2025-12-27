@@ -24,6 +24,7 @@
 #include "events/scene.hpp"
 #include "core/resources.hpp"
 #include "core/salvo.hpp"
+#include "core/input/input_map.hpp"
 #include "tools/profiler.hpp"
 
 bool tmt::Engine::get_is_running() const { return is_running; }
@@ -105,9 +106,9 @@ void Engine::run() {
             game_controller.should_resume_game = false;
         }
 
-        input.update();
-
         const FrameData frame_data = {.delta_time = timer.tick()};
+
+        input.update(frame_data);
 
         const bool should_update = game_controller.is_playing() && !game_controller.is_paused();
         /* Update */

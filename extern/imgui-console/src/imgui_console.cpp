@@ -219,7 +219,7 @@ void ImGuiConsole::LogWindow() {
         ImGui::PopTextWrapPos();
 
         // Auto-scroll logs.
-        if ((m_ScrollToBottom && (ImGui::GetScrollY() >= ImGui::GetScrollMaxY() || m_AutoScroll))) ImGui::SetScrollHereY(1.0f);
+        if (m_ScrollToBottom || (m_AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())) ImGui::SetScrollHereY(1.0f);
         m_ScrollToBottom = false;
     }
     // Loop through command string vector.

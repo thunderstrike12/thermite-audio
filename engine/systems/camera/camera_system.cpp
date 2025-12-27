@@ -6,6 +6,7 @@
 #include "core/logger.hpp"
 #include "core/components/camera.hpp"
 #include "core/components/transform.hpp"
+#include "core/input/input_map.hpp"
 #include "engine/core/input/keys.hpp"
 
 namespace tmt {
