@@ -107,6 +107,11 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
     bool display_entity(const HierarchyState& state);
     void end_section();
 
+    void context_menu();
+
+    void copy_selection();
+    void paste_entities();
+
     void clear_selection();
 
     struct DragNDropPayload {
@@ -125,5 +130,9 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
 
     void before_begin() override;
     void end_display() override;
+
+    struct Config {
+        constexpr static inline const char* RIGHT_CLICK_CONTEXT = "Hierarchy.RightClickContext";
+    };
 };
 }  // namespace tmt

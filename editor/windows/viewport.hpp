@@ -17,7 +17,8 @@ class Viewport : public IWindow {
     void display() override;
     void end_display() override;
 
-    constexpr std::string get_title() const override { return ICON_MS_VISIBILITY " Viewport"; };
+    std::string get_title() const override;
+    int get_window_flags() const override;
     constexpr bool is_closable() const override { return false; };
     constexpr bool default_open() const override { return true; }
 

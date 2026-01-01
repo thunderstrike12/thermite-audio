@@ -25,4 +25,18 @@ class Timer {
 
     void reset() { start_time = last_time = Clock::now(); }
 };
+
+/* Simple RAII timer to check elapsed time */
+class ScopedTimer {
+   private:
+    Timer timer;
+    std::string name;
+
+   public:
+    ScopedTimer(std::string name) : timer(), name(std::move(name)) {}
+    ~ScopedTimer() {
+        float elapsed_time = timer.elapsed();
+        printf("[Timer] %s: %.6f seconds\n", name.c_str(), elapsed_time);
+    }
+};
 };  // namespace tmt

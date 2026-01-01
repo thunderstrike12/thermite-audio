@@ -21,6 +21,8 @@
 #include "editor/imgui/components/all.hpp"
 #include "editor/imgui/types/all.hpp"
 
+#include "editor/events/scene.hpp"
+
 namespace tmt {
 
 template <typename T>
@@ -30,6 +32,7 @@ void remove_component(const tmt::Inspector::MenuContext& menu_context) {
         if (has_comp == false) continue;
         tmt::engine.ecs.remove_component<T>(entity);
     }
+    OnSceneModified::dispatch();
 }
 
 void paste_component(const auto& name, const tmt::Inspector::MenuContext& menu_context) {
@@ -40,7 +43,7 @@ void paste_component(const auto& name, const tmt::Inspector::MenuContext& menu_c
     }
     const json deserialized = json::parse(clipboard_text, nullptr, false);
     if (deserialized.is_discarded()) {
-        Log::error("Failed to parse clipboard JSON for component '{}'. Clipboard is:", name, clipboard_text);
+        Log::error("Failed to parse clipboard JSON for component '{}'. Clipboard is: \"{}\"", name, clipboard_text);
         return;
     }
 
@@ -56,6 +59,7 @@ void paste_component(const auto& name, const tmt::Inspector::MenuContext& menu_c
             Serializer::deserialize(data, target_instance);
         }
     });
+    OnSceneModified::dispatch();
 }
 
 void paste_values(const auto& name, const tmt::Inspector::MenuContext& menu_context) {
@@ -66,7 +70,7 @@ void paste_values(const auto& name, const tmt::Inspector::MenuContext& menu_cont
     }
     const json deserialized = json::parse(clipboard_text, nullptr, false);
     if (deserialized.is_discarded()) {
-        Log::error("Failed to parse clipboard JSON for component '{}'. Clipboard is:", name, clipboard_text);
+        Log::error("Failed to parse clipboard JSON for component '{}'. Clipboard is: \"{}\"", name, clipboard_text);
         return;
     }
 
@@ -84,6 +88,7 @@ void paste_values(const auto& name, const tmt::Inspector::MenuContext& menu_cont
             Serializer::deserialize(data, target_instance);
         }
     });
+    OnSceneModified::dispatch();
 }
 
 void Inspector::display() {
@@ -149,6 +154,9 @@ void Inspector::display() {
         const bool changed = response.get<T>().is_changed();
 
         if (changed == false) return;
+
+        OnSceneModified::dispatch();
+
         if (menu_context.selected_entities.size() <= 1) return;
 
         auto after = tmt::Serializer::serialize(component_instance);
@@ -188,6 +196,7 @@ void Inspector::add_component(const MenuContext& menu_context) {
                 if (ImGui::MenuItem(name)) {
                     tmt::engine.ecs.add_component<T>(entity);
                     ImGui::CloseCurrentPopup();
+                    OnSceneModified::dispatch();
                 }
             }
         });

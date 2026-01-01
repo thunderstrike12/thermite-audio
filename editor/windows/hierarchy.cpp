@@ -6,9 +6,14 @@
 
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
+#include "engine/core/logger.hpp"
 
 #include "engine/core/components/name.hpp"
 #include "engine/core/components/transform.hpp"
+
+#include "engine/tools/serializer/ecs.hpp"
+
+#include "editor/events/scene.hpp"
 
 namespace tmt {
 
@@ -22,6 +27,8 @@ void Hierarchy::display() {
 
     top_bar();
     render_hierarchy();
+    context_menu();
+
     ImGui::PopStyleVar();
 }
 
@@ -37,6 +44,9 @@ void Hierarchy::end_section() {
 
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered()) {
         clear_selection();
+    }
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Right) && !ImGui::IsAnyItemHovered()) {
+        ImGui::OpenPopup(Config::RIGHT_CLICK_CONTEXT);
     }
 
     drag_drop_target(entt::null);
@@ -56,6 +66,61 @@ void Hierarchy::end_section() {
     } else {
         previous_end_below = NULL_INDEX;
     }
+}
+
+void Hierarchy::context_menu() {
+    if (ImGui::BeginPopup(Config::RIGHT_CLICK_CONTEXT)) {
+        if (selected_entities.empty() == false) { /* Delete selection */
+            const auto text = selected_entities.size() > 1 ? "Delete Entities" : "Delete Entity";
+            if (ImGui::MenuItem(text)) {
+                for (const auto selected : selected_entities) {
+                    tmt::engine.ecs.destroy_entity(selected);
+                }
+                clear_selection();
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        if (selected_entities.empty() == false) { /* Copy selection */
+            const auto text = selected_entities.size() > 1 ? "Copy Entities" : "Copy Entity";
+            if (ImGui::MenuItem(text)) {
+                copy_selection();
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        { /* Paste selection */
+            const auto text = "Paste Entities";
+            if (ImGui::MenuItem(text)) {
+                paste_entities();
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndPopup();
+    }
+}
+
+void Hierarchy::copy_selection() {
+    const auto json = Serializer::serialize(std::set(selected_entities.begin(), selected_entities.end()), tmt::engine.ecs);
+    ImGui::SetClipboardText(json.dump().c_str());
+}
+
+void Hierarchy::paste_entities() {
+    const char* clipboard_text = ImGui::GetClipboardText();
+    if (clipboard_text == nullptr) {
+        Log::warn("Failed to paste entities, clipboard is empty.");
+        return;
+    }
+    const json deserialized = json::parse(clipboard_text, nullptr, false);
+    if (deserialized.is_discarded()) {
+        Log::error("Failed to parse clipboard JSON for entities. Clipboard is: \"{}\"", clipboard_text);
+        return;
+    }
+
+    std::set<Entity> new_entities;
+    Serializer::deserialize(deserialized, new_entities, tmt::engine.ecs);
+
+    clear_selection();
+    selected_entities = std::unordered_set(new_entities.begin(), new_entities.end());
+    OnSceneModified::dispatch();
 }
 
 void Hierarchy::clear_selection() {
@@ -212,23 +277,10 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
         selected_entities.erase(state.entity);
     }
 
-    const std::string right_click_context_id = "RightContextPopUp" + name;
     if (is_right_clicked) {
-        ImGui::OpenPopup(right_click_context_id.c_str());
+        ImGui::OpenPopup(Config::RIGHT_CLICK_CONTEXT);
     }
-    if (ImGui::BeginPopup(right_click_context_id.c_str())) {
-        { /* Delete Entities */
-            const auto text = selected_entities.size() > 1 ? "Delete Entities" : "Delete Entity";
-            if (ImGui::MenuItem(text)) {
-                for (const auto selected : selected_entities) {
-                    tmt::engine.ecs.destroy_entity(selected);
-                }
-                clear_selection();
-                ImGui::CloseCurrentPopup();
-            }
-        }
-        ImGui::EndPopup();
-    }
+    context_menu();
 
     /* If the node is closed, don't display children */
     if (open_node == false) return true;
@@ -308,6 +360,7 @@ bool Hierarchy::drag_drop_target(const Entity dropped_entity) {
             selection_parent = entt::null;
             selected_index_end_above = NULL_INDEX;
             selected_index_end_below = NULL_INDEX;
+            OnSceneModified::dispatch();
             return true;
         }
         ImGui::EndDragDropTarget();

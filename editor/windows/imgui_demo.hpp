@@ -7,6 +7,7 @@ class ImguiDemo : public IWindow {
    public:
     // Inherited via IWindow
     std::string get_title() const override { return "Dear ImGui Demo"; }
+    int get_window_flags() const override { return ImGuiWindowFlags_MenuBar; }
 
     void display() override { ImGui::ShowDemoWindow(); }
 

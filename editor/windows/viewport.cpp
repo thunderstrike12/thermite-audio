@@ -6,9 +6,12 @@
 #include "engine/core/components/camera.hpp"
 #include "engine/core/logger.hpp"
 #include "engine/core/window.hpp"
+#include "engine/core/scenes.hpp"
 #include "engine/core/renderer/renderer.hpp"
 #include "engine/core/input/input.hpp"
 #include "engine/core/input/input_map.hpp"
+#include "editor/events/scene.hpp"
+#include "editor/windows/scenes.hpp"
 
 void tmt::Viewport::on_editor_start() {
     ImGuizmo::AllowAxisFlip(false);
@@ -44,6 +47,18 @@ void tmt::Viewport::before_begin() {
 }
 
 void tmt::Viewport::end_display() { ImGui::PopStyleVar(); }
+
+std::string tmt::Viewport::get_title() const {
+    const auto window_id = "###" ICON_MS_VISIBILITY " Viewport";
+    const auto scene_name = engine.scenes.is_scene_loaded() ? engine.scenes.get_active_scene_info().name : "UNKNOWN";
+    return scene_name + window_id;
+}
+int tmt::Viewport::get_window_flags() const {
+    if (engine.game_controller.is_running()) return ImGuiWindowFlags_None;
+
+    const bool is_scene_dirty = editor.windows.get<ScenesWindow>().is_scene_dirty();
+    return is_scene_dirty ? ImGuiWindowFlags_UnsavedDocument : 0;
+};
 
 void tmt::Viewport::display() {
     auto size = ImGui::GetContentRegionAvail();
@@ -117,6 +132,8 @@ void tmt::Viewport::gizmo_manip() {
     const float aspect_ratio = width / height;
     auto perspective = glm::perspective(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
 
+    bool changed = false;
+
     // relative to first
     if (gizmo_multiselect_mode == 0) {
         Entity selected_entity = hierarchy.get_first_selected_entity();
@@ -125,7 +142,7 @@ void tmt::Viewport::gizmo_manip() {
         glm::mat4 imguizmo_input_matrix = selected_matrix;
 
         glm::mat4 delta;
-        ImGuizmo::Manipulate(
+        changed = ImGuizmo::Manipulate(
             &view[0][0], &perspective[0][0], static_cast<ImGuizmo::OPERATION>(gizmo_operations[gizmo_operation]), static_cast<ImGuizmo::MODE>(gizmo_space), &imguizmo_input_matrix[0][0],
             &delta[0][0]
         );
@@ -160,7 +177,7 @@ void tmt::Viewport::gizmo_manip() {
 
         glm::mat4 avg = glm::translate(glm::mat4(1.f), avg_translation) * glm::mat4_cast(avg_rotation) * glm::scale(glm::mat4(1.f), scale);
         glm::mat4 delta;
-        ImGuizmo::Manipulate(
+        changed = ImGuizmo::Manipulate(
             &view[0][0], &perspective[0][0], static_cast<ImGuizmo::OPERATION>(gizmo_operations[gizmo_operation]), static_cast<ImGuizmo::MODE>(gizmo_space), &avg[0][0], &delta[0][0]
         );
         for (auto entity : selected_entities) {
@@ -169,6 +186,10 @@ void tmt::Viewport::gizmo_manip() {
 
             multi_select_transform.set_world_matrix(delta * multi_matrix);
         }
+    }
+
+    if (changed) {
+        OnSceneModified::dispatch();
     }
 }
 

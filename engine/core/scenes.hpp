@@ -1,26 +1,17 @@
 #pragma once
-#include <type_traits>
-#include <typeindex>
-
 #include "engine/core/scene.hpp"
 #include "engine/core/collection.hpp"
 #include "engine/core/logger.hpp"
+#include "engine/core/io.hpp"
 
-#include "engine/tools/type_factory.hpp"
+#include "engine/core/resources/json.hpp"
+
+#include "engine/tools/scene_types.hpp"
+#include "engine/events/scene.hpp"
 
 namespace tmt {
 
 class Scenes {
-    using SceneFactory = TypeFactory<std::unique_ptr<SceneBase>>;
-
-    struct SceneInfo {
-        std::string name;
-        SceneFactory factory;
-    };
-
-    /* empty type_index */
-    static inline const std::type_index TYPE_INDEX_NULL = std::type_index(typeid(void));
-
    public:
     Scenes() = default;
     ~Scenes() = default;
@@ -34,16 +25,17 @@ class Scenes {
     template <typename T>
         requires std::is_base_of_v<SceneBase, T>
     void register_scene() {
-        SceneInfo info;
-        info.name = T::scene_name();
+        const auto name = std::string(T::scene_name());
+        const auto scene_path = std::filesystem::path(Config::SCENES_FOLDER) / (name + Config::SCENE_EXTENSION);
+        SceneInfo info {name, {IO::Location::PROJECT, scene_path}};
         info.factory.register_type<T>();
 
-        const std::type_index type_id = typeid(T);
-        registered_scenes[type_id] = std::move(info);
+        const SceneIndex type_id = typeid(T);
+        registered_scenes.emplace(type_id, std::move(info));
 
-        if (next_scene == TYPE_INDEX_NULL) {
+        if (next_scene_type == NULL_SCENE) {
             /* Set the first registered scene as the next scene */
-            next_scene = type_id;
+            next_scene_type = type_id;
         }
     }
 
@@ -51,18 +43,11 @@ class Scenes {
     template <typename T>
         requires std::is_base_of_v<SceneBase, T>
     void enqueue_scene() {
-        const std::type_index type_id = typeid(T);
+        const SceneIndex type_id = typeid(T);
         enqueue_scene(type_id);
     }
 
-    void enqueue_scene(const std::type_index& type_id) {
-        auto it = registered_scenes.find(type_id);
-        if (it == registered_scenes.end()) {
-            Log::error(Log::Scope::ENGINE, "Scenes::enqueue_scene: Scene not registered");
-            return;
-        }
-        next_scene = type_id;
-    }
+    void enqueue_scene(const SceneIndex& type_id);
 
     /* Immediatly load a new scene */
     template <typename T>
@@ -72,15 +57,33 @@ class Scenes {
         swap_scenes();
     }
 
-    std::unique_ptr<SceneBase>& get_active_scene() { return active_scene; }
+    bool is_scene_loaded() const { return active_scene_type != NULL_SCENE && active_scene != nullptr; }
 
-    const std::unordered_map<std::type_index, SceneInfo>& get_registered_scenes() const { return registered_scenes; }
+    std::unique_ptr<SceneBase>& get_active_scene() { return active_scene; }
+    SceneIndex get_active_scene_type() const { return active_scene_type; }
+
+    const SceneInfo& get_active_scene_info() const;
+    const SceneInfo& get_scene_info(const SceneIndex& type_index) const;
+
+    const std::unordered_map<SceneIndex, SceneInfo>& get_registered_scenes() const { return registered_scenes; }
+
+    struct Config {
+        constexpr static const char* SCENE_EXTENSION = ".scene";
+        constexpr static const char* SCENES_FOLDER = "scenes";
+    };
+
+    void serialize_active_scene();
 
    private:
     std::unique_ptr<SceneBase> active_scene = nullptr;
 
-    std::type_index next_scene = TYPE_INDEX_NULL;
+    SceneIndex active_scene_type = NULL_SCENE;
+    SceneIndex next_scene_type = NULL_SCENE;
 
-    std::unordered_map<std::type_index, SceneInfo> registered_scenes;
+    ResourceRef<Json> active_scene_json = {};
+
+    std::unordered_map<SceneIndex, SceneInfo> registered_scenes;
+
+    void deserialize_scene(PreLoadSceneEvent& event);
 };
 }  // namespace tmt

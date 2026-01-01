@@ -59,6 +59,8 @@ bool IO::write_text_file(const FileLocation& file_location, const std::string& t
     return true;
 }
 
+bool IO::file_exists(const FileLocation& file_location) { return std::filesystem::exists(file_location.get_absolute_path()); }
+
 std::vector<char> IO::read_file(const FileLocation& file_location) {
     const std::filesystem::path& absolute = file_location.get_absolute_path();
 

@@ -1,8 +1,10 @@
 #pragma once
 #include "editor/core/window.hpp"
+#include "engine/core/scenes.hpp"
+#include "engine/events/scene.hpp"
 
 namespace tmt {
-class GameFlow : public IWindow {
+class GameFlow : public IWindow, public OnPreLoadScene {
    public:
     // Inherited via IWindow
     std::string get_title() const override { return ICON_MS_GAMEPAD "  Game Flow"; };
@@ -13,5 +15,13 @@ class GameFlow : public IWindow {
     void on_editor_start() override;
     void on_editor_update(const tmt::FrameData& time) override;
     void on_editor_end() override;
+
+   private:
+    SceneIndex working_scene = NULL_SCENE;
+    nlohmann::ordered_json cached_scene;
+    bool has_ended = false;
+
+    // Inherited via OnPreLoadScene
+    void on_pre_load_scene(PreLoadSceneEvent& event) override;
 };
 }  // namespace tmt

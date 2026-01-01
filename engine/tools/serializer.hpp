@@ -22,5 +22,9 @@ class Serializer {
     static void deserialize(const json& j, T& value, Args&&... args) {
         JsonReflect::from_json(j, value, std::forward<Args>(args)...);
     }
+
+    struct Config {
+        constexpr static uint64_t VERSION = 1;
+    };
 };
 }  // namespace tmt

@@ -12,6 +12,7 @@
 #include "engine/core/ecs.hpp"
 #include "engine/core/logger.hpp"
 #include "engine/core/window.hpp"
+#include "engine/core/scenes.hpp"
 
 #include "editor/imgui/manager.hpp"
 #include "editor/core/font_manager.hpp"
@@ -110,6 +111,12 @@ void Editor::on_engine_end() {
 
 void Editor::main_menu_bar() {
     if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("Scene")) {
+            if (ImGui::MenuItem("Save Scene")) {
+                engine.scenes.serialize_active_scene();
+            }
+            ImGui::EndMenu();
+        }
         if (ImGui::BeginMenu("Windows")) {
             for (const auto& window : windows) {
                 const auto& name = window->get_title();

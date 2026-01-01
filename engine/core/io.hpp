@@ -42,6 +42,9 @@ class IO {
     // Write text to file, overwrites if file exists. set overwrite = false to append. returns success
     static bool write_text_file(const FileLocation& file_location, const std::string& text, bool overwrite = true);
 
+    // Check if file exists on disk
+    static bool file_exists(const FileLocation& file_location);
+
     // Read file, returns vector containing bytes
     static std::vector<char> read_file(const FileLocation& file_location);
 
