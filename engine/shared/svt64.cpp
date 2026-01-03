@@ -28,7 +28,7 @@ inline uint32_t raw_voxel_count(const RawVoxels& data) {
     for (uint32_t z = 0u; z < data.d; ++z) {
         for (uint32_t y = 0u; y < data.h; ++y) {
             for (uint32_t x = 0u; x < data.w; ++x) {
-                if (data.materials[z * data.w * data.h + y * data.w + x] != 0u) count++;
+                if (data.materials[z * data.w * data.h + y * data.w + x] != AIR_INDEX) count++;
             }
         }
     }
