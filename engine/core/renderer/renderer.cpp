@@ -14,17 +14,17 @@
 
 #include "engine/engine.hpp"
 
-#include "pipelines/debug_pipeline.hpp"
+#include "pipelines/polyline_pipeline.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "tools/profiler.hpp"
 
 namespace tmt {
 
-Renderer::Renderer() : gpu(*new GPUAdapter()), render_graph(*new RenderGraph()), debug_pipeline(*new DebugPipeline()), geometry_pipeline(*new GeometryPipeline()) {}
+Renderer::Renderer() : gpu(*new GPUAdapter()), render_graph(*new RenderGraph()), polyline_pipeline(*new PolylinePipeline()), geometry_pipeline(*new GeometryPipeline()) {}
 
 Renderer::~Renderer() {
     delete &geometry_pipeline;
-    delete &debug_pipeline;
+    delete &polyline_pipeline;
     delete &render_graph;
     delete &gpu;
 }
@@ -71,7 +71,7 @@ void Renderer::init() {
     render_view.init();
 
     /* Initialize pipelines */
-    debug_pipeline.init(gpu);
+    polyline_pipeline.init(gpu);
     geometry_pipeline.init(gpu);
 
     debug_transform.set_local_position({0.0f, 0.0f, -1.0f});
@@ -93,7 +93,7 @@ void Renderer::update() {
     }
     /* Pipelines enqueue */
     geometry_pipeline.enqueue(render_graph, render_view);
-    debug_pipeline.enqueue(render_graph, render_view);
+    polyline_pipeline.enqueue(render_graph, render_view);
 
 #ifdef THERMITE_EDITOR
     /* Add the immediate mode GUI to the render graph */
@@ -118,7 +118,7 @@ void Renderer::end() {
     render_view.deinit();
 
     /* Pipelines cleanup */
-    debug_pipeline.deinit(gpu);
+    polyline_pipeline.deinit(gpu);
     geometry_pipeline.deinit(gpu);
 
     /* Cleanup the VRAM bank & GPU adapter */
@@ -139,26 +139,6 @@ void Renderer::set_imgui(ImGUI* new_imgui) {
     render_view.imgui_viewport = imgui->add_image(render_view.viewport_image);
 }
 #endif
-
-void Renderer::draw_line(const glm::vec3 start, const glm::vec3 end, const glm::vec3 color, const float time) { debug_pipeline.draw_line(start, end, color, time); }
-
-void Renderer::draw_circle(const glm::vec3 center, const float radius, const glm::vec3 axis_a, const glm::vec3 axis_b, const glm::vec3 color, int segments, const float time) {
-    debug_pipeline.draw_circle(center, radius, axis_a, axis_b, color, segments, time);
-}
-
-void Renderer::draw_sphere(const glm::vec3 center, const float radius, const glm::vec3 color, int rings, int segments, const float time) {
-    debug_pipeline.draw_sphere(center, radius, color, rings, segments, time);
-}
-
-void Renderer::draw_arrow(const glm::vec3 start, glm::vec3 dir, const glm::vec3 color, float length, float head_length, float head_angle, const float time) {
-    debug_pipeline.draw_arrow(start, dir, color, length, head_length, head_angle, time);
-}
-
-void Renderer::draw_cross(const glm::vec3 center, const glm::vec3 color, const float size, const glm::quat rot, const float time) { debug_pipeline.draw_cross(center, color, size, rot, time); }
-
-void Renderer::draw_obb(const glm::vec3 center, const float width, const float height, const float depth, const glm::vec3 color, const glm::quat rot, const float time) {
-    debug_pipeline.draw_obb(center, width, height, depth, color, rot, time);
-}
 
 VRAMBank& Renderer::vram_bank() { return gpu.get_vram_bank(); }
 

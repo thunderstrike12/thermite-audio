@@ -1,18 +1,17 @@
 #include "physics_system.hpp"
-#include "core/logger.hpp"
 
-#include "engine.hpp"
-#include "core/ecs.hpp"
-#include "core/components/transform.hpp"
-#include "components/voxel_body.hpp"
-
-#include "glm/gtx/norm.hpp"
+#include <glm/gtx/norm.hpp>
 #include <glm/gtx/quaternion.hpp>
-
-#include "core/renderer/renderer.hpp"
 #include <queue>
 
-#include "tools/profiler.hpp"
+#include "engine.hpp"
+#include "engine/core/ecs.hpp"
+#include "engine/core/components/transform.hpp"
+#include "engine/core/logger.hpp"
+#include "engine/core/polyline.hpp"
+#include "engine/tools/profiler.hpp"
+
+#include "components/voxel_body.hpp"
 
 namespace tmt {
 
@@ -41,25 +40,26 @@ void draw_node(tmt::Bvh2<VoxelObject>& bvh, uint32_t current_node) {
     // Draw AABB of the node
     glm::vec3 min = bvh.nodes[current_node].min_bounds;
     glm::vec3 max = bvh.nodes[current_node].max_bounds;
-    glm::vec3 color(0, 0, 1);
+    engine.polyline.use_color(0.3f, 0.3f, 1.0f);
+    engine.polyline.use_line_width(0.25f);
 
     // Bottom face (4 edges)
-    tmt::engine.renderer.draw_line(glm::vec3(min.x, min.y, min.z), glm::vec3(max.x, min.y, min.z), color);
-    tmt::engine.renderer.draw_line(glm::vec3(max.x, min.y, min.z), glm::vec3(max.x, min.y, max.z), color);
-    tmt::engine.renderer.draw_line(glm::vec3(max.x, min.y, max.z), glm::vec3(min.x, min.y, max.z), color);
-    tmt::engine.renderer.draw_line(glm::vec3(min.x, min.y, max.z), glm::vec3(min.x, min.y, min.z), color);
+    engine.polyline.draw_line(glm::vec3(min.x, min.y, min.z), glm::vec3(max.x, min.y, min.z));
+    engine.polyline.draw_line(glm::vec3(max.x, min.y, min.z), glm::vec3(max.x, min.y, max.z));
+    engine.polyline.draw_line(glm::vec3(max.x, min.y, max.z), glm::vec3(min.x, min.y, max.z));
+    engine.polyline.draw_line(glm::vec3(min.x, min.y, max.z), glm::vec3(min.x, min.y, min.z));
 
     // Top face (4 edges)
-    tmt::engine.renderer.draw_line(glm::vec3(min.x, max.y, min.z), glm::vec3(max.x, max.y, min.z), color);
-    tmt::engine.renderer.draw_line(glm::vec3(max.x, max.y, min.z), glm::vec3(max.x, max.y, max.z), color);
-    tmt::engine.renderer.draw_line(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, max.y, max.z), color);
-    tmt::engine.renderer.draw_line(glm::vec3(min.x, max.y, max.z), glm::vec3(min.x, max.y, min.z), color);
+    engine.polyline.draw_line(glm::vec3(min.x, max.y, min.z), glm::vec3(max.x, max.y, min.z));
+    engine.polyline.draw_line(glm::vec3(max.x, max.y, min.z), glm::vec3(max.x, max.y, max.z));
+    engine.polyline.draw_line(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, max.y, max.z));
+    engine.polyline.draw_line(glm::vec3(min.x, max.y, max.z), glm::vec3(min.x, max.y, min.z));
 
     // Vertical edges (4 edges connecting bottom to top)
-    tmt::engine.renderer.draw_line(glm::vec3(min.x, min.y, min.z), glm::vec3(min.x, max.y, min.z), color);
-    tmt::engine.renderer.draw_line(glm::vec3(max.x, min.y, min.z), glm::vec3(max.x, max.y, min.z), color);
-    tmt::engine.renderer.draw_line(glm::vec3(max.x, min.y, max.z), glm::vec3(max.x, max.y, max.z), color);
-    tmt::engine.renderer.draw_line(glm::vec3(min.x, min.y, max.z), glm::vec3(min.x, max.y, max.z), color);
+    engine.polyline.draw_line(glm::vec3(min.x, min.y, min.z), glm::vec3(min.x, max.y, min.z));
+    engine.polyline.draw_line(glm::vec3(max.x, min.y, min.z), glm::vec3(max.x, max.y, min.z));
+    engine.polyline.draw_line(glm::vec3(max.x, min.y, max.z), glm::vec3(max.x, max.y, max.z));
+    engine.polyline.draw_line(glm::vec3(min.x, min.y, max.z), glm::vec3(min.x, max.y, max.z));
 
     if (bvh.nodes[current_node].is_leaf()) return;
     draw_node(bvh, bvh.nodes[current_node].left_first);
@@ -67,11 +67,12 @@ void draw_node(tmt::Bvh2<VoxelObject>& bvh, uint32_t current_node) {
 }
 
 void Physics::on_update(const FrameData&) {
+    engine.polyline.use_line_width(0.25f);
     for (const auto& [entity, vb, transform] : engine.ecs.get_registry().view<VoxelBody, Transform>().each()) {
         auto edges = vb.get_world_edges();
-        glm::vec3 color = vb.type == VoxelBody::DYNAMIC ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
+        engine.polyline.use_color(vb.type == VoxelBody::DYNAMIC ? glm::vec4(0, 1, 0, 1) : glm::vec4(1, 0, 0, 1));
         for (size_t i = 0; i < edges.size(); i++) {
-            tmt::engine.renderer.draw_line(edges[i].start, edges[i].end, color);
+            engine.polyline.draw_line(edges[i].start, edges[i].end);
         }
     }
 
