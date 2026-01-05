@@ -54,11 +54,11 @@ class InputEventMouseMotion : public InputEvent {
     }
 
    private:
-    float position_x = 0;
-    float position_y = 0;
+    float position_x = 0.0f;
+    float position_y = 0.0f;
 
-    float relative_x = 0;
-    float relative_y = 0;
+    float relative_x = 0.0f;
+    float relative_y = 0.0f;
 };
 
 class InputEventMouseButton : public InputEventMouseMotion {

@@ -73,15 +73,32 @@ void InputMap::add_action_mouse_motion(const std::string& name) { add_action_eve
 
 void InputMap::remove_action(const std::string& name) { actions.erase(name); }
 
-const InputAction* InputMap::get_action(std::string_view name) const {
-    auto it = actions.find(std::string {name});
+const InputAction* InputMap::get_action(const std::string& name) const {
+    auto it = actions.find(name);
+    if (it == actions.end()) return nullptr;
+    return &it->second;
+}
+InputAction* InputMap::get_action(const std::string& name) {
+    auto it = actions.find(name);
     if (it == actions.end()) return nullptr;
     return &it->second;
 }
 
-bool InputMap::has_action(std::string_view name) const { return actions.find(std::string {name}) != actions.end(); }
+bool InputMap::has_action(const std::string& name) const { return actions.contains(name); }
 
-float InputMap::get_action_deadzone(std::string_view name) const {
+float InputMap::get_action_deadzone(const std::string& name) const {
     const auto* action = get_action(name);
     return action ? action->deadzone : 0.0f;
+}
+void InputMap::set_action_deadzone(const std::string& name, float deadzone) {
+    auto* action = get_action(name);
+    action->deadzone = deadzone;
+}
+float InputMap::get_action_sensitivity(const std::string& name) const {
+    const auto* action = get_action(name);
+    return action->sensitivity;
+}
+void InputMap::set_action_sensitivity(const std::string& name, float sensitivity) {
+    auto* action = get_action(name);
+    action->sensitivity = sensitivity;
 }

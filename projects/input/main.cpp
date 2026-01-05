@@ -52,7 +52,21 @@ void Game::on_start() {
 void Game::on_update(const tmt::FrameData& time) {
     time_passed += time.delta_time;
 
+    // Sensitivity test: compare left trigger (default) vs right trigger (modified)
+    static bool sensitivity_set = false;
+    if (!sensitivity_set) {
+        tmt::engine.input_map.set_action_sensitivity(tmt::action::RIGHT_TRIGGER, 2.0f);
+        sensitivity_set = true;
+    }
+
+    float lt = tmt::engine.input.get_action_strength(tmt::action::LEFT_TRIGGER);
+    float rt = tmt::engine.input.get_action_strength(tmt::action::RIGHT_TRIGGER);
+
+    if (lt > 0.0f || rt > 0.0f) {
+        tmt::Log::info(tmt::Log::Scope::GAME, "LT (sens=1.0): {:.2f}, RT (sens=2.0): {:.2f}", lt, rt);
+    }
     // Button action tests using constexpr names
+
     if (tmt::engine.input.is_action_just_pressed(tmt::action::CONFIRM)) {
         tmt::Log::info(tmt::Log::Scope::GAME, "Confirm action pressed!");
         tmt::engine.input.set_mouse_relative_to_window(true);

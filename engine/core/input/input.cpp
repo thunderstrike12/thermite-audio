@@ -148,8 +148,8 @@ bool Input::is_mouse_button_just_released(MouseButton button) const {
     return is_pressed == false && was_pressed == true;
 }
 
-bool Input::is_action_pressed(std::string_view name) const {
-    auto it = engine.input_map.actions.find(std::string {name});
+bool Input::is_action_pressed(const std::string& name) const {
+    auto it = engine.input_map.actions.find(name);
     if (it == engine.input_map.actions.end()) {
         Log::warn(Log::Scope::ENGINE, "No input action found with this name {}", name);
         return false;
@@ -161,8 +161,8 @@ bool Input::is_action_pressed(std::string_view name) const {
     return false;
 }
 
-bool Input::is_action_just_pressed(std::string_view name) const {
-    auto it = engine.input_map.actions.find(std::string {name});
+bool Input::is_action_just_pressed(const std::string& name) const {
+    auto it = engine.input_map.actions.find(name);
     if (it == engine.input_map.actions.end()) {
         Log::warn(Log::Scope::ENGINE, "No input action found with this name {}", name);
         return false;
@@ -175,8 +175,8 @@ bool Input::is_action_just_pressed(std::string_view name) const {
     return false;
 }
 
-bool Input::is_action_just_released(std::string_view name) const {
-    auto it = engine.input_map.actions.find(std::string {name});
+bool Input::is_action_just_released(const std::string& name) const {
+    auto it = engine.input_map.actions.find(name);
     if (it == engine.input_map.actions.end()) {
         Log::warn(Log::Scope::ENGINE, "No input action found with this name {}", name);
 
@@ -189,8 +189,8 @@ bool Input::is_action_just_released(std::string_view name) const {
 
     return false;
 }
-float Input::get_action_duration(std::string_view name) const {
-    auto it = engine.input_map.actions.find(std::string {name});
+float Input::get_action_duration(const std::string& name) const {
+    auto it = engine.input_map.actions.find(name);
     if (it == engine.input_map.actions.end()) {
         Log::warn(Log::Scope::ENGINE, "No input action found with this name {}", name);
 
@@ -198,27 +198,29 @@ float Input::get_action_duration(std::string_view name) const {
     }
     return it->second.time_since_being_pressed;
 }
-float Input::get_action_strength(std::string_view name) {
-    auto it = engine.input_map.actions.find(std::string {name});
+float Input::get_action_strength(const std::string& name) {
+    auto it = engine.input_map.actions.find(name);
     if (it == engine.input_map.actions.end()) {
         Log::warn(Log::Scope::ENGINE, "No input action found with this name {}", name);
 
         return 0.0f;
     }
 
-    // TODO inneficient in principle, could cache it once
+    // TODO inneficient in principle, could cache it once, but first it should be a bottleneck through profiling
     float max_strength = 0.0f;
     for (const auto& event : it->second.events) {
         auto strength = event->get_action_strength();
         if (strength < it->second.deadzone) {
             continue;
         }
+
         max_strength = std::max(strength, max_strength);
     }
-    return max_strength;
+
+    return max_strength * it->second.sensitivity;
 }
-float Input::get_action_raw_strength(std::string_view name) {
-    auto it = engine.input_map.actions.find(std::string {name});
+float Input::get_action_raw_strength(const std::string& name) {
+    auto it = engine.input_map.actions.find(name);
     if (it == engine.input_map.actions.end()) {
         Log::warn(Log::Scope::ENGINE, "No input action found with this name {}", name);
 
@@ -232,9 +234,11 @@ float Input::get_action_raw_strength(std::string_view name) {
     }
     return max_strength;
 }
-float Input::get_axis(std::string_view negative_action, std::string_view positive_action) { return get_action_strength(positive_action) - get_action_strength(negative_action); }
+float Input::get_axis(const std::string& negative_action, const std::string& positive_action) { return get_action_strength(positive_action) - get_action_strength(negative_action); }
 // https://github.com/godotengine/godot/blob/79603b2f28fdd8b0dce14064e488a3783d51d1ff/core/input/input.cpp#L548C1-L572C2
-glm::vec2 Input::get_vector(std::string_view negative_action_x, std::string_view positive_action_x, std::string_view negative_action_y, std::string_view positive_action_y, float deadzone) {
+glm::vec2 Input::get_vector(
+    const std::string& negative_action_x, const std::string& positive_action_x, const std::string& negative_action_y, const std::string& positive_action_y, float deadzone
+) {
     glm::vec2 vector {
         get_action_raw_strength(positive_action_x) - get_action_raw_strength(negative_action_x), get_action_raw_strength(positive_action_y) - get_action_raw_strength(negative_action_y)
     };
