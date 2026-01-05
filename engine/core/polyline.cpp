@@ -16,7 +16,10 @@ PolylinePipeline& polyline = engine.renderer.polyline_pipeline;
 void Polyline::draw_line(glm::vec3 a, glm::vec3 b, float time) {
     /* Check if we reached the maximum number of polylines */
     if (polyline.line_segment_count >= MAX_POLYLINES - 1u) {
-        Log::warn(Log::Scope::RENDERER, "Max amount of polylines reached. Consider increasing MAX_POLYLINES, or draw less lines.");
+        if (logged_once == false) {
+            Log::warn(Log::Scope::RENDERER, "Max amount of polylines reached. Consider increasing MAX_POLYLINES, or draw less lines.");
+            logged_once = true;
+        }
         return;
     }
 

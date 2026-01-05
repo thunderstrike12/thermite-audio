@@ -11,6 +11,7 @@ class Polyline {
     /* Polyline material state */
     glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     float line_width = 0.1f;
+    bool logged_once = false;
 
    public:
     Polyline() = default;
