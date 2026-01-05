@@ -9,6 +9,8 @@
 
 namespace tmt {
 
+using TimeStamp = std::filesystem::file_time_type;
+
 class IO {
    public:
     enum class Location : uint8_t { PROJECT, ENGINE, EDITOR };
@@ -54,6 +56,8 @@ class IO {
     static std::string read_or_create_text_file(const FileLocation& file_location, const std::string& default_contents = "");
 
     [[nodiscard]] static const std::filesystem::path& get_sub_location_path(const IO::Location sub_location) { return SUB_LOCATIONS[static_cast<uint8_t>(sub_location)]; }
+
+    static TimeStamp get_file_last_modified_time(const FileLocation& file_location);
 
    private:
     static inline const std::filesystem::path SUB_LOCATIONS[3] {"assets/game", "assets/engine", "assets/editor"};

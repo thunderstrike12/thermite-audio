@@ -35,6 +35,10 @@ class FileResource : public Resource {
     virtual ~FileResource() = default;
 
     const IO::FileLocation file_location;
+
+   private:
+    friend class Resources;
+    TimeStamp last_modified_time = {};
 };
 
 template <typename T>

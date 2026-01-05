@@ -11,7 +11,7 @@ void Resources::unload_unused() {
         if (ref_count <= 1) {
             collection.file_resource->unload();
             collection.file_resource->loaded = false;
-            tmt::Log::info(tmt::Log::Scope::ENGINE, "Unloaded unused file resource {}", file_location);
+            tmt::Log::info(tmt::Log::Scope::ENGINE, "[Resources] Unloaded unused file resource {}", file_location);
             resource_type_locations[resources.at(file_location).type_hash].erase(file_location);  // Get the type hash
             resources.erase(file_location);
             i--;
@@ -20,6 +20,44 @@ void Resources::unload_unused() {
 }
 
 size_t Resources::resource_count() const { return resources.size(); }
+
+void Resources::reload_collection(ResourceCollection& collection) const {
+    const bool success = reload_resource(collection.file_resource);
+    if (!success) {
+        tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to reload resource collection");
+        return;
+    }
+
+    for (auto& runtime_resource : collection) {
+        if (auto res = runtime_resource.lock()) {
+            const bool success = reload_resource(res);
+            if (!success) {
+                tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to reload runtime resource in collection");
+            }
+        }
+    }
+}
+
+bool Resources::reload_resource(const std::shared_ptr<Resource>& resource) const {
+    const bool success = resource->reload();
+    if (!success) {
+        tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to reload resource");
+        return false;
+    }
+    resource->loaded = true;
+    return true;
+}
+
+bool Resources::reload_resource(const std::shared_ptr<FileResource>& resource) const {
+    const bool success = resource->reload();
+    if (!success) {
+        tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to reload resource: {}", resource->file_location);
+        return false;
+    }
+    resource->loaded = true;
+    resource->last_modified_time = IO::get_file_last_modified_time(resource->file_location);
+    return true;
+}
 
 void Resources::ResourceCollection::push_back(const std::shared_ptr<Resource>& resource) { runtime_resources.push_back(resource); }
 

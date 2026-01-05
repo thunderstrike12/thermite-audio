@@ -141,4 +141,14 @@ bool IO::create_directories(const std::filesystem::path& absolute) {
     return true;
 }
 
+TimeStamp IO::get_file_last_modified_time(const FileLocation& file_location) {
+    const std::filesystem::path& absolute = file_location.get_absolute_path();
+    try {
+        return std::filesystem::last_write_time(absolute);
+    } catch (const std::exception& exception) {
+        tmt::Log::error(tmt::Log::Scope::ENGINE, "Exception when getting last modified time for file: {}\nreason: {}", absolute.string(), exception.what());
+        return TimeStamp::min();
+    }
+}
+
 }  // namespace tmt
