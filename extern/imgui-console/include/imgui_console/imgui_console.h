@@ -86,7 +86,11 @@ class ImGuiConsole {
     std::array<ImVec4, COL_COUNT> m_ColorPalette;  //!< Container for all available colors
 
     // ImGui Console Window.
-
+    bool m_IsSelecting = false;
+    ImVec2 m_SelectionStart;
+    ImVec2 m_SelectionEnd;
+    int m_SelectionStartIndex = -1;
+    int m_SelectionEndIndex = -1;
     static int InputCallback(ImGuiInputTextCallbackData* data);  //!< Console input callback
     bool m_WasPrevFrameTabCompletion = false;                    //!< Flag to determine if previous input was a tab completion
     std::vector<std::string> m_CmdSuggestions;                   //!< Holds command suggestions from partial completion
