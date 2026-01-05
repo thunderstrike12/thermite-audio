@@ -28,6 +28,18 @@ struct Delete {};
 template <typename T>
 concept System = std::is_base_of_v<ISystem, T>;
 
+template <typename T, typename = void>
+struct EcsComponentTraits {
+    static T& add(Registry& registry, Entity entity) { return registry.emplace<T>(entity); }
+    static void remove(Registry& registry, Entity entity) { registry.remove<T>(entity); }
+    static T& get(Registry& registry, Entity entity) { return registry.get<T>(entity); }
+    static const T& get(const Registry& registry, Entity entity) { return registry.get<T>(entity); }
+    static bool has(const Registry& registry, Entity entity) { return registry.all_of<T>(entity); }
+    static T& add_or_get(Registry& registry, Entity entity) { return registry.get_or_emplace<T>(entity); }
+    static T* try_get(Registry& registry, Entity entity) { return registry.try_get<T>(entity); }
+    static const T* try_get(const Registry& registry, Entity entity) { return registry.try_get<T>(entity); }
+};
+
 class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, public OnGameEnd, public OnEndFrame {
    public:
     Ecs() = default;
@@ -53,7 +65,7 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
     template <typename... Component>
     Entity create_entity(const std::string& name = "", const Entity hint = entt::null) {
         Entity entity = create_entity(name, hint);
-        (registry.emplace<Component>(entity), ...);
+        (add_component<Component>(entity), ...);
         return entity;
     }
 
@@ -61,7 +73,7 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
     template <typename... Component>
     Entity create_empty_entity(const Entity hint = entt::null) {
         Entity entity = create_empty_entity(hint);
-        (registry.emplace<Component>(entity), ...);
+        (add_component<Component>(entity), ...);
         return entity;
     }
 
@@ -70,16 +82,21 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
     decltype(auto) add_component(Entity entity) {
         constexpr size_t COUNT = sizeof...(Component);
         if constexpr (COUNT == 1) {
-            return registry.emplace<Component...>(entity);
+            return EcsComponentTraits<Component...>::add(registry, entity);
         } else {
-            return std::make_tuple(registry.emplace<Component>(entity)...);
+            return std::make_tuple(add_component<Component>(entity)...);
         }
     }
 
     /* Single + Multiple remove */
     template <typename... Component>
     void remove_component(Entity entity) {
-        (registry.remove<Component>(entity), ...);
+        constexpr size_t COUNT = sizeof...(Component);
+        if constexpr (COUNT == 1) {
+            EcsComponentTraits<Component...>::remove(registry, entity);
+        } else {
+            (remove_component<Component>(entity), ...);
+        }
     }
 
     /* Single + Multiple get, mutable */
@@ -87,9 +104,9 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
     decltype(auto) get_component(const Entity entity) {
         constexpr size_t COUNT = sizeof...(Component);
         if constexpr (COUNT == 1) {
-            return registry.get<Component...>(entity);
+            return EcsComponentTraits<Component...>::get(registry, entity);
         } else {
-            return std::make_tuple(registry.get<Component>(entity)...);
+            return std::make_tuple(get_component<Component>(entity)...);
         }
     }
 
@@ -98,24 +115,29 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
     decltype(auto) get_component(const Entity entity) const {
         constexpr size_t COUNT = sizeof...(Component);
         if constexpr (COUNT == 1) {
-            return registry.get<Component...>(entity);
+            return EcsComponentTraits<Component...>::get(registry, entity);
         } else {
-            return std::make_tuple(registry.get<Component>(entity)...);
+            return std::make_tuple(get_component<Component>(entity)...);
         }
     }
 
     template <typename... Component>
     bool has_component(const Entity entity) const {
-        return registry.all_of<Component...>(entity);
+        constexpr size_t COUNT = sizeof...(Component);
+        if constexpr (COUNT == 1) {
+            return EcsComponentTraits<Component...>::has(registry, entity);
+        } else {
+            return (has_component<Component>(entity) && ...);
+        }
     }
 
     template <typename... Component>
     decltype(auto) add_or_get_component(const Entity entity) {
         constexpr size_t COUNT = sizeof...(Component);
         if constexpr (COUNT == 1) {
-            return registry.emplace_or_replace<Component...>(entity);
+            return EcsComponentTraits<Component...>::add_or_get(registry, entity);
         } else {
-            return std::make_tuple(registry.emplace_or_replace<Component>(entity)...);
+            return std::make_tuple(add_or_get_component<Component>(entity)...);
         }
     }
 
@@ -126,7 +148,7 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
         if constexpr (COUNT == 1) {
             return registry.try_get<Component...>(entity);
         } else {
-            return std::make_tuple(registry.try_get<Component>(entity)...);
+            return std::make_tuple(try_get_component<Component>(entity)...);
         }
     }
 
@@ -137,7 +159,7 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
         if constexpr (COUNT == 1) {
             return registry.try_get<Component...>(entity);
         } else {
-            return std::make_tuple(registry.try_get<Component>(entity)...);
+            return std::make_tuple(try_get_component<Component>(entity)...);
         }
     }
 

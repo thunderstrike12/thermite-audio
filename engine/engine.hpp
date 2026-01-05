@@ -17,6 +17,7 @@ class Resources;
 class Audio;
 class Salvo;
 class Scenes;
+class GameComponentRegistry;
 class Polyline;
 
 class Engine {
@@ -56,6 +57,7 @@ class Engine {
     Resources& resources;
     Salvo& salvo;
     Scenes& scenes;
+    GameComponentRegistry& component_registry;
     Polyline& polyline;
 
     GameController game_controller;

@@ -6,7 +6,7 @@
 #include "engine/core/components/name.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
 #include "engine/core/components/camera.hpp"
-
+#include "engine/core/components/component_collection.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"
 
 namespace tmt {
@@ -18,7 +18,8 @@ using SerializeComponents = ComponentRegistry<
 	Transform, 
 	VoxelRenderer, 
 	Camera,
-	VoxelBody
+	VoxelBody,
+	ComponentCollection
 >;
 // clang-format on
 
@@ -26,7 +27,7 @@ using SerializeComponents = ComponentRegistry<
 using InspectComponents = ComponentRegistry<
 	/* Order in which components are displayed in the editor */
 	Name, 
-	Transform, 
+	Transform,
 	VoxelRenderer, 
 	Camera,
 	VoxelBody

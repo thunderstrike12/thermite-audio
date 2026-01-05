@@ -12,7 +12,6 @@ void GameFlow::display() {
     if (engine.game_controller.is_playing()) {
         if (ImGui::Button("End")) {
             engine.game_controller.end_game();
-            engine.scenes.enqueue_scene(working_scene);
             has_ended = true;
         }
     } else {
@@ -40,6 +39,11 @@ void GameFlow::on_editor_start() {}
 void GameFlow::on_editor_update(const FrameData&) {}
 
 void GameFlow::on_editor_end() {}
+
+void GameFlow::on_game_end() {
+    if (has_ended == false) return;
+    engine.scenes.enqueue_scene(working_scene);
+}
 
 void GameFlow::on_pre_load_scene(PreLoadSceneEvent& event) {
     if (has_ended == false) return;

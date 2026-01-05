@@ -54,28 +54,6 @@ if (THERMITE_EDITOR_BUILD)
 endif()
 add_subdirectory(graphite)
 
-# IMGUI - Immediate Mode GUI
-# https://github.com/ocornut/imgui
-if (THERMITE_EDITOR_BUILD)
-    # Sources
-    target_sources(thermite-editor
-        PRIVATE "./imgui/imgui_demo.cpp"
-        PRIVATE "./imgui/imgui_draw.cpp"
-        PRIVATE "./imgui/imgui_tables.cpp"
-        PRIVATE "./imgui/imgui_widgets.cpp"
-        PRIVATE "./imgui/imgui.cpp"
-        PRIVATE "./imgui/backends/imgui_impl_sdl3.cpp"
-        PRIVATE "./imgui/backends/imgui_impl_vulkan.cpp"
-        PRIVATE "./imgui/backends/imgui_impl_win32.cpp"
-    )
-
-    # Includes
-    target_include_directories(thermite-editor
-        PRIVATE "./imgui"
-        PRIVATE "./imgui/backends"
-    )
-endif()
-
 # visit_struct - struct reflection
 # https://github.com/cbeck88/visit_struct
 add_library(visit_struct INTERFACE)
@@ -93,18 +71,18 @@ target_include_directories(JsonReflect
     ${CMAKE_CURRENT_SOURCE_DIR}/JsonReflect/extern
 )
 
+# nlohmann json - json parsing
+# https://github.com/nlohmann/json
+add_subdirectory(nlohmann_json)
+
 # ImReflect - ImGui reflection
 # https://github.com/Sven-vh/ImReflect
 add_library(ImReflect INTERFACE)
 target_include_directories(JsonReflect
     INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/ImReflect/
-    ${CMAKE_CURRENT_SOURCE_DIR}/ImReflect/extern
+    ${CMAKE_CURRENT_SOURCE_DIR}/ImReflect/imgui/imgui/misc/cpp
 )
-
-# nlohmann json - json parsing
-# https://github.com/nlohmann/json
-add_subdirectory(nlohmann_json)
 
 if (THERMITE_EDITOR_BUILD)
     # ImGUI - immediate mode gui
@@ -141,7 +119,6 @@ if (THERMITE_EDITOR_BUILD)
     target_include_directories(thermite-editor
         PRIVATE "./imguizmo"
     )
-
 endif()
 
 

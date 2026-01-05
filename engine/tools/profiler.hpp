@@ -41,6 +41,14 @@
 #define TMT_LOCKABLE(type, var) TracyLockable(type, var)
 #define TMT_LOCKABLE_N(type, var, name) TracyLockableN(type, var, name)
 
+// Runtime zone naming (use AFTER creating a zone)
+#define TMT_ZONE_NAME(text, len) ZoneName(text, len)
+#define TMT_ZONE_NAME_V(text) ZoneName(text.c_str(), text.length())
+
+#define TMT_ZONE_SCOPED_STRING(str) \
+    TMT_ZONE_SCOPED;                \
+    TMT_ZONE_NAME((str).c_str(), (str).length())
+
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4595)  // non-member operator new/delete may not be declared inline
@@ -97,5 +105,10 @@ inline void operator delete(void* ptr) noexcept {
 // Locks
 #define TMT_LOCKABLE(type, var) type var
 #define TMT_LOCKABLE_N(type, var, name) type var
+
+#define TMT_ZONE_NAME(text, len)
+#define TMT_ZONE_NAME_V(text)
+
+#define TMT_ZONE_SCOPED_STRING(str)
 
 #endif
