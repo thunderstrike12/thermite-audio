@@ -23,6 +23,7 @@
 #include "editor/windows/game_flow.hpp"
 #include "editor/windows/inspector.hpp"
 #include "editor/windows/goap_debugger.hpp"
+#include "editor/windows/goap_action_editor.hpp"
 #include "editor/windows/font_control.hpp"
 #include "editor/windows/audio_mixer.hpp"
 #include "editor/windows/profiler_tracy.hpp"
@@ -53,6 +54,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     windows.add<Viewport>();
     windows.add<Profiler>();
     windows.add<GoapDebugger>();
+    windows.add<GoapActionEditor>();
     windows.add<FontControl>();
     windows.add<AudioMixer>();
     windows.add<ScenesWindow>();

@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/systems/ai/goap/components/goap_action.hpp"
+#include "engine/systems/ai/goap/components/goap_action_registry.hpp"
 
 namespace tmt {
 
@@ -16,15 +17,16 @@ class KillPlayer : public GoapAction {
         cost = 2.f;
     }
 
-    const char* get_name() const override { return "KillPlayer"; }
+    std::string get_id() const override { return "KillPlayer"; };
 
-    void on_start(Entity /*agent*/, Registry& /*ecs*/) override {}
+    float time_killing = 0.f;
+    float kill_duration = 0.5f;  // seconds
 
-    bool is_done(Entity /*agent*/, Registry& /*ecs*/) const override {
-        return true;  // Done instantly for testing purposes
-    }
+    void on_start(Entity /*agent*/, Registry& /*ecs*/) override { time_killing = 0.f; }
 
-    void on_tick(Entity /*agent*/, Registry& /*ecs*/, float /*dt*/) override {}
+    void on_tick(Entity /*agent*/, Registry& /*ecs*/, float dt) override { time_killing += dt; }
+
+    bool is_done(Entity /*agent*/, Registry& /*ecs*/) const override { return time_killing >= kill_duration; }
 
     void on_finished(Entity /*agent*/, Registry& /*ecs*/) override {}
 

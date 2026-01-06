@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/systems/ai/goap/components/goap_action.hpp"
+#include "engine/systems/ai/goap/components/goap_action_registry.hpp"
 #include <cstdlib>
 
 namespace tmt {
@@ -14,7 +15,7 @@ class PatrolArea : public GoapAction {
         cost = 1.f;
     }
 
-    const char* get_name() const override { return "PatrolArea"; }
+    std::string get_id() const override { return "PatrolArea"; };
 
     void on_start(Entity /*agent*/, Registry& /*ecs*/) override { timer = 0.f; }
 

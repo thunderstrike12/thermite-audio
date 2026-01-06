@@ -1,6 +1,7 @@
 #pragma once
 // #include "engine/core/ecs.hpp"
 #include "engine/systems/ai/goap/components/goap_action.hpp"
+#include "engine/systems/ai/goap/components/goap_action_registry.hpp"
 
 namespace tmt {
 
@@ -12,11 +13,10 @@ class ChasePlayer : public GoapAction {
         effects["player_in_range"] = true;
         cost = 4.f;
     }
+    std::string get_id() const override { return "ChasePlayer"; };
 
     float time_chasing = 0.f;
     float chase_duration = 1.f;  // seconds
-
-    const char* get_name() const override { return "ChasePlayer"; }
 
     void on_start(Entity /*agent*/, Registry& /*ecs*/) override { time_chasing = 0.f; }
 

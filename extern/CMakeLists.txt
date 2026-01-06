@@ -119,6 +119,19 @@ if (THERMITE_EDITOR_BUILD)
     target_include_directories(thermite-editor
         PRIVATE "./imguizmo"
     )
+
+    # imgui-node-editor - nice looking node editor for imgui
+    # https://github.com/LAK132/imgui-node-editor (updated fork)
+    target_sources(thermite-editor
+        PRIVATE "./imgui-node-editor/imgui_node_editor.cpp"
+        PRIVATE "./imgui-node-editor/imgui_node_editor_api.cpp"
+        PRIVATE "./imgui-node-editor/imgui_canvas.cpp"
+        PRIVATE "./imgui-node-editor/crude_json.cpp"
+    )
+    target_include_directories(thermite-editor
+        PRIVATE "./imgui-node-editor"
+    )
+
 endif()
 
 

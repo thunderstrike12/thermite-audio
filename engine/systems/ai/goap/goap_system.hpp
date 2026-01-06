@@ -3,6 +3,8 @@
 #include "components/goap_goal.hpp"
 #include "components/world_state.hpp"
 #include "components/goap_agent.hpp"
+#include "components/goap_action_editor_data.hpp"
+#include "components/goap_action_overrides.hpp"
 
 /**
  * Class Goap
@@ -55,5 +57,20 @@ class Goap : public ISystem {
     // Set to true if you want more logging to see whats happening internally
     bool show_logging = false;
 };
+
+/**
+ * Helper struct for live edits in the editor, actions keep their origiona values,
+ * and only this takes care of the updates.
+ */
+struct EffectiveGoapAction {
+    float cost;
+    std::unordered_map<std::string, bool> preconditions;
+    std::unordered_map<std::string, bool> effects;
+};
+
+/**
+ * Build an effective action that merges base GoapAction with editor overrides.
+ */
+EffectiveGoapAction build_effective_action(const GoapAction& base, const GoapActionEditorData* override);
 
 }  // namespace tmt

@@ -22,7 +22,10 @@ namespace tmt {
 
 struct GoapAgent {
     // Owned actions available to this agent.
-    std::vector<std::unique_ptr<GoapAction>> actions;
+    std::vector<GoapAction*> available_actions;
+
+    // Decleration of what actions this agent supports.
+    std::vector<std::string> action_set;
 
     // Currently executing action (nullptr if idle).
     GoapAction* current_action = nullptr;

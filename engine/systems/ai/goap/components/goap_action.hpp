@@ -23,6 +23,8 @@ class GoapAction {
     GoapAction() = default;
     virtual ~GoapAction() = default;
 
+    virtual std::string get_id() const = 0;
+
     // These are used by the planner
     std::unordered_map<std::string, bool> preconditions;
     std::unordered_map<std::string, bool> effects;
@@ -32,7 +34,7 @@ class GoapAction {
     bool is_running = false;
 
     // readable name
-    virtual const char* get_name() const = 0;
+    // virtual const char* get_name() const = 0;
 
     /**
      * Checks if world state satisfies the action's preconditions.
@@ -67,6 +69,17 @@ class GoapAction {
      * Called when an action is externally interrupted.
      */
     virtual void on_interrupt(Entity /*agent*/, Registry& /*ecs*/) {}
+
+    /**
+     * For an implementation of this class, add:
+     * GoapActionRegistry::instance().register_action(this);
+     * Which is in:
+     * #include "engine/systems/ai/goap/components/goap_action_registry.hpp"
+     * Use ths to register the actions for use in ImGui, registering this function
+     * will make it be able to get edited in the editor, then use the clone for the agents.
+     * Add this before creating agents:
+     * tmt::GoapActionRegistry::instance().register_action(new tmt::PatrolArea());
+     */
 };
 
 }  // namespace tmt

@@ -30,3 +30,6 @@
 [submodule "extern/ImReflect"]
 	path = extern/ImReflect
 	url = https://github.com/Sven-vh/ImReflect
+[submodule "extern/imgui-node-editor"]
+	path = extern/imgui-node-editor
+	url = https://github.com/littlemine/imgui-node-editor
