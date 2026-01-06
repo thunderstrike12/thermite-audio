@@ -34,6 +34,12 @@ class Application : public IGameEvents {
     virtual ~Application() = default;
 
     const ApplicationSpecs specs;
+
+    /* [Optional] */
+    virtual void on_start() override {};
+    virtual void on_update(const tmt::FrameData& time) override {};
+    virtual void on_end() override {};
+    virtual void on_fixed_update(const tmt::FrameData& time) override {};
 };
 
 }  // namespace tmt

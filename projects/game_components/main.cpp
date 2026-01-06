@@ -120,7 +120,7 @@ void DragonScene::on_end() {}
 void MoveUp::start() { printf("MoveUp component started on entity %u\n", entity); }
 
 void MoveUp::update(const tmt::FrameData&) {
-    const float elapsed_time = tmt::engine.get_elapsed_time();
+    const float elapsed_time = tmt::engine.frame_data().elapsed_time;
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
     auto position = transform.get_local_position();
     position.y = std::sin(elapsed_time * speed);
@@ -130,7 +130,7 @@ void MoveUp::update(const tmt::FrameData&) {
 void MoveUp::end() { printf("MoveUp component ended on entity %u\n", entity); }
 
 void MoveSide::update(const tmt::FrameData&) {
-    const float elapsed_time = tmt::engine.get_elapsed_time();
+    const float elapsed_time = tmt::engine.frame_data().elapsed_time;
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
     auto position = transform.get_local_position();
     position.x = std::sin(elapsed_time * speed);
@@ -138,7 +138,7 @@ void MoveSide::update(const tmt::FrameData&) {
 }
 
 void MoveForward::update(const tmt::FrameData&) {
-    const float elapsed_time = tmt::engine.get_elapsed_time();
+    const float elapsed_time = tmt::engine.frame_data().elapsed_time;
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
     auto position = transform.get_local_position();
     position.z = std::cos(elapsed_time * speed);

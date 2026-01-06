@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/application.hpp"
-#include "core/timer.hpp"
 
 #include "engine/core/game_controller.hpp"
 
@@ -66,15 +65,13 @@ class Engine {
         constexpr static float FIXED_TIME_STEP = 1.0f / 60.0f;
     };
 
-    uint64_t get_frame_count() const { return frame_count; }
-    float get_elapsed_time() const { return timer.elapsed(); }
+    const FrameData& frame_data() const;
 
     bool get_is_running() const;
     void set_is_running(bool value);
 
    private:
-    Timer timer;
-    uint64_t frame_count = 0;
+    FrameData current_frame_data {};
     bool is_running {true};
     std::unique_ptr<Application> app;
 

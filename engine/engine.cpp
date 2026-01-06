@@ -10,7 +10,6 @@
 #include "core/audio.hpp"
 #include "core/ecs.hpp"
 #include "core/scenes.hpp"
-#include "core/timer.hpp"
 #include "core/polyline.hpp"
 
 #include "core/renderer/renderer.hpp"
@@ -29,9 +28,7 @@
 #include "core/salvo.hpp"
 #include "core/input/input_map.hpp"
 #include "tools/profiler.hpp"
-
-bool tmt::Engine::get_is_running() const { return is_running; }
-void tmt::Engine::set_is_running(bool value) { is_running = value; }
+#include "tools/timer.hpp"
 
 /* Singleton */
 tmt::Engine tmt::engine;
@@ -89,9 +86,10 @@ void Engine::init(std::unique_ptr<Application> user_app) {
 // Example stuff
 void Engine::run() {
     scenes.update(); /* Initial scene load if needed */
-    timer.reset();
 
+    Timer timer;
     float accumulator = 0.0f;
+    size_t frame_count = 0;
     while (is_running) {
         TMT_ZONE_SCOPED_N("Frame");
 
@@ -116,20 +114,24 @@ void Engine::run() {
             game_controller.should_resume_game = false;
         }
 
-        const FrameData frame_data = {.delta_time = timer.tick()};
+        current_frame_data = {
+            .frame_number = frame_count,
+            .delta_time = timer.tick(),
+            .elapsed_time = timer.elapsed(),
+        };
 
-        input.update(frame_data);
+        input.update(current_frame_data);
 
-        const bool should_update = game_controller.is_playing() && !game_controller.is_paused();
+        const bool should_update = game_controller.is_running();
         /* Update */
         if (should_update) {
-            update_game(frame_data);
+            update_game(current_frame_data);
         }
-        update_engine(frame_data);
+        update_engine(current_frame_data);
 
         audio.update();
 
-        accumulator += frame_data.delta_time;
+        accumulator += current_frame_data.delta_time;
         while (accumulator >= Config::FIXED_TIME_STEP) {
             accumulator -= Config::FIXED_TIME_STEP;
 
@@ -137,9 +139,9 @@ void Engine::run() {
 
             /* Fixed Update */
             if (should_update) {
-                fixed_update_game(frame_data);
+                fixed_update_game(current_frame_data);
             }
-            fixed_update_engine(frame_data);
+            fixed_update_engine(current_frame_data);
         }
 
         OnEndFrame::dispatch();
@@ -225,6 +227,12 @@ void Engine::end_game() {
     OnSceneEnd::dispatch();
     OnGameEnd::dispatch();
 }
+
+const FrameData& tmt::Engine::frame_data() const { return current_frame_data; }
+
+bool tmt::Engine::get_is_running() const { return is_running; }
+
+void tmt::Engine::set_is_running(bool value) { is_running = value; }
 
 }  // namespace tmt
 

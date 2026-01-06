@@ -13,6 +13,12 @@ class SceneBase : public IGameEvents {
     virtual ~SceneBase() = default;
 
     /* [Optional] */
+    virtual void on_start() override {};
+    virtual void on_update(const tmt::FrameData& time) override {};
+    virtual void on_end() override {};
+    virtual void on_fixed_update(const tmt::FrameData& time) override {};
+
+    /* [Optional] */
     /* Gets called before deserialization */
     virtual void on_pre_load() {};
     /* Gets called after deserialization */
