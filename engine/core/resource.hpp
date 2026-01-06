@@ -1,4 +1,6 @@
 #pragma once
+#include <set>
+
 #include "engine/core/io.hpp"
 #include "engine/core/reflection.hpp"
 
@@ -52,6 +54,8 @@ class RuntimeResource : public Resource {
     using is_runtime_resource = std::true_type;
 
     virtual ~RuntimeResource() = default;
+
+    inline static const std::set<std::string_view>& SUPPORTED_FILE_EXTENSIONS {T::SUPPORTED_FILE_EXTENSIONS};  // NOLINT(readability-identifier-naming)
 
     const std::shared_ptr<T> file_resource;
 

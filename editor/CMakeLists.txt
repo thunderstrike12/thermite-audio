@@ -28,6 +28,9 @@ target_include_directories(thermite-editor
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+# Add project compile definitions
+target_compile_definitions(thermite-editor PRIVATE "IMGUI_DEFINE_MATH_OPERATORS")
+
 # Add the precompiled header
 target_precompile_headers(thermite-editor PRIVATE "shared/pch.hpp")
 

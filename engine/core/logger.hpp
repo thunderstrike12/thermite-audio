@@ -25,6 +25,7 @@ class Log {
         loggers[Scope::ENGINE] = spdlog::stdout_color_mt("Engine");
         loggers[Scope::GAME] = spdlog::stdout_color_mt("Game");
         loggers[Scope::RENDERER] = spdlog::stdout_color_mt("Renderer");
+        loggers[Scope::EDITOR] = spdlog::stdout_color_mt("Editor");
         loggers[Scope::GLOBAL] = spdlog::stdout_color_mt("Global");
 
         std::shared_ptr<spdlog::sinks::basic_file_sink_mt> file_sink = nullptr;
@@ -46,6 +47,7 @@ class Log {
         ENGINE,
         RENDERER,
         GAME,
+        EDITOR,
         GLOBAL,
     };
 

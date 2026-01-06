@@ -39,6 +39,8 @@ class TextFile : public tmt::FileResource {
     }
     void unload() override {}
 
+    inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS {".txt"};
+
     std::string original_content;
 };
 
