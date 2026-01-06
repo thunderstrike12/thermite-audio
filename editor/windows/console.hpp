@@ -61,9 +61,9 @@ class Console : public IWindow {
     void on_editor_update(const tmt::FrameData& time) override;
     void on_editor_end() override;
 
-    template <typename Func>
-    void register_command(const std::string& name, const std::string& description, Func&& callback) {
-        console.System().RegisterCommand(name, description, std::forward<Func>(callback));
+    template <typename Func, typename... Args>
+    void register_command(const std::string& name, const std::string& description, Func&& callback, Args&&... args) {
+        console.System().RegisterCommand(name, description, std::forward<Func>(callback), std::forward<Args>(args)...);
     }
 
     template <typename T>
@@ -71,7 +71,10 @@ class Console : public IWindow {
         console.System().RegisterVariable(name, variable);
     }
 
+    void register_script(const std::string& name, const std::string& filepath) { console.System().RegisterScript(name, filepath); }
+
    private:
+    void register_commands();
     ImGuiConsole console;
     std::shared_ptr<ConsoleSink_st> sink;
 };

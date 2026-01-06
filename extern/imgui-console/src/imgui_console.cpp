@@ -8,51 +8,11 @@
 #include "imgui_internal.h"
 #include <cstring>
 #include <misc/cpp/imgui_stdlib.h>
-//
-//// The following three functions (InputTextCallback_UserData, InputTextCallback, InputText) are obtained from misc/cpp/imgui_stdlib.h
-//// Which are licensed under MIT License (https://github.com/ocornut/imgui/blob/master/LICENSE.txt)
-// namespace ImGui
-//{
-//     struct InputTextCallback_UserData
-//     {
-//         std::string *Str;
-//         ImGuiInputTextCallback ChainCallback;
-//         void *ChainCallbackUserData;
-//     };
-//
-//     static int InputTextCallback(ImGuiInputTextCallbackData *data)
-//     {
-//         auto *user_data = (InputTextCallback_UserData *) data->UserData;
-//         if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
-//         {
-//             // Resize string callback
-//             // If for some reason we refuse the new length (BufTextLen) and/or capacity (BufSize) we need to set them back to what we want.
-//             std::string *str = user_data->Str;
-//             IM_ASSERT(data->Buf == str->c_str());
-//             str->resize(data->BufTextLen);
-//             data->Buf = (char *) str->c_str();
-//         }
-//         else if (user_data->ChainCallback)
-//         {
-//             // Forward to user callback, if any
-//             data->UserData = user_data->ChainCallbackUserData;
-//             return user_data->ChainCallback(data);
-//         }
-//         return 0;
-//     }
-//
-//     bool InputText(const char *label, std::string *str, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void *user_data)
-//     {
-//         IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
-//         flags |= ImGuiInputTextFlags_CallbackResize;
-//
-//         InputTextCallback_UserData cb_user_data;
-//         cb_user_data.Str = str;
-//         cb_user_data.ChainCallback = callback;
-//         cb_user_data.ChainCallbackUserData = user_data;
-//         return InputText(label, (char *) str->c_str(), str->capacity() + 1, flags, InputTextCallback, &cb_user_data);
-//     }
-// }
+// fonts icons
+
+#define ICON_FA_TRIANGLE_EXCLAMATION "\xef\x81\xb1"
+#define ICON_FA_CIRCLE_XMARK "\xef\x81\x97"
+#define ICON_FA_CIRCLE_INFO "\xef\x81\x9a"
 
 ImGuiConsole::ImGuiConsole(std::string c_name, size_t inputBufferSize) : m_ConsoleName(std::move(c_name)) {
     // Set input buffer size.
@@ -127,6 +87,12 @@ void ImGuiConsole::DefaultSettings() {
     m_FilterBar = true;
     m_TimeStamps = true;
 
+    m_ShowCommand = true;
+    m_ShowLog = true;
+    m_ShowWarning = true;
+    m_ShowError = true;
+    m_ShowInfo = true;
+
     // Style
     m_WindowAlpha = 1;
     m_ColorPalette[COL_COMMAND] = ImVec4(1.f, 1.f, 1.f, 1.f);
@@ -166,8 +132,76 @@ void ImGuiConsole::RegisterConsoleCommands() {
 }
 
 void ImGuiConsole::FilterBar() {
+    DrawLogTypeButtons();
+
+    ImGui::SameLine();
+    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+    ImGui::SameLine();
+
     m_TextFilter.Draw("Filter", ImGui::GetWindowWidth() * 0.25f);
     ImGui::Separator();
+}
+
+void ImGuiConsole::DrawLogTypeButtons() {
+    auto ToggleButton = [this](const char* icon, const char* tooltip, bool* enabled, ImVec4 color, int count) {
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+
+        if (*enabled) {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(color.x, color.y, color.z, 0.6f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(color.x, color.y, color.z, 0.8f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(color.x, color.y, color.z, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+        } else {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.3f, 0.4f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.4f, 0.4f, 0.5f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5f, 0.5f, 0.5f, 0.6f));
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+        }
+
+        char buf[64];
+        snprintf(buf, sizeof(buf), "%s %d", icon, count);
+        if (ImGui::Button(buf)) {
+            *enabled = !*enabled;
+        }
+
+        // Tooltip on hover
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("%s (%d)", tooltip, count);
+            ImGui::EndTooltip();
+        }
+
+        ImGui::PopStyleColor(4);
+        ImGui::PopStyleVar();
+    };
+
+    // Count each type
+    int cmdCount = 0, logCount = 0, warnCount = 0, errCount = 0, infoCount = 0;
+    for (const auto& item : m_ConsoleSystem.Items()) {
+        switch (item.m_Type) {
+            case csys::COMMAND:
+                cmdCount++;
+                break;
+            case csys::LOG:
+                logCount++;
+                break;
+            case csys::WARNING:
+                warnCount++;
+                break;
+            case csys::ERROR:
+                errCount++;
+                break;
+            case csys::INFO:
+                infoCount++;
+                break;
+        }
+    }
+
+    ToggleButton(ICON_FA_CIRCLE_INFO, "Info", &m_ShowInfo, m_ColorPalette[COL_INFO], infoCount);
+    ImGui::SameLine();
+    ToggleButton(ICON_FA_TRIANGLE_EXCLAMATION, "Warnings", &m_ShowWarning, m_ColorPalette[COL_WARNING], warnCount);
+    ImGui::SameLine();
+    ToggleButton(ICON_FA_CIRCLE_XMARK, "Errors", &m_ShowError, m_ColorPalette[COL_ERROR], errCount);
 }
 void ImGuiConsole::LogWindow() {
     const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
@@ -189,9 +223,21 @@ void ImGuiConsole::LogWindow() {
 
         std::string selectedText;
 
+        auto PassesTypeFilter = [this](csys::ItemType type) {
+            switch (type) {
+                case csys::INFO:
+                    return m_ShowInfo;
+                case csys::WARNING:
+                    return m_ShowWarning;
+                case csys::ERROR:
+                    return m_ShowError;
+                default:
+                    return true;
+            }
+        };
         // First pass: calculate content bounds.
         for (const auto& item : m_ConsoleSystem.Items()) {
-            if (!m_TextFilter.PassFilter(item.Get().c_str())) continue;
+            if (!PassesTypeFilter(item.m_Type) || !m_TextFilter.PassFilter(item.Get().c_str())) continue;
             ImVec2 textSize = ImGui::CalcTextSize(item.Get().data());
             contentEndY += textSize.y + ImGui::GetStyle().ItemSpacing.y;
             if (item.m_Type == csys::COMMAND && count++ != 0) {
@@ -235,7 +281,7 @@ void ImGuiConsole::LogWindow() {
         // Display items.
         for (const auto& item : m_ConsoleSystem.Items()) {
             // Exit if word is filtered.
-            if (!m_TextFilter.PassFilter(item.Get().c_str())) {
+            if (!PassesTypeFilter(item.m_Type) || !m_TextFilter.PassFilter(item.Get().c_str())) {
                 itemIndex++;
                 continue;
             }
@@ -620,6 +666,8 @@ void ImGuiConsole::SettingsHandler_ReadLine(ImGuiContext* ctx, ImGuiSettingsHand
             // Window settings
             else if INI_CONSOLE_LOAD_BOOL (m_AutoScroll) else if INI_CONSOLE_LOAD_BOOL (m_ScrollToBottom) else if INI_CONSOLE_LOAD_BOOL (m_ColoredOutput) else if INI_CONSOLE_LOAD_BOOL (m_FilterBar) else if INI_CONSOLE_LOAD_BOOL (m_TimeStamps)
 
+            // Log type filters
+            else if INI_CONSOLE_LOAD_BOOL (m_ShowCommand) else if INI_CONSOLE_LOAD_BOOL (m_ShowLog) else if INI_CONSOLE_LOAD_BOOL (m_ShowWarning) else if INI_CONSOLE_LOAD_BOOL (m_ShowError) else if INI_CONSOLE_LOAD_BOOL (m_ShowInfo)
 #pragma warning(pop)
 }
 
@@ -651,7 +699,12 @@ void ImGuiConsole::SettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHand
     INI_CONSOLE_SAVE_BOOL(m_ColoredOutput);
     INI_CONSOLE_SAVE_BOOL(m_FilterBar);
     INI_CONSOLE_SAVE_BOOL(m_TimeStamps);
-
+    // Log type filters.
+    INI_CONSOLE_SAVE_BOOL(m_ShowCommand);
+    INI_CONSOLE_SAVE_BOOL(m_ShowLog);
+    INI_CONSOLE_SAVE_BOOL(m_ShowWarning);
+    INI_CONSOLE_SAVE_BOOL(m_ShowError);
+    INI_CONSOLE_SAVE_BOOL(m_ShowInfo);
     // Window style/visuals
     INI_CONSOLE_SAVE_FLOAT(m_WindowAlpha);
     INI_CONSOLE_SAVE_COLOR(COL_COMMAND);

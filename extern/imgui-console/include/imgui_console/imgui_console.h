@@ -62,6 +62,7 @@ class ImGuiConsole {
     void FilterBar();  //!< Console filter bar
     void InputBar();   //!< Console input bar
     void LogWindow();  //!< Console log
+    void DrawLogTypeButtons();
 
     static void HelpMaker(const char* desc);
 
@@ -86,6 +87,12 @@ class ImGuiConsole {
     std::array<ImVec4, COL_COUNT> m_ColorPalette;  //!< Container for all available colors
 
     // ImGui Console Window.
+    bool m_ShowCommand = true;
+    bool m_ShowLog = true;
+    bool m_ShowWarning = true;
+    bool m_ShowError = true;
+    bool m_ShowInfo = true;
+
     bool m_IsSelecting = false;
     ImVec2 m_SelectionStart;
     ImVec2 m_SelectionEnd;
