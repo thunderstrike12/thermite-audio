@@ -216,15 +216,15 @@ void Polyline::draw_cone(glm::vec3 origin, glm::vec3 dir, float angle, float len
 }
 
 void Polyline::draw_tube(glm::vec3 a, glm::vec3 b, float radius, uint32_t segments, float time) {
-    const glm::vec3 direction = glm::normalize(b - a);
+    const glm::vec3 dir = glm::normalize(b - a);
 
     /* Find perpendicular axes for the end circles */
     glm::vec3 ref = glm::vec3(0.0f, 1.0f, 0.0f);
-    if (glm::abs(glm::dot(direction, ref)) > 0.99f) {
+    if (glm::abs(glm::dot(dir, ref)) > 0.99f) {
         ref = glm::vec3(1.0f, 0.0f, 0.0f);
     }
-    const glm::vec3 axis_a = glm::normalize(glm::cross(direction, ref));
-    const glm::vec3 axis_b = glm::cross(direction, axis_a);
+    const glm::vec3 axis_a = glm::normalize(glm::cross(dir, ref));
+    const glm::vec3 axis_b = glm::cross(dir, axis_a);
 
     /* Draw the end circles */
     if (segments < 4u) segments = 4u;
@@ -243,7 +243,7 @@ void Polyline::draw_tube(glm::vec3 a, glm::vec3 b, float radius, uint32_t segmen
     const glm::vec3 camera_pos = engine.renderer.render_view.gpu_view.origin;
     const glm::vec3 to_camera = glm::normalize(camera_pos - center);
 
-    glm::vec3 perp = glm::cross(direction, to_camera);
+    glm::vec3 perp = glm::cross(dir, to_camera);
     if (glm::length2(perp) < 0.0001f) {
         perp = axis_a;
     } else {
@@ -252,6 +252,37 @@ void Polyline::draw_tube(glm::vec3 a, glm::vec3 b, float radius, uint32_t segmen
 
     draw_line(a + perp * radius, b + perp * radius, time);
     draw_line(a - perp * radius, b - perp * radius, time);
+}
+
+void Polyline::draw_bone(glm::vec3 origin, glm::quat rot, float length, float time) {
+    if (length < 0.0001f) return;
+
+    /* Mid-point and width inferred from dir and length */
+    const glm::vec3 dir = rot * glm::vec3(0, 1, 0);
+    const glm::vec3 mid = origin + dir * length * 0.125f;
+    const float width = length * 0.125f;
+    const glm::vec3 b = origin + dir * length;
+
+    /* Get the four corner points of the bone */
+    const glm::vec3 rot_a = rot * glm::vec3(1, 0, 0) * width;
+    const glm::vec3 rot_b = rot * glm::vec3(0, 0, 1) * width;
+    const glm::vec3 points[4] = {mid + rot_a, mid + rot_b, mid - rot_a, mid - rot_b};
+    const glm::vec3 to_cam = glm::normalize(glm::vec3(engine.renderer.render_view.gpu_view.origin) - mid);
+
+    /* Draw each of the bone edges (only if they would be visible if it was solid) */
+    for (int i = 0; i < 4; ++i) {
+        const int n = (i + 1) & 3;
+        const int pr = (i + 3) & 3;
+
+        const bool front_i = glm::dot(glm::cross(points[i] - origin, points[n] - origin), to_cam) > 0.0f;
+        const bool front_pr = glm::dot(glm::cross(points[pr] - origin, points[i] - origin), to_cam) > 0.0f;
+        const bool back_i = glm::dot(glm::cross(points[n] - b, points[i] - b), to_cam) > 0.0f;
+        const bool back_pr = glm::dot(glm::cross(points[i] - b, points[pr] - b), to_cam) > 0.0f;
+
+        if (front_i || front_pr) draw_line(origin, points[i], time);
+        if (back_i || back_pr) draw_line(points[i], b, time);
+        if (front_i || back_i) draw_line(points[i], points[n], time);
+    }
 }
 
 }  // namespace tmt

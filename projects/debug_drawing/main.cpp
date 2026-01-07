@@ -48,7 +48,7 @@ void DebugDrawing::on_update(const tmt::FrameData& time) {
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(voxel);
 
     /* Lines */
-    tmt::engine.polyline.use_line_width(0.25f);
+    tmt::engine.polyline.use_line_width(0.15f);
     tmt::engine.polyline.use_color(1.0f, 0.3f, 0.3f);
     tmt::engine.polyline.draw_line({0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
     tmt::engine.polyline.use_color(0.3f, 1.0f, 0.3f);
@@ -66,7 +66,7 @@ void DebugDrawing::on_update(const tmt::FrameData& time) {
     tmt::engine.polyline.draw_arrow({3.25f, 0.0f, 0.5f}, {0.0f, 1.0f, 0.0f}, 1.0f);
 
     /* AABB */
-    tmt::engine.polyline.use_line_width(0.25f);
+    tmt::engine.polyline.use_line_width(0.15f);
     tmt::engine.polyline.use_color(1.0f, 0.3f, 0.3f);
     tmt::engine.polyline.draw_aabb({4.0f, 0.0f, 0.0f}, {5.0f, 1.0f, 1.0f});
 
@@ -85,6 +85,15 @@ void DebugDrawing::on_update(const tmt::FrameData& time) {
     /* Tube */
     tmt::engine.polyline.use_color(0.9f, 0.9f, 0.9f);
     tmt::engine.polyline.draw_tube({10.0f, 0.5f, 0.0f}, {10.0f, 0.5f, 1.0f}, 0.1f, 32);
+
+    /* Bones */
+    tmt::engine.polyline.use_line_width(0.15f);
+    tmt::engine.polyline.use_color(0.9f, 0.9f, 0.9f);
+    tmt::engine.polyline.draw_bone({11.0f, 0.5f, 0.5f}, glm::angleAxis(0.0f, glm::vec3(1.0f, 0.0f, 0.0f)), 1.0f);
+    tmt::engine.polyline.use_color(1.0f, 0.3f, 0.3f);
+    tmt::engine.polyline.draw_bone({11.0f, 1.5f, 0.5f}, glm::angleAxis(1.1f, glm::vec3(0.0f, 0.0f, 1.0f)), 1.5f);
+    tmt::engine.polyline.use_color(0.3f, 0.3f, 1.0f);
+    tmt::engine.polyline.draw_bone({11.0f, 1.5f, 0.5f}, glm::angleAxis(-0.8f, glm::vec3(0.0f, 0.0f, 1.0f)), 1.0f);
 }
 
 void DebugDrawing::on_end() {}
