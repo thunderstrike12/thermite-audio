@@ -103,6 +103,9 @@ inline RawVoxels gather_voxels(const vengi::Node* file_node) {
     voxels.h = region.height();
     voxels.d = region.depth();
 
+    /* Safety check */
+    assert(voxels.w <= 1024u && voxels.h <= 1024u && voxels.d <= 1024u && "models cannot be larger than 1024 on any axis.");
+
     /* Gather all voxels from the file node */
     voxels.materials.resize(voxels.w * voxels.h * voxels.d);
     voxels.physics_data.resize(voxels.w * voxels.h * voxels.d);

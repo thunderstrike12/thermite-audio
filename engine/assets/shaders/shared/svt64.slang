@@ -7,6 +7,7 @@ import material;
 public struct Svt64Hit {
     public float3 point;
     public uint voxel_index;
+    public uint face_index;
     public uint steps;
 
     /* Returns true if this was a miss. */
@@ -24,23 +25,17 @@ public struct Svt64Node {
     /* Absolute offset into an array of child nodes / voxels. */
     [ForceInline] uint abs_ptr() { return child_ptr & 0x7FFFFFFFu; };
 
+    /* Get the 64 bit child mask by combining the low and high unit of the child mask. */
+    [ForceInline] uint64_t child_mask() { return child_mask_hi | (uint64_t)child_mask_lo << 32; };
+
     /* Is a given child node index active? */
     [ForceInline] bool child_active(uint child_index) {
-        if (child_index < 32u) {
-            return (child_mask_hi >> child_index & 1u) != 0u;
-        } else {
-            return (child_mask_lo >> (child_index - 32u) & 1u) != 0u;
-        }
+        return (child_mask() >> child_index & 1u) != 0u;
     }
 
     /* Can we perform a coalesced skip? */
     [ForceInline] bool child_coalesced_skip(uint child_index) {
-        child_index = child_index & 0b101010;
-        if (child_index < 32u) {
-            return (child_mask_hi >> child_index & 0x00330033u) == 0u;
-        } else {
-            return (child_mask_lo >> (child_index - 32u) & 0x00330033u) == 0u;
-        }
+        return (child_mask() >> (child_index & 0b101010) & 0x00330033u) == 0u;
     }
 };
 
@@ -74,19 +69,27 @@ public struct Svt64Node {
 }
 
 /* Count number of set bits in variable range [0..width] */
-[ForceInline] uint popcnt_var64(uint mask_lo, uint mask_hi, uint width) {
-    uint count = 0u, himask = mask_hi;
-    if (width >= 32u) {
-        count = countbits(himask);
-        himask = mask_lo;
-    }
-    const uint m = 1u << (width & 31u);
-    count += countbits(himask & (m - 1u));
-    return count;
+[ForceInline] uint popcnt_var64(uint64_t mask, uint width) {
+    return countbits(mask & ((1ull << width) - 1));
+}
+
+/* Get the index of the voxel at a given position and traversal scale. */
+[ForceInline] uint voxel_index(float3 pos, int scale_exp) {
+    const uint inv_scale = (1u << (23 - scale_exp)) - 1u;
+    const uint3 voxel_pos = inv_scale - (~asuint(pos) >> scale_exp & 0b1111111111u);
+    return voxel_pos.x | (voxel_pos.y << 10) | (voxel_pos.z << 20);
+}
+
+/* Get the face index of a voxel. */
+[ForceInline] uint face_index(float3 side_dist, float3 ray_dir) {
+    const float tmax = min3(side_dist.x, side_dist.y, side_dist.z);
+    if (side_dist.x == tmax) return ray_dir.x < 0.0f ? 0b100u : 0b000u;
+    else if (side_dist.y == tmax) return (ray_dir.y < 0.0f ? 0b100u : 0b000u) | 1u;
+    return (ray_dir.z < 0.0f ? 0b100u : 0b000u) | 2u;
 }
 
 /* Trace a ray through a SVT64. */
-public inline Svt64Hit trace_svt64<let DEBUG : bool>(
+public [ForceInline] Svt64Hit trace_svt64<let DEBUG : bool>(
     StructuredBuffer<Svt64Node> nodes,
     Ray ray
 ) {
@@ -123,7 +126,7 @@ public inline Svt64Hit trace_svt64<let DEBUG : bool>(
             gs_stack[group_id][scale_exp >> 1] = node_index;
 
             /* Fetch the child node */
-            node_index = node.abs_ptr() + popcnt_var64(node.child_mask_lo, node.child_mask_hi, child_index);
+            node_index = node.abs_ptr() + popcnt_var64(node.child_mask(), child_index);
             node = nodes[node_index];
 
             /* Decrease the scale & get the next child index */
@@ -173,10 +176,127 @@ public inline Svt64Hit trace_svt64<let DEBUG : bool>(
         hit.point = pos;
 
         /* Fetch the material of the voxel we hit */
-        const uint child_index = get_node_cell_index(pos, scale_exp);
-        const uint voxel_index = node.abs_ptr() + popcnt_var64(node.child_mask_lo, node.child_mask_hi, child_index);
-        hit.voxel_index = voxel_index;
+        hit.voxel_index = voxel_index(pos, scale_exp);
+        /* Set the face index to an invalid value if we instantly hit a voxel */
+        /* This case should be handled outside the SVT64 traversal */
+        hit.face_index = side_dist.x == 0.0f ? 3u : face_index(side_dist, ray.dir);
     }
 
     return hit;
+}
+
+/* Trace a ray through a SVT64 to check for occlusion. */
+public [ForceInline] float3 occlusion_svt64(
+    StructuredBuffer<Svt64Node> nodes,
+    Ray ray
+) {
+    const uint group_id = spirv_asm {
+        result:$$uint = OpLoad builtin(LocalInvocationIndex:uint);
+    };
+
+    /* 16x8 thread group, 11 stack slots each. */
+    static groupshared uint gs_stack[16 * 8][11];
+
+    /* Mirror ray origin for more efficient ray-octant traversal */
+    ray.origin = mirror_pos(ray.origin, ray.dir, true);
+    ray.rcp_dir = 1.0f / -abs(ray.dir);
+
+    /* Mirror coordinates to simplify cell intersections */
+    uint mirror_mask = 0x00u;
+    if (ray.dir.x > 0.0f) mirror_mask |= 3u << 0u;
+    if (ray.dir.y > 0.0f) mirror_mask |= 3u << 4u;
+    if (ray.dir.z > 0.0f) mirror_mask |= 3u << 2u;
+
+    /* Traversal state */
+    uint node_index = 0u; /* root node */
+    int scale_exp = 21;   /* 23 mantissa bits - 2 */
+    Svt64Node node = nodes[node_index];
+    float3 pos = clamp(ray.origin, 1.0f, 1.9999999f);
+    for (;;) {
+        uint child_index = get_node_cell_index(pos, scale_exp) ^ mirror_mask;
+
+        /* Descend down the tree until we find an empty node or leaf node */
+        while (node.child_active(child_index) && !node.is_leaf()) {
+            /* Push the current node on the stack (at `scale_exp / 2`) */
+            gs_stack[group_id][scale_exp >> 1] = node_index;
+
+            /* Fetch the child node */
+            node_index = node.abs_ptr() + popcnt_var64(node.child_mask(), child_index);
+            node = nodes[node_index];
+
+            /* Decrease the scale & get the next child index */
+            scale_exp -= 2;
+            child_index = get_node_cell_index(pos, scale_exp) ^ mirror_mask;
+        }
+
+        /* If this node is a leaf, check if we hit a voxel */
+        if (node.child_active(child_index) && node.is_leaf()) break;
+
+        /* Check if we can actually take a larger step based on the child mask */
+        const int sub_scale_exp = node.child_coalesced_skip(child_index) ? (scale_exp + 1) : scale_exp;
+
+        /* Compute the next position by intersecting the max cell sides */
+        const float3 cell_min = floor_scale(pos, sub_scale_exp);
+        const float3 side_dist = (cell_min - ray.origin) * ray.rcp_dir;
+        const float tmax = min(min(side_dist.x, side_dist.y), side_dist.z);
+        const int3 neighbor_max = asint(cell_min) + select(side_dist == tmax, -1, (1 << sub_scale_exp) - 1);
+        pos = min(ray.origin - abs(ray.dir) * tmax, asfloat(neighbor_max));
+
+        /* Find the first common ancestor node based on left-most carry bit */
+        const uint3 diff_pos = asuint(pos) ^ asuint(cell_min);
+        const int diff_exp = firstbithigh((diff_pos.x | diff_pos.y | diff_pos.z) & 0xFFAAAAAAu);
+
+        /* Traverse back up the tree if we need to */
+        if (diff_exp > scale_exp) {
+            /* Break if we're exiting the root node */
+            scale_exp = diff_exp;
+            if (diff_exp > 21) break;
+
+            /* Read the first common ancestor node from the stack */
+            node_index = gs_stack[group_id][scale_exp >> 1];
+            node = nodes[node_index];
+        }
+    }
+
+    /* If we hit a leaf node, return the voxel we hit */
+    if (node.is_leaf() && scale_exp <= 21) {
+        /* Find the hit position & calculate the hit distance */
+        pos = mirror_pos(pos, ray.dir, false);
+        return pos;
+    }
+
+    return float::maxValue;
+}
+
+/* Fetch the voxel index at a given voxel position in a SVT64. */
+public [ForceInline] uint fetch_svt64(
+    StructuredBuffer<Svt64Node> nodes,
+    uint root_depth, uint3 voxel
+) {
+    /* Traversal state */
+    Svt64Node node = nodes[0];
+    uint depth = root_depth - 1u;
+
+    for (;;) {
+        /* Find the local index at the current tree depth (0..4) */
+        const uint3 local_index = voxel >> (depth << 1) & 0b11u;
+        const uint child_pos = (local_index.x << 0) | (local_index.z << 2) | (local_index.y << 4);
+
+        /* Get the sparse child node / voxel pointer */
+        const uint child_ptr = node.abs_ptr() + popcnt_var64(node.child_mask(), child_pos);
+
+        if (node.child_active(child_pos) == false) {
+            return uint::maxValue; /* Voxel doesn't exist */
+        } else if (depth == 0u) {
+            /* Found the voxel, return it's absolute pointer */
+            return child_ptr;
+        }
+
+        /* Traverse further down the tree */
+        depth -= 1u;
+        node = nodes[child_ptr];
+    }
+
+    /* Unreachable code path */
+    return uint::maxValue;
 }

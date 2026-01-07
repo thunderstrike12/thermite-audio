@@ -2,6 +2,9 @@
 
 #include "const.hpp"
 
+#undef min
+#undef max
+
 namespace tmt {
 
 /* Axis Aligned Bounding Box. */

@@ -8,18 +8,23 @@ function(compile_shaders)
     set(SHADER_SOURCE_DIR ${CMAKE_SOURCE_DIR}/engine/assets/shaders)
     set(SHADER_OUTPUT_DIR ${CMAKE_SOURCE_DIR}/engine/assets/shaders/bin)
     set(SHADER_SCRIPT ${CMAKE_SOURCE_DIR}/scripts/compile_shaders.py)
-    file(GLOB SLANG_SOURCES
+    file(GLOB_RECURSE SLANG_SOURCES
         "${SHADER_SOURCE_DIR}/*.vx.slang"
         "${SHADER_SOURCE_DIR}/*.px.slang"
         "${SHADER_SOURCE_DIR}/*.cs.slang"
     )
 
     foreach(SHADER ${SLANG_SOURCES})
-        get_filename_component(BASE_NAME ${SHADER} NAME_WE)
-        get_filename_component(EXT ${SHADER} EXT)  # e.g. .vx.slang -> .slang
-        string(REPLACE ".slang" "" SHADER_STAGE ${EXT})  # produce .vx or .px
-        set(OUTPUT_SPV "${SHADER_OUTPUT_DIR}/${BASE_NAME}${SHADER_STAGE}.spv")
-        set(DEPFILE "${SHADER_OUTPUT_DIR}/${BASE_NAME}${SHADER_STAGE}.dep")
+        # Find the path relative to the shader source directory
+        # e.g. "debug/visibility.cs.slang"
+        file(RELATIVE_PATH REL_PATH ${SHADER_SOURCE_DIR} ${SHADER})
+
+        # Remove the ".slang" extension from the relative path
+        string(REPLACE ".slang" "" REL_PATH_NO_EXT ${REL_PATH})
+
+        # Output SPIR-V and dep-file paths
+        set(OUTPUT_SPV "${SHADER_OUTPUT_DIR}/${REL_PATH_NO_EXT}.spv")
+        set(DEPFILE "${SHADER_OUTPUT_DIR}/${REL_PATH_NO_EXT}.dep")
 
         set(DEPFILE_OPT)
         if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.21.0")
@@ -41,7 +46,7 @@ function(compile_shaders)
                     --depfile ${DEPFILE}
             DEPENDS ${SHADER}
             ${DEPFILE_OPT}
-            COMMENT "Compiling shader: ${BASE_NAME}${EXT}"
+            COMMENT "Compiling shader: ${REL_PATH_NO_EXT}"
             VERBATIM
         )
 

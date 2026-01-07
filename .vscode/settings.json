@@ -11,8 +11,7 @@
         "**/.git": true,
         "build": true,
         "out": true,
-        ".vs": true,
-        "**/**.spv": true
+        ".vs": true
     },
     "C_Cpp.autoAddFileAssociations": false
 }

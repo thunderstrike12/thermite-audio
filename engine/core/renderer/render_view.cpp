@@ -38,13 +38,13 @@ void RenderView::init() {
         Log::error(Log::Scope::RENDERER, "failed to initialize attachment texture.\nreason: {}", r.unwrap_err());
         return;
     } else
-        viewport_texture = r.unwrap();
+        viewport.texture = r.unwrap();
     /* Viewport Image */
-    if (const Result r = bank.create_image(viewport_texture, 0, 0, "Viewport Image"); r.is_err()) {
+    if (const Result r = bank.create_image(viewport.texture, 0, 0, "Viewport Image"); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to initialize attachment image.\nreason: {}", r.unwrap_err());
         return;
     } else
-        viewport_image = r.unwrap();
+        viewport.image = r.unwrap();
 
     /* Create the active render view buffer */
     if (const Result r = bank.create_buffer(BufferUsage::Constant | BufferUsage::TransferDst, sizeof(RenderView), 0, "Render View Buffer"); r.is_err()) {
@@ -53,23 +53,41 @@ void RenderView::init() {
     } else {
         render_view_buffer = r.unwrap();
     }
+
+    /* Create the visibility buffer */
+    const Size3D view_size {gpu_view.resolution.x, gpu_view.resolution.y};
+    vbuffer.texture = bank.create_texture(TextureUsage::Storage, TextureFormat::RG32Uint, view_size).expect("failed to create vbuffer texture.");
+    vbuffer.image = bank.create_image(vbuffer.texture).expect("failed to create vbuffer image.");
+
+    /* Create the illuminance buffer */
+    ibuffer.texture = bank.create_texture(TextureUsage::Storage, TextureFormat::RG11B10Ufloat, view_size).expect("failed to create ibuffer texture.");
+    ibuffer.image = bank.create_image(vbuffer.texture).expect("failed to create ibuffer image.");
+
+    /* Create the macrofacet buffers */
+    const uint64_t hashkey_size = sizeof(uint64_t);
+    const uint64_t hashset_size = (uint64_t)view_size.x * view_size.y;
+    macrofacet_hashset = bank.create_buffer(BufferUsage::Storage, hashset_size, hashkey_size).expect("failed to create macrofacet hashset buffer.");
+    macrofacet_shading_commands = bank.create_buffer(BufferUsage::Storage, hashset_size, hashkey_size).expect("failed to create macrofacet shading commands buffer.");
+    const uint64_t cache_element_size = hashkey_size + sizeof(uint32_t) * 2ull;
+    const uint64_t cache_size = 10'000'000u;
+    macrofacet_illuminance_cache = bank.create_buffer(BufferUsage::Storage, cache_size, cache_element_size).expect("failed to create macrofacet illuminance cache buffer.");
 }
 
 void RenderView::update() {
-    VRAMBank& bank = engine.renderer.vram_bank();
-
-    if (engine.window.resized) {
-        if (const Result r = bank.resize_render_target(render_target, engine.window.width, engine.window.height); r.is_err()) {
-            Log::error(Log::Scope::RENDERER, "failed to resize the swapchain.\nreason: {}", r.unwrap_err().c_str());
-        } else {
-            engine.window.resized = false;
-            Log::info(Log::Scope::RENDERER, "Swapchain has been resized.");
-        }
-    }
-
 #ifndef THERMITE_EDITOR
     gpu_view.resolution = glm::uvec2(engine.window.width, engine.window.height);
 #endif  // !THERMITE_EDITOR
+
+    /* Resize the render target if the window was resized */
+    if (engine.window.resized) {
+        VRAMBank& bank = engine.renderer.vram_bank();
+
+        /* Resize the render target */
+        if (const Result r = bank.resize_render_target(render_target, gpu_view.resolution.x, gpu_view.resolution.y); r.is_err()) {
+            Log::error(Log::Scope::RENDERER, "failed to resize the swapchain.\nreason: {}", r.unwrap_err().c_str());
+        }
+        engine.window.resized = false;
+    }
 }
 
 void RenderView::update_gpu_view(RenderGraph& render_graph, const Camera& camera, const Transform& transform) {
@@ -82,23 +100,36 @@ void RenderView::update_gpu_view(RenderGraph& render_graph, const Camera& camera
     gpu_view.world_to_clip = p * v;
     gpu_view.clip_to_world = glm::inverse(gpu_view.world_to_clip);
     gpu_view.origin = glm::vec4(transform.get_world_position(), 0.0f);
+    gpu_view.frame_index = frame_counter;
 
     /* Upload the active render view */
     render_graph.upload_buffer(render_view_buffer, &gpu_view, 0u, sizeof(GpuView));
+    frame_counter++; /* Update frame counter */
 }
 
 void RenderView::deinit() {
     VRAMBank& bank = engine.renderer.vram_bank();
 
+    /* Destroy macrofacet buffers */
+    bank.destroy(macrofacet_hashset);
+    bank.destroy(macrofacet_shading_commands);
+    bank.destroy(macrofacet_illuminance_cache);
+
+    /* Destroy screen buffers */
+    bank.destroy(vbuffer.image);
+    bank.destroy(vbuffer.texture);
+    bank.destroy(ibuffer.image);
+    bank.destroy(ibuffer.texture);
+    bank.destroy(viewport.texture);
+    bank.destroy(viewport.image);
+
     bank.destroy(render_view_buffer);
-    bank.destroy(viewport_texture);
-    bank.destroy(viewport_image);
     bank.destroy(render_target);
 }
 
 BindHandle RenderView::get_render_image() const {
 #ifdef THERMITE_EDITOR
-    return viewport_image;
+    return viewport.image;
 #else
     return render_target;
 #endif  // THERMITE_EDITOR
@@ -108,20 +139,29 @@ void RenderView::set_viewport_size(uint32_t width, uint32_t height) {
     if (width != gpu_view.resolution.x || height != gpu_view.resolution.y) {
         height = height <= 0 ? 1 : height;
         gpu_view.resolution = {width, height};
-
-        VRAMBank& bank = engine.renderer.vram_bank();
-
-        if (const Result r = bank.resize_texture(viewport_texture, {width, height, 0}); r.is_err()) {
-            Log::error(Log::Scope::RENDERER, "failed to resize the viewport texture.\nreason: {}", r.unwrap_err().c_str());
-        } else {
-            Log::info(Log::Scope::RENDERER, "viewport texture has been resized.");
-        }
+        resize_textures();
 
 #ifdef THERMITE_EDITOR
-        engine.renderer.imgui->remove_image(viewport_image);
-        imgui_viewport = engine.renderer.imgui->add_image(viewport_image);
+        engine.renderer.imgui->remove_image(viewport.image);
+        imgui_viewport = engine.renderer.imgui->add_image(viewport.image);
 #endif
     }
+}
+
+void RenderView::resize_textures() {
+    const Size3D view_size {gpu_view.resolution.x, gpu_view.resolution.y};
+    VRAMBank& bank = engine.renderer.vram_bank();
+
+    /* Resize the screen buffers */
+    bank.resize_texture(viewport.texture, view_size).expect("failed to resize viewport texture.");
+    bank.resize_texture(vbuffer.texture, view_size).expect("failed to resize vbuffer texture.");
+    bank.resize_texture(ibuffer.texture, view_size).expect("failed to resize ibuffer texture.");
+
+    /* Resize macrofacet buffers */
+    const uint64_t hashkey_size = sizeof(uint64_t);
+    const uint64_t hashset_size = (uint64_t)view_size.x * view_size.y;
+    bank.resize_buffer(macrofacet_hashset, hashset_size, hashkey_size).expect("failed to resize macrofacet hashset buffer");
+    bank.resize_buffer(macrofacet_shading_commands, hashset_size, hashkey_size).expect("failed to resize macrofacet shading commands buffer");
 }
 
 }  // namespace tmt

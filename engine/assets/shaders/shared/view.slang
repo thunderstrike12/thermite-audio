@@ -12,6 +12,8 @@ public struct RenderView {
     public float4 origin;
     /* Resolution of the view in pixels. */
     public uint2 resolution;
+    /* Index of the current frame. */
+    public uint frame_index;
 };
 
 /* Represents a ray that can be traced. */
@@ -26,6 +28,7 @@ public struct Hit {
     public float t;
     public uint voxel_index;
     public uint object_index;
+    public uint face_index;
     public uint steps;
 
     public inline static Hit miss() {
@@ -53,6 +56,15 @@ public inline Ray pinhole_ray(RenderView view, int2 pixel) {
     Ray ray; /* Fill in the ray struct */
     ray.origin = view.origin.xyz;
     ray.dir = world_dir;
+    ray.rcp_dir = clamp(rcp(ray.dir), -1e30f, 1e30f);
+    return ray;
+}
+
+/* Generate a custom ray. */
+public inline Ray custom_ray(float3 origin, float3 dir) {
+    Ray ray; /* Fill in the ray struct */
+    ray.origin = origin;
+    ray.dir = dir;
     ray.rcp_dir = clamp(rcp(ray.dir), -1e30f, 1e30f);
     return ray;
 }
