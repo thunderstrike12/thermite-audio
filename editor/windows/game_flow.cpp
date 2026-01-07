@@ -5,6 +5,7 @@
 #include "engine/core/ecs.hpp"
 
 #include "engine/tools/serializer/ecs.hpp"
+#include "engine/core/input/input.hpp"
 
 namespace tmt {
 
@@ -36,11 +37,22 @@ void GameFlow::display() {
 
 void GameFlow::on_editor_start() {}
 
-void GameFlow::on_editor_update(const FrameData&) {}
+void GameFlow::on_editor_update(const FrameData&) {
+    if (engine.input.is_keyboard_button_just_pressed(Key::F1)) {
+        unlock_mouse();
+    }
+}
 
 void GameFlow::on_editor_end() {}
 
+void GameFlow::unlock_mouse() {
+    engine.input.lock_mouse(false);
+    engine.input.set_mouse_relative_to_window(false);
+}
+
 void GameFlow::on_game_end() {
+    unlock_mouse();
+
     if (has_ended == false) return;
     engine.scenes.enqueue_scene(working_scene);
 }

@@ -27,5 +27,7 @@ class GameFlow : public IWindow, public OnGameEnd, public OnPreLoadScene {
 
     // Inherited via OnGameEnd
     void on_game_end() override;
+
+    void unlock_mouse();
 };
 }  // namespace tmt
