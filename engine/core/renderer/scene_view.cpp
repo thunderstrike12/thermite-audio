@@ -20,9 +20,9 @@ void SceneView::init() {
 
     /* Create GPU resources */
     const BufferUsage usage = BufferUsage::Storage | BufferUsage::TransferDst;
-    bvh_nodes = bank.create_buffer(usage, MAX_VOXEL_OBJECTS * 2u + 1u, sizeof(AilaLaineNode)).expect("failed to create bvh nodes buffer.");
-    object_indices = bank.create_buffer(usage, MAX_VOXEL_OBJECTS, sizeof(uint32_t)).expect("failed to create object indices buffer.");
-    object_data = bank.create_buffer(usage, MAX_VOXEL_OBJECTS, sizeof(VoxelObject)).expect("failed to create object data buffer.");
+    bvh_nodes = bank.create_buffer("BVH Nodes Buffer", usage, MAX_VOXEL_OBJECTS * 2u + 1u, sizeof(AilaLaineNode)).expect("failed to create bvh nodes buffer.");
+    object_indices = bank.create_buffer("Object Indices Buffer", usage, MAX_VOXEL_OBJECTS, sizeof(uint32_t)).expect("failed to create object indices buffer.");
+    object_data = bank.create_buffer("Object Data Buffer", usage, MAX_VOXEL_OBJECTS, sizeof(VoxelObject)).expect("failed to create object data buffer.");
 }
 
 void SceneView::update(RenderGraph& render_graph) {

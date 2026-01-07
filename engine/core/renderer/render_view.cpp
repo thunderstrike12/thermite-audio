@@ -30,47 +30,37 @@ void RenderView::init() {
     }
 
     /* Viewport Texture */
-    if (const Result r = bank.create_texture(
-            TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA8Unorm, {(uint32_t)engine.window.width, (uint32_t)engine.window.height, 0},
-            {1, 1}, "Viewport Texture"
-        );
-        r.is_err()) {
-        Log::error(Log::Scope::RENDERER, "failed to initialize attachment texture.\nreason: {}", r.unwrap_err());
-        return;
-    } else
-        viewport.texture = r.unwrap();
+    viewport.texture = bank.create_texture(
+                               "Viewport Texture", TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA8Unorm,
+                               {(uint32_t)engine.window.width, (uint32_t)engine.window.height, 0}, {1, 1}
+    )
+                           .expect("failed to initialize attachment texture");
+
     /* Viewport Image */
-    if (const Result r = bank.create_image(viewport.texture, 0, 0, "Viewport Image"); r.is_err()) {
-        Log::error(Log::Scope::RENDERER, "failed to initialize attachment image.\nreason: {}", r.unwrap_err());
-        return;
-    } else
-        viewport.image = r.unwrap();
+    viewport.image = bank.create_image("Viewport Image", viewport.texture).expect("failed to initialize attachment image.");
 
     /* Create the active render view buffer */
-    if (const Result r = bank.create_buffer(BufferUsage::Constant | BufferUsage::TransferDst, sizeof(RenderView), 0, "Render View Buffer"); r.is_err()) {
-        Log::error(Log::Scope::RENDERER, "failed to create render view buffer.\nreason: {}", r.unwrap_err().c_str());
-        return;
-    } else {
-        render_view_buffer = r.unwrap();
-    }
+    render_view_buffer = bank.create_buffer("Render View Buffer", BufferUsage::Constant | BufferUsage::TransferDst, sizeof(RenderView)).expect("failed to create render view buffer.");
 
     /* Create the visibility buffer */
     const Size3D view_size {gpu_view.resolution.x, gpu_view.resolution.y};
-    vbuffer.texture = bank.create_texture(TextureUsage::Storage, TextureFormat::RG32Uint, view_size).expect("failed to create vbuffer texture.");
-    vbuffer.image = bank.create_image(vbuffer.texture).expect("failed to create vbuffer image.");
+    vbuffer.texture = bank.create_texture("Visibility Buffer Texture", TextureUsage::Storage, TextureFormat::RG32Uint, view_size).expect("failed to create vbuffer texture.");
+    vbuffer.image = bank.create_image("Visibility Buffer Image", vbuffer.texture).expect("failed to create vbuffer image.");
 
     /* Create the illuminance buffer */
-    ibuffer.texture = bank.create_texture(TextureUsage::Storage, TextureFormat::RG11B10Ufloat, view_size).expect("failed to create ibuffer texture.");
-    ibuffer.image = bank.create_image(vbuffer.texture).expect("failed to create ibuffer image.");
+    ibuffer.texture = bank.create_texture("Illuminance Buffer Texture", TextureUsage::Storage, TextureFormat::RG11B10Ufloat, view_size).expect("failed to create ibuffer texture.");
+    ibuffer.image = bank.create_image("Illuminance Buffer Image", vbuffer.texture).expect("failed to create ibuffer image.");
 
     /* Create the macrofacet buffers */
     const uint64_t hashkey_size = sizeof(uint64_t);
     const uint64_t hashset_size = (uint64_t)view_size.x * view_size.y;
-    macrofacet_hashset = bank.create_buffer(BufferUsage::Storage, hashset_size, hashkey_size).expect("failed to create macrofacet hashset buffer.");
-    macrofacet_shading_commands = bank.create_buffer(BufferUsage::Storage, hashset_size, hashkey_size).expect("failed to create macrofacet shading commands buffer.");
+    macrofacet_hashset = bank.create_buffer("Macrofacet Hashset Buffer", BufferUsage::Storage, hashset_size, hashkey_size).expect("failed to create macrofacet hashset buffer.");
+    macrofacet_shading_commands =
+        bank.create_buffer("Macrofacet Shading Commands Buffer", BufferUsage::Storage, hashset_size, hashkey_size).expect("failed to create macrofacet shading commands buffer.");
     const uint64_t cache_element_size = hashkey_size + sizeof(uint32_t) * 2ull;
     const uint64_t cache_size = 10'000'000u;
-    macrofacet_illuminance_cache = bank.create_buffer(BufferUsage::Storage, cache_size, cache_element_size).expect("failed to create macrofacet illuminance cache buffer.");
+    macrofacet_illuminance_cache =
+        bank.create_buffer("Macrofacet Illuminance Cache Buffer", BufferUsage::Storage, cache_size, cache_element_size).expect("failed to create macrofacet illuminance cache buffer.");
 }
 
 void RenderView::update() {
