@@ -54,11 +54,13 @@ void Renderer::init() {
 
     /* Initialize the GPU adapter */
     bool sync_validation = false;  // Sync validation is enabled only in Debug
+    bool gpu_validation = false;   // GPU assisted validation is enabled only in Debug
 #ifdef THERMITE_DEBUG
     sync_validation = true;
+    gpu_validation = true;
 #endif  //
 
-    if (const Result r = gpu.init(true, sync_validation); r.is_err()) {
+    if (const Result r = gpu.init(true, sync_validation, gpu_validation); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to initialize gpu adapter.\nreason: {}", r.unwrap_err());
         return;
     }
