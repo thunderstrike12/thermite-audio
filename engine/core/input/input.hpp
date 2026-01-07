@@ -3,6 +3,7 @@
 #include <memory>
 #include <unordered_map>
 #include <array>
+#include <glm/glm.hpp>
 #include "keys.hpp"
 #include "input_event.hpp"
 
