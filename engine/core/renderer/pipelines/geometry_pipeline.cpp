@@ -23,9 +23,9 @@ void GeometryPipeline::init(GPUAdapter& gpu) {
 
     /* Create GPU resources */
     const BufferUsage usage = BufferUsage::Storage | BufferUsage::TransferDst;
-    bvh_nodes = bank.create_buffer(usage, MAX_VOXEL_OBJECTS * 2u + 1u, sizeof(AilaLaineNode)).expect("failed to create bvh nodes buffer.");
-    object_indices = bank.create_buffer(usage, MAX_VOXEL_OBJECTS, sizeof(uint32_t)).expect("failed to create object indices buffer.");
-    object_data = bank.create_buffer(usage, MAX_VOXEL_OBJECTS, sizeof(VoxelObject)).expect("failed to create object data buffer.");
+    bvh_nodes = bank.create_buffer(usage, MAX_VOXEL_OBJECTS * 2u + 1u, sizeof(AilaLaineNode), "BVH Nodes BUffer").expect("failed to create bvh nodes buffer.");
+    object_indices = bank.create_buffer(usage, MAX_VOXEL_OBJECTS, sizeof(uint32_t), "Object Indices Buffer").expect("failed to create object indices buffer.");
+    object_data = bank.create_buffer(usage, MAX_VOXEL_OBJECTS, sizeof(VoxelObject), "Object Data Buffer").expect("failed to create object data buffer.");
 }
 
 void GeometryPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {

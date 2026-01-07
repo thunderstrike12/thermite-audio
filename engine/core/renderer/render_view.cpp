@@ -31,7 +31,8 @@ void RenderView::init() {
 
     /* Viewport Texture */
     if (const Result r = bank.create_texture(
-            TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA8Unorm, {(uint32_t)engine.window.width, (uint32_t)engine.window.height, 0}
+            TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA8Unorm, {(uint32_t)engine.window.width, (uint32_t)engine.window.height, 0},
+            {1, 1}, "Viewport Texture"
         );
         r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to initialize attachment texture.\nreason: {}", r.unwrap_err());
@@ -39,14 +40,14 @@ void RenderView::init() {
     } else
         viewport_texture = r.unwrap();
     /* Viewport Image */
-    if (const Result r = bank.create_image(viewport_texture); r.is_err()) {
+    if (const Result r = bank.create_image(viewport_texture, 0, 0, "Viewport Image"); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to initialize attachment image.\nreason: {}", r.unwrap_err());
         return;
     } else
         viewport_image = r.unwrap();
 
     /* Create the active render view buffer */
-    if (const Result r = bank.create_buffer(BufferUsage::Constant | BufferUsage::TransferDst, sizeof(RenderView)); r.is_err()) {
+    if (const Result r = bank.create_buffer(BufferUsage::Constant | BufferUsage::TransferDst, sizeof(RenderView), 0, "Render View Buffer"); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to create render view buffer.\nreason: {}", r.unwrap_err().c_str());
         return;
     } else {

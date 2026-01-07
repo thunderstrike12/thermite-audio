@@ -14,7 +14,7 @@ namespace tmt {
 void PolylinePipeline::init(GPUAdapter& gpu) {
     /* Initialize the polyline vertex buffer */
     VRAMBank& bank = gpu.get_vram_bank();
-    line_buffer = bank.create_buffer(BufferUsage::Vertex | BufferUsage::TransferDst, MAX_POLYLINES, sizeof(PolylineSegment)).expect("failed to create polyline vertex buffer.");
+    line_buffer = bank.create_buffer(BufferUsage::Vertex | BufferUsage::TransferDst, MAX_POLYLINES, sizeof(PolylineSegment), "Polyline Vertex Buffer").expect("failed to create polyline vertex buffer.");
 }
 
 void PolylinePipeline::on_engine_update(const FrameData& time) {
