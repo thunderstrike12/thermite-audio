@@ -31,7 +31,7 @@ struct TimedPolylineSegment {
 };
 
 /* Maximum number of polylines that can be drawn per frame. */
-constexpr uint32_t MAX_POLYLINES = 1u << 14;
+constexpr uint32_t MAX_POLYLINES = 1u << 19;
 
 /**
  * Pipeline for drawing polygonal lines, used for debugging and editor visualizations.

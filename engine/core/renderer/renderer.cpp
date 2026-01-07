@@ -53,7 +53,7 @@ void Renderer::init() {
     gpu.set_max_samplers(32u);
 
     /* Initialize the GPU adapter */
-    bool sync_validation = false; // Sync validation is enabled only in Debug
+    bool sync_validation = false;  // Sync validation is enabled only in Debug
 #ifdef THERMITE_DEBUG
     sync_validation = true;
 #endif  //
@@ -65,7 +65,7 @@ void Renderer::init() {
 
     /* Initialize the Render Graph */
     render_graph.set_shader_path("assets/engine/shaders/bin");
-    render_graph.set_staging_limit(10000000u /* 10mb */);
+    render_graph.set_staging_limit(32000000u /* 32mb */);
     render_graph.set_max_graphs_in_flight(2u); /* Double buffering */
     if (const Result r = render_graph.init(gpu); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to initialize render graph.\nreason: {}", r.unwrap_err());
