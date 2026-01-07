@@ -6,95 +6,270 @@
 #include "engine/core/logger.hpp"
 #include "engine/engine.hpp"
 #include "engine/core/renderer/renderer.hpp"
+#include "engine/tools/profiler.hpp"
+#include "engine/tools/timer.hpp"
 
 #include <queue>
+#include <omp.h>
 
 namespace tmt {
 
 void compute_physics_data(RawVoxels& voxels) {
-    // Precompute physics voxel data
-    std::queue<uint32_t> queue {};
+    TMT_ZONE_SCOPED
 
-    for (uint32_t z = 0; z < voxels.d; z++) {
-        for (uint32_t y = 0; y < voxels.h; y++) {
-            for (uint32_t x = 0; x < voxels.w; x++) {
-                const uint32_t index = x + voxels.w * y + voxels.w * voxels.h * z;
-                if (voxels.physics_data[index].type == PhysicsVoxelType::EMPTY) continue;
+    // More conservative pre-allocation estimate for better cache locality
+    const size_t estimated_queue_size = static_cast<size_t>(std::pow(voxels.w * voxels.h * voxels.d, 2.0 / 3.0) * 3.0);
 
-                int empty_sides = 0;
-                glm::ivec3 normal = {};
-                for (size_t sign = 0; sign < 2; sign++) {
-                    for (size_t dir = 0; dir < 3; dir++) {
-                        glm::uvec3 temp = {x, y, z};
-                        temp[(int)dir] += sign == 0 ? (int)1 : -((int)1);
-                        const uint32_t temp_index = temp.x + voxels.w * temp.y + voxels.w * voxels.h * temp.z;
+    std::vector<uint32_t> queue_vec;
+    queue_vec.reserve(estimated_queue_size);
 
-                        // Check if temp is outside of size or empty
-                        if (!(temp.x >= 0 && temp.x < voxels.w && temp.y >= 0 && temp.y < voxels.h && temp.z >= 0 && temp.z < voxels.d) ||
-                            voxels.physics_data[temp_index].type == PhysicsVoxelType::EMPTY) {
-                            normal[(int)dir] += sign == 0 ? 1 : -1;
-                            empty_sides++;
+    // Phase 1: Classify voxels and compute normals (PARALLELIZED)
+    {
+        TMT_ZONE_SCOPED_N("VoxelClassification")
+
+        // Thread-local queues for parallel collection
+        const int num_threads = omp_get_max_threads();
+        std::vector<std::vector<uint32_t>> thread_queues(num_threads);
+
+        // Pre-allocate thread-local queues
+        for (int i = 0; i < num_threads; i++) {
+            thread_queues[i].reserve(estimated_queue_size / num_threads);
+        }
+
+#pragma omp parallel
+        {
+            const int thread_id = omp_get_thread_num();
+            std::vector<uint32_t>& local_queue = thread_queues[thread_id];
+
+#pragma omp for collapse(3) schedule(dynamic, 16)
+            for (uint32_t z = 0; z < voxels.d; z++) {
+                for (uint32_t y = 0; y < voxels.h; y++) {
+                    for (uint32_t x = 0; x < voxels.w; x++) {
+                        const uint32_t index = x + voxels.w * y + voxels.w * voxels.h * z;
+                        if (voxels.physics_data[index].type == PhysicsVoxelType::EMPTY) continue;
+
+                        // Check neighbors and compute normal
+                        {
+                            TMT_ZONE_SCOPED_N("NeighborAnalysis")
+
+                            int empty_sides = 0;
+                            glm::ivec3 normal = {};
+
+                            // Precompute dimensions for bounds checking
+                            const uint32_t w = voxels.w;
+                            const uint32_t h = voxels.h;
+                            const uint32_t d = voxels.d;
+                            const uint32_t wh = w * h;
+
+                            // Unrolled neighbor checking for better performance
+                            // Check -X
+                            if (x > 0) {
+                                if (voxels.physics_data[index - 1].type == PhysicsVoxelType::EMPTY) {
+                                    normal.x -= 1;
+                                    empty_sides++;
+                                }
+                            } else {
+                                normal.x -= 1;
+                                empty_sides++;
+                            }
+
+                            // Check +X
+                            if (x < w - 1) {
+                                if (voxels.physics_data[index + 1].type == PhysicsVoxelType::EMPTY) {
+                                    normal.x += 1;
+                                    empty_sides++;
+                                }
+                            } else {
+                                normal.x += 1;
+                                empty_sides++;
+                            }
+
+                            // Check -Y
+                            if (y > 0) {
+                                if (voxels.physics_data[index - w].type == PhysicsVoxelType::EMPTY) {
+                                    normal.y -= 1;
+                                    empty_sides++;
+                                }
+                            } else {
+                                normal.y -= 1;
+                                empty_sides++;
+                            }
+
+                            // Check +Y
+                            if (y < h - 1) {
+                                if (voxels.physics_data[index + w].type == PhysicsVoxelType::EMPTY) {
+                                    normal.y += 1;
+                                    empty_sides++;
+                                }
+                            } else {
+                                normal.y += 1;
+                                empty_sides++;
+                            }
+
+                            // Check -Z
+                            if (z > 0) {
+                                if (voxels.physics_data[index - wh].type == PhysicsVoxelType::EMPTY) {
+                                    normal.z -= 1;
+                                    empty_sides++;
+                                }
+                            } else {
+                                normal.z -= 1;
+                                empty_sides++;
+                            }
+
+                            // Check +Z
+                            if (z < d - 1) {
+                                if (voxels.physics_data[index + wh].type == PhysicsVoxelType::EMPTY) {
+                                    normal.z += 1;
+                                    empty_sides++;
+                                }
+                            } else {
+                                normal.z += 1;
+                                empty_sides++;
+                            }
+
+                            voxels.physics_data[index].normal_index = 0;
+
+                            // Classify voxel type based on empty neighbors
+                            if (empty_sides == 0) {
+                                voxels.physics_data[index].type = PhysicsVoxelType::INSIDE;
+                            } else if (empty_sides == 1) {
+                                TMT_ZONE_SCOPED_N("FaceNormalLookup")
+                                for (size_t i = 1; i < 7; i++) {
+                                    if (NORMAL_LUT[i] == normal) {
+                                        voxels.physics_data[index].normal_index = i;
+                                        break;
+                                    }
+                                }
+                                voxels.physics_data[index].type = PhysicsVoxelType::FACE;
+                            } else if (empty_sides == 2) {
+                                TMT_ZONE_SCOPED_N("EdgeNormalLookup")
+                                for (size_t i = 7; i < 19; i++) {
+                                    if (NORMAL_LUT[i] == normal) {
+                                        voxels.physics_data[index].normal_index = i;
+                                        break;
+                                    }
+                                }
+                                voxels.physics_data[index].type = PhysicsVoxelType::EDGE;
+                            } else {  // empty_sides >= 3
+                                TMT_ZONE_SCOPED_N("CornerNormalLookup")
+                                for (size_t i = 19; i < 27; i++) {
+                                    if (NORMAL_LUT[i] == normal) {
+                                        voxels.physics_data[index].normal_index = i;
+                                        break;
+                                    }
+                                }
+                                voxels.physics_data[index].type = PhysicsVoxelType::CORNER;
+                            }
+
+                            if (voxels.physics_data[index].normal_index != 0) {
+                                local_queue.push_back(index);
+                            }
                         }
                     }
                 }
+            }
+        }
 
-                voxels.physics_data[index].normal_index = 0;
+        // Merge thread-local queues into main queue
+        {
+            TMT_ZONE_SCOPED_N("MergeQueues")
+            size_t total_size = 0;
+            for (const auto& q : thread_queues) {
+                total_size += q.size();
+            }
+            queue_vec.reserve(total_size);
 
-                if (empty_sides == 0)
-                    voxels.physics_data[index].type = PhysicsVoxelType::INSIDE;
-                else if (empty_sides == 1) {
-                    for (size_t i = 1; i < 7; i++) {
-                        if (NORMAL_LUT[i] == normal) voxels.physics_data[index].normal_index = i;
-                    }
-                    voxels.physics_data[index].type = PhysicsVoxelType::FACE;
-                } else if (empty_sides == 2) {
-                    for (size_t i = 7; i < 19; i++) {
-                        if (NORMAL_LUT[i] == normal) voxels.physics_data[index].normal_index = i;
-                    }
-                    voxels.physics_data[index].type = PhysicsVoxelType::EDGE;
-                } else if (empty_sides >= 3) {
-                    for (size_t i = 19; i < 27; i++) {
-                        if (NORMAL_LUT[i] == normal) voxels.physics_data[index].normal_index = i;
-                    }
-                    voxels.physics_data[index].type = PhysicsVoxelType::CORNER;
-                }
-
-                if (voxels.physics_data[index].normal_index != 0) queue.push(index);
+            for (auto& q : thread_queues) {
+                queue_vec.insert(queue_vec.end(), q.begin(), q.end());
             }
         }
     }
 
-    while (!queue.empty()) {
-        const uint32_t& current = queue.front();
-        uint32_t x = current % voxels.w;
-        uint32_t y = (current % (voxels.w * voxels.h)) / voxels.w;
-        uint32_t z = current / (voxels.w * voxels.h);
+    // Phase 2: Propagate normal indices via BFS (Sequential - inherently dependent)
+    {
+        TMT_ZONE_SCOPED_N("NormalPropagation")
 
-        // add voxel neighbours to queue and propegate normal index
-        for (int sign = 0; sign < 2; sign++) {
-            for (size_t axis = 0; axis < 3; axis++) {
-                glm::uvec3 p = glm::uvec3(x, y, z);
-                p[(glm::uvec3::length_type)axis] += (sign * 2) - 1;
+        // Precompute dimensions for faster access
+        const uint32_t w = voxels.w;
+        const uint32_t h = voxels.h;
+        const uint32_t d = voxels.d;
+        const uint32_t wh = w * h;
 
-                // If not in range continue
-                if (p.x >= voxels.w || p.y >= voxels.h || p.z >= voxels.d) continue;
+        // Use index-based iteration instead of queue operations
+        size_t read_pos = 0;
 
-                // If the voxel already has a normal index continue
-                uint32_t neighbour = p.x + voxels.w * p.y + voxels.w * voxels.h * p.z;
-                if (voxels.physics_data[neighbour].normal_index != 0) continue;
+        while (read_pos < queue_vec.size()) {
+            const uint32_t current = queue_vec[read_pos++];
 
-                voxels.physics_data[neighbour].normal_index = voxels.physics_data[current].normal_index;
+            // Decompose index into coordinates
+            const uint32_t x = current % w;
+            const uint32_t y = (current % wh) / w;
+            const uint32_t z = current / wh;
 
-                queue.push(neighbour);
+            const uint32_t current_normal_index = voxels.physics_data[current].normal_index;
+
+            // Unrolled neighbor checking for better performance
+            // Check -X neighbor
+            if (x > 0) {
+                const uint32_t neighbour = current - 1;
+                if (voxels.physics_data[neighbour].normal_index == 0) {
+                    voxels.physics_data[neighbour].normal_index = current_normal_index;
+                    queue_vec.push_back(neighbour);
+                }
+            }
+
+            // Check +X neighbor
+            if (x < w - 1) {
+                const uint32_t neighbour = current + 1;
+                if (voxels.physics_data[neighbour].normal_index == 0) {
+                    voxels.physics_data[neighbour].normal_index = current_normal_index;
+                    queue_vec.push_back(neighbour);
+                }
+            }
+
+            // Check -Y neighbor
+            if (y > 0) {
+                const uint32_t neighbour = current - w;
+                if (voxels.physics_data[neighbour].normal_index == 0) {
+                    voxels.physics_data[neighbour].normal_index = current_normal_index;
+                    queue_vec.push_back(neighbour);
+                }
+            }
+
+            // Check +Y neighbor
+            if (y < h - 1) {
+                const uint32_t neighbour = current + w;
+                if (voxels.physics_data[neighbour].normal_index == 0) {
+                    voxels.physics_data[neighbour].normal_index = current_normal_index;
+                    queue_vec.push_back(neighbour);
+                }
+            }
+
+            // Check -Z neighbor
+            if (z > 0) {
+                const uint32_t neighbour = current - wh;
+                if (voxels.physics_data[neighbour].normal_index == 0) {
+                    voxels.physics_data[neighbour].normal_index = current_normal_index;
+                    queue_vec.push_back(neighbour);
+                }
+            }
+
+            // Check +Z neighbor
+            if (z < d - 1) {
+                const uint32_t neighbour = current + wh;
+                if (voxels.physics_data[neighbour].normal_index == 0) {
+                    voxels.physics_data[neighbour].normal_index = current_normal_index;
+                    queue_vec.push_back(neighbour);
+                }
             }
         }
-
-        queue.pop();
     }
 }
 
 /* Gather all voxels inside a voxel model node. */
 inline RawVoxels gather_voxels(const vengi::Node* file_node) {
+    TMT_ZONE_SCOPED
     const vengi::Region& region = file_node->voxel_data->region;
 
     /* Create a new collection of raw voxels */
@@ -132,6 +307,8 @@ inline RawVoxels gather_voxels(const vengi::Node* file_node) {
 
 /* Parse the vengi scene hierarchy. */
 VoxelSceneNode parse_hierarchy(const vengi::Node* file_node) {
+    TMT_ZONE_SCOPED
+
     /* Create a new scene node */
     VoxelSceneNode node {};
     node.uuid[0] = file_node->uuid[0];
@@ -167,15 +344,24 @@ VoxelSceneNode parse_hierarchy(const vengi::Node* file_node) {
 }
 
 bool VoxelScene::load() {
+    TMT_ZONE_SCOPED
+
     /* Parse the vengi file */
-    const std::unique_ptr<vengi::Node> root = VengiParser::load(file_location);
+    std::unique_ptr<vengi::Node> root = nullptr;
+    {
+        ScopedTimer timer("Parse Vengi File");
+        root = VengiParser::load(file_location);
+    }
     if (!root) {
         Log::error("Failed to load voxel scene from file: {}", file_location.get_relative_path().string());
         return false;
     }
 
     /* Traverse & parse the vengi scene */
-    hierarchy = parse_hierarchy(root.get());
+    {
+        ScopedTimer timer("Parse Vengi Hierarchy");
+        hierarchy = parse_hierarchy(root.get());
+    }
     return true;
 }
 

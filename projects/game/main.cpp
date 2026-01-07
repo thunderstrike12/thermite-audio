@@ -73,32 +73,34 @@ void DragonScene::on_start() {
         transform.set_world_position(glm::vec3(0.0f, 0.25f, -260.0f));
     }
 
-    tmt::ResourceRef<tmt::VoxelScene> voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "dragon128.vengi"});
-    tmt::ResourceRef<tmt::VoxelVolume> voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
+    // tmt::ResourceRef<tmt::VoxelScene> voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "dragon128.vengi"});
+    // tmt::ResourceRef<tmt::VoxelVolume> voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
 
-    { /* Voxel entity */
-        voxel = tmt::engine.ecs.create_entity("Moving Voxel");
-        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(voxel);
-        auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(voxel);
-        renderer.resource = voxel_volume;
-        transform.set_world_position(glm::vec3(0.0f, 0.0f, 0.0f));
-        transform.set_world_scale(glm::vec3(1.0f, 1.0f, 1.0f));
-    }
+    //{ /* Voxel entity */
+    //    voxel = tmt::engine.ecs.create_entity("Moving Voxel");
+    //    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(voxel);
+    //    auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(voxel);
+    //    renderer.resource = voxel_volume;
+    //    transform.set_world_position(glm::vec3(0.0f, 0.0f, 0.0f));
+    //    transform.set_world_scale(glm::vec3(1.0f, 1.0f, 1.0f));
+    //}
 
-    generate_random_entities(voxel_volume);
+    // generate_random_entities(voxel_volume);
 }
+
+#include "engine/core/renderer/renderer.hpp"
 
 void DragonScene::on_update(const tmt::FrameData& time) {
     /* Animate the voxel */
-    elapsed_time += time.delta_time;
-    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(voxel);
-    transform.set_world_position(glm::vec3(1.0f, sinf(elapsed_time), 1.0f));
-    transform.set_world_rotation(glm::vec3(sinf(elapsed_time), cosf(elapsed_time), 0.0f));
-    transform.set_world_scale(glm::vec3(1.0f, 1.5f + sinf(elapsed_time), 1.0f));
+    // elapsed_time += time.delta_time;
+    // auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(voxel);
+    // transform.set_world_position(glm::vec3(1.0f, sinf(elapsed_time), 1.0f));
+    // transform.set_world_rotation(glm::vec3(sinf(elapsed_time), cosf(elapsed_time), 0.0f));
+    // transform.set_world_scale(glm::vec3(1.0f, 1.5f + sinf(elapsed_time), 1.0f));
 
-    if (tmt::engine.input.is_keyboard_button_released(tmt::Key::SPACE)) {
-        tmt::engine.scenes.enqueue_scene<TableScene>();
-    }
+    // if (tmt::engine.input.is_keyboard_button_released(tmt::Key::SPACE)) {
+    //     tmt::engine.scenes.enqueue_scene<TableScene>();
+    // }
 }
 
 void DragonScene::on_end() {}
