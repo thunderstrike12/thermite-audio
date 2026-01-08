@@ -17,6 +17,7 @@
 
 #include "editor/imgui/manager.hpp"
 #include "editor/core/font_manager.hpp"
+#include "engine/tools/profiler.hpp"
 
 /* Windows */
 #include "editor/windows/hierarchy.hpp"
@@ -69,7 +70,11 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
 }
 
 void Editor::on_engine_update(const FrameData& time) {
-    imgui_manager.new_frame();
+    TMT_ZONE_SCOPED_N("Editor Update");
+    {
+        TMT_ZONE_SCOPED_N("ImGui New Frame");
+        imgui_manager.new_frame();
+    }
 
     main_menu_bar();
 
@@ -79,8 +84,10 @@ void Editor::on_engine_update(const FrameData& time) {
 
     auto& open_windows = editor.save_data.open_windows;
     for (auto& window : windows) {
-        const ImGuiWindowFlags_ flags = static_cast<ImGuiWindowFlags_>(window->get_window_flags());
         const auto& name = window->get_title();
+        TMT_ZONE_SCOPED_STRING(name);
+
+        const ImGuiWindowFlags_ flags = static_cast<ImGuiWindowFlags_>(window->get_window_flags());
         if (open_windows.contains(name) == false) {
             open_windows[name] = window->default_open();
         }
@@ -95,7 +102,10 @@ void Editor::on_engine_update(const FrameData& time) {
         }
     }
 
-    imgui_manager.end_frame();
+    {
+        TMT_ZONE_SCOPED_N("ImGui End Frame");
+        imgui_manager.end_frame();
+    }
 }
 
 void Editor::on_engine_fixed_update(const FrameData& time) {

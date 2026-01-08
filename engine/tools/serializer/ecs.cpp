@@ -160,4 +160,11 @@ void tag_invoke(JsonReflect::deserialize_t, const Json& j, std::set<tmt::Entity>
             tmt::Serializer::deserialize(json_value, component_value, state);
         }
     });
+
+    /* Return newly created entities */
+    for (const auto& [_, mapped_entity] : state.entity_mapping) {
+        if (mapped_entity != entt::null) {
+            new_entities.insert(mapped_entity);
+        }
+    }
 }

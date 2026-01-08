@@ -19,7 +19,7 @@ class Inspector : public IWindow {
 
     struct MenuContext {
         const Entity primary_entity;
-        const std::unordered_set<Entity>& selected_entities;
+        const std::vector<Entity>& selected_entities;
     };
 
     void display_runtime_components(const MenuContext& menu_context);

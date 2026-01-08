@@ -4,6 +4,8 @@
 #include <imgui_stdlib.h>
 #include <imgui_internal.h>
 
+#include <ImReflect.hpp>
+
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
 #include "engine/core/logger.hpp"
@@ -27,7 +29,7 @@ void Hierarchy::display() {
 
     top_bar();
     render_hierarchy();
-    context_menu();
+    context_menu(entt::null);
 
     ImGui::PopStyleVar();
 }
@@ -68,7 +70,7 @@ void Hierarchy::end_section() {
     }
 }
 
-void Hierarchy::context_menu() {
+void Hierarchy::context_menu(const Entity hovered_entity) {
     if (ImGui::BeginPopup(Config::RIGHT_CLICK_CONTEXT)) {
         if (selected_entities.empty() == false) { /* Delete selection */
             const auto text = selected_entities.size() > 1 ? "Delete Entities" : "Delete Entity";
@@ -90,7 +92,7 @@ void Hierarchy::context_menu() {
         { /* Paste selection */
             const auto text = "Paste Entities";
             if (ImGui::MenuItem(text)) {
-                paste_entities();
+                paste_entities(hovered_entity);
                 ImGui::CloseCurrentPopup();
             }
         }
@@ -103,7 +105,7 @@ void Hierarchy::copy_selection() {
     ImGui::SetClipboardText(json.dump().c_str());
 }
 
-void Hierarchy::paste_entities() {
+void Hierarchy::paste_entities(const Entity hovered_entity) {
     const char* clipboard_text = ImGui::GetClipboardText();
     if (clipboard_text == nullptr) {
         Log::warn("Failed to paste entities, clipboard is empty.");
@@ -118,14 +120,21 @@ void Hierarchy::paste_entities() {
     std::set<Entity> new_entities;
     Serializer::deserialize(deserialized, new_entities, tmt::engine.ecs);
 
+    const std::set<Entity> parents = EntityHelper::upper_parents(new_entities);
+    for (const Entity parent : parents) {
+        Transform& parent_transform = tmt::engine.ecs.get_component<Transform>(parent);
+        parent_transform.set_parent(hovered_entity);
+    }
+
     clear_selection();
-    selected_entities = std::unordered_set(new_entities.begin(), new_entities.end());
+    for (const auto entity : new_entities) {
+        selected_entities.insert(entity);
+    }
     OnSceneModified::dispatch();
 }
 
 void Hierarchy::clear_selection() {
     selected_entities.clear();
-    first_selected_entity = entt::null;
     selection_parent = entt::null;
 
     selected_index_begin = NULL_INDEX;
@@ -147,7 +156,6 @@ void Hierarchy::top_bar() {
                 auto entity = engine.ecs.create_entity();
                 engine.ecs.add_or_get_component<Transform>(entity);
                 clear_selection();
-                first_selected_entity = entity;
                 selected_entities.insert(entity);
             }
             ImGui::EndMenu();
@@ -161,6 +169,8 @@ void Hierarchy::top_bar() {
 }
 
 bool Hierarchy::display_entity(const HierarchyState& state) {
+    const auto scope = ImReflect::Detail::scope_id((int)state.entity);
+
     const bool filtering = filter.empty() == false;
     if (filtering) {
         if (state.name.name.find(filter) == std::string::npos) {
@@ -224,7 +234,6 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
             if (is_first_selected) {
                 selected_index_begin = state.position;
                 selection_parent = parent;
-                first_selected_entity = state.entity;
                 selected_index_end_above = state.position;
                 selected_index_end_below = state.position;
             } else {
@@ -249,7 +258,6 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
                 selection_parent = state.transform.get_parent();
                 selected_index_end_above = state.position;
                 selected_index_end_below = state.position;
-                first_selected_entity = state.entity;
             }
         } else {
             selected_entities.clear();
@@ -258,7 +266,6 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
             selection_parent = state.transform.get_parent();
             selected_index_end_above = state.position;
             selected_index_end_below = state.position;
-            first_selected_entity = state.entity;
         }
     }
 
@@ -280,7 +287,7 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
     if (is_right_clicked) {
         ImGui::OpenPopup(Config::RIGHT_CLICK_CONTEXT);
     }
-    context_menu();
+    context_menu(state.entity);
 
     /* If the node is closed, don't display children */
     if (open_node == false) return true;
