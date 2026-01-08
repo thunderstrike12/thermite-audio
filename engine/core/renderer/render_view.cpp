@@ -56,7 +56,7 @@ void RenderView::init() {
     const uint64_t hashset_size = (uint64_t)view_size.x * view_size.y;
     macrofacet_hashset = bank.create_buffer("Macrofacet Hashset Buffer", BufferUsage::Storage, hashset_size, hashkey_size).expect("failed to create macrofacet hashset buffer.");
     macrofacet_shading_commands =
-        bank.create_buffer("Macrofacet Shading Commands Buffer", BufferUsage::Storage, hashset_size, hashkey_size).expect("failed to create macrofacet shading commands buffer.");
+        bank.create_buffer("Macrofacet Shading Commands Buffer", BufferUsage::Storage | BufferUsage::Indirect, hashset_size, hashkey_size).expect("failed to create macrofacet shading commands buffer.");
     const uint64_t cache_element_size = hashkey_size + sizeof(uint32_t) * 2ull;
     const uint64_t cache_size = 10'000'000u;
     macrofacet_illuminance_cache =
