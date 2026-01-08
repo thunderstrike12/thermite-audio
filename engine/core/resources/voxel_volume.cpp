@@ -45,11 +45,10 @@ bool VoxelVolume::load() {
 }
 
 void VoxelVolume::unload() {
-    /* Destroy the GPU buffers */
-    VRAMBank& bank = engine.renderer.vram_bank();
-    bank.destroy(blas_nodes);
-    bank.destroy(blas_voxels);
-    bank.destroy(blas_palette);
+    /* Destroy the (bindless) GPU buffers */
+    engine.renderer.destroy(blas_nodes);
+    engine.renderer.destroy(blas_voxels);
+    engine.renderer.destroy(blas_palette);
 
     /* Set the BLAS to null */
     blas = nullptr;

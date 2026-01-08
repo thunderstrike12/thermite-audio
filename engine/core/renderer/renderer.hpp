@@ -60,7 +60,11 @@ class Renderer {
     void update();
     void end();
 
+    /* Get a reference to the primary vram bank, for resource creation. */
     VRAMBank& vram_bank();
+
+    /* Destroy a resource for the primary render graph. */
+    void destroy(OpaqueHandle& handle);
 
     Transform& get_debug_transform() { return debug_transform; }
     Camera& get_debug_camera() { return debug_camera; }
