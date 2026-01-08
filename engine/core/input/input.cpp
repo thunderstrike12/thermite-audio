@@ -17,6 +17,9 @@
 
 using namespace tmt;
 
+bool Input::can_use_input_mouse() const { return !can_capture_mouse; }
+bool Input::can_use_input_keyboard() const { return !can_capture_keyboard; }
+
 void Input::init() {
     int32_t number_keys;
     keys_sdl = SDL_GetKeyboardState(&number_keys);
@@ -62,7 +65,11 @@ void Input::update(const FrameData& time) {
 
     SDL_Event sdl_event {};
     while (SDL_PollEvent(&sdl_event)) {
-        internal::OnSdlEvent::dispatch(sdl_event);
+        internal::SdlEvent sdl_event_wrapper(sdl_event);
+        internal::OnSdlEvent::dispatch(sdl_event_wrapper);
+
+        can_capture_mouse = sdl_event_wrapper.imgui_capture_mouse;
+        can_capture_keyboard = sdl_event_wrapper.imgui_capture_keyboard;
         switch (sdl_event.type) {
             case SDL_EVENT_QUIT: {
                 engine.set_is_running(false);
@@ -115,6 +122,7 @@ void Input::update(const FrameData& time) {
         }
     }
     // update hold timers
+
     for (auto& [action_name, input_action] : engine.input_map.actions) {
         for (auto& event : input_action.events) {
             if (event->is_pressed() == true) {
@@ -123,25 +131,37 @@ void Input::update(const FrameData& time) {
         }
     }
 }
-bool Input::is_keyboard_button_pressed(Key key) const { return keys_sdl[static_cast<SDL_Scancode>(key)]; }
+bool Input::is_keyboard_button_pressed(Key key) const {
+    if (!can_use_input_keyboard()) return false;
+    return keys_sdl[static_cast<SDL_Scancode>(key)];
+}
 
 bool Input::is_keyboard_button_just_pressed(Key key) const {
+    if (!can_use_input_keyboard()) return false;
     const auto sdl_scancode = static_cast<SDL_Scancode>(key);
     return keys_sdl[sdl_scancode] == true && prev_keys[sdl_scancode] == false;
 }
 bool Input::is_keyboard_button_released(Key key) const {
+    if (!can_use_input_keyboard()) return false;
     auto sdl_scancode = static_cast<SDL_Scancode>(key);
     return keys_sdl[sdl_scancode] == false && prev_keys[sdl_scancode] == true;
 }
 
-bool Input::is_mouse_button_pressed(MouseButton button) const { return mouse_buttons & SDL_BUTTON_MASK(static_cast<int>(button)); }
+bool Input::is_mouse_button_pressed(MouseButton button) const {
+    if (!can_use_input_mouse()) return false;
+    return mouse_buttons & SDL_BUTTON_MASK(static_cast<int>(button));
+}
 bool Input::is_mouse_button_just_pressed(MouseButton button) const {
+    if (!can_use_input_mouse()) return false;
+
     auto mask = SDL_BUTTON_MASK(static_cast<int32_t>(button));
     bool is_pressed = (mouse_buttons & mask) != 0;
     bool was_pressed = (prev_mouse_buttons & mask) != 0;
     return is_pressed == true && was_pressed == false;
 }
 bool Input::is_mouse_button_just_released(MouseButton button) const {
+    if (!can_use_input_mouse()) return false;
+
     auto mask = SDL_BUTTON_MASK(static_cast<int32_t>(button));
     bool is_pressed = (mouse_buttons & mask) != 0;
     bool was_pressed = (prev_mouse_buttons & mask) != 0;
@@ -256,6 +276,31 @@ glm::vec2 Input::get_vector(
     }
     const float remapped = (length - deadzone) / (1.0f - deadzone);
     return vector * remapped / length;
+}
+float Input::get_mouse_x() const {
+    if (!can_use_input_mouse()) return false;
+    return mouse_x;
+}
+
+float Input::get_mouse_y() const {
+    if (!can_use_input_mouse()) return 0.0f;
+    return mouse_y;
+}
+float Input::get_mouse_wheel_x() const {
+    if (!can_use_input_mouse()) return 0.0f;
+    return scroll_dx;
+}
+float Input::get_mouse_wheel_y() const {
+    if (!can_use_input_mouse()) return 0.0f;
+    return scroll_dy;
+}
+float Input::get_mouse_delta_x() const {
+    if (!can_use_input_mouse()) return 0.0f;
+    return mouse_dx;
+}
+float Input::get_mouse_delta_y() const {
+    if (!can_use_input_mouse()) return 0.0f;
+    return mouse_dy;
 }
 void Input::set_mouse_relative_to_window(bool value) { SDL_SetWindowRelativeMouseMode(engine.window.window, value); }
 bool Input::get_mouse_relative_to_window() { return SDL_GetWindowRelativeMouseMode(engine.window.window); }

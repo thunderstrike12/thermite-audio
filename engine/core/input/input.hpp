@@ -117,37 +117,37 @@ class Input {
     /// Returns the mouse cursor's X position in window coordinates.
     /// </summary>
     /// <returns>X position in pixels.</returns>
-    float get_mouse_x() const { return mouse_x; }
+    float get_mouse_x() const;
 
     /// <summary>
     /// Returns the mouse cursor's Y position in window coordinates.
     /// </summary>
     /// <returns>Y position in pixels.</returns>
-    float get_mouse_y() const { return mouse_y; }
+    float get_mouse_y() const;
 
     /// <summary>
     /// Returns horizontal scroll wheel delta for this frame.
     /// </summary>
     /// <returns>Horizontal scroll amount.</returns>
-    float get_mouse_wheel_x() const { return scroll_dx; }
+    float get_mouse_wheel_x() const;
 
     /// <summary>
     /// Returns vertical scroll wheel delta for this frame.
     /// </summary>
     /// <returns>Vertical scroll amount.</returns>
-    float get_mouse_wheel_y() const { return scroll_dy; }
+    float get_mouse_wheel_y() const;
 
     /// <summary>
     /// Returns mouse movement delta X since last frame.
     /// </summary>
     /// <returns>Horizontal movement in pixels.</returns>
-    float get_mouse_delta_x() const { return mouse_dx; }
+    float get_mouse_delta_x() const;
 
     /// <summary>
     /// Returns mouse movement delta Y since last frame.
     /// </summary>
     /// <returns>Vertical movement in pixels.</returns>
-    float get_mouse_delta_y() const { return mouse_dy; }
+    float get_mouse_delta_y() const;
 
     /// <summary>
     /// Enables or disables relative mouse mode (cursor hidden, infinite movement).
@@ -289,6 +289,10 @@ class Input {
     float get_action_duration(const std::string& name) const;
 
    private:
+    bool can_use_input_mouse() const;
+    bool can_use_input_keyboard() const;
+    bool can_capture_keyboard = false;
+    bool can_capture_mouse = false;
     // non-owning pointer from SDL, do not free manually
     const bool* keys_sdl = nullptr;
     uint32_t mouse_buttons = 0u;

@@ -24,7 +24,7 @@ class ImGuiManager : public internal::OnSdlEvent, public OnEngineUpdate {
     FontManager font_manager;
 
    private:
-    void on_sdl_event(SDL_Event& event) override;
+    void on_sdl_event(internal::SdlEvent& event) override;
 
     ImGUI* imgui {};
 

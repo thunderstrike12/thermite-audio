@@ -10,14 +10,22 @@ should not be used by the game
 
 namespace tmt::internal {
 
-class OnSdlEvent : public EventListenerBase<OnSdlEvent, SDL_Event> {
+struct SdlEvent {
+    SdlEvent(SDL_Event event) : event(event) {}
+
+    SDL_Event event;
+    bool imgui_capture_mouse = false;
+    bool imgui_capture_keyboard = false;
+};
+
+class OnSdlEvent : public EventListenerBase<OnSdlEvent, SdlEvent> {
    public:
     OnSdlEvent() : EventListenerBase() {}
 
-    virtual void on_sdl_event(SDL_Event& event) = 0;
+    virtual void on_sdl_event(SdlEvent& event) = 0;
 
-    void on_event(SDL_Event& event) final override { on_sdl_event(event); };
-    void on_event(const SDL_Event&) final override { /* Empty */ }
+    void on_event(SdlEvent& event) final override { on_sdl_event(event); };
+    void on_event(const SdlEvent&) final override { /* Empty */ }
 };
 
 }  // namespace tmt::internal

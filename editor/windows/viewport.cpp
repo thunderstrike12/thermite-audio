@@ -77,7 +77,6 @@ void tmt::Viewport::display() {
     ImGui::BeginChild("viewport_render", ImVec2(0, 0), 0, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove);
     ImGui::Image((ImTextureRef)engine.renderer.render_view.imgui_viewport, size);
     is_hovered = ImGui::IsItemHovered();
-
     ImGuizmo::SetDrawlist();
 
     gizmo_manip();
@@ -207,6 +206,9 @@ void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {
         input.lock_mouse(false);
         return;
     }
+    /* Cancel any text fields in editor you may interact with */
+    ImGui::SetWindowFocus();
+
     /* Hide mouse cursor */
     input.set_mouse_relative_to_window(true);
     input.lock_mouse(true);

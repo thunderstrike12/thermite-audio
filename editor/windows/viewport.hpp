@@ -22,6 +22,8 @@ class Viewport : public IWindow {
     constexpr bool is_closable() const override { return false; };
     constexpr bool default_open() const override { return true; }
 
+    bool get_is_hovered() const { return is_hovered; }
+
    private:
     void gizmo_manip();
     void setup_gizmo_style();
