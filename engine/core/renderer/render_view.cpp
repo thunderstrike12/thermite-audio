@@ -76,6 +76,7 @@ void RenderView::update() {
         if (const Result r = bank.resize_render_target(render_target, gpu_view.resolution.x, gpu_view.resolution.y); r.is_err()) {
             Log::error(Log::Scope::RENDERER, "failed to resize the swapchain.\nreason: {}", r.unwrap_err().c_str());
         }
+        resize_textures();
         engine.window.resized = false;
     }
 }
