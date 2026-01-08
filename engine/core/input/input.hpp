@@ -221,6 +221,13 @@ class Input {
     void lock_mouse(bool value) const;
 
     /// <summary>
+    /// Moves the cursor position to given position using the default window.
+    /// </summary>
+    /// <param name="pos">The position used to set the cursor.</param>
+    /// <param name="relative">By default it will do it relatively to the window.</param>
+    void warp_mouse(const glm::vec2& pos, bool relative = true);
+
+    /// <summary>
     /// Adds a custom input event to an action. Creates the action if it doesn't exist.
     /// </summary>
     /// <param name="name">The action identifier.</param>

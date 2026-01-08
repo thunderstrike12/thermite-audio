@@ -5,6 +5,7 @@
 #include "engine/core/ecs.hpp"
 #include "engine/core/io.hpp"
 #include "engine/core/components/camera.hpp"
+#include "engine/core/input/input.hpp"
 
 using namespace tmt;
 
@@ -55,4 +56,18 @@ void Console::register_commands() {
             Log::info("[{}] {}", static_cast<uint32_t>(entity), registry.get<Name>(entity).name);
         }
     });
+
+    // Input related commands
+    register_command(
+        "warp_mouse", "Moves the cursor instantly to the given position relative to the window",
+        [](float x, float y) {
+            auto mouse_pos = glm::vec2 {x, y};
+            tmt::engine.input.warp_mouse(mouse_pos);
+
+            Log::info("Mouse position is moved to {}", mouse_pos.x, mouse_pos.y);
+        },
+
+        csys::Arg<float>("mouse_x"), csys::Arg<float>("mouse_y")
+
+    );
 }

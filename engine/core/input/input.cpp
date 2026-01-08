@@ -268,6 +268,13 @@ void Input::lock_mouse(bool value) const {
         SDL_SetWindowMouseRect(engine.window.window, nullptr);
     }
 }
+void Input::warp_mouse(const glm::vec2& pos, bool relative) {
+    if (relative) {
+        SDL_WarpMouseInWindow(engine.window.window, pos.x, pos.y);
+    } else {
+        SDL_WarpMouseGlobal(pos.x, pos.y);
+    }
+}
 
 void Input::add_key_to_action(const std::string& name, Key key) { add_action_event(name, std::make_unique<InputEventKey>(key)); }
 
