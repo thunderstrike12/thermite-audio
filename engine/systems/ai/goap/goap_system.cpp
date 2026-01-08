@@ -128,13 +128,27 @@ struct Node {
     float total_cost() const { return cost_so_far + heuristic; }
 };
 
+/**
+ * Builds the runtime-effective version of a GOAP action.
+ *
+ * GOAP actions now have two layers of data:
+ *   - The base action definition (registered in code)
+ *   - The editor override data (loaded from saved JSON)
+ *
+ * This function merges them into a single EffectiveGoapAction:
+ *   - The override is applied only when it exists and contains a valid field.
+ *   - Base values act as the fallback default.
+ *
+ * This allows designers to modify values at runtime without affecting the
+ * base registered action implementation.
+ */
 EffectiveGoapAction build_effective_action(const GoapAction& base, const GoapActionEditorData* override) {
     EffectiveGoapAction out;
 
-    // Cost
+    // --- Cost ---
     out.cost = (override && override->cost >= 0.f) ? override->cost : base.cost;
 
-    // Preconditions
+    // --- Preconditions ---
     out.preconditions = base.preconditions;
     if (override) {
         for (auto& [k, v] : override->preconditions) {
@@ -142,7 +156,7 @@ EffectiveGoapAction build_effective_action(const GoapAction& base, const GoapAct
         }
     }
 
-    // Effects
+    // --- Effects ---
     out.effects = base.effects;
     if (override) {
         for (auto& [k, v] : override->effects) {
