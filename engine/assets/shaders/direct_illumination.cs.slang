@@ -36,6 +36,9 @@ static const float3 LIGHT_POS = float3(2.0f, 12.0f, 4.0f);
 [shader("compute")]
 [numthreads(128, 1, 1)]
 void main(int thread_id: SV_DispatchThreadID) {
+    /* Bounds check */
+    if (thread_id >= macrofacet_shading_commands[3]) return;
+
     /* Load macrofacet shading command */
     const uint64_t facet_key = asuint64(uint2(
         macrofacet_shading_commands[4 + thread_id * 2], 
