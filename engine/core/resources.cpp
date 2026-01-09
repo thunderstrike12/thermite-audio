@@ -30,8 +30,7 @@ void Resources::reload_collection(ResourceCollection& collection) const {
 
     for (auto& runtime_resource : collection) {
         if (auto res = runtime_resource.lock()) {
-            const bool success = reload_resource(res);
-            if (!success) {
+            if (!reload_resource(res)) {
                 tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to reload runtime resource in collection");
             }
         }

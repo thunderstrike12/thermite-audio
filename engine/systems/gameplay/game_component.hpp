@@ -28,7 +28,7 @@ class IGameComponent {
     virtual void update(const FrameData& time) = 0;
     virtual void end() = 0;
     /* [ Optional ] */
-    virtual void fixed_update(const FrameData& time) {};
+    virtual void fixed_update(const FrameData& time) { (void)time; };
 
     /* [ Auto ] Helpers for engine */
     virtual nlohmann::json serialize() const = 0;

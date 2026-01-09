@@ -37,9 +37,9 @@ class Application : public IGameEvents {
 
     /* [Optional] */
     virtual void on_start() override {};
-    virtual void on_update(const tmt::FrameData& time) override {};
+    virtual void on_update(const tmt::FrameData& time) override { (void)time; };
     virtual void on_end() override {};
-    virtual void on_fixed_update(const tmt::FrameData& time) override {};
+    virtual void on_fixed_update(const tmt::FrameData& time) override { (void)time; };
 };
 
 }  // namespace tmt

@@ -14,14 +14,12 @@ std::unique_ptr<vengi::Node> VengiParser::load(const tmt::IO::FileLocation& veng
     try {
         if (data.size() < 8) {
             throw std::runtime_error("File too small to be valid VENGI file");
-            return ret_node;
         }
 
         // Check startfile "VENG" identifier
         uint32_t veng_mark = *reinterpret_cast<const uint32_t*>(&data[0]);
         if (veng_mark != 0x474E4556) {  // "VENG" in little-endian
             throw std::runtime_error("Invalid magic number. Expected 'VENG'");
-            return ret_node;
         }
 
         std::vector<char> decompressed_output = zlib_decompress_vengi_file(data);

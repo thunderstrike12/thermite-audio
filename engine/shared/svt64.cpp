@@ -131,7 +131,7 @@ bool Svt64::is_empty(const uint32_t x, const uint32_t y, const uint32_t z) {
             return false;
         }
 
-        const uint32_t child_pos = __popcnt64(current->child_mask & ((1ull << child_index) - 1u));
+        const uint32_t child_pos = (uint32_t)__popcnt64(current->child_mask & ((1ull << child_index) - 1u));
         current = &nodes[current->abs_ptr() + child_pos];
     }
 
@@ -152,11 +152,11 @@ Material* Svt64::get_voxel(const uint32_t x, const uint32_t y, const uint32_t z)
         if ((current->child_mask & (1ull << child_index)) == 0u) {
             return nullptr;
         } else if (level == depth) {
-            const uint32_t child_pos = __popcnt64(current->child_mask & ((1ull << child_index) - 1u));
+            const uint32_t child_pos = (uint32_t)__popcnt64(current->child_mask & ((1ull << child_index) - 1u));
             return &palette.entries[materials[current->abs_ptr() + child_pos]];
         }
 
-        const uint32_t child_pos = __popcnt64(current->child_mask & ((1ull << child_index) - 1u));
+        const uint32_t child_pos = (uint32_t)__popcnt64(current->child_mask & ((1ull << child_index) - 1u));
         current = &nodes[current->abs_ptr() + child_pos];
     }
 
@@ -177,11 +177,11 @@ PhysicsVoxel* Svt64::get_physics_voxel(const uint32_t x, const uint32_t y, const
         if ((current->child_mask & (1ull << child_index)) == 0u) {
             return nullptr;
         } else if (level == depth) {
-            const uint32_t child_pos = __popcnt64(current->child_mask & ((1ull << child_index) - 1u));
+            const uint32_t child_pos = (uint32_t)__popcnt64(current->child_mask & ((1ull << child_index) - 1u));
             return &physics_data[current->abs_ptr() + child_pos];
         }
 
-        const uint32_t child_pos = __popcnt64(current->child_mask & ((1ull << child_index) - 1u));
+        const uint32_t child_pos = (uint32_t)__popcnt64(current->child_mask & ((1ull << child_index) - 1u));
         current = &nodes[current->abs_ptr() + child_pos];
     }
 

@@ -59,7 +59,7 @@ Json tag_invoke(JsonReflect::serialize_t, const tmt::Entity& entity, const tmt::
     return tmt::Serializer::serialize(entities, ecs);
 }
 
-void tag_invoke(JsonReflect::deserialize_t, const Json& j, tmt::Entity& entity, tmt::Ecs& ecs) {}
+void tag_invoke(JsonReflect::deserialize_t, const Json&, tmt::Entity&, tmt::Ecs&) {}
 
 /* Set of entities */
 Json tag_invoke(JsonReflect::serialize_t, const std::set<tmt::Entity>& entities_original, const tmt::Ecs& ecs) {

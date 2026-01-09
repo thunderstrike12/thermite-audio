@@ -223,7 +223,7 @@ void Goap::update_plan(Entity entity, GoapAgent& agent, WorldState& ws) {
         // Check preconditions against current worldstate
         bool satisfied = true;
         for (auto& [fact, val] : effective.preconditions) {
-            auto it = ws.facts.find(std::hash<std::string>()(fact));
+            auto it = ws.facts.find((uint32_t)std::hash<std::string>()(fact));
             if (it == ws.facts.end() || it->second.bool_val != val) {
                 satisfied = false;
                 break;
@@ -279,7 +279,7 @@ void Goap::update_plan(Entity entity, GoapAgent& agent, WorldState& ws) {
 
             bool satisfied = true;
             for (auto& [fact, val] : effective.preconditions) {
-                auto it = temp.facts.find(std::hash<std::string>()(fact));
+                auto it = temp.facts.find((uint32_t)std::hash<std::string>()(fact));
                 if (it == temp.facts.end() || it->second.bool_val != val) {
                     satisfied = false;
                     break;

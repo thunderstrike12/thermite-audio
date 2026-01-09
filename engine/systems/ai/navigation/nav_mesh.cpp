@@ -13,7 +13,7 @@ void NavMesh::generate_mesh(tmt::ResourceRef<tmt::VoxelVolume> voxel_volume, int
     nodes.clear();
 
     uint32_t full_depth = voxel_volume->blas->depth;
-    uint32_t target_depth = (lod_level < full_depth) ? (full_depth - lod_level) : 1;
+    uint32_t target_depth = (lod_level < (int)full_depth) ? (full_depth - lod_level) : 1;
 
     uint32_t divisor = 1u << (lod_level * 2);
     glm::uvec3 size = (voxel_volume->size + divisor - 1u) / divisor;
@@ -194,8 +194,8 @@ std::vector<int> NavMesh::find_path(const int starting_node_id, const int ending
     }
 
     // reconstruct path and return it
-    std::vector<int> path;
-    path.push_back(ending_node_id);
+    std::vector<int> repath;
+    repath.push_back(ending_node_id);
     current = ending_node_id;
     while (1) {
         if (current == starting_node_id) {
@@ -204,9 +204,9 @@ std::vector<int> NavMesh::find_path(const int starting_node_id, const int ending
                 nodes[i].h = 0.0f;
                 nodes[i].parent = 0;
             }
-            return path;
+            return repath;
         }
-        path.push_back(nodes[current].parent);
+        repath.push_back(nodes[current].parent);
         current = nodes[current].parent;
     }
 }

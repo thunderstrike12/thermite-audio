@@ -83,7 +83,7 @@ void RigModelManager::inspect(float) {
     for (const auto& [entity, transform, rig] : engine.ecs.get_registry().view<Transform, RigModel>().each()) {
         for (const Entity bone_entity : rig.bone_entities) {
             auto& bone_transform = engine.ecs.get_component<Transform>(bone_entity);
-            auto& bone_name = engine.ecs.get_component<Name>(bone_entity);
+            // auto& bone_name = engine.ecs.get_component<Name>(bone_entity);
             const glm::vec3 joint = bone_transform.get_world_position();
 
             if (bone_transform.has_parent()) {

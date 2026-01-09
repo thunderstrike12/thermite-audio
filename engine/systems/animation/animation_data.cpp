@@ -100,7 +100,7 @@ void RigData::extract_bone_keyframes_fbx(const ufbx_scene* animation_fbx, const 
 
             std::function<bool(const Bone&)> find_bone_predicate;
 
-            const std::string& bone_name = bone_node->name.data;
+            // const std::string& bone_name = bone_node->name.data;
 
             // Get the bone node of the rig from the animation fbx file, since we are animating based on rig_fbx names.
             const auto animation_bone_node =
@@ -140,7 +140,7 @@ void RigData::extract_bone_keyframes_fbx(const ufbx_scene* animation_fbx, const 
 
             for (const ufbx_baked_quat& rotation : bake_node.rotation_keys) {
                 bone_comp.animations[animation_name].keyframes_rot.push_back(
-                    KeyframeRot {static_cast<float>(rotation.time), glm::quat(rotation.value.w, rotation.value.x, rotation.value.y, rotation.value.z)}
+                    KeyframeRot {static_cast<float>(rotation.time), glm::quat((float)rotation.value.w, (float)rotation.value.x, (float)rotation.value.y, (float)rotation.value.z)}
                 );
             }
         }

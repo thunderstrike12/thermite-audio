@@ -300,7 +300,7 @@ void Polyline::draw_text(glm::vec3 origin, std::string_view text, float size, fl
     const float spacing = size * 1.2f;  // todo remove magic number for spacing?
 
     for (char c : text) {
-        char upper_case_character = std::toupper(static_cast<unsigned char>(c));
+        const char upper_case_character = (char)std::toupper(static_cast<unsigned char>(c));
 
         auto it = char_text_constants::CHAR_SEGMENTS.find(upper_case_character);
         if (it == char_text_constants::CHAR_SEGMENTS.end()) {
