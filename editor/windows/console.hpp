@@ -70,11 +70,16 @@ class Console : public IWindow {
     void register_variable(const std::string& name, T& variable) {
         console.System().RegisterVariable(name, variable);
     }
-
+    template <typename T, typename... Args>
+    void register_variable(const std::string& name, T& variable, Args&&... args) {
+        console.System().RegisterVariable(name, variable, std::forward<Args>(args)...);
+    }
     void register_script(const std::string& name, const std::string& filepath) { console.System().RegisterScript(name, filepath); }
 
    private:
     void register_commands();
+    void register_variables();
+
     ImGuiConsole console;
     std::shared_ptr<ConsoleSink_st> sink;
 };

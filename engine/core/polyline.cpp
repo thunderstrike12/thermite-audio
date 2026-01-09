@@ -7,6 +7,7 @@
 #include "engine/core/renderer/renderer.hpp"
 #include "engine/core/renderer/pipelines/polyline_pipeline.hpp"
 #include "engine/core/logger.hpp"
+#include "utilities/constants.hpp"
 
 namespace tmt {
 
@@ -282,4 +283,37 @@ void Polyline::draw_bone(glm::vec3 origin, glm::quat rot, float length, float ti
     }
 }
 
+void Polyline::draw_text(glm::vec3 origin, std::string_view text, float size, float time) {
+    /* Billboard toward camera */
+    const glm::vec3 cam_pos = engine.renderer.render_view.gpu_view.origin;
+    const glm::vec3 forward = glm::normalize(cam_pos - origin);
+
+    glm::vec3 world_up = glm::vec3(0.0f, 1.0f, 0.0f);
+    if (glm::abs(glm::dot(forward, world_up)) > 0.99f) {
+        world_up = glm::vec3(0.0f, 0.0f, 1.0f);
+    }
+
+    const glm::vec3 right = glm::normalize(glm::cross(forward, world_up));
+    const glm::vec3 up = glm::cross(right, forward);
+
+    glm::vec3 cursor = origin;
+    const float spacing = size * 1.2f;  // todo remove magic number for spacing?
+
+    for (char c : text) {
+        char upper_case_character = std::toupper(static_cast<unsigned char>(c));
+
+        auto it = char_text_constants::CHAR_SEGMENTS.find(upper_case_character);
+        if (it == char_text_constants::CHAR_SEGMENTS.end()) {
+            // assign invalid character
+            it = char_text_constants::CHAR_SEGMENTS.find('\0');
+        }
+        for (const auto& seg : it->second) {
+            const glm::vec3 p0 = cursor + right * seg.x0 * size + up * seg.y0 * size;
+            const glm::vec3 p1 = cursor + right * seg.x1 * size + up * seg.y1 * size;
+            draw_line(p0, p1, time);
+        }
+
+        cursor += right * spacing;
+    }
+}
 }  // namespace tmt

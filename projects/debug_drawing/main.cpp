@@ -5,12 +5,21 @@
 #include "engine/core/components/camera.hpp"
 #include "engine/core/renderer/renderer.hpp"
 #include "engine/core/polyline.hpp"
+#include "engine/core/scene.hpp"
+#include "engine/core/scenes.hpp"
 #include "engine/systems/camera/camera_system.hpp"
 
 class DebugDrawing : public tmt::Application {
    public:
     DebugDrawing(const tmt::ApplicationSpecs& specs) : Application(specs) {}
 
+    void on_start() override {};
+    void on_update(const tmt::FrameData& time) override {};
+    void on_end() override {};
+};
+class DebugScene : public tmt::Scene<DebugScene> {
+   public:
+    static constexpr std::string_view scene_name() { return "DebugScene"; }
     tmt::Entity voxel {};
     float time_passed = 0.0f;
 
@@ -18,7 +27,6 @@ class DebugDrawing : public tmt::Application {
     void on_update(const tmt::FrameData& time) override;
     void on_end() override;
 };
-
 std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs& args) {
     // clang-format off
     tmt::ApplicationSpecs specs {
@@ -30,11 +38,11 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
 
     /* Register Systems */
     tmt::engine.ecs.systems.add<tmt::CameraSystem>();
-
+    tmt::engine.scenes.register_scene<DebugScene>();
     return std::make_unique<DebugDrawing>(specs);
 }
 
-void DebugDrawing::on_start() {
+void DebugScene::on_start() {
     { /* Camera entity */
         tmt::Entity entity = tmt::engine.ecs.create_entity("Camera");
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
@@ -43,8 +51,7 @@ void DebugDrawing::on_start() {
     }
 }
 
-void DebugDrawing::on_update(const tmt::FrameData& time) {
-    time_passed += time.delta_time;
+void DebugScene::on_update(const tmt::FrameData& time) {
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(voxel);
 
     /* Lines */
@@ -94,6 +101,10 @@ void DebugDrawing::on_update(const tmt::FrameData& time) {
     tmt::engine.polyline.draw_bone({11.0f, 1.5f, 0.5f}, glm::angleAxis(1.1f, glm::vec3(0.0f, 0.0f, 1.0f)), 1.5f);
     tmt::engine.polyline.use_color(0.3f, 0.3f, 1.0f);
     tmt::engine.polyline.draw_bone({11.0f, 1.5f, 0.5f}, glm::angleAxis(-0.8f, glm::vec3(0.0f, 0.0f, 1.0f)), 1.0f);
+    /* Text */
+    tmt::engine.polyline.use_line_width(0.15f);
+    tmt::engine.polyline.use_color(0.9f, 0.9f, 0.9f);
+    tmt::engine.polyline.draw_text({12.0f, 0.5f, 0.5f}, "HP: 100", 0.15f, 0.0f);
 }
 
-void DebugDrawing::on_end() {}
+void DebugScene::on_end() {}
