@@ -10,12 +10,9 @@
 
 namespace tmt {
 
-/* Internal polyline pipeline quick access. */
-PolylinePipeline& polyline = engine.renderer.polyline_pipeline;
-
 void Polyline::draw_line(glm::vec3 a, glm::vec3 b, float time) {
     /* Check if we reached the maximum number of polylines */
-    if (polyline.line_segment_count >= MAX_POLYLINES - 1u) {
+    if (engine.renderer.polyline_pipeline.line_segment_count >= MAX_POLYLINES - 1u) {
         if (logged_once == false) {
             Log::warn(Log::Scope::RENDERER, "Max amount of polylines reached. Consider increasing MAX_POLYLINES, or draw less lines.");
             logged_once = true;
@@ -24,16 +21,16 @@ void Polyline::draw_line(glm::vec3 a, glm::vec3 b, float time) {
     }
 
     /* Increment the line segment count */
-    polyline.line_segment_count += 1u;
+    engine.renderer.polyline_pipeline.line_segment_count += 1u;
 
     /* If the time is 0 that means this is an immediate line */
     if (time == 0.0f) {
-        polyline.immediate_lines.emplace_back(a, b, color, line_width);
+        engine.renderer.polyline_pipeline.immediate_lines.emplace_back(a, b, color, line_width);
         return;
     }
 
     /* If the time *is* set, create a timed line */
-    polyline.timed_lines.emplace_back(a, b, color, line_width, time);
+    engine.renderer.polyline_pipeline.timed_lines.emplace_back(a, b, color, line_width, time);
 }
 
 void Polyline::draw_circle(glm::vec3 origin, float radius, uint32_t segments, float time) {
