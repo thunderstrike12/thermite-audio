@@ -184,7 +184,8 @@ const glm::mat4& Transform::get_world_matrix() const {
 }
 
 void Transform::set_parent(Entity new_parent) {
-    if (new_parent == get_self()) {
+    Entity self = get_self();
+    if (new_parent == self) {
         throw std::runtime_error("Transform::set_parent: Cannot set self as parent");
     }
 
@@ -193,7 +194,7 @@ void Transform::set_parent(Entity new_parent) {
     constexpr static int MAX_ITERATIONS = 1000;
     Entity current = new_parent;
     while (current != entt::null) {
-        if (current == get_self()) {
+        if (current == self) {
             throw std::runtime_error("Circular parent hierarchy detected");
         }
 
