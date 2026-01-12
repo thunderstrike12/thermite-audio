@@ -12,7 +12,7 @@
 #include "engine/core/io.hpp"
 #include "engine/core/renderer/renderer.hpp"
 #include "ImGuizmo.h"
-
+#include "implot.h"
 #include "editor/editor.hpp"
 #include "editor/windows/viewport.hpp"
 
@@ -23,6 +23,7 @@ void ImGuiManager::init() {
 
     /* Initialize the immediate mode GUI */
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGui_ImplSDL3_InitForVulkan(engine.window.window);
     imgui->set_clear_screen(true);
     tmt::engine.renderer.set_imgui(imgui);
@@ -60,6 +61,7 @@ void ImGuiManager::end_frame() {
 }
 
 void ImGuiManager::deinit() {
+    ImPlot::DestroyContext();
     imgui->deinit().expect("Failed to deinitialize ImGui");
 
     delete imgui;

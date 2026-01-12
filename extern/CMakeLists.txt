@@ -132,6 +132,35 @@ if (THERMITE_EDITOR_BUILD)
         PRIVATE "./imgui-node-editor"
     )
 
+    # ImPlot - Immediate Mode Plotting
+    # https://github.com/epezent/implot
+    target_sources(thermite-editor
+        PRIVATE "./implot/implot.cpp"
+        PRIVATE "./implot/implot_items.cpp"
+    )
+    target_include_directories(thermite-editor
+        PRIVATE "./implot"
+    )
+
+    # imgui-console - ImGui Console
+    # https://github.com/rmxbalanque/imgui-console
+    # csys (header-only, bundled with imgui-console)
+    add_library(csys INTERFACE)
+    target_include_directories(csys INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/imgui-console/include")
+    target_compile_features(csys INTERFACE cxx_std_17)
+
+    # imgui-console library
+    add_library(imgui-console STATIC 
+        "${CMAKE_CURRENT_SOURCE_DIR}/imgui-console/src/imgui_console.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/imgui-console/include/imgui_console/imgui_console.h"
+    )
+    target_include_directories(imgui-console 
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/imgui-console/include/imgui_console"
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/imgui"  
+    )
+    target_compile_features(imgui-console PUBLIC cxx_std_17)
+    target_link_libraries(imgui-console PUBLIC csys)
+
 endif()
 
 
@@ -166,26 +195,6 @@ set(FMOD_POSTFIX "$<$<CONFIG:Debug>:L>")
 target_include_directories(thermite-engine
     PUBLIC "./fmod/include"
 )
-# imgui-console - ImGui Console
-# https://github.com/rmxbalanque/imgui-console
-if (THERMITE_EDITOR_BUILD)
-    # csys (header-only, bundled with imgui-console)
-    add_library(csys INTERFACE)
-    target_include_directories(csys INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/imgui-console/include")
-    target_compile_features(csys INTERFACE cxx_std_17)
-
-    # imgui-console library
-    add_library(imgui-console STATIC 
-        "${CMAKE_CURRENT_SOURCE_DIR}/imgui-console/src/imgui_console.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/imgui-console/include/imgui_console/imgui_console.h"
-    )
-    target_include_directories(imgui-console 
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/imgui-console/include/imgui_console"
-        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/imgui"  
-    )
-    target_compile_features(imgui-console PUBLIC cxx_std_17)
-    target_link_libraries(imgui-console PUBLIC csys)
-endif()
 
 # Link engine libraries publicly
 target_link_libraries(thermite-engine
