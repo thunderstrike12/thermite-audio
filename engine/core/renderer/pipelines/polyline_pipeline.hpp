@@ -5,6 +5,7 @@
 #include <graphite/resources/handle.hh>
 
 #include "engine/core/renderer/render_view.hpp"
+#include "engine/core/renderer/scene_view.hpp"
 #include "engine/events/engine.hpp"
 
 class GPUAdapter;
@@ -51,7 +52,7 @@ class PolylinePipeline : public OnEngineUpdate {
    public:
     void init(GPUAdapter& gpu);
     void on_engine_update(const FrameData& time) override;
-    void enqueue(RenderGraph& render_graph, RenderView render_view);
+    void enqueue(RenderGraph& render_graph, RenderView& render_view, SceneView& scene_view);
     void deinit(GPUAdapter& gpu);
 
     PolylinePipeline() = default;

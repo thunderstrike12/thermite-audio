@@ -15,7 +15,7 @@ struct HashCell {
 /* Active render view */
 ConstantBuffer<RenderView> render_view;
 /* Visibility buffer */
-RWTexture2D<uint2> vbuffer;
+Texture2D<uint2> vbuffer;
 /* Macrofacet illuminance cache buffer. */
 StructuredBuffer<HashCell> macrofacet_illuminance_cache;
 /* Render target. (Output) */

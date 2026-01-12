@@ -51,7 +51,7 @@ public [ForceInline] bool null_visibility(const uint64_t packed) {
 }
 
 /* Expands one dimensional voxel index into three dimensional voxel position. */
-[ForceInline] uint3 expand_voxel_index(const uint voxel_index) {
+public [ForceInline] uint3 expand_voxel_index(const uint voxel_index) {
     return uint3(voxel_index & 0b1111111111u, (voxel_index >> 10) & 0b1111111111u, voxel_index >> 20);
 }
 

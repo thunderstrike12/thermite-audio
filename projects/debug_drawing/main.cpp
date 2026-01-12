@@ -8,6 +8,9 @@
 #include "engine/core/scene.hpp"
 #include "engine/core/scenes.hpp"
 #include "engine/systems/camera/camera_system.hpp"
+#include "engine/core/resources/voxel_scene.hpp"
+#include "engine/core/resources/voxel_volume.hpp"
+#include "engine/core/components/voxel_renderer.hpp"
 
 class DebugDrawing : public tmt::Application {
    public:
@@ -49,6 +52,14 @@ void DebugScene::on_start() {
         auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
         transform.set_world_position(glm::vec3(0.0f, 0.0f, -16.0f));
     }
+
+    auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "dragon128.vengi"});
+    auto voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
+
+    auto entity = tmt::engine.ecs.create_entity();
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+    auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
+    renderer.resource = voxel_volume;
 }
 
 void DebugScene::on_update(const tmt::FrameData& time) {

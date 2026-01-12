@@ -10,7 +10,7 @@ static const uint64_t EMPTY_KEY = 0ull;
 /* Active render view */
 ConstantBuffer<RenderView> render_view;
 /* Visibility buffer */
-RWTexture2D<uint2> vbuffer;
+Texture2D<uint2> vbuffer;
 /* Macrofacet Hash Set */
 StructuredBuffer<uint64_t> macrofacet_hashset;
 /* Render target. (Output) */

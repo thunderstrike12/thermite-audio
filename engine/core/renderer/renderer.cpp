@@ -110,7 +110,7 @@ void Renderer::update() {
     /* Enqueue pipelines */
     geometry_pipeline.enqueue(render_graph, render_view, scene_view);
     di_pipeline.enqueue(render_graph, render_view, scene_view);
-    polyline_pipeline.enqueue(render_graph, render_view);
+    polyline_pipeline.enqueue(render_graph, render_view, scene_view);
 
 #ifdef THERMITE_EDITOR
     /* Add the immediate mode GUI to the render graph */

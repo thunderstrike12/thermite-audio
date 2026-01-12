@@ -10,7 +10,7 @@ ConstantBuffer<RenderView> render_view;
 StructuredBuffer<float4> bvh_nodes;
 StructuredBuffer<uint> object_indices;
 StructuredBuffer<VoxelObject> object_data;
-/* Visibility buffer. (Output) */
+/* Visibility buffer. */
 RWTexture2D<uint2> vbuffer;
 
 [shader("compute")]

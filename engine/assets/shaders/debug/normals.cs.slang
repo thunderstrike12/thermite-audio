@@ -8,7 +8,7 @@ ConstantBuffer<RenderView> render_view;
 /* Object buffers. */
 StructuredBuffer<VoxelObject> objects;
 /* Visibility buffer. (Input) */
-RWTexture2D<uint2> vbuffer;
+Texture2D<uint2> vbuffer;
 /* Render target. (Output) */
 RWTexture2D<float4> render_target;
 

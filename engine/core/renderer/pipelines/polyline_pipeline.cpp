@@ -29,7 +29,7 @@ void PolylinePipeline::on_engine_update(const FrameData& time) {
     line_segment_count = (uint32_t)timed_lines.size() + (uint32_t)immediate_lines.size();
 }
 
-void PolylinePipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
+void PolylinePipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, SceneView& scene_view) {
     /* Get Render Image */
     const BindHandle render_image = render_view.get_render_image();
 
@@ -49,8 +49,19 @@ void PolylinePipeline::enqueue(RenderGraph& render_graph, RenderView render_view
 
     /* clang-format off */
 
-    /* Polyline render pass */
+    /* Depth transfer pass */
     const glm::uvec2 render_res = render_view.gpu_view.resolution;
+    RasterNode& transfer_pass = render_graph.add_raster_pass("depth transfer pass", "depth_transfer.vx", "depth_transfer.px")
+        .topology(Topology::TriangleList)
+        .read(render_view.render_view_buffer, ShaderStages::Pixel)
+        .read(render_view.vbuffer.image, ShaderStages::Pixel)
+        .read(scene_view.object_data, ShaderStages::Pixel)
+        .load_op_depth(LoadOp::Clear) /* Clear the depth buffer */
+        .depth_stencil(render_view.dbuffer.image, true, true)
+        .raster_extent(render_res.x, render_res.y);
+    transfer_pass.draw(NULL_BUFFER, 3u);
+
+    /* Polyline render pass */
     RasterNode& line_pass = render_graph.add_raster_pass("polyline pass", "polyline.vx", "polyline.px")
         .topology(Topology::TriangleList)
         .attribute(AttrFormat::XYZ32_SFloat)  /* Begin */
@@ -61,6 +72,7 @@ void PolylinePipeline::enqueue(RenderGraph& render_graph, RenderView render_view
         .alpha_blending(true)
         .read(render_view.render_view_buffer, ShaderStages::Vertex)
         .attach(render_image)
+        .depth_stencil(render_view.dbuffer.image)
         .raster_extent(render_res.x, render_res.y);
     line_pass.draw(line_buffer, 6u, 0u, line_segment_count, 0u);
 

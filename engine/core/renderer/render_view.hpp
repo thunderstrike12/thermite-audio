@@ -50,6 +50,7 @@ struct RenderView {
 
     /* Screen buffers */
     ScreenBuffer vbuffer {}; /* Visibility buffer (WxH, 6->8 bytes) */
+    ScreenBuffer dbuffer {}; /* Depth buffer (WxH, 4 bytes) */
     ScreenBuffer ibuffer {}; /* Illuminance buffer (WxH, 4 bytes) */
 
     /* Macrofacet buffers */
