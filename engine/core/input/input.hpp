@@ -218,7 +218,13 @@ class Input {
     /// Locks or unlocks the mouse cursor to the window.
     /// </summary>
     /// <param name="value">True to lock, false to unlock.</param>
-    void lock_mouse(bool value) const;
+    void lock_mouse(bool value);
+
+    /// <summary>
+    /// Returns true if the mouse cursor is currently locked to the window.
+    /// </summary>
+    /// <returns>True if the mouse is locked.</returns>
+    bool is_mouse_locked() const;
 
     /// <summary>
     /// Moves the cursor position to given position using the default window.
@@ -303,6 +309,7 @@ class Input {
     float mouse_dy = 0.0f;
     float scroll_dx = 0.0f;
     float scroll_dy = 0.0f;
+    bool mouse_locked = false;
     std::vector<bool> prev_keys {};
     std::unordered_map<int32_t, GamepadState> gamepads {};
 };

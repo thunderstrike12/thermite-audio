@@ -8,7 +8,7 @@
 
 using namespace tmt;
 
-void NavMesh::generate_mesh(tmt::ResourceRef<tmt::VoxelVolume> voxel_volume, int lod_level) {
+void NavMesh::generate_mesh() {
     TMT_ZONE_SCOPED_N("NavMesh::generate_mesh");
     nodes.clear();
 
@@ -211,7 +211,66 @@ std::vector<int> NavMesh::find_path(const int starting_node_id, const int ending
     }
 }
 
+int tmt::NavMesh::find_closest_node(const glm::vec3& position) {
+    int closest_node = -1;
+    float closest_distance = std::numeric_limits<float>::max();
+    for (int i = 0; i < (int)nodes.size(); i++) {
+        float distance = glm::distance(position, nodes[i].world_pos);
+        if (distance < closest_distance) {
+            closest_distance = distance;
+            closest_node = i;
+        }
+    }
+    return closest_node;
+}
+
+std::optional<glm::vec3> tmt::NavMesh::follow_path(glm::vec3 start, glm::vec3 end) {
+    // Calculate path
+    int start_pos = find_closest_node(start);
+    int closest_node_id = find_closest_node(end);
+    std::vector<int> new_path = find_path(start_pos, closest_node_id);
+    path = new_path;
+    if (new_path.size() < 1) return std::nullopt;
+
+    glm::vec3 target_pos = nodes[new_path[0]].world_pos;
+    if (path.size() > 2) {
+        float attraction_distance = 1.5f;
+        int current_node = new_path.size() - 1;
+        glm::vec3 current_pos = nodes[new_path[current_node]].world_pos;
+        float travelled_distance = 0.0f;
+        while (current_node >= 1) {
+            // Get next segment
+            glm::vec3 next_pos = nodes[new_path[current_node - 1]].world_pos;
+            float segment_distance = glm::distance(current_pos, next_pos);
+            // Check if we exceed attraction distance
+            if (travelled_distance + segment_distance > attraction_distance) {
+                float remaining_distance = attraction_distance - travelled_distance;
+                glm::vec3 direction = glm::normalize(next_pos - current_pos);
+                target_pos = current_pos + direction * remaining_distance;
+                break;
+                // Exit loop
+            } else {
+                travelled_distance += segment_distance;
+                current_node--;
+                current_pos = next_pos;
+                if (current_node >= (int)new_path.size() - 1) {
+                    target_pos = nodes[new_path.back()].world_pos;
+                    break;
+                }
+            }
+        }
+    }
+    tmt::engine.polyline.draw_sphere(target_pos, 0.1f);
+    tmt::engine.polyline.draw_sphere(start, 0.1f);
+
+    if (glm::distance(target_pos, start) > 0.01f) {
+        return glm::normalize(target_pos - start);
+    }
+    return std::nullopt;
+}
+
 void tmt::NavMesh::inspect() {
+    return;
     tmt::engine.polyline.use_color(1.0f, 0.0f, 0.0f);
     tmt::engine.polyline.use_line_width(2, true);
 

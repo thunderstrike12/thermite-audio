@@ -63,10 +63,14 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
 
     /* Enforce Name component */
     template <typename... Component>
-    Entity create_entity(const std::string& name = "", const Entity hint = entt::null) {
+    decltype(auto) create_entity(const std::string& name = "", const Entity hint = entt::null) {
         Entity entity = create_entity(name, hint);
-        (add_component<Component>(entity), ...);
-        return entity;
+        constexpr size_t COUNT = sizeof...(Component);
+        if constexpr (COUNT > 0) {
+            return add_or_get_component<Component...>(entity);
+        } else {
+            return entity;
+        }
     }
 
     /* No components enforced. Preferably use ``create_entity`` over this one */
@@ -183,6 +187,8 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
     }
 
     void clear() { registry.clear(); }
+
+    bool valid(const Entity entity) const { return registry.valid(entity); }
 
     Collection<ISystem> systems;
 

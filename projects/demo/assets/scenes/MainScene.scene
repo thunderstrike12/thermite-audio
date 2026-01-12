@@ -1,0 +1,444 @@
+{
+    "version": 1,
+    "entities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        3145734
+    ],
+    "Name": {
+        "0": {
+            "name": "Player"
+        },
+        "1": {
+            "name": "Walkable_asteroid"
+        },
+        "2": {
+            "name": "Asteroids"
+        },
+        "3": {
+            "name": "animation guy"
+        },
+        "4": {
+            "name": "Walkable_asteroid"
+        },
+        "5": {
+            "name": "Walking Dragon"
+        },
+        "3145734": {
+            "name": "Walking Dragon"
+        }
+    },
+    "Transform": {
+        "0": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -9.915840148925781
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1": {
+            "local_position": {
+                "x": -6.309313774108887,
+                "y": 0.0,
+                "z": 21.942337036132813
+            },
+            "local_rotation": {
+                "w": 0.7518202662467957,
+                "x": 0.0,
+                "y": -0.659368097782135,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0000001192092896,
+                "y": 1.0,
+                "z": 1.0000001192092896
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "2": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "3": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "4": {
+            "local_position": {
+                "x": -22.24384307861328,
+                "y": 0.0,
+                "z": 0.5516737699508667
+            },
+            "local_rotation": {
+                "w": -0.4213019609451294,
+                "x": 0.0,
+                "y": 0.9069204330444336,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0000001192092896,
+                "y": 1.0,
+                "z": 1.0000001192092896
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "5": {
+            "local_position": {
+                "x": -0.562983512878418,
+                "y": 5.419820308685303,
+                "z": 23.93695831298828
+            },
+            "local_rotation": {
+                "w": 0.9147375226020813,
+                "x": 0.0,
+                "y": 0.4040485620498657,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 0.19580405950546265,
+                "y": 0.19580404460430145,
+                "z": 0.19580405950546265
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "3145734": {
+            "local_position": {
+                "x": -16.74327850341797,
+                "y": 5.419820308685303,
+                "z": -4.522403240203857
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 0.19580404460430145,
+                "y": 0.19580404460430145,
+                "z": 0.19580404460430145
+            },
+            "parent": 4294967295,
+            "children": []
+        }
+    },
+    "Voxel Renderer": {
+        "1": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "asteroids/test_asteroid_2.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 149,
+                        "y": 151,
+                        "z": 137
+                    }
+                }
+            }
+        },
+        "4": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "asteroids/test_asteroid_3.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 169,
+                        "y": 183,
+                        "z": 209
+                    }
+                }
+            }
+        },
+        "5": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "dragon128.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 128,
+                        "y": 90,
+                        "z": 58
+                    }
+                }
+            }
+        },
+        "3145734": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "dragon128.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 128,
+                        "y": 90,
+                        "z": 58
+                    }
+                }
+            }
+        }
+    },
+    "Camera": {
+        "0": {
+            "fov": 80.0,
+            "pitch": 0.0,
+            "yaw": 90.0,
+            "active": true
+        }
+    },
+    "ComponentCollection": {
+        "0": {
+            "Player": {
+                "acceleration": 10.0,
+                "camera_sensitivity": 0.10000000149011612,
+                "drag": 2.5,
+                "max_speed": 5.0
+            }
+        },
+        "2": {
+            "AsteroidSpawner": {
+                "asteroid_bodies": [
+                    {
+                        "data": {
+                            "size": {
+                                "x": 85,
+                                "y": 77,
+                                "z": 67
+                            }
+                        },
+                        "file_location": {
+                            "relative_path": "asteroids/test_asteroid_0.vengi",
+                            "sub_location": "PROJECT"
+                        }
+                    },
+                    {
+                        "data": {
+                            "size": {
+                                "x": 74,
+                                "y": 75,
+                                "z": 77
+                            }
+                        },
+                        "file_location": {
+                            "relative_path": "asteroids/test_asteroid_1.vengi",
+                            "sub_location": "PROJECT"
+                        }
+                    },
+                    {
+                        "data": {
+                            "size": {
+                                "x": 149,
+                                "y": 151,
+                                "z": 137
+                            }
+                        },
+                        "file_location": {
+                            "relative_path": "asteroids/test_asteroid_2.vengi",
+                            "sub_location": "PROJECT"
+                        }
+                    },
+                    {
+                        "data": {
+                            "size": {
+                                "x": 169,
+                                "y": 183,
+                                "z": 209
+                            }
+                        },
+                        "file_location": {
+                            "relative_path": "asteroids/test_asteroid_3.vengi",
+                            "sub_location": "PROJECT"
+                        }
+                    },
+                    {
+                        "data": {
+                            "size": {
+                                "x": 65,
+                                "y": 68,
+                                "z": 65
+                            }
+                        },
+                        "file_location": {
+                            "relative_path": "asteroids/test_asteroid_4.vengi",
+                            "sub_location": "PROJECT"
+                        }
+                    },
+                    {
+                        "data": {
+                            "size": {
+                                "x": 111,
+                                "y": 105,
+                                "z": 138
+                            }
+                        },
+                        "file_location": {
+                            "relative_path": "asteroids/test_asteroid_5.vengi",
+                            "sub_location": "PROJECT"
+                        }
+                    },
+                    {
+                        "data": {
+                            "size": {
+                                "x": 41,
+                                "y": 37,
+                                "z": 39
+                            }
+                        },
+                        "file_location": {
+                            "relative_path": "asteroids/test_asteroid_6.vengi",
+                            "sub_location": "PROJECT"
+                        }
+                    },
+                    {
+                        "data": {
+                            "size": {
+                                "x": 151,
+                                "y": 121,
+                                "z": 121
+                            }
+                        },
+                        "file_location": {
+                            "relative_path": "asteroids/test_asteroid_7.vengi",
+                            "sub_location": "PROJECT"
+                        }
+                    }
+                ],
+                "asteroid_count": 100,
+                "enable_random_rotation": true,
+                "max_height_offset": 10.0,
+                "max_radius": 200.0,
+                "max_scale_factor": 2.0,
+                "min_height_offset": -10.0,
+                "min_radius": 50.0,
+                "min_scale_factor": 0.5,
+                "radial_bias": 0.0,
+                "randomize_seed": true,
+                "seed": 42,
+                "use_3d_distribution": false
+            }
+        },
+        "3": {
+            "AnimationPlayer": {
+                "animation_location": [
+                    {
+                        "relative_path": "animations/Victory_animation.fbx",
+                        "sub_location": "PROJECT"
+                    }
+                ],
+                "animation_name": "Victory_animation",
+                "rig_location": {
+                    "relative_path": "animations/Victory_animation.fbx",
+                    "sub_location": "PROJECT"
+                }
+            }
+        },
+        "5": {
+            "Walking": {
+                "attack_range": 1.0,
+                "max_chase_distance": 20.0,
+                "walk_speed": 2.5,
+                "walkable_asteroid": 1
+            }
+        },
+        "3145734": {
+            "Walking": {
+                "attack_range": 1.0,
+                "max_chase_distance": 20.0,
+                "walk_speed": 2.5,
+                "walkable_asteroid": 4
+            }
+        }
+    },
+    "Navigation Mesh": {
+        "1": {
+            "voxel_volume": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "asteroids/test_asteroid_2.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 149,
+                        "y": 151,
+                        "z": 137
+                    }
+                }
+            },
+            "lod_level": 1
+        },
+        "4": {
+            "voxel_volume": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "asteroids/test_asteroid_3.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 169,
+                        "y": 183,
+                        "z": 209
+                    }
+                }
+            },
+            "lod_level": 1
+        }
+    }
+}

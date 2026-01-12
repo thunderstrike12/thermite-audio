@@ -130,8 +130,10 @@ void AIScene::on_start() {
 
     {
         // Spawn agents from type registry via factory
-        tmt::Entity ai1 = tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 1");
-        tmt::Entity ai2 = tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 1");
+        tmt::Entity ai1 = tmt::engine.ecs.create_entity("AI Agent 1");
+        tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 1", ai1);
+        tmt::Entity ai2 = tmt::engine.ecs.create_entity("AI Agent 2");
+        tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 1", ai2);
 
         // Set unique positions
         ecs.get_component<tmt::Transform>(ai1).set_world_position({0.f, 0.f, 0.f});
@@ -157,7 +159,8 @@ void AIScene::on_start() {
         transform.set_world_scale(glm::vec3(1.0f, 1.0f, 1.0f));
 
         nav_mesh = &tmt::engine.ecs.add_component<tmt::NavMesh>(voxel);
-
-        nav_mesh->generate_mesh(voxel_volume, 1);
+        nav_mesh->voxel_volume = voxel_volume;
+        nav_mesh->lod_level = 1;
+        nav_mesh->generate_mesh();
     }
 }

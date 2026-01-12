@@ -305,14 +305,18 @@ float Input::get_mouse_delta_y() const {
 void Input::set_mouse_relative_to_window(bool value) { SDL_SetWindowRelativeMouseMode(engine.window.window, value); }
 bool Input::get_mouse_relative_to_window() { return SDL_GetWindowRelativeMouseMode(engine.window.window); }
 
-void Input::lock_mouse(bool value) const {
+void Input::lock_mouse(bool value) {
     if (value) {
         const SDL_Rect rect {static_cast<int32_t>(mouse_x), static_cast<int32_t>(mouse_y), 1, 1};
         SDL_SetWindowMouseRect(engine.window.window, &rect);
     } else {
         SDL_SetWindowMouseRect(engine.window.window, nullptr);
     }
+    mouse_locked = value;
 }
+
+bool Input::is_mouse_locked() const { return mouse_locked; }
+
 void Input::warp_mouse(const glm::vec2& pos, bool relative) {
     if (relative) {
         SDL_WarpMouseInWindow(engine.window.window, pos.x, pos.y);

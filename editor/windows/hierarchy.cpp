@@ -148,6 +148,16 @@ void Hierarchy::clear_selection() {
 
 int Hierarchy::get_window_flags() const { return ImGuiWindowFlags_MenuBar; }
 
+void Hierarchy::on_editor_update(const FrameData&) {
+    for (int i = 0; i < selected_entities.size(); ++i) {
+        const auto entity = *std::next(selected_entities.begin(), i);
+        if (engine.ecs.valid(entity) == false) {
+            selected_entities.erase(entity);
+            break;
+        }
+    }
+}
+
 void Hierarchy::top_bar() {
     /*menu bar*/
     if (ImGui::BeginMenuBar()) {

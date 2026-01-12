@@ -14,7 +14,7 @@ inline tmt::IO::FileLocation buffer_to_file_location(const void* buffer, const s
 }
 
 template <typename T>
-void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::ResourceRef<T>& value, ImSettings& settings, ImResponse& response) {
+inline void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::ResourceRef<T>& value, ImSettings& settings, ImResponse& response) {
     ImGui::BeginGroup();
     ImReflect::Input(label, value.file_location, settings, response);
     if (ImGui::Button("Load")) {

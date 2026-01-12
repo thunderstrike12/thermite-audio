@@ -21,6 +21,7 @@ class GameFlow : public IWindow, public OnGameEnd, public OnPreLoadScene {
     SceneIndex working_scene = NULL_SCENE;
     nlohmann::ordered_json cached_scene;
     bool has_ended = false;
+    bool was_mouse_locked = false;
 
     // Inherited via OnPreLoadScene
     void on_pre_load_scene(PreLoadSceneEvent& event) override;
@@ -29,5 +30,6 @@ class GameFlow : public IWindow, public OnGameEnd, public OnPreLoadScene {
     void on_game_end() override;
 
     void unlock_mouse();
+    void lock_mouse();
 };
 }  // namespace tmt

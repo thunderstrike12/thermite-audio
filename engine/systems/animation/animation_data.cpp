@@ -47,7 +47,7 @@ bool check_correct_bone(std::string_view rig_bone, std::string_view animation_bo
 
 void RigData::load_fbx(const IO::FileLocation& directory) {
     const std::vector<char>& rig = IO::read_file(directory);
-
+    // todo: invalid file error handling
     ufbx_error error;
     ufbx_load_opts opts = {};
     opts.evaluate_skinning = true;

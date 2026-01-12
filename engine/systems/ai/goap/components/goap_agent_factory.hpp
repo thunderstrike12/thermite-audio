@@ -22,7 +22,7 @@ class GoapAgentFactory {
      * Retrieves the agent type from GoapAgentTypeRegistry
      */
 
-    static Entity spawn_agent_from_type(const std::string& type_id);
+    static void spawn_agent_from_type(const std::string& type_id, const Entity entity);
 };
 
 }  // namespace tmt

@@ -5,13 +5,13 @@
 template <typename T>
 concept ExactlyPath = std::same_as<std::remove_cvref_t<T>, std::filesystem::path>;
 
-void tag_invoke(ImReflect::ImInput_t, const char* label, ExactlyPath auto& value, ImSettings& settings, ImResponse& response) {
+inline void tag_invoke(ImReflect::ImInput_t, const char* label, ExactlyPath auto& value, ImSettings& settings, ImResponse& response) {
     auto str = value.string();
     ImReflect::Input(label, str, settings, response);
     value = std::filesystem::path(str);
 }
 
-void tag_invoke(ImReflect::ImInput_t, const char* label, const ExactlyPath auto& value, ImSettings& settings, ImResponse& response) {
+inline void tag_invoke(ImReflect::ImInput_t, const char* label, const ExactlyPath auto& value, ImSettings& settings, ImResponse& response) {
     const auto& str = value.string();
     ImReflect::Input(label, str, settings, response);
 }

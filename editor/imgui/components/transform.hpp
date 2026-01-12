@@ -5,7 +5,7 @@
 
 #include "editor/imgui/types/glm.hpp"
 
-void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Transform& value, ImSettings& settings, ImResponse& response) {
+inline void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Transform& value, ImSettings& settings, ImResponse& response) {
     auto& type_settings = settings.get<tmt::Transform>();
     auto& type_response = response.get<tmt::Transform>();
 

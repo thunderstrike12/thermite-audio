@@ -3,6 +3,8 @@
 #include "engine/core/resources.hpp"
 #include "engine/core/resources/voxel_volume.hpp"
 
+#include "engine/core/reflection.hpp"
+
 namespace tmt {
 
 enum class VoxelType : uint8_t { EMPTY, OUTSIDE, INSIDE };
@@ -34,8 +36,15 @@ class NavMesh {
     std::vector<Node> nodes;
     std::vector<int> path;
 
-    void generate_mesh(tmt::ResourceRef<tmt::VoxelVolume> voxel_volume, int lod_level = 0);
+    tmt::ResourceRef<tmt::VoxelVolume> voxel_volume;
+    int lod_level = 0;
+
+    void generate_mesh();
     std::vector<int> find_path(const int starting_node_id, const int ending_node_id);
+    int find_closest_node(const glm::vec3& position);
+    std::optional<glm::vec3> follow_path(glm::vec3 start, glm::vec3 end);
     void inspect();
 };
 }  // namespace tmt
+
+TMT_COMPONENT(tmt::NavMesh, "Navigation Mesh", (voxel_volume, lod_level));

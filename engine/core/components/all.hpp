@@ -8,6 +8,7 @@
 #include "engine/core/components/camera.hpp"
 #include "engine/core/components/component_collection.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"
+#include "engine/systems/ai/navigation/nav_mesh.hpp"
 
 namespace tmt {
 
@@ -19,7 +20,8 @@ using SerializeComponents = ComponentRegistry<
 	VoxelRenderer, 
 	Camera,
 	VoxelBody,
-	ComponentCollection
+	ComponentCollection,
+	NavMesh
 >;
 // clang-format on
 
@@ -30,7 +32,8 @@ using InspectComponents = ComponentRegistry<
 	Transform,
 	VoxelRenderer, 
 	Camera,
-	VoxelBody
+	VoxelBody,
+	NavMesh
 >;
 // clang-format on
 

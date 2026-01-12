@@ -69,6 +69,8 @@ struct Transform {
     /* Get all children recursivly, aka children of children too */
     std::set<Entity> get_all_children() const;
 
+    void mark_dirty();
+
    private:
     BEFRIEND_VISITABLE();
 
@@ -82,8 +84,6 @@ struct Transform {
 
     Entity parent {entt::null};
     std::set<Entity> children;
-
-    void mark_dirty();
 
     /* Recalculate world matrix if dirty */
     void calculate_world_matrix() const;

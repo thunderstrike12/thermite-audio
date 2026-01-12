@@ -60,7 +60,8 @@ class RuntimeTextFile : public tmt::RuntimeResource<TextFile> {
 };
 
 void Game::on_start() {
-    const tmt::Entity camera_entity = tmt::engine.ecs.create_entity<tmt::Transform, tmt::Camera>("Camera entity");
+    const tmt::Entity camera_entity = tmt::engine.ecs.create_entity("Main Camera");
+    auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(camera_entity);
     tmt::Camera::set_active_camera(camera_entity);
 
     /* Load 2 voxel files to show different resource types being loaded */

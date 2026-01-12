@@ -27,10 +27,15 @@ void GameFlow::display() {
     if (engine.game_controller.is_paused()) {
         if (ImGui::Button("Resume")) {
             engine.game_controller.resume_game();
+            if (was_mouse_locked) {
+                lock_mouse();
+            }
         }
     } else {
         if (ImGui::Button("Pause")) {
             engine.game_controller.pause_game();
+            was_mouse_locked = engine.input.is_mouse_locked();
+            unlock_mouse();
         }
     }
 }
@@ -39,7 +44,11 @@ void GameFlow::on_editor_start() {}
 
 void GameFlow::on_editor_update(const FrameData&) {
     if (engine.input.is_keyboard_button_just_pressed(Key::F1)) {
-        unlock_mouse();
+        if (engine.input.is_mouse_locked()) {
+            unlock_mouse();
+        } else {
+            lock_mouse();
+        }
     }
 }
 
@@ -48,6 +57,11 @@ void GameFlow::on_editor_end() {}
 void GameFlow::unlock_mouse() {
     engine.input.lock_mouse(false);
     engine.input.set_mouse_relative_to_window(false);
+}
+
+void GameFlow::lock_mouse() {
+    engine.input.lock_mouse(true);
+    engine.input.set_mouse_relative_to_window(true);
 }
 
 void GameFlow::on_game_end() {

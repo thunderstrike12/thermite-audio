@@ -3,9 +3,12 @@
 #include "engine/tools/serializer.hpp"
 #include "engine/tools/serializer/all.hpp"
 #include "engine/core/components/transform.hpp"
+#include "engine/engine.hpp"
+#include "engine/core/ecs.hpp"
 
 TEST(SerializerTest, BasicSerialization) {
-    tmt::Transform transform;
+    tmt::Transform& transform = tmt::engine.ecs.create_entity<tmt::Transform>();
+
     transform.set_local_position(glm::vec3(1.0f, 2.0f, 3.0f));
     transform.set_local_rotation(glm::vec3(glm::radians(45.0f), glm::radians(90.0f), glm::radians(180.0f)));
     transform.set_local_scale(glm::vec3(2.0f, 2.0f, 2.0f));
@@ -13,7 +16,8 @@ TEST(SerializerTest, BasicSerialization) {
     auto json = tmt::Serializer::serialize(transform);
     auto string = json.dump(4);
 
-    tmt::Transform deserialized_transform;
+    tmt::Entity entity = tmt::engine.ecs.create_entity();
+    tmt::Transform& deserialized_transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
     tmt::Serializer::deserialize(json, deserialized_transform);
 
     EXPECT_TRUE(deserialized_transform.get_local_position() == transform.get_local_position());

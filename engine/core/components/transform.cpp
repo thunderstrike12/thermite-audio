@@ -184,10 +184,6 @@ const glm::mat4& Transform::get_world_matrix() const {
 }
 
 void Transform::set_parent(Entity new_parent) {
-    if (new_parent == parent) {
-        return;
-    }
-
     if (new_parent == get_self()) {
         throw std::runtime_error("Transform::set_parent: Cannot set self as parent");
     }
