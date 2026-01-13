@@ -38,36 +38,19 @@ void apply_requests(ImGuiMultiSelectIO* io, std::vector<ItemType>& selection, co
     }
 }
 
-// Returns a malloc-ed buffer of sequential IO::FileLocation data (caller needs to manually call std::free() on the buffer).
-void* file_location_to_buffer(const tmt::IO::FileLocation& location, size_t& size) {
-    constexpr size_t sub_location_size = sizeof(location.sub_location);
-
-    const std::string& path_string = location.relative_path.generic_string();
-    const size_t relative_path_size = path_string.size();
-
-    size = sub_location_size + relative_path_size;
-    void* data = std::malloc(size);  // Allocate enough data to hold teh IO::Location and the relative path string.
-
-    *static_cast<tmt::IO::Location*>(data) = location.sub_location;
-    std::memcpy(static_cast<char*>(data) + sub_location_size, path_string.data(), relative_path_size);
-
-    return data;
-}
-
 void drag_drop_location(const tmt::IO::FileLocation& location) {
     if (!ImGui::BeginDragDropSource()) return;
 
-    // Create a trivially copyable version of the IO::FileLocation data, this way we can use it as ImGUI drag/drop data.
-    size_t size;
-    void* data = file_location_to_buffer(location, size);
-    ImGui::SetDragDropPayload("FileLocation", data, size);
-    std::free(data);
+    const std::string& location_json = tmt::Serializer::serialize(location).dump(4);
+    ImGui::SetDragDropPayload("FileLocation", location_json.data(), location_json.size());
 
     ImGui::Text("sub_location: %s", magic_enum::enum_name(location.sub_location).data());
     ImGui::Text("relative_path: %s", location.relative_path.generic_string().c_str());
 
     ImGui::EndDragDropSource();
 }
+
+[[nodiscard]] bool path_valid(const std::filesystem::path& path) { return !path.empty() && exists(path); }
 
 }  // namespace
 
@@ -83,8 +66,6 @@ void AssetBrowser::recurse_parse_directory(Directory& directory) {
         recurse_parse_directory(sub_directory);
     }
 }
-
-[[nodiscard]] bool path_valid(const std::filesystem::path& path) { return !path.empty() && exists(path); }
 
 void AssetBrowser::update_bookmark_vector(std::vector<Bookmark>& bookmarks) {
     for (auto& bookmark : bookmarks) {

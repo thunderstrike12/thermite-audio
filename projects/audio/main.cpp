@@ -4,13 +4,26 @@
 #include "engine/core/resource.hpp"
 #include "engine/core/io.hpp"
 #include "engine/core/resources.hpp"
+#include "engine/core/scene.hpp"
+#include "engine/core/scenes.hpp"
 #include "engine/core/components/camera.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
-#include "engine/core/resources/audio_bank.hpp"
+#include "engine/core/components/audio_emitter.hpp"
+
+namespace {
+
+tmt::Entity entity;
+
+}  // namespace
 
 class Game : public tmt::Application {
    public:
     Game(const tmt::ApplicationSpecs& specs) : Application(specs) {}
+};
+
+class TestScene : public tmt::Scene<TestScene> {
+   public:
+    static std::string_view scene_name() { return "TestScene"; }
 
     void on_start() override;
     void on_update(const tmt::FrameData& time) override;
@@ -18,25 +31,28 @@ class Game : public tmt::Application {
 };
 
 std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs& args) {
-    // clang-format off
     tmt::ApplicationSpecs specs {
         .name = "Audio Module Test",
         .command_args = args,
-        .log_file = "audio.txt"
+        .log_file = "audio.txt",
     };
-    // clang-format on
+
+    tmt::engine.scenes.register_scene<TestScene>();
 
     return std::make_unique<Game>(specs);
 }
 
-void Game::on_start() {
-    tmt::engine.resources.load_resource<tmt::AudioBank>({tmt::IO::Location::PROJECT, "Master.bank"}, true);
-    tmt::engine.resources.load_resource<tmt::AudioBank>({tmt::IO::Location::PROJECT, "Music.bank"});
-    tmt::engine.resources.load_resource<tmt::AudioBank>({tmt::IO::Location::PROJECT, "SFX.bank"});
-    tmt::engine.resources.load_resource<tmt::AudioBank>({tmt::IO::Location::PROJECT, "Vehicles.bank"});
-    tmt::engine.resources.load_resource<tmt::AudioBank>({tmt::IO::Location::PROJECT, "VO.bank"});
+void TestScene::on_start() {
+    // Just get the first entity with the AudioEmitter component, there is only 1 in the saved scene.
+    entity = tmt::engine.ecs.get_registry().view<tmt::AudioEmitter>().front();
 }
 
-void Game::on_update(const tmt::FrameData& time) {}
+void TestScene::on_update(const tmt::FrameData& time) {
+    const float n = time.elapsed_time;
+    const glm::vec3 position = glm::vec3 {glm::cos(n), 0.0f, glm::sin(n)} * 3.0f;
 
-void Game::on_end() {}
+    tmt::Transform& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+    transform.set_world_position(position);
+}
+
+void TestScene::on_end() {}

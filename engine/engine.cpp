@@ -98,6 +98,7 @@ void Engine::run() {
 
         if (game_controller.should_game_end()) {
             end_game();
+            audio.stop_all_audio_instances();
             game_controller.should_end_game = false;
             game_controller.is_game_playing = false;
         }
@@ -167,6 +168,7 @@ void Engine::end() {
 
     salvo.end();
     ecs.clear();
+    audio.end();  // Needs to be ended after the ecs.
     resources.unload_unused();
     renderer.end();
 }

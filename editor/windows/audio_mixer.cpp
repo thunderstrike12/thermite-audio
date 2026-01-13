@@ -4,8 +4,11 @@
 #include "engine/core/audio.hpp"
 #include "engine/core/resources.hpp"
 #include "engine/core/resources/audio_bank.hpp"
+#include "engine/tools/serializer/audio.hpp"
+#include "engine/tools/serializer.hpp"
 
 #include <imgui.h>
+#include <imgui_stdlib.h>
 
 namespace {
 
@@ -14,7 +17,8 @@ void audio_drag_source(const std::string& type_name, const Type& value) {
     if (!ImGui::BeginDragDropSource()) return;
 
     ImGui::Text("%s: %s", type_name.c_str(), value.get_path().c_str());
-    ImGui::SetDragDropPayload(type_name.c_str(), &value, sizeof(Type));
+    const std::string json_string = tmt::Serializer::serialize(value).dump(4);
+    ImGui::SetDragDropPayload(type_name.c_str(), json_string.data(), json_string.size());
     ImGui::EndDragDropSource();
 }
 
@@ -23,6 +27,8 @@ void audio_drag_source(const std::string& type_name, const Type& value) {
 namespace tmt {
 
 void AudioMixer::display() {
+    display_menu_bar();
+
     if (selection.index() == 0 && std::get<std::weak_ptr<AudioBank>>(selection).expired()) invalidate_selection();
 
     if (!ImGui::BeginTable("MixerTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable)) return;
@@ -132,6 +138,53 @@ void AudioMixer::display() {
     ImGui::EndTable();
 }
 
+void AudioMixer::on_game_end() {
+    cached_banks.clear();
+    selection = {};
+}
+
+void AudioMixer::display_menu_bar() {
+    if (!ImGui::BeginMenuBar()) return;
+
+    static IO::FileLocation resource_location {};
+    const bool is_location_valid = !resource_location.relative_path.empty();
+
+    ImGui::BeginDisabled(!is_location_valid);
+    if (ImGui::MenuItem("Load Bank:")) {
+        const auto bank = engine.resources.load_resource<AudioBank>(resource_location);
+        if (std::ranges::find(cached_banks, bank) == cached_banks.end()) cached_banks.push_back(bank);
+        resource_location = {};
+    }
+    ImGui::EndDisabled();
+
+    // Always keep this disabled to avoid the user editing it.
+    ImGui::BeginDisabled(resource_location.relative_path.empty());
+    std::string resource_text = (is_location_valid ? fmt::format("{}", resource_location) : "");
+    ImGui::InputText("##ResourceLocation", &resource_text);
+    ImGui::EndDisabled();
+
+    if (ImGui::BeginDragDropTarget()) {
+        // Get the current payload to check if it's a FileLocation.
+        const ImGuiPayload* payload = ImGui::GetDragDropPayload();
+        if (payload != nullptr && payload->IsDataType("FileLocation")) {
+            const std::string_view json_string {static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize)};
+            IO::FileLocation file_location;
+            Serializer::deserialize(nlohmann::ordered_json::parse(json_string), file_location);
+
+            // Now that we know the user is dragging a FileLocation type, we can check its file extension to see if its valid for the resource type.
+            const std::string& extension = file_location.relative_path.extension().generic_string();
+            if (tmt::AudioBank::SUPPORTED_FILE_EXTENSIONS.contains(extension) && ImGui::AcceptDragDropPayload("FileLocation") != nullptr) {
+                // If the file extension is valid start excepting the payload, this will return true once the user drops it.
+                resource_location = file_location;
+            }
+        }
+
+        ImGui::EndDragDropTarget();
+    }
+
+    ImGui::EndMenuBar();
+}
+
 template <>
 int AudioMixer::get_selection_flags<std::weak_ptr<AudioBank>>(const std::weak_ptr<AudioBank>& selection_compare) {
     const auto* value_pointer = std::get_if<std::weak_ptr<AudioBank>>(&selection);
@@ -148,5 +201,5 @@ int AudioMixer::get_selection_flags(const Type& selection_compare) {
     return ImGuiTreeNodeFlags_Bullet;
 }
 
-void AudioMixer::invalidate_selection() { selection = AudioEvent {nullptr}; }
+void AudioMixer::invalidate_selection() { selection = AudioEvent {}; }
 }  // namespace tmt

@@ -2,9 +2,14 @@
 
 #include "engine.hpp"
 #include "core/logger.hpp"
+#include "components/audio_listener.hpp"
 
 #include <fmod_studio.hpp>
 #include <fmod_errors.h>
+
+#include "ecs.hpp"
+#include "components/audio_emitter.hpp"
+#include "systems/physics/components/voxel_body.hpp"
 
 namespace tmt {
 
@@ -19,11 +24,15 @@ bool TryLogError(const FMOD_RESULT result, const spdlog::string_view_t message) 
     return false;
 }
 
-// Logs the message as an error if fail is false (used with error check e.g. "pointer == nullptr").
+// Logs the message as an error if fail is true (used with error checks e.g. "!vca->is_valid()").
 bool TryLogError(const bool fail, const spdlog::string_view_t message) {
-    if (fail) Log::error(Log::Scope::ENGINE, "FMOD, {}", message);
+    if (fail) Log::error(Log::Scope::ENGINE, "Audio, {}", message);
     return fail;
 }
+
+// Vector of audio instances that are/were paused due to pausing the game.
+std::vector<AudioInstance> paused_game_audio;
+
 }  // namespace
 
 bool AudioInstance::is_valid() const { return engine.audio.active_instances.contains(instance); }
@@ -32,6 +41,23 @@ void AudioInstance::stop(const FMOD_STUDIO_STOP_MODE stop_mode) const {
     if (TryLogError(!is_valid(), "Invalid AudioInstance for get_path")) return;
 
     instance->stop(stop_mode);
+}
+
+void AudioInstance::set_paused(const bool pause) const {
+    if (TryLogError(!is_valid(), "Invalid AudioInstance for set_paused")) return;
+
+    const FMOD_RESULT result = instance->setPaused(pause);
+    TryLogError(result, "Failed to set instance paused");
+}
+
+bool AudioInstance::get_paused() const {
+    if (TryLogError(!is_valid(), "Invalid AudioInstance for get_paused")) return false;
+
+    bool paused = false;
+    const FMOD_RESULT result = instance->getPaused(&paused);
+    TryLogError(result, "Failed to get instance paused");
+
+    return paused;
 }
 
 void AudioInstance::set_parameter(const AudioParameter& event_parameter, const float value) const {
@@ -51,11 +77,88 @@ void AudioInstance::set_label_parameter(const AudioParameter& event_parameter, c
     TryLogError(result, "Failed to set parameter with label");
 }
 
-bool AudioEvent::is_valid() const { return description != nullptr && description->isValid(); }
+void AudioInstance3D::set_3d_position(const glm::vec3& position) const {
+    FMOD_3D_ATTRIBUTES attributes = get_3d_attributes();
+    attributes.position = std::bit_cast<FMOD_VECTOR>(position);
+
+    const FMOD_RESULT result = instance->set3DAttributes(&attributes);
+    TryLogError(result, "Failed to set 3D position attribute");
+}
+
+void AudioInstance3D::set_3d_velocity(const glm::vec3& velocity) const {
+    FMOD_3D_ATTRIBUTES attributes = get_3d_attributes();
+    attributes.velocity = std::bit_cast<FMOD_VECTOR>(velocity);
+
+    const FMOD_RESULT result = instance->set3DAttributes(&attributes);
+    TryLogError(result, "Failed to set 3D velocity attribute");
+}
+
+void AudioInstance3D::set_3d_forward(const glm::vec3& forward) const {
+    FMOD_3D_ATTRIBUTES attributes = get_3d_attributes();
+    attributes.forward = std::bit_cast<FMOD_VECTOR>(forward);
+
+    const FMOD_RESULT result = instance->set3DAttributes(&attributes);
+    TryLogError(result, "Failed to set 3D forward attribute");
+}
+
+void AudioInstance3D::set_3d_up(const glm::vec3& up) const {
+    FMOD_3D_ATTRIBUTES attributes = get_3d_attributes();
+    attributes.up = std::bit_cast<FMOD_VECTOR>(up);
+
+    const FMOD_RESULT result = instance->set3DAttributes(&attributes);
+    TryLogError(result, "Failed to set 3D up attribute");
+}
+
+void AudioInstance3D::auto_set_3d_attributes(const Transform& transform, const VoxelBody* voxel_body) const {
+    FMOD_VECTOR velocity {};
+    if (voxel_body != nullptr) velocity = std::bit_cast<FMOD_VECTOR>(voxel_body->velocity);  // Set the velocity if the entity also has a voxel_body component.
+
+    const FMOD_3D_ATTRIBUTES attributes {
+        .position = std::bit_cast<FMOD_VECTOR>(transform.get_world_position()),
+        .velocity = velocity,
+        .forward = std::bit_cast<FMOD_VECTOR>(transform.get_forward()),
+        .up = std::bit_cast<FMOD_VECTOR>(transform.get_up()),
+    };
+
+    const FMOD_RESULT result = instance->set3DAttributes(&attributes);
+    TryLogError(result, "Failed to auto set 3D attributes");
+}
+
+void AudioInstance3D::set_listener_mask(const unsigned int mask) const {
+    const FMOD_RESULT result = instance->setListenerMask(mask);
+    TryLogError(result, "Failed to set instance listener mask");
+}
+
+unsigned int AudioInstance3D::get_listener_mask() const {
+    unsigned int mask = 0xFFFFFFFF;
+
+    const FMOD_RESULT result = instance->getListenerMask(&mask);
+    TryLogError(result, "Failed to get instance listener mask");
+
+    return mask;
+}
+
+FMOD_3D_ATTRIBUTES AudioInstance3D::get_3d_attributes() const {
+    FMOD_3D_ATTRIBUTES attributes;
+    const FMOD_RESULT result = instance->get3DAttributes(&attributes);
+    if (TryLogError(result, "Failed to get instance 3D attributes")) return {};
+
+    return attributes;
+}
+
+bool AudioEvent::is_valid() const { return source_bank && description->isValid(); }
+
+bool AudioEvent::is_3d() const {
+    bool is_3d = false;
+    const FMOD_RESULT result = description->is3D(&is_3d);
+    TryLogError(result, "Failed check if event is 3D");
+
+    return is_3d;
+}
 
 std::string AudioEvent::get_path() const {
 #if defined(THERMITE_EDITOR) || defined(THERMITE_DEBUG)
-    if (TryLogError(description == nullptr, "Invalid AudioEvent for get_path")) return "";
+    if (TryLogError(!is_valid(), "Invalid AudioEvent for get_path")) return "";
 
     // This function only returns useful paths in the editor or in debug mode, since these aren't necessary for audio to function, and it allows us to skip loading string banks in release
     // game.
@@ -72,6 +175,16 @@ std::string AudioEvent::get_path() const {
 #else
     return "";
 #endif
+}
+
+FMOD_GUID AudioEvent::get_guid() const {
+    if (TryLogError(!is_valid(), "Invalid AudioEvent for get_guid")) return {};
+
+    FMOD_GUID guid {};
+    const FMOD_RESULT result = description->getID(&guid);
+    TryLogError(result, "Failed to get the path of the audio event");
+
+    return guid;
 }
 
 std::vector<AudioParameter> AudioEvent::get_parameters() const {
@@ -95,7 +208,7 @@ std::vector<AudioParameter> AudioEvent::get_parameters() const {
 }
 
 AudioInstance AudioEvent::play() const {
-    if (TryLogError(description == nullptr, "Invalid AudioEvent for play")) return {nullptr};
+    if (TryLogError(!is_valid(), "Invalid AudioEvent for play.")) return {nullptr};
 
     // Play the event, creating an instance.
     FMOD::Studio::EventInstance* event_instance = nullptr;
@@ -114,11 +227,31 @@ AudioInstance AudioEvent::play() const {
     return {event_instance};
 }
 
-bool VolumeControl::is_valid() const { return vca != nullptr && vca->isValid(); }
+AudioInstance3D AudioEvent::play_3d() const {
+    if (TryLogError(!is_valid(), "Invalid AudioEvent for play_3d.")) return {nullptr};
+
+    if (TryLogError(!is_3d(), "AudioEvent isn't 3d, invalid call to play_3d.")) return {nullptr};
+
+    AudioInstance instance = play();
+    return {instance.instance};
+}
+
+glm::vec2 AudioEvent::get_min_max_distance() const {
+    if (TryLogError(!is_valid(), "Invalid VolumeControl for get_min_max")) return {};
+
+    float min = 0;
+    float max = 0;
+    const FMOD_RESULT result = description->getMinMaxDistance(&min, &max);
+    if (TryLogError(result, "Failed to get VCA volume")) return {};
+
+    return {min, max};
+}
+
+bool VolumeControl::is_valid() const { return source_bank && vca->isValid(); }
 
 std::string VolumeControl::get_path() const {
 #if defined(THERMITE_EDITOR) || defined(THERMITE_DEBUG)
-    if (TryLogError(vca == nullptr, "Invalid VolumeControl for get_path")) return "";
+    if (TryLogError(!is_valid(), "Invalid VolumeControl for get_path")) return "";
 
     // This function only returns useful paths in the editor or in debug mode, since these aren't necessary for audio to function, and it allows us to skip loading string banks in release
     // game.
@@ -137,8 +270,18 @@ std::string VolumeControl::get_path() const {
 #endif
 }
 
+FMOD_GUID VolumeControl::get_guid() const {
+    if (TryLogError(!is_valid(), "Invalid VolumeControl for get_guid")) return {};
+
+    FMOD_GUID guid {};
+    const FMOD_RESULT result = vca->getID(&guid);
+    TryLogError(result, "Failed to get the path of the volume control");
+
+    return guid;
+}
+
 float VolumeControl::get_volume() const {
-    if (TryLogError(vca == nullptr, "Invalid VolumeControl for get_volume")) return 0.0f;
+    if (TryLogError(!is_valid(), "Invalid VolumeControl for get_volume")) return 0.0f;
 
     float volume = 0.0f;
     const FMOD_RESULT result = vca->getVolume(&volume);
@@ -148,7 +291,7 @@ float VolumeControl::get_volume() const {
 }
 
 void VolumeControl::set_volume(const float volume) const {
-    if (TryLogError(vca == nullptr, "Invalid VolumeControl for set_volume")) return;
+    if (TryLogError(!is_valid(), "Invalid VolumeControl for set_volume")) return;
 
     const FMOD_RESULT result = vca->setVolume(volume);
     TryLogError(result, "Failed to set VCA volume");
@@ -161,14 +304,22 @@ void Audio::init() {
     if (TryLogError(result, "Failed to create the FMOD Studio System")) return;
 
     // Initialize FMOD Studio, which will also initialize FMOD Core.
-    result = system->initialize(512, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_3D_RIGHTHANDED, nullptr);
+    result = system->initialize(512, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, nullptr);
     if (TryLogError(result, "Failed to initialize the FMOD Studio System")) return;
 
     result = system->getCoreSystem(&core_system);
     TryLogError(result, "Failed to get the FMOD Studio System after initialization");
+
+    // Setup delegates to handle adding and removing listener's to FMOD when an AudioListener components gets added or destroyed (constructor/deconstructors can't be used, these might be
+    // called when the registry moves components).
+    engine.ecs.get_registry().on_construct<AudioListener>().connect<&Audio::add_listener>(this);
+    engine.ecs.get_registry().on_destroy<AudioListener>().connect<&Audio::remove_listener>(this);
 }
 
 void Audio::update() {
+    update_listeners();
+    update_emitters();
+
     system->update();
 
     std::erase_if(active_instances, [](const FMOD::Studio::EventInstance* instance) {
@@ -178,7 +329,39 @@ void Audio::update() {
     });
 }
 
-void Audio::end() const { system->release(); }
+void Audio::end() const {
+    // Remove delegates.
+    engine.ecs.get_registry().on_destroy<AudioListener>().disconnect<&Audio::remove_listener>(this);
+    engine.ecs.get_registry().on_construct<AudioListener>().disconnect<&Audio::add_listener>(this);
+
+    system->release();
+    core_system->release();
+}
+
+void Audio::on_game_pause() {
+    paused_game_audio.reserve(active_instances.size());
+
+    for (AudioInstance instance : active_instances) {
+        if (instance.get_paused()) continue;
+
+        // If the audio instance is not paused yet, we pause it to resume once the game resumes.
+        paused_game_audio.emplace_back(instance);
+        instance.set_paused(true);
+    }
+}
+
+void Audio::on_game_resume() {
+    // Resume the stored audio instances then clear the vector.
+    for (AudioInstance instance : paused_game_audio) {
+        instance.set_paused(false);
+    }
+    paused_game_audio.clear();
+}
+
+void Audio::on_game_end() {
+    paused_game_audio.clear();
+    stop_all_audio_instances();
+}
 
 FMOD::Studio::Bank* Audio::init_bank(const std::vector<char>& bank_data) const {
     FMOD::Studio::Bank* bank = nullptr;
@@ -196,20 +379,22 @@ FMOD::Studio::Bank* Audio::init_bank(const std::vector<char>& bank_data) const {
     return bank;
 }
 
-AudioEvent Audio::get_event(const FMOD_GUID& guid) const {
-    FMOD::Studio::EventDescription* description;
-    system->getEventByID(&guid, &description);
+FMOD::Studio::EventDescription* Audio::get_event_description(const FMOD_GUID& guid) const {
+    FMOD::Studio::EventDescription* description = nullptr;
 
-    return {description};
+    const FMOD_RESULT result = system->getEventByID(&guid, &description);
+    TryLogError(result, "Failed to get EventDescription");
+
+    return description;
 }
 
-VolumeControl Audio::get_volume_control(const FMOD_GUID& guid) const {
-    FMOD::Studio::VCA* vca;
+FMOD::Studio::VCA* Audio::get_vca(const FMOD_GUID& guid) const {
+    FMOD::Studio::VCA* vca = nullptr;
+
     const FMOD_RESULT result = system->getVCAByID(&guid, &vca);
+    TryLogError(result, "Failed to get VCA");
 
-    if (TryLogError(result, "Failed to get VolumeControl")) return nullptr;
-
-    return {vca};
+    return vca;
 }
 
 void Audio::stop_all_audio_instances() {
@@ -226,12 +411,104 @@ void Audio::set_global_parameter(const AudioParameter& parameter, const float va
     TryLogError(result, "Failed to set parameter");
 }
 
-void Audio::set_global_parameter(const AudioParameter& parameter, int value) const { set_global_parameter(parameter, static_cast<float>(value)); }
+void Audio::set_global_parameter(const AudioParameter& parameter, const int value) const { set_global_parameter(parameter, static_cast<float>(value)); }
 
 void Audio::set_global_label_parameter(const AudioParameter& parameter, const std::string& value) const {
     const FMOD_RESULT result = system->setParameterByIDWithLabel(parameter.get_id(), value.c_str());
 
     TryLogError(result, "Failed to set parameter with label");
+}
+
+void Audio::set_3d_settings(const DopplerSettings& settings) const {
+    const FMOD_RESULT result = core_system->set3DSettings(settings.doppler_scale, settings.distance_factor, settings.rolloff_scale);
+
+    TryLogError(result, "Failed to set doppler settings");
+}
+
+Audio::DopplerSettings Audio::get_3d_settings() const {
+    DopplerSettings settings {};
+    const FMOD_RESULT result = core_system->get3DSettings(&settings.doppler_scale, &settings.distance_factor, &settings.rolloff_scale);
+
+    TryLogError(result, "Failed to get doppler settings");
+    return settings;
+}
+
+void Audio::update_listeners() const {
+    // Loop over the all listeners to update their positions/velocities.
+    const entt::basic_group listener_group = engine.ecs.get_registry().group<AudioListener>(entt::get<Transform>);
+    for (const auto&& [entity, audio_listener, transform] : listener_group.each()) {
+        const VoxelBody* voxel_body = engine.ecs.try_get_component<VoxelBody>(entity);
+
+        FMOD_VECTOR velocity {};
+        if (voxel_body != nullptr) velocity = std::bit_cast<FMOD_VECTOR>(voxel_body->velocity);  // Set the velocity if the entity also has a VoxelBody component.
+
+        const FMOD_3D_ATTRIBUTES attributes {
+            .position = std::bit_cast<FMOD_VECTOR>(transform.get_world_position()),
+            .velocity = velocity,
+            .forward = std::bit_cast<FMOD_VECTOR>(transform.get_forward()),
+            .up = std::bit_cast<FMOD_VECTOR>(transform.get_up()),
+        };
+
+        const FMOD_RESULT result = system->setListenerAttributes(audio_listener.get_listener_index(), &attributes);
+        TryLogError(result, "Failed to set listener attributes");
+    }
+}
+
+void Audio::update_emitters() {
+    // Loop over the all emitters to update their positions/velocities.
+    const entt::basic_group emitter_group = engine.ecs.get_registry().group<AudioEmitter>(entt::get<Transform>);
+    for (const auto&& [entity, audio_emitter, transform] : emitter_group.each()) {
+        audio_emitter.cleanup_playing_instances();
+
+        const VoxelBody* voxel_body = engine.ecs.try_get_component<VoxelBody>(entity);
+
+        FMOD_VECTOR velocity {};
+        if (voxel_body != nullptr) velocity = std::bit_cast<FMOD_VECTOR>(voxel_body->velocity);  // Set the velocity if the entity also has a VoxelBody component.
+
+        const FMOD_3D_ATTRIBUTES attributes {
+            .position = std::bit_cast<FMOD_VECTOR>(transform.get_world_position()),
+            .velocity = velocity,
+            .forward = std::bit_cast<FMOD_VECTOR>(transform.get_forward()),
+            .up = std::bit_cast<FMOD_VECTOR>(transform.get_up()),
+        };
+
+        for (const AudioInstance3D& instance : audio_emitter.playing_instances) {
+            const FMOD_RESULT result = instance.instance->set3DAttributes(&attributes);
+            TryLogError(result, "Failed to set emitter attributes");
+        }
+    }
+}
+
+void Audio::add_listener(entt::registry& registry, const Entity entity) const {
+    int listener_count;
+    FMOD_RESULT result = system->getNumListeners(&listener_count);
+    if (TryLogError(result, "Failed to get listener count")) return;
+
+    result = system->setNumListeners(listener_count + 1);
+    if (TryLogError(result, "Failed to increase listener count")) return;
+
+    AudioListener& audio_listener = registry.get<AudioListener>(entity);
+    audio_listener.listener_index = listener_count;  // Set to the old listener count aka, the *new* last index.
+}
+
+void Audio::remove_listener() const {
+    int listener_count;
+    FMOD_RESULT result = system->getNumListeners(&listener_count);
+    if (TryLogError(result, "Failed to get listener count")) return;
+
+    int new_listener_index = 0;
+    const entt::basic_group listener_group = engine.ecs.get_registry().group<AudioListener>(entt::get<Transform>);
+    for (const auto&& [entity, audio_listener, transform] : listener_group.each()) {
+        const float cached_weight = audio_listener.get_weight();
+
+        audio_listener.listener_index = new_listener_index;
+        audio_listener.set_weight(cached_weight);
+
+        ++new_listener_index;
+    }
+
+    result = system->setNumListeners(listener_count - 1);
+    TryLogError(result, "Failed to increase listener count");
 }
 
 }  // namespace tmt

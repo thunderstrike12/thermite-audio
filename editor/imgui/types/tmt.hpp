@@ -3,16 +3,6 @@
 #include <ImReflect.hpp>
 #include <engine/core/resources.hpp>
 
-// Unpack the trivially copyable buffer containing the IO::FileLocation data.
-inline tmt::IO::FileLocation buffer_to_file_location(const void* buffer, const size_t size) {
-    constexpr size_t SUB_LOCATION_SIZE = sizeof(tmt::IO::Location);
-
-    const tmt::IO::Location sub_location = *static_cast<const tmt::IO::Location*>(buffer);
-    const std::string_view relative_path_view {static_cast<const char*>(buffer) + SUB_LOCATION_SIZE, size - SUB_LOCATION_SIZE};
-
-    return {sub_location, relative_path_view};
-}
-
 template <typename T>
 inline void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::ResourceRef<T>& value, ImSettings& settings, ImResponse& response) {
     ImGui::BeginGroup();
@@ -33,7 +23,9 @@ inline void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::ResourceRef
         // Get the current payload to check if its a FileLocation.
         const ImGuiPayload* payload = ImGui::GetDragDropPayload();
         if (payload != nullptr && payload->IsDataType("FileLocation")) {
-            tmt::IO::FileLocation file_location = buffer_to_file_location(payload->Data, payload->DataSize);
+            const std::string_view json_string {static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize)};
+            tmt::IO::FileLocation file_location;
+            tmt::Serializer::deserialize(nlohmann::ordered_json::parse(json_string), file_location);
 
             // Now that we know the user is dragging a FileLocation type, we can check its file extension to see if its valid for the resource type.
             const std::string& extension = file_location.relative_path.extension().generic_string();
