@@ -3,6 +3,11 @@
 /* Large 32-bit floating point constant. */
 constexpr float BIG_F32 = 1e30f;
 
+/* The square root of 2 */
+constexpr float SQRT2 = 1.41421356237f;
+/* The square root of 3 */
+constexpr float SQRT3 = 1.73205080757f;
+
 /* Number of voxels per unit in world-space. */
 constexpr uint32_t VOXELS_PER_UNIT = 10u;
 /* Number of world-space units per voxel. */

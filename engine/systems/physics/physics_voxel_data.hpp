@@ -6,7 +6,9 @@ namespace tmt {
 
 class VoxelInstance;
 
-static const glm::ivec3 NORMAL_LUT[27] {
+constexpr size_t INVALID_NORMAL_INDEX = 27;
+
+static const glm::ivec3 NORMAL_LUT[28] {
     {0, 0, 0},
     // Cardinal directions 1-7
     {1, 0, 0},
@@ -36,7 +38,8 @@ static const glm::ivec3 NORMAL_LUT[27] {
     {-1, 1, 1},
     {-1, 1, -1},
     {-1, -1, 1},
-    {-1, -1, -1}
+    {-1, -1, -1},
+    {0, 0, 0}
 };
 
 enum PhysicsVoxelType : uint8_t { EMPTY, CORNER, EDGE, FACE, INSIDE };

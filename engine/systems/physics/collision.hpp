@@ -1,5 +1,5 @@
 #pragma once
-#include "core/ecs.hpp"
+#include "engine/core/ecs.hpp"
 #include "glm/vec3.hpp"
 
 namespace tmt {
