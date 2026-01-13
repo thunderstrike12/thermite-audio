@@ -42,6 +42,8 @@ void Salvo::end() {
 }
 
 void Salvo::parallel_for(const size_t count, const std::function<void(size_t)>& function) {
+    if (count == 0ull) return;
+
     // Set up the variables used when executing work.
     task_function = function;
     next_task_index = 0;
