@@ -126,6 +126,12 @@ class Input {
     float get_mouse_y() const;
 
     /// <summary>
+    /// Returns the mouse cursor's position as a 2D vector.
+    /// </summary>
+    /// <returns>Mouse position vector.</returns>
+    glm::vec2 get_mouse_position() const { return glm::vec2 {mouse_x, mouse_y}; }
+
+    /// <summary>
     /// Returns horizontal scroll wheel delta for this frame.
     /// </summary>
     /// <returns>Horizontal scroll amount.</returns>

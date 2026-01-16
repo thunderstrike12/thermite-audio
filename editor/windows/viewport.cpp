@@ -77,6 +77,10 @@ void tmt::Viewport::display() {
     ImGui::BeginChild("viewport_render", ImVec2(0, 0), 0, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove);
     ImGui::Image((ImTextureRef)engine.renderer.render_view.imgui_viewport, size);
     is_hovered = ImGui::IsItemHovered();
+    auto imgui_mouse_pos = ImGui::GetMousePos();
+    mouse_pos.x = imgui_mouse_pos.x - image_pos.x;
+    mouse_pos.y = imgui_mouse_pos.y - image_pos.y;
+
     ImGuizmo::SetDrawlist();
 
     gizmo_manip();
@@ -119,6 +123,12 @@ void tmt::Viewport::toolbar(const glm::vec2& image_pos) {
     if (ImGui::Button(multi_button_icon, ImVec2(btn_w, btn_h))) {
         gizmo_multiselect_mode = static_cast<uint8_t>(!gizmo_multiselect_mode);
     }
+}
+
+void tmt::Viewport::on_retrieve_mouse_state(MouseOverride& event) {
+    event.x = mouse_pos.x;
+    event.y = mouse_pos.y;
+    event.handled = true;
 }
 
 void tmt::Viewport::gizmo_manip() {
