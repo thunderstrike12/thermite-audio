@@ -39,7 +39,7 @@ struct AilaLaineNode {
  * NOTE:
  * All BVH primitive types must implement the following functions:
  * 1. Aabb aabb() const;
- * 2. float intersect(const Ray&) const;
+ * 2. Hit intersect(const Ray& ray, const float tmax) const;
  * These are required for the BVH to function.
 /*/
 

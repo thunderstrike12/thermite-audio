@@ -29,6 +29,7 @@ struct SceneView {
 
     /* Acceleration structures */
     Bvh2<struct VoxelObject> bvh {};
+    std::vector<Entity> entities {};
 };
 
 }  // namespace tmt

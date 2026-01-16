@@ -5,9 +5,9 @@
 #include <graphite/resources/handle.hh>
 
 #include "engine/core/entity.hpp"
-
 #include "engine/core/components/camera.hpp"
 #include "engine/core/components/transform.hpp"
+#include "engine/shared/ray.hpp"
 
 class RenderGraph;
 
@@ -47,6 +47,9 @@ struct RenderView {
 
     /* Update the size of the viewport. */
     void set_viewport_size(uint32_t width, uint32_t height);
+
+    /* Create a ray from this render view for a given pixel coordinate. */
+    Ray pixel_ray(glm::ivec2 pixel) const;
 
     /* Screen buffers */
     ScreenBuffer vbuffer {}; /* Visibility buffer (WxH, 6->8 bytes) */

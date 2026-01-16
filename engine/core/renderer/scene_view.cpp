@@ -22,7 +22,7 @@ void SceneView::init() {
     const BufferUsage usage = BufferUsage::Storage | BufferUsage::TransferDst;
     bvh_nodes = bank.create_buffer("BVH Nodes Buffer", usage, MAX_VOXEL_OBJECTS * 2u + 1u, sizeof(AilaLaineNode)).expect("failed to create bvh nodes buffer.");
     object_indices = bank.create_buffer("Object Indices Buffer", usage, MAX_VOXEL_OBJECTS, sizeof(uint32_t)).expect("failed to create object indices buffer.");
-    object_data = bank.create_buffer("Object Data Buffer", usage, MAX_VOXEL_OBJECTS, sizeof(VoxelObject)).expect("failed to create object data buffer.");
+    object_data = bank.create_buffer("Object Data Buffer", usage, MAX_VOXEL_OBJECTS, sizeof(GpuVoxelObject)).expect("failed to create object data buffer.");
 }
 
 void SceneView::update(RenderGraph& render_graph) {
@@ -31,7 +31,11 @@ void SceneView::update(RenderGraph& render_graph) {
 
     /* Allocate space for all voxel objects */
     std::vector<VoxelObject> objects {};
+    std::vector<GpuVoxelObject> gpu_objects {};
     objects.reserve(std::min(group.size(), (size_t)MAX_VOXEL_OBJECTS));
+    gpu_objects.reserve(std::min(group.size(), (size_t)MAX_VOXEL_OBJECTS));
+    entities.clear();
+    entities.reserve(std::min(group.size(), (size_t)MAX_VOXEL_OBJECTS));
 
     /* Iterate over all voxel renderers */
     for (auto&& [entity, renderer, transform] : group.each()) {
@@ -47,11 +51,22 @@ void SceneView::update(RenderGraph& render_graph) {
         object.world_to_local = glm::inverse(object.local_to_world);
         object.size = renderer.resource->size;
         object.rcp_tree_width = 1.0f / powf(4.0f, (float)renderer.resource->blas->depth);
-        object.tree_depth = renderer.resource->blas->depth;
-        object.blas_handle = renderer.resource->blas_nodes.get_index();
-        object.voxels_handle = renderer.resource->blas_voxels.get_index();
-        object.palette_handle = renderer.resource->blas_palette.get_index();
+        object.volume = renderer.resource.resource.get();
         objects.push_back(std::move(object));
+
+        /* Convert the entity to a voxel object */
+        GpuVoxelObject gpu_object {};
+        gpu_object.local_to_world = transform.get_world_matrix();
+        gpu_object.world_to_local = glm::inverse(object.local_to_world);
+        gpu_object.size = renderer.resource->size;
+        gpu_object.rcp_tree_width = 1.0f / powf(4.0f, (float)renderer.resource->blas->depth);
+        gpu_object.tree_depth = renderer.resource->blas->depth;
+        gpu_object.blas_handle = renderer.resource->blas_nodes.get_index();
+        gpu_object.voxels_handle = renderer.resource->blas_voxels.get_index();
+        gpu_object.palette_handle = renderer.resource->blas_palette.get_index();
+        gpu_objects.push_back(std::move(gpu_object));
+
+        entities.push_back(entity);
     }
 
     /* Build a BVH over the scene */
@@ -60,7 +75,7 @@ void SceneView::update(RenderGraph& render_graph) {
     /* Upload the BVH buffers */
     render_graph.upload_buffer(bvh_nodes, bvh.gpu_nodes, 0u, bvh.node_count * sizeof(AilaLaineNode));
     render_graph.upload_buffer(object_indices, bvh.indices, 0u, bvh.prim_count * sizeof(uint32_t));
-    render_graph.upload_buffer(object_data, bvh.prims, 0u, bvh.prim_count * sizeof(VoxelObject));
+    render_graph.upload_buffer(object_data, gpu_objects.data(), 0u, bvh.prim_count * sizeof(GpuVoxelObject));
 }
 
 void SceneView::deinit() {

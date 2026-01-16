@@ -53,12 +53,15 @@ class Renderer {
     Renderer();
     ~Renderer();
 
+    /* Copy */
     Renderer(const Renderer&) = delete;
     Renderer& operator=(const Renderer&) = delete;
 
     void init();
     void update();
     void end();
+
+    Hit trace_ray(const Ray& ray) const;
 
     /* Get a reference to the primary vram bank, for resource creation. */
     VRAMBank& vram_bank();

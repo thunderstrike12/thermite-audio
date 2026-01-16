@@ -148,6 +148,19 @@ void RenderView::set_viewport_size(uint32_t width, uint32_t height) {
     }
 }
 
+/* Convert a pixel coordinate to a normalized device coordinate. */
+inline glm::vec2 pixel_to_ndc(glm::ivec2 pixel, glm::uvec2 resolution) { return ((glm::vec2(pixel) + 0.5f) / glm::vec2(resolution)) * 2.0f - 1.0f; }
+
+Ray RenderView::pixel_ray(glm::ivec2 pixel) const {
+    /* Convert the pixel coordinate to normalized device coordinate */
+    const glm::vec2 ndc = pixel_to_ndc(pixel, gpu_view.resolution);
+
+    /* Find the world-space position and convert it to a world-space direction */
+    glm::vec4 world_pos = gpu_view.clip_to_world * glm::vec4(ndc, 1.0f, 1.0f);
+    world_pos = glm::vec4(glm::vec3(world_pos) / world_pos.w, world_pos.w);
+    return Ray(glm::vec3(gpu_view.origin), glm::normalize(glm::vec3(world_pos) - glm::vec3(gpu_view.origin)));
+}
+
 void RenderView::resize_textures() {
     const Size3D view_size {gpu_view.resolution.x, gpu_view.resolution.y};
     VRAMBank& bank = engine.renderer.vram_bank();

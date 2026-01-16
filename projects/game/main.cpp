@@ -12,6 +12,7 @@
 
 #include "engine/core/scene.hpp"
 #include "engine/core/scenes.hpp"
+#include "engine/core/renderer/voxel_object.hpp"
 
 class Game : public tmt::Application {
    public:
@@ -71,7 +72,7 @@ void DragonScene::on_start() {
         auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
 
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
-        transform.set_world_position(glm::vec3(0.0f, 0.25f, -260.0f));
+        transform.set_world_position(glm::vec3(0.0f, 0.25f, -120.0f));
     }
 
     // tmt::ResourceRef<tmt::VoxelScene> voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "dragon128.vengi"});
@@ -90,6 +91,8 @@ void DragonScene::on_start() {
 }
 
 #include "engine/core/renderer/renderer.hpp"
+#include "engine/core/renderer/render_view.hpp"
+#include "engine/shared/ray.hpp"
 
 void DragonScene::on_update(const tmt::FrameData& time) {
     /* Animate the voxel */
@@ -98,6 +101,20 @@ void DragonScene::on_update(const tmt::FrameData& time) {
     // transform.set_world_position(glm::vec3(1.0f, sinf(elapsed_time), 1.0f));
     // transform.set_world_rotation(glm::vec3(sinf(elapsed_time), cosf(elapsed_time), 0.0f));
     // transform.set_world_scale(glm::vec3(1.0f, 1.5f + sinf(elapsed_time), 1.0f));
+
+    if (tmt::engine.input.is_mouse_button_just_pressed(tmt::MouseButton::LEFT)) {
+        /* Get the mouse position */
+        const glm::ivec2 mouse_pos = glm::ivec2(tmt::engine.input.get_mouse_x(), tmt::engine.input.get_mouse_y());
+
+        /* Create a ray from the mouse position for the current render view and trace it */
+        const tmt::Ray mouse_ray = tmt::engine.renderer.render_view.pixel_ray(mouse_pos);
+        const tmt::Hit hit = tmt::engine.renderer.trace_ray(mouse_ray);
+
+        if (hit) {
+            // tmt::engine.ecs.destroy_entity(hit.entity);
+            tmt::Log::info("pixel: {}, {} | hit: {}, {}, {}", mouse_pos.x, mouse_pos.y, hit.coord.x, hit.coord.y, hit.coord.z);
+        }
+    }
 
     // if (tmt::engine.input.is_keyboard_button_released(tmt::Key::SPACE)) {
     //     tmt::engine.scenes.enqueue_scene<TableScene>();

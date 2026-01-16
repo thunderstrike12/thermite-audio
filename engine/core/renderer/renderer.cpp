@@ -146,6 +146,8 @@ void Renderer::end() {
     gpu.deinit().expect("failed to destroy gpu adapter.");
 }
 
+Hit Renderer::trace_ray(const Ray& ray) const { return scene_view.bvh.trace(ray); }
+
 #ifdef THERMITE_EDITOR
 void Renderer::set_imgui(ImGUI* new_imgui) {
     imgui = new_imgui;

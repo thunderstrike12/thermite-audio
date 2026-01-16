@@ -1,6 +1,9 @@
 #include "svt64.hpp"
-#include <nmmintrin.h>
+
+#include <nmmintrin.h> /* popcnt64 */
+
 #include "engine/tools/profiler.hpp"
+#include "engine/shared/ray.hpp"
 
 namespace tmt {
 
@@ -205,9 +208,9 @@ void Svt64::build(const RawVoxels& raw_data) {
     const uint32_t raw_voxels = raw_voxel_count(raw_data);
 
     /* Allocate space for new tree */
-    nodes = new Svt64Node[max_nodes];  // (Node*)malloc(1ull << 26);
+    nodes = new Svt64Node[max_nodes];
     node_count = 1u;
-    materials = new MaterialIndex[raw_voxels + SVT64_BUFFER_MEMORY];  // (MaterialIndex*)malloc(1ull << 26);
+    materials = new MaterialIndex[raw_voxels + SVT64_BUFFER_MEMORY];
     physics_data = new PhysicsVoxel[raw_voxels + SVT64_BUFFER_MEMORY];
     voxel_count = 0u;
 
@@ -221,6 +224,126 @@ void Svt64::build(const RawVoxels& raw_data) {
     nodes = (Svt64Node*)realloc(nodes, node_count * sizeof(Svt64Node) + SVT64_BUFFER_MEMORY);
 }
 
+inline uint32_t get_node_cell_index(const glm::vec3 pos, const int scale_exp) {
+    const uint32_t cell_x = (uint32_t&)pos.x >> scale_exp & 3u;
+    const uint32_t cell_y = (uint32_t&)pos.y >> scale_exp & 3u;
+    const uint32_t cell_z = (uint32_t&)pos.z >> scale_exp & 3u;
+    return cell_x + cell_y * 16u + cell_z * 4u;
+}
+
+inline glm::vec3 floor_scale(const glm::vec3 pos, const int scale_exp) {
+    const uint32_t mask = ~0u << scale_exp;
+    const uint32_t masked_x = (uint32_t&)pos.x & mask;
+    const uint32_t masked_y = (uint32_t&)pos.y & mask;
+    const uint32_t masked_z = (uint32_t&)pos.z & mask;
+    return glm::vec3((float&)masked_x, (float&)masked_y, (float&)masked_z);
+}
+
+// Reverses `pos` from range [1.0, 2.0) to (2.0, 1.0] if `dir > 0`.
+inline glm::vec3 mirror_pos(const glm::vec3 pos, const glm::vec3 dir) {
+    glm::vec3 mirrored {};
+    mirrored.x = dir.x > 0.0f ? (3.0f - pos.x) : pos.x;
+    mirrored.y = dir.y > 0.0f ? (3.0f - pos.y) : pos.y;
+    mirrored.z = dir.z > 0.0f ? (3.0f - pos.z) : pos.z;
+    return mirrored;
+}
+
+// Count number of set bits in variable range [0..width]
+inline uint32_t popcnt_var64(uint64_t mask, uint32_t width) { return (uint32_t)__popcnt64(mask & ((1ull << width) - 1)); }
+
+/* Get the index of the voxel at a given position and traversal scale. */
+glm::uvec3 voxel_index(glm::vec3 pos, uint32_t scale_exp) {
+    const uint32_t inv_scale = (1u << (23 - scale_exp)) - 1u;
+    return inv_scale - (~(glm::uvec3&)pos >> scale_exp & 0b1111111111u);
+}
+
+Svt64Hit Svt64::trace(const Ray& ray) const {
+    /* Traversal state */
+    uint32_t stack[11] {};
+    int scale_exp = 21;       /* 23 mantissa bits - 2 */
+    uint32_t node_index = 0u; /* root node */
+    Svt64Node node = nodes[node_index];
+
+    const glm::vec3 origin = mirror_pos(ray.origin, ray.dir);
+    const glm::vec3 dir = ray.dir;
+
+    /* Mirror coordinates to simplify cell intersections */
+    uint32_t mirror_mask = 0x00;
+    if (dir.x > 0.0f) mirror_mask |= 3u << 0;
+    if (dir.y > 0.0f) mirror_mask |= 3u << 4;
+    if (dir.z > 0.0f) mirror_mask |= 3u << 2;
+
+    /* Safety clamp */
+    glm::vec3 pos = clamp(origin, 1.0f, 1.9999999f);
+    const glm::vec3 inv_dir = 1.0f / -glm::abs(dir);
+
+    glm::vec3 side_dist = glm::vec3(0.0f);
+    int i = 0;
+
+    for (i = 0; i < 256; i++) {
+        uint32_t child_index = get_node_cell_index(pos, scale_exp) ^ mirror_mask;
+
+        /* Descend down the tree until we find an empty node or leaf node */
+        while ((node.child_mask >> child_index & 1) != 0 && !node.is_leaf()) {
+            /* Push the current node on the stack (at `scale_exp / 2`) */
+            stack[scale_exp >> 1] = node_index;
+
+            /* Fetch the child node */
+            node_index = node.abs_ptr() + popcnt_var64(node.child_mask, child_index);
+            node = nodes[node_index];
+
+            /* Decrease the scale & get the next child index */
+            scale_exp -= 2;
+            child_index = get_node_cell_index(pos, scale_exp) ^ mirror_mask;
+        }
+
+        /* If this node is a leaf, check if we hit a voxel */
+        if (node.is_leaf() && (node.child_mask >> child_index & 1) != 0) break;
+
+        /* Check if we can actually take a larger step based on the child mask */
+        int sub_scale_exp = scale_exp;
+        if ((node.child_mask >> (child_index & 0b101010) & 0x00330033) == 0) sub_scale_exp++;
+
+        // Compute next pos by intersecting with max cell sides
+        const glm::vec3 cell_min = floor_scale(pos, sub_scale_exp);
+
+        side_dist = (cell_min - origin) * inv_dir;
+        float tmax = fminf(fminf(side_dist.x, side_dist.y), side_dist.z);
+
+        const glm::ivec3 cell_min_i = glm::ivec3((int&)cell_min.x, (int&)cell_min.y, (int&)cell_min.z);
+
+        glm::ivec3 neighbor_max = cell_min_i;
+        neighbor_max.x += side_dist.x == tmax ? -1 : (1 << sub_scale_exp) - 1;
+        neighbor_max.y += side_dist.y == tmax ? -1 : (1 << sub_scale_exp) - 1;
+        neighbor_max.z += side_dist.z == tmax ? -1 : (1 << sub_scale_exp) - 1;
+
+        /* Move to the entry point of our neighbour */
+        pos = glm::min(origin - glm::abs(dir) * tmax, (glm::vec3&)neighbor_max);
+
+        /* Find the first common ancestor node based on left-most carry bit */
+        const glm::uvec3 diff_pos = glm::uvec3((uint32_t&)pos.x ^ (uint32_t&)cell_min.x, (uint32_t&)pos.y ^ (uint32_t&)cell_min.y, (uint32_t&)pos.z ^ (uint32_t&)cell_min.z);
+        const int diff_exp = 31 - _lzcnt_u32((diff_pos.x | diff_pos.y | diff_pos.z) & 0xFFAAAAAA);
+
+        /* Traverse back up the tree if we need to */
+        if (diff_exp > scale_exp) {
+            /* Break if we're exiting the root node */
+            scale_exp = diff_exp;
+            if (diff_exp > 21) break;
+
+            /* Read the first common ancestor node from the stack */
+            node_index = stack[scale_exp >> 1];
+            node = nodes[node_index];
+        }
+    }
+
+    /* If we ended in a leaf, we can gather the hit data we need */
+    if (node.is_leaf() && scale_exp <= 21) {
+        pos = mirror_pos(pos, dir);
+        return Svt64Hit(pos, 0xFFFFFFFFu, voxel_index(pos, scale_exp));
+    }
+    return Svt64Hit();
+}
+
 Svt64::~Svt64() {
     if (depth > 0u) {
         delete[] nodes;
@@ -228,6 +351,35 @@ Svt64::~Svt64() {
         delete[] physics_data;
         depth = 0u;
     }
+}
+
+/* Copy */
+Svt64::Svt64(const Svt64& src) {
+    node_count = src.node_count;
+    voxel_count = src.voxel_count;
+    depth = src.depth;
+    nodes = new Svt64Node[node_count + SVT64_BUFFER_MEMORY / sizeof(Svt64Node)];
+    materials = new MaterialIndex[voxel_count + SVT64_BUFFER_MEMORY / sizeof(MaterialIndex)];
+    physics_data = new PhysicsVoxel[voxel_count + SVT64_BUFFER_MEMORY / sizeof(PhysicsVoxel)];
+    memcpy(nodes, src.nodes, node_count * sizeof(Svt64Node));
+    memcpy(materials, src.materials, voxel_count * sizeof(MaterialIndex));
+    memcpy(physics_data, src.physics_data, voxel_count * sizeof(PhysicsVoxel));
+    palette = src.palette;
+}
+
+/* Copy */
+Svt64& Svt64::operator=(const Svt64& src) {
+    node_count = src.node_count;
+    voxel_count = src.voxel_count;
+    depth = src.depth;
+    nodes = new Svt64Node[node_count + SVT64_BUFFER_MEMORY / sizeof(Svt64Node)];
+    materials = new MaterialIndex[voxel_count + SVT64_BUFFER_MEMORY / sizeof(MaterialIndex)];
+    physics_data = new PhysicsVoxel[voxel_count + SVT64_BUFFER_MEMORY / sizeof(PhysicsVoxel)];
+    memcpy(nodes, src.nodes, node_count * sizeof(Svt64Node));
+    memcpy(materials, src.materials, voxel_count * sizeof(MaterialIndex));
+    memcpy(physics_data, src.physics_data, voxel_count * sizeof(PhysicsVoxel));
+    palette = src.palette;
+    return *this;
 }
 
 }  // namespace tmt
