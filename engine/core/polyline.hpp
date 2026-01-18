@@ -11,17 +11,18 @@ namespace tmt {
 class Polyline {
     /* Polyline material state */
     glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    float line_width = 0.1f;
+    float line_width = 1.5f;
     bool logged_once = false;
 
    public:
     Polyline() = default;
 
     /* Use the given color when drawing subsequent lines. */
+    inline void use_color(glm::vec3 new_color) { color = glm::vec4(new_color, 1.0f); };
     inline void use_color(glm::vec4 new_color) { color = new_color; };
     inline void use_color(float r, float g, float b, float a = 1.0f) { color = glm::vec4(r, g, b, a); };
     /* Use the given line width when drawing subsequent lines. */
-    inline void use_line_width(float new_width, bool screen_space = false) { line_width = screen_space ? -abs(new_width) : abs(new_width); };
+    inline void use_line_width(float new_width, bool screen_space = true) { line_width = screen_space ? abs(new_width) : -abs(new_width); };
 
     /**
      * @brief Draw a polyline.
@@ -113,6 +114,15 @@ class Polyline {
      * @param time Optional timer for how long the polyline should stay alive. *(default is 1 frame)*
      */
     void draw_text(glm::vec3 origin, std::string_view text, float scale, float time = 0.0f);
+
+    /**
+     * @brief Draw a polyline scene grid with axis lines.
+     * @param cell_size Size of a grid cell in world-space.
+     * @param subdivisions Every N lines, draw a major line.
+     * @param grid_extent Extent of the grid in cells.
+     * @param time Optional timer for how long the polyline should stay alive. *(default is 1 frame)*
+     */
+    void draw_scene_grid(float cell_size, int subdivisions, int grid_extent, float time = 0.0f);
 };
 
 }  // namespace tmt

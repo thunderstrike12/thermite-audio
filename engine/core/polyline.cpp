@@ -316,4 +316,54 @@ void Polyline::draw_text(glm::vec3 origin, std::string_view text, float size, fl
         cursor += right * spacing;
     }
 }
+
+void Polyline::draw_scene_grid(float cell_size, int subdivisions, int grid_extent, float time) {
+    const float extent = grid_extent * cell_size;
+
+    /* Colors and line widths */
+    const glm::vec4 minor_color = glm::vec4(1.0f, 1.0f, 1.0f, 0.1f);
+    const glm::vec4 major_color = glm::vec4(1.0f, 1.0f, 1.0f, 0.2f);
+    const glm::vec4 x_axis_color = glm::vec4(0.6f, 0.2f, 0.25f, 1.0f);
+    const glm::vec4 z_axis_color = glm::vec4(0.2f, 0.6f, 0.25f, 1.0f);
+    const float minor_width = 1.0f, major_width = 2.0f, axis_width = 2.5f;
+
+    /* Z axis lines */
+    for (int i = -grid_extent; i <= grid_extent; ++i) {
+        const float x = i * cell_size;
+        const glm::vec3 a = glm::vec3(x, 0.0f, -extent);
+        const glm::vec3 b = glm::vec3(x, 0.0f, extent);
+
+        if (i == 0) {
+            use_line_width(axis_width, true);
+            use_color(z_axis_color);
+        } else if (i % subdivisions == 0) {
+            use_line_width(major_width, true);
+            use_color(major_color);
+        } else {
+            use_line_width(minor_width, true);
+            use_color(minor_color);
+        }
+        draw_line(a, b, time);
+    }
+
+    /* X axis lines */
+    for (int i = -grid_extent; i <= grid_extent; ++i) {
+        const float z = i * cell_size;
+        const glm::vec3 a = glm::vec3(-extent, 0.0f, z);
+        const glm::vec3 b = glm::vec3(extent, 0.0f, z);
+
+        if (i == 0) {
+            use_line_width(axis_width, true);
+            use_color(x_axis_color);
+        } else if (i % subdivisions == 0) {
+            use_line_width(major_width, true);
+            use_color(major_color);
+        } else {
+            use_line_width(minor_width, true);
+            use_color(minor_color);
+        }
+        draw_line(a, b, time);
+    }
+}
+
 }  // namespace tmt
