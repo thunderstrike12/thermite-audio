@@ -75,9 +75,10 @@ public struct Svt64Node {
 
 /* Get the index of the voxel at a given position and traversal scale. */
 [ForceInline] uint voxel_index(float3 pos, int scale_exp) {
-    const uint inv_scale = (1u << (23 - scale_exp)) - 1u;
-    const uint3 voxel_pos = inv_scale - (~asuint(pos) >> scale_exp & 0b1111111111u);
-    return voxel_pos.x | (voxel_pos.y << 10) | (voxel_pos.z << 20);
+    /* Create a bitmask of all the position bits */
+    const uint pos_mask = (1u << (23 - scale_exp)) - 1u;
+    const uint3 index = asuint(pos) >> scale_exp & pos_mask;
+    return index.x | (index.y << 10) | (index.z << 20);
 }
 
 /* Get the face index of a voxel. */

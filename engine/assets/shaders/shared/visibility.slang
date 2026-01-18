@@ -55,6 +55,23 @@ public [ForceInline] uint3 expand_voxel_index(const uint voxel_index) {
     return uint3(voxel_index & 0b1111111111u, (voxel_index >> 10) & 0b1111111111u, voxel_index >> 20);
 }
 
+/* Finds the material for a given voxel pointer inside a SVT64. */
+public [ForceInline] Material voxel_material(const VoxelObject object, const uint voxel_ptr) {
+    /* Find the dword and bit offset for the voxel pointer */
+    const uint dword_ptr = voxel_ptr >> 2u; /* voxel_ptr / 4u */
+    const uint bit_offset = (voxel_ptr & 0b11u) << 3u; /* (voxel_ptr % 4u) * 8 bits */
+
+    /* Fetch the bindless voxel material buffer */
+    const StructuredBuffer<uint> voxels = bindless::storage_buffer<StructuredBuffer<uint>>(object.voxels_handle);
+
+    /* Use the dword and bit offset to get the palette index for the voxel */
+    const uint palette_index = voxels[dword_ptr] >> bit_offset & 0xFFu;
+
+    /* Fetch the bindless material palette buffer */
+    const StructuredBuffer<Material> palette = bindless::storage_buffer<StructuredBuffer<Material>>(object.palette_handle);
+    return palette[palette_index];
+}
+
 /* Unpack voxel geometry from visibility data. */
 public [ForceInline] GeoData unpack_geometry(const VisData vis, StructuredBuffer<VoxelObject> objects, const Ray ray) {
     GeoData data;
@@ -80,11 +97,8 @@ public [ForceInline] GeoData unpack_geometry(const VisData vis, StructuredBuffer
     const StructuredBuffer<Svt64Node> nodes = bindless::storage_buffer<StructuredBuffer<Svt64Node>>(object.blas_handle);
     const uint voxel_ptr = fetch_svt64(nodes, object.tree_depth, voxel_index);
 
-    /* Fetch the voxel palette index and it's material from the palette */
-    const StructuredBuffer<uint> voxels = bindless::storage_buffer<StructuredBuffer<uint>>(object.voxels_handle);
-    const StructuredBuffer<Material> palette = bindless::storage_buffer<StructuredBuffer<Material>>(object.palette_handle);
-    const uint palette_index = (voxels[voxel_ptr >> 2u] >> ((4u - (voxel_ptr % 4u)) << 3u)) & 0xFFu;
-    data.material = palette[palette_index];
+    /* Find the voxel material */
+    data.material = voxel_material(object, voxel_ptr);
     
     return data;
 }

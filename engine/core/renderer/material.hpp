@@ -16,9 +16,9 @@ using MaterialIndex = uint8_t;
 
 constexpr MaterialIndex AIR_INDEX = 0xFFu;
 
-/* Voxel material palette with 255 entries. */
+/* Voxel material palette with 256 entries. */
 struct MaterialPalette {
-    static constexpr size_t ENTRY_COUNT = (1u << (sizeof(MaterialIndex) * 8u)) - 1u;
+    static constexpr size_t ENTRY_COUNT = (1u << (sizeof(MaterialIndex) * 8u));
     Material entries[ENTRY_COUNT] {};
 
     /* Subscript operator */

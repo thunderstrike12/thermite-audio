@@ -253,8 +253,12 @@ inline uint32_t popcnt_var64(uint64_t mask, uint32_t width) { return (uint32_t)_
 
 /* Get the index of the voxel at a given position and traversal scale. */
 glm::uvec3 voxel_index(glm::vec3 pos, uint32_t scale_exp) {
-    const uint32_t inv_scale = (1u << (23 - scale_exp)) - 1u;
-    return inv_scale - (~(glm::uvec3&)pos >> scale_exp & 0b1111111111u);
+    /* Create a bitmask of all the position bits */
+    const uint32_t pos_mask = (1u << (23 - scale_exp)) - 1u;
+    const uint32_t cell_x = (uint32_t&)pos.x >> scale_exp & pos_mask;
+    const uint32_t cell_y = (uint32_t&)pos.y >> scale_exp & pos_mask;
+    const uint32_t cell_z = (uint32_t&)pos.z >> scale_exp & pos_mask;
+    return glm::uvec3(cell_x, cell_y, cell_z);
 }
 
 Svt64Hit Svt64::trace(const Ray& ray) const {
