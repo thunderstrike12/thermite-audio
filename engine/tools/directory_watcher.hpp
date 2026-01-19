@@ -16,8 +16,10 @@ enum class WatchReason : uint8_t {
     CREATION = 0b1 << 6,
     SECURITY_CHANGE = 0b1 << 7,
 
+    VISUAL = FILE_NAME_CHANGE | DIR_NAME_CHANGE | CREATION,
     ANY = FILE_NAME_CHANGE | DIR_NAME_CHANGE | ATTRIBUTE_CHANGE | SIZE_CHANGE | LAST_WRITE_CHANGE | LAST_ACCESS_CHANGE | CREATION | SECURITY_CHANGE
 };
+using namespace magic_enum::bitwise_operators;
 
 // A class to easily and efficiently watch a certain directory for changes.
 class DirectoryWatcher {

@@ -2,6 +2,9 @@
 
 #include "engine/core/io.hpp"
 #include "engine/core/logger.hpp"
+#include "engine/core/resources/voxel_scene.hpp"
+#include "engine/tools/file_dialog.hpp"
+#include "engine/tools/svh_format.hpp"
 
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -10,6 +13,13 @@
 #include <magic_enum/magic_enum.hpp>
 
 namespace {
+
+struct FileDropState {
+    bool is_dropping {false};
+    std::vector<tmt::IO::FileLocation> dropped_files;
+} file_drop_state;
+
+std::atomic_flag block_import_atomic {};
 
 template <typename ItemType, typename ContainerType>
 void apply_requests(ImGuiMultiSelectIO* io, std::vector<ItemType>& selection, const ContainerType& items) {
@@ -38,7 +48,27 @@ void apply_requests(ImGuiMultiSelectIO* io, std::vector<ItemType>& selection, co
     }
 }
 
-void drag_drop_location(const tmt::IO::FileLocation& location) {
+[[nodiscard]] bool path_valid(const std::filesystem::path& path) { return !path.empty() && exists(path); }
+
+// Generate an unused filename by appending "(NUMBER)" after the filename.
+tmt::IO::FileLocation find_unused_file_location(tmt::IO::FileLocation file_location) {
+    if (!tmt::IO::file_exists(file_location)) return file_location;
+
+    const std::string& stem_string = file_location.relative_path.stem().generic_string();
+    const auto& extension = file_location.relative_path.extension();
+
+    size_t index = 0;
+    tmt::IO::FileLocation new_location = file_location;
+    do {
+        ++index;
+        new_location = file_location;
+        new_location.relative_path.replace_filename(stem_string + fmt::format("({})", index)) += extension;
+    } while (tmt::IO::file_exists(new_location));
+
+    return new_location;
+}
+
+void drag_drop_file(const tmt::IO::FileLocation& location) {
     if (!ImGui::BeginDragDropSource()) return;
 
     const std::string& location_json = tmt::Serializer::serialize(location).dump(4);
@@ -50,27 +80,68 @@ void drag_drop_location(const tmt::IO::FileLocation& location) {
     ImGui::EndDragDropSource();
 }
 
-[[nodiscard]] bool path_valid(const std::filesystem::path& path) { return !path.empty() && exists(path); }
+void drag_drop_directory(const tmt::IO::FileLocation& location, const bool is_window = false) {
+    if (!is_window) {
+        if (!ImGui::BeginDragDropTarget()) return;
+    } else {
+        if (!ImGui::BeginDragDropTargetCustom(ImGui::GetCurrentWindow()->Rect(), ImGui::GetID("WindowDragDropTarget"))) return;
+    }
+
+    const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Import");
+    if (payload != nullptr) {
+        for (const tmt::IO::FileLocation& file_location : file_drop_state.dropped_files) {
+            tmt::AssetBrowser::import_asset(file_location, location);
+        }
+        file_drop_state.dropped_files.clear();
+    }
+
+    ImGui::EndDragDropTarget();
+}
 
 }  // namespace
 
 namespace tmt {
 
 void AssetBrowser::recurse_parse_directory(Directory& directory) {
-    std::filesystem::directory_iterator iterator {directory.location.get_relative_path()};
-    for (const auto& entry : iterator) {
-        if (!entry.is_directory()) continue;
+    try {
+        std::filesystem::directory_iterator iterator {directory.location.get_relative_path()};
+        for (const auto& entry : iterator) {
+            if (!entry.is_directory()) continue;
 
-        Directory& sub_directory = directory.sub_directories.emplace_back();
-        sub_directory.location = {directory.location.sub_location, directory.location.relative_path / entry.path().filename()};
-        recurse_parse_directory(sub_directory);
+            Directory& sub_directory = directory.sub_directories.emplace_back();
+            sub_directory.location = {directory.location.sub_location, directory.location.relative_path / entry.path().filename()};
+            recurse_parse_directory(sub_directory);
+        }
+    } catch (const std::exception& e) {
+        Log::error("Error with parsing directory: {}", e.what());
+    }
+}
+
+void AssetBrowser::on_sdl_event(internal::SdlEvent& event) {
+    const SDL_DropEvent& drop_event = event.event.drop;
+
+    switch (drop_event.type) {
+        case SDL_EVENT_DROP_BEGIN:
+            file_drop_state.is_dropping = true;
+            break;
+
+        case SDL_EVENT_DROP_FILE:
+            file_drop_state.dropped_files.push_back(IO::path_to_file_location(drop_event.data));
+            break;
+
+        case SDL_EVENT_DROP_COMPLETE:
+            file_drop_state.is_dropping = false;
+            break;
+
+        default:
+            break;
     }
 }
 
 void AssetBrowser::update_bookmark_vector(std::vector<Bookmark>& bookmarks) {
     for (auto& bookmark : bookmarks) {
         if (!bookmark.location_watcher.is_valid()) {  // If the location watcher is invalid, make it valid.
-            bookmark.location_watcher = tmt::DirectoryWatcher {bookmark.directory.location};
+            bookmark.location_watcher = DirectoryWatcher {bookmark.directory.location, true, true, WatchReason::VISUAL};
         } else if (!bookmark.location_watcher.check_changes()) {  // If the watcher is valid skip updating the bookmark view if there were no updates to the directory.
             continue;
         }
@@ -88,26 +159,39 @@ bool AssetBrowser::location_is_bookmarked(const IO::FileLocation& location) {
 }
 
 void AssetBrowser::display() {
+    // If we are dragging a file in from another program we manually create a drag and drop source to use in ImGui.
+    if (file_drop_state.is_dropping) {
+        ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceExtern);  // ImGuiDragDropFlags_SourceExtern means it'll always return true.
+
+        ImGui::SetDragDropPayload("Import", nullptr, 0);
+        ImGui::Text("Import files...");
+
+        ImGui::EndDragDropSource();
+    }
+
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImGui::GetStyle().FramePadding);
     const bool menu_bar_open = ImGui::BeginMenuBar();
     ImGui::PopStyleVar();
     if (menu_bar_open) {
+        if (ImGui::Button(ICON_MS_ARROW_DOWNWARD_ALT " Import...")) import_assets_dialog();
+
+        ImGui::Separator();
+
         ImGui::BeginDisabled(undo_viewing_locations.empty());
-        if (ImGui::Button(ICON_MS_ARROW_BACK)) move_location_stacks(undo_viewing_locations, redo_viewing_locations);
+        if (ImGui::MenuItem(ICON_MS_ARROW_BACK)) move_location_stacks(undo_viewing_locations, redo_viewing_locations);
         ImGui::EndDisabled();
 
         ImGui::BeginDisabled(redo_viewing_locations.empty());
-        if (ImGui::Button(ICON_MS_ARROW_FORWARD)) move_location_stacks(redo_viewing_locations, undo_viewing_locations);
+        if (ImGui::MenuItem(ICON_MS_ARROW_FORWARD)) move_location_stacks(redo_viewing_locations, undo_viewing_locations);
         ImGui::EndDisabled();
 
         const std::filesystem::path& current_path = viewing_location.relative_path;
         ImGui::BeginDisabled(current_path.empty());
-        if (ImGui::Button(ICON_MS_ARROW_UPWARD_ALT)) pending_viewing_location = {viewing_location.sub_location, current_path.parent_path()};
+        if (ImGui::MenuItem(ICON_MS_ARROW_UPWARD_ALT)) pending_viewing_location = {viewing_location.sub_location, current_path.parent_path()};
         ImGui::EndDisabled();
 
-        if (ImGui::Button(ICON_MS_AUTORENEW)) pending_viewing_location = viewing_location;
+        if (ImGui::MenuItem(ICON_MS_AUTORENEW)) pending_viewing_location = viewing_location;
 
-        ImGui::Text("Directory:");
         display_directory_bar();
 
         ImGui::BeginDisabled(location_is_bookmarked(viewing_location));
@@ -136,6 +220,7 @@ void AssetBrowser::display() {
     if (ImGui::BeginChild("Files")) {
         display_viewing_location();
     }
+    drag_drop_directory(viewing_location, true);
     ImGui::EndChild();
 
     ImGui::EndTable();
@@ -150,6 +235,8 @@ void AssetBrowser::on_editor_start() {
 }
 
 void AssetBrowser::on_editor_update(const FrameData&) {
+    block_import_atomic.wait(true);
+
     // Check if there are changes in the viewing directory, if so we update the viewing directory by setting it to pending.
     if (viewing_location_watcher.is_valid() && viewing_location_watcher.check_changes()) pending_viewing_location = viewing_location;
 
@@ -159,6 +246,42 @@ void AssetBrowser::on_editor_update(const FrameData&) {
     update_bookmark_vector(default_bookmarks);
     // Update the user added bookmarks.
     update_bookmark_vector(bookmarks);
+}
+
+void AssetBrowser::import_asset(const IO::FileLocation& import_file, const IO::FileLocation& location) {
+    const std::string& extension = import_file.relative_path.extension().generic_string();
+    if (extension == ".vengi") {
+        VoxelScene vengi_scene {import_file};
+        if (!vengi_scene.load()) {
+            Log::error("Failed to import asset: failed to parse .vengi file.");
+            return;
+        }
+
+        IO::FileLocation import_file_location = location;
+        import_file_location.relative_path /= import_file.relative_path.filename().replace_extension(".svh");
+        import_file_location = find_unused_file_location(import_file_location);
+
+        const std::vector<char>& data = encode_svh(vengi_scene);
+        IO::write_file(import_file_location, data.data(), data.size());
+
+        return;
+    }
+
+    Log::error("Failed to import asset: invalid file type.");
+}
+
+void AssetBrowser::import_assets_dialog() const {
+    open_files_dialog(
+        [this](const std::vector<IO::FileLocation>& file_locations) {
+            block_import_atomic.test_and_set();
+            for (const auto& file_location : file_locations) {
+                import_asset(file_location, viewing_location);
+            }
+            block_import_atomic.clear();
+            block_import_atomic.notify_one();
+        },
+        {{"Vengi voxel object", "vengi"}}
+    );
 }
 
 void AssetBrowser::update_location_history() {
@@ -202,7 +325,7 @@ void AssetBrowser::update_viewing_locations() {
         return is_directory(a_path);
     });
 
-    viewing_location_watcher = DirectoryWatcher {viewing_location, false};
+    viewing_location_watcher = DirectoryWatcher {viewing_location, false, true, WatchReason::VISUAL};
 }
 
 void AssetBrowser::move_location_stacks(std::stack<IO::FileLocation>& from, std::stack<IO::FileLocation>& to) {
@@ -282,6 +405,8 @@ ImGuiID AssetBrowser::recurse_display_bookmark_dirs(const Directory& directory) 
     // Check ImGui internal storage to check if the node is already toggled open, this allows us to set the display label based on if the folder is toggled open.
     const std::string node_display_text = (ImGui::GetStateStorage()->GetBool(node_id) ? ICON_MS_FOLDER_OPEN " " : ICON_MS_FOLDER " ") + directory_path;
     const bool node_open = ImGui::TreeNodeBehavior(node_id, flags, node_display_text.c_str(), nullptr);
+
+    drag_drop_directory(directory.location);
 
     location_context_menu(directory.location, true);
     if (ImGui::IsItemClicked()) pending_viewing_location = directory.location;
@@ -400,7 +525,11 @@ void AssetBrowser::display_viewing_location() {
         ImGui::SetNextItemSelectionUserData(i);
         ImGui::Selectable(location_name.c_str(), is_selected);
         location_context_menu(location, location_is_directory);
-        if (!location_is_directory) drag_drop_location(location);
+        if (location_is_directory) {
+            drag_drop_directory(location);
+        } else {
+            drag_drop_file(location);
+        }
 
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
             if (location_is_directory) {

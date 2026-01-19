@@ -196,6 +196,11 @@ target_include_directories(thermite-engine
     PUBLIC "./fmod/include"
 )
 
+# uuid_v4 - uuid parsing/generation
+target_include_directories(thermite-engine
+    PUBLIC "./uuid_v4"
+)
+
 # Link engine libraries publicly
 target_link_libraries(thermite-engine
     PUBLIC 

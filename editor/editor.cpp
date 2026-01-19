@@ -18,6 +18,7 @@
 #include "editor/imgui/manager.hpp"
 #include "editor/core/font_manager.hpp"
 #include "engine/tools/profiler.hpp"
+#include "engine/tools/file_dialog.hpp"
 
 /* Windows */
 #include "editor/windows/hierarchy.hpp"
@@ -128,6 +129,13 @@ void Editor::on_engine_end() {
 
 void Editor::main_menu_bar() {
     if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Import Assets...")) {
+                windows.get<AssetBrowser>().import_assets_dialog();
+            }
+            ImGui::EndMenu();
+        }
+
         if (ImGui::BeginMenu("Scene")) {
             if (ImGui::MenuItem("Save Scene")) {
                 engine.scenes.serialize_active_scene();

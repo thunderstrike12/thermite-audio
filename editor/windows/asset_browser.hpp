@@ -3,13 +3,14 @@
 #include "editor/core/window.hpp"
 #include "engine/core/io.hpp"
 #include "engine/tools/directory_watcher.hpp"
+#include "engine/events/sdl.hpp"
 
 #include <stack>
 #include <imgui.h>
 
 namespace tmt {
 
-class AssetBrowser : public IWindow {
+class AssetBrowser : public internal::OnSdlEvent, public IWindow {
    public:
     constexpr std::string get_title() const override { return ICON_MS_FOLDER " Asset Browser"; }
     constexpr int get_window_flags() const override { return ImGuiWindowFlags_MenuBar; }
@@ -20,6 +21,12 @@ class AssetBrowser : public IWindow {
     void on_editor_start() override;
     void on_editor_update(const FrameData&) override;
     void on_editor_end() override {}
+
+    /// Try to import a file.
+    /// @param import_file The location of the file to import.
+    /// @param location The folder location of where to put the imported file.
+    static void import_asset(const IO::FileLocation& import_file, const IO::FileLocation& location);
+    void import_assets_dialog() const;
 
    private:
     struct Directory {
@@ -43,6 +50,9 @@ class AssetBrowser : public IWindow {
 
     std::vector<Bookmark> default_bookmarks;
     std::vector<Bookmark> bookmarks;
+
+    // Handle file drop events to import a file.
+    void on_sdl_event(internal::SdlEvent& event) override;
 
     static void update_bookmark_vector(std::vector<Bookmark>& bookmarks);
     static void recurse_parse_directory(Directory& directory);

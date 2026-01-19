@@ -59,6 +59,8 @@ class IO {
 
     static TimeStamp get_file_last_modified_time(const FileLocation& file_location);
 
+    [[nodiscard]] static FileLocation path_to_file_location(const std::filesystem::path& path);
+
    private:
     static inline const std::filesystem::path SUB_LOCATIONS[3] {"assets/game", "assets/engine", "assets/editor"};
 

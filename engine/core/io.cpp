@@ -5,6 +5,27 @@
 
 namespace tmt {
 
+namespace {
+
+// Function from: https://stackoverflow.com/questions/67144806/c-check-if-path-is-outside-a-given-directory
+// Function to check if a file path is below a certain directory/folder in the file hierarchy.
+bool directory_contains_path(const std::filesystem::path& directory, const std::filesystem::path& path) {
+    const auto& cannon_directory = canonical(directory);
+    const auto& cannon_path = canonical(path);
+
+    auto directory_iterator = cannon_directory.begin();
+    for (const auto& sub_path : cannon_path) {
+        if (directory_iterator == cannon_directory.end()) break;
+
+        if (*directory_iterator != sub_path) return false;
+        ++directory_iterator;
+    }
+
+    return true;
+}
+
+}  // namespace
+
 /* Relative to working directory */
 std::filesystem::path IO::FileLocation::get_relative_path() const {
     const std::filesystem::path& sub_path = get_sub_location_path(sub_location);
@@ -149,6 +170,22 @@ TimeStamp IO::get_file_last_modified_time(const FileLocation& file_location) {
         tmt::Log::error(tmt::Log::Scope::ENGINE, "Exception when getting last modified time for file: {}\nreason: {}", absolute.string(), exception.what());
         return TimeStamp::min();
     }
+}
+
+IO::FileLocation IO::path_to_file_location(const std::filesystem::path& path) {
+    if (!exists(path)) {
+        Log::error("Failed to make FileLocation from path: path does not exist.");
+        return {};
+    }
+
+    size_t location_index = 0;
+    for (const std::filesystem::path& sub_location : SUB_LOCATIONS) {
+        if (directory_contains_path(sub_location, path)) return {static_cast<Location>(location_index), relative(path, absolute(sub_location))};
+        ++location_index;
+    }
+
+    Log::error("Failed to make FileLocation from path: couldn't create relative path.");
+    return {};
 }
 
 }  // namespace tmt
