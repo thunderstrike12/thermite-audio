@@ -5,6 +5,19 @@ project(thermite LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Check that we're building for x64
+if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    message(FATAL_ERROR "Thermite currently only supports x64 architecture")
+endif()
+
+# Check that we're using MSVC as our compiler
+if (NOT MSVC)
+    message(FATAL_ERROR "Thermite currently only supports building with MSVC.")
+endif()
+
+# Enable bigobj flag so we can compile big object files
+add_compile_options( /bigobj )
+
 # Set output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)

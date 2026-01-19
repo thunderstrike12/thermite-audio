@@ -1,13 +1,3 @@
-# Check that we're building for x64
-if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    message(FATAL_ERROR "Thermite currently only supports x64 architecture")
-endif()
-
-# Check that we're using MSVC as our compiler
-if (NOT MSVC)
-    message(FATAL_ERROR "Thermite currently only supports building with MSVC.")
-endif()
-
 # Collect source files
 file(GLOB_RECURSE THERMITE_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
