@@ -83,6 +83,7 @@ void Renderer::init() {
 
     /* Initialize pipelines */
     polyline_pipeline.init(gpu);
+    di_pipeline.init(gpu);
 
     debug_transform.set_local_position({0.0f, 0.0f, -1.0f});
 }
@@ -139,6 +140,7 @@ void Renderer::end() {
 
     /* Pipelines cleanup */
     polyline_pipeline.deinit(gpu);
+    di_pipeline.deinit(gpu);
 
     /* Cleanup the VRAM bank & GPU adapter */
     render_graph.deinit().expect("failed to destroy render graph.");

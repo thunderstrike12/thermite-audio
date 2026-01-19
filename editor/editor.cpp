@@ -13,6 +13,7 @@
 #include "engine/core/logger.hpp"
 #include "engine/core/window.hpp"
 #include "engine/core/renderer/renderer.hpp"
+#include "engine/core/renderer/pipelines/di_pipeline.hpp"
 #include "engine/core/scenes.hpp"
 
 #include "editor/imgui/manager.hpp"
@@ -170,6 +171,29 @@ void Editor::main_menu_bar() {
                     if (ImGui::MenuItem((prefix + DISPLAY_MODE_LABELS[i]).c_str())) {
                         display_mode_index = i;
                         engine.renderer.display_mode = magic_enum::enum_cast<DisplayMode>(i).value_or(DisplayMode::DEFAULT);
+                    }
+                }
+                ImGui::EndMenu();
+            }
+
+            /* List of shading rate labels */
+            const char* SHADING_RATE_LABELS[] {"Full-Rate", "Half-Rate (1:2)", "Quarter-Rate (1:4)"};
+
+            static uint32_t shading_rate_index = 0u;
+            const std::string shading_rate = SHADING_RATE_LABELS[shading_rate_index];
+
+            if (ImGui::BeginMenu(("Shading Rate (" + shading_rate + ")").c_str())) {
+                /* Render all shading rate options */
+                constexpr uint32_t COUNT = sizeof(SHADING_RATE_LABELS) / sizeof(char*);
+                const char* SELECTED_PREFIX = "* ";
+                const char* DEFAULT_PREFIX = "";
+                for (uint32_t i = 0u; i < COUNT; ++i) {
+                    const bool selected = engine.renderer.di_pipeline.get_shading_rate() == magic_enum::enum_cast<ShadingRate>(i).value_or(ShadingRate::FULL_RATE);
+                    const std::string prefix = selected ? SELECTED_PREFIX : DEFAULT_PREFIX;
+
+                    if (ImGui::MenuItem((prefix + SHADING_RATE_LABELS[i]).c_str())) {
+                        shading_rate_index = i;
+                        engine.renderer.di_pipeline.set_shading_rate(magic_enum::enum_cast<ShadingRate>(i).value_or(ShadingRate::FULL_RATE));
                     }
                 }
                 ImGui::EndMenu();
