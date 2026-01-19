@@ -206,19 +206,15 @@ void ImGuiConsole::DrawLogTypeButtons() {
 void ImGuiConsole::LogWindow() {
     const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
     if (ImGui::BeginChild("ScrollRegion##", ImVec2(0, -footerHeightToReserve), false, 0)) {
-        // Display colored command output.
-        static const float timestamp_width = ImGui::CalcTextSize("00:00:00:0000").x;  // Timestamp.
-        int count = 0;                                                                // Item count.
-        int itemIndex = 0;                                                            // Selection index.
+        static const float timestamp_width = ImGui::CalcTextSize("00:00:00:0000").x;
+        int count = 0;
+        int itemIndex = 0;
 
         ImVec2 mousePos = ImGui::GetMousePos();
         ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-        // Track content bounds.
-        float contentStartY = ImGui::GetCursorScreenPos().y;
-        float contentEndY = contentStartY;
-
-        // Wrap items.
+        float scrollY = ImGui::GetScrollY();
+        float wrapWidth = ImGui::GetContentRegionAvail().x;
         ImGui::PushTextWrapPos();
 
         std::string selectedText;
@@ -235,101 +231,106 @@ void ImGuiConsole::LogWindow() {
                     return true;
             }
         };
-        // First pass: calculate content bounds.
-        for (const auto& item : m_ConsoleSystem.Items()) {
-            if (!PassesTypeFilter(item.m_Type) || !m_TextFilter.PassFilter(item.Get().c_str())) continue;
-            ImVec2 textSize = ImGui::CalcTextSize(item.Get().data());
-            contentEndY += textSize.y + ImGui::GetStyle().ItemSpacing.y;
-            if (item.m_Type == csys::COMMAND && count++ != 0) {
-                contentEndY += ImGui::GetFontSize();  // Account for spacing between commands.
-            }
-        }
-        count = 0;  // Reset count for actual rendering.
 
-        // Handle selection input.
-        if (ImGui::IsWindowHovered()) {
-            if (ImGui::IsMouseClicked(0)) {
-                // Only start selection if clicking within content bounds.
-                if (mousePos.y >= contentStartY && mousePos.y <= contentEndY) {
-                    m_IsSelecting = true;
-                    m_SelectionStart = mousePos;
-                    m_SelectionEnd = mousePos;
-                    m_SelectionStartIndex = -1;
-                    m_SelectionEndIndex = -1;
-                } else {
-                    // Clear selection if clicking outside content.
-                    m_SelectionStartIndex = -1;
-                    m_SelectionEndIndex = -1;
-                }
+        // Build filtered index list for proper line-based selection
+        std::vector<int> filteredIndices;
+        for (int i = 0; i < (int)m_ConsoleSystem.Items().size(); i++) {
+            const auto& item = m_ConsoleSystem.Items()[i];
+            if (PassesTypeFilter(item.m_Type) && m_TextFilter.PassFilter(item.Get().c_str())) {
+                filteredIndices.push_back(i);
             }
         }
 
+        // Handle selection input - use LINE INDICES, not pixel coordinates
+        if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0)) {
+            m_IsSelecting = true;
+            m_SelectionStartIndex = -1;
+            m_SelectionEndIndex = -1;
+        }
+
+        if (m_IsSelecting && !ImGui::IsMouseDown(0)) {
+            m_IsSelecting = false;
+        }
+
+        // Auto-scroll when dragging near edges
         if (m_IsSelecting) {
-            if (ImGui::IsMouseDown(0)) {
-                m_SelectionEnd = mousePos;
-                // Clamp selection end to content bounds.
-                m_SelectionEnd.y = std::max(contentStartY, std::min(m_SelectionEnd.y, contentEndY));
-            } else {
-                m_IsSelecting = false;
+            ImVec2 windowMin = ImGui::GetWindowPos();
+            ImVec2 windowMax = ImVec2(windowMin.x + ImGui::GetWindowSize().x, windowMin.y + ImGui::GetWindowSize().y - footerHeightToReserve);
+            float scrollSpeed = 10.0f;
+
+            if (mousePos.y < windowMin.y + 20.0f) {
+                ImGui::SetScrollY(std::max(0.0f, scrollY - scrollSpeed));
+            } else if (mousePos.y > windowMax.y - 20.0f) {
+                ImGui::SetScrollY(scrollY + scrollSpeed);
             }
         }
 
-        // Calculate selection bounds (ensure start < end).
-        ImVec2 selMin(std::min(m_SelectionStart.x, m_SelectionEnd.x), std::min(m_SelectionStart.y, m_SelectionEnd.y));
-        ImVec2 selMax(std::max(m_SelectionStart.x, m_SelectionEnd.x), std::max(m_SelectionStart.y, m_SelectionEnd.y));
+        // Calculate normalized selection range (ensure start <= end)
+        int selStart = m_SelectionStartIndex;
+        int selEnd = m_SelectionEndIndex;
+        if (selStart > selEnd && selEnd != -1) {
+            std::swap(selStart, selEnd);
+        }
 
-        // Display items.
+        // Display items
+        int filteredIndex = 0;
         for (const auto& item : m_ConsoleSystem.Items()) {
-            // Exit if word is filtered.
             if (!PassesTypeFilter(item.m_Type) || !m_TextFilter.PassFilter(item.Get().c_str())) {
                 itemIndex++;
                 continue;
             }
 
-            // Spacing between commands.
+            // Spacing between commands
             if (item.m_Type == csys::COMMAND) {
-                if (m_TimeStamps) ImGui::PushTextWrapPos(ImGui::GetColumnWidth() - timestamp_width);  // Wrap before timestamps start.
-                if (count++ != 0) ImGui::Dummy(ImVec2(-1, ImGui::GetFontSize()));                     // No space for the first command.
+                if (m_TimeStamps) ImGui::PushTextWrapPos(ImGui::GetColumnWidth() - timestamp_width);
+                if (count++ != 0) {
+                    ImGui::Dummy(ImVec2(-1, ImGui::GetFontSize()));
+                }
             }
 
-            // Get item position before rendering.
-            ImVec2 textPos = ImGui::GetCursorScreenPos();
-            ImVec2 textSize = ImGui::CalcTextSize(item.Get().data());
-            ImVec2 textEnd(textPos.x + textSize.x, textPos.y + textSize.y);
+            float itemWrapWidth = wrapWidth;
+            if (item.m_Type == csys::COMMAND && m_TimeStamps) {
+                itemWrapWidth = ImGui::GetColumnWidth() - timestamp_width - ImGui::GetStyle().ItemSpacing.x;
+            }
 
-            // Check if this line intersects with selection.
-            bool lineSelected =
-                (textPos.y <= selMax.y && textEnd.y >= selMin.y) && (m_SelectionStartIndex != -1 || m_SelectionStart.x != m_SelectionEnd.x || m_SelectionStart.y != m_SelectionEnd.y);
+            ImVec2 textPosScreen = ImGui::GetCursorScreenPos();
+            ImVec2 textSize = ImGui::CalcTextSize(item.Get().data(), nullptr, false, itemWrapWidth);
 
-            // Track selection indices.
-            if (mousePos.y >= textPos.y && mousePos.y <= textEnd.y) {
+            // Check if mouse is over this line (for selection tracking)
+            bool mouseOverLine = (mousePos.y >= textPosScreen.y && mousePos.y <= textPosScreen.y + textSize.y);
+
+            if (mouseOverLine) {
                 if (ImGui::IsMouseClicked(0)) {
-                    m_SelectionStartIndex = itemIndex;
+                    m_SelectionStartIndex = filteredIndex;
+                    m_SelectionEndIndex = filteredIndex;
                 }
                 if (m_IsSelecting) {
-                    m_SelectionEndIndex = itemIndex;
+                    m_SelectionEndIndex = filteredIndex;
                 }
             }
 
-            // Draw selection highlight.
+            // Check if this line is within selection range (LINE-BASED)
+            bool lineSelected = (selStart != -1 && selEnd != -1 && filteredIndex >= selStart && filteredIndex <= selEnd);
+
+            // Draw FULL LINE selection highlight
             if (lineSelected) {
-                float highlightStartX = textPos.x;
-                float highlightEndX = textEnd.x;
+                ImVec2 highlightMin = ImVec2(textPosScreen.x, textPosScreen.y);
+                ImVec2 highlightMax = ImVec2(textPosScreen.x + wrapWidth, textPosScreen.y + textSize.y);
 
-                // Clamp to selection bounds for first/last lines.
-                if (textPos.y <= selMin.y && textEnd.y >= selMin.y) {
-                    highlightStartX = std::max(textPos.x, selMin.x);
-                }
-                if (textPos.y <= selMax.y && textEnd.y >= selMax.y) {
-                    highlightEndX = std::min(textEnd.x, selMax.x);
-                }
+                // Clip to visible window area
+                ImVec2 clipMin = ImGui::GetWindowPos();
+                ImVec2 clipMax = ImVec2(clipMin.x + ImGui::GetWindowSize().x, clipMin.y + ImGui::GetWindowSize().y);
 
-                drawList->AddRectFilled(ImVec2(highlightStartX, textPos.y), ImVec2(highlightEndX, textEnd.y), IM_COL32(80, 120, 200, 100));
+                if (highlightMax.y > clipMin.y && highlightMin.y < clipMax.y) {
+                    drawList->AddRectFilled(
+                        ImVec2(highlightMin.x, std::max(highlightMin.y, clipMin.y)), ImVec2(highlightMax.x, std::min(highlightMax.y, clipMax.y)), IM_COL32(80, 120, 200, 100)
+                    );
+                }
 
                 selectedText += item.Get() + "\n";
             }
 
-            // Items.
+            // Render item text
             if (m_ColoredOutput) {
                 ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[item.m_Type]);
                 ImGui::TextUnformatted(item.Get().data());
@@ -338,44 +339,38 @@ void ImGuiConsole::LogWindow() {
                 ImGui::TextUnformatted(item.Get().data());
             }
 
-            // Time stamp.
+            // Time stamp
             if (item.m_Type == csys::COMMAND && m_TimeStamps) {
-                // No wrap for timestamps
                 ImGui::PopTextWrapPos();
-
-                // Right align.
                 ImGui::SameLine(ImGui::GetColumnWidth(-1) - timestamp_width);
-
-                // Draw time stamp.
                 ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[COL_TIMESTAMP]);
                 ImGui::Text("%02d:%02d:%02d:%04d", ((item.m_TimeStamp / 1000 / 3600) % 24), ((item.m_TimeStamp / 1000 / 60) % 60), ((item.m_TimeStamp / 1000) % 60), item.m_TimeStamp % 1000);
                 ImGui::PopStyleColor();
             }
 
             itemIndex++;
+            filteredIndex++;
         }
 
-        // Stop wrapping since we are done displaying console items.
         ImGui::PopTextWrapPos();
 
-        // Handle Ctrl+C to copy selected text.
+        // Handle Ctrl+C / Ctrl+A
         if (ImGui::IsWindowFocused() && ImGui::GetIO().KeyCtrl) {
             if (ImGui::IsKeyPressed(ImGuiKey_C) && !selectedText.empty()) {
                 ImGui::SetClipboardText(selectedText.c_str());
             }
-            if (ImGui::IsKeyPressed(ImGuiKey_A)) {
+            if (ImGui::IsKeyPressed(ImGuiKey_A) && !filteredIndices.empty()) {
                 m_SelectionStartIndex = 0;
-                m_SelectionEndIndex = m_ConsoleSystem.Items().size() - 1;
-                m_SelectionStart = ImVec2(ImGui::GetCursorScreenPos().x, contentStartY);
-                m_SelectionEnd = ImVec2(ImGui::GetCursorScreenPos().x + ImGui::GetColumnWidth(), contentEndY);
+                m_SelectionEndIndex = (int)filteredIndices.size() - 1;
             }
         }
 
-        // Auto-scroll logs.
-        if (m_ScrollToBottom || (m_AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())) ImGui::SetScrollHereY(1.0f);
+        // Auto-scroll
+        if (m_ScrollToBottom || (m_AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())) {
+            ImGui::SetScrollHereY(1.0f);
+        }
         m_ScrollToBottom = false;
     }
-    // Loop through command string vector.
     ImGui::EndChild();
 }
 

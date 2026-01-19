@@ -94,8 +94,6 @@ class ImGuiConsole {
     bool m_ShowInfo = true;
 
     bool m_IsSelecting = false;
-    ImVec2 m_SelectionStart;
-    ImVec2 m_SelectionEnd;
     int m_SelectionStartIndex = -1;
     int m_SelectionEndIndex = -1;
     static int InputCallback(ImGuiInputTextCallbackData* data);  //!< Console input callback
