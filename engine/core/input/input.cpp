@@ -270,19 +270,24 @@ float Input::get_axis(const std::string& negative_action, const std::string& pos
 glm::vec2 Input::get_vector(
     const std::string& negative_action_x, const std::string& positive_action_x, const std::string& negative_action_y, const std::string& positive_action_y, float deadzone
 ) {
-    glm::vec2 vector {
-        get_action_raw_strength(positive_action_x) - get_action_raw_strength(negative_action_x), get_action_raw_strength(positive_action_y) - get_action_raw_strength(negative_action_y)
-    };
     auto& input_map = engine.input_map;
     if (deadzone < 0.0f) {
         deadzone = 0.25f * (input_map.get_action_deadzone(negative_action_x) + input_map.get_action_deadzone(negative_action_y) + input_map.get_action_deadzone(positive_action_x) +
                             input_map.get_action_deadzone(positive_action_y));
     }
+    auto filter = [deadzone](float value) { return value < deadzone ? 0.0f : value; };
+    float pos_x = filter(get_action_raw_strength(positive_action_x));
+    float neg_x = filter(get_action_raw_strength(negative_action_x));
+    float pos_y = filter(get_action_raw_strength(positive_action_y));
+    float neg_y = filter(get_action_raw_strength(negative_action_y));
+
+    glm::vec2 vector {pos_x - neg_x, pos_y - neg_y};
+
     float length = glm::length(vector);
     if (length < deadzone) {
         return {};
     }
-    if (length > 1.0f) {
+    if (length >= 1.0f) {
         return vector / length;
     }
     const float remapped = (length - deadzone) / (1.0f - deadzone);
