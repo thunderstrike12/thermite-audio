@@ -286,27 +286,27 @@ void tmt::Viewport::setup_gizmo_style() {
     using namespace ImGuizmo;
     // style..
     auto& style = ImGuizmo::GetStyle();
-    style.TranslationLineThickness = 7.0f;
-    style.TranslationLineArrowSize = 11.0f;
-    style.RotationLineThickness = 5.0f;
-    style.RotationOuterLineThickness = 6.0f;
-    style.ScaleLineThickness = 7.0f;
-    style.ScaleLineCircleSize = 11.0f;
+    style.TranslationLineThickness = 2.0f;
+    style.TranslationLineArrowSize = 8.0f;
+    style.RotationLineThickness = 3.0f;
+    style.RotationOuterLineThickness = 3.0f;
+    style.ScaleLineThickness = 2.0f;
+    style.ScaleLineCircleSize = 1.5f;
     style.HatchedAxisLineThickness = 5.0f;
-    style.CenterCircleSize = 10.0f;
+    style.CenterCircleSize = 24.0f;
 
     // Slightly neon, softer axis colors
-    style.Colors[DIRECTION_X] = ImVec4(0.98f, 0.36f, 0.47f, 1.00f);  // soft coral red
-    style.Colors[DIRECTION_Y] = ImVec4(0.39f, 0.86f, 0.55f, 1.00f);  // mint/teal
-    style.Colors[DIRECTION_Z] = ImVec4(0.38f, 0.67f, 0.98f, 1.00f);  // sky blue
+    style.Colors[DIRECTION_X] = ImVec4(0.93725490f, 0.28235294f, 0.35686274f, 1.00f); /* red */
+    style.Colors[DIRECTION_Y] = ImVec4(0.52941176f, 0.81176470f, 0.21176470f, 1.00f); /* green */
+    style.Colors[DIRECTION_Z] = ImVec4(0.27843137f, 0.56078431f, 0.94509803f, 1.00f); /* blue */
 
     // Matching planes, with lower alpha
-    style.Colors[PLANE_X] = ImVec4(0.98f, 0.36f, 0.47f, 0.28f);
-    style.Colors[PLANE_Y] = ImVec4(0.39f, 0.86f, 0.55f, 0.28f);
-    style.Colors[PLANE_Z] = ImVec4(0.38f, 0.67f, 0.98f, 0.28f);
+    style.Colors[PLANE_X] = ImVec4(0.93725490f, 0.28235294f, 0.35686274f, 0.4f);
+    style.Colors[PLANE_Y] = ImVec4(0.52941176f, 0.81176470f, 0.21176470f, 0.4f);
+    style.Colors[PLANE_Z] = ImVec4(0.27843137f, 0.56078431f, 0.94509803f, 0.4f);
 
     // Selection: warm golden accent
-    style.Colors[SELECTION] = ImVec4(1.00f, 0.84f, 0.39f, 0.85f);
+    style.Colors[SELECTION] = ImVec4(0.95686274f, 0.60392156f, 0.21960784f, 1.0f);
 
     // Inactive: cooler desaturated grey-blue
     style.Colors[INACTIVE] = ImVec4(0.32f, 0.35f, 0.42f, 0.85f);
@@ -316,8 +316,8 @@ void tmt::Viewport::setup_gizmo_style() {
     style.Colors[SCALE_LINE] = ImVec4(0.92f, 0.92f, 0.96f, 0.90f);
 
     // Rotation highlight: vivid magenta/orange mix
-    style.Colors[ROTATION_USING_BORDER] = ImVec4(1.00f, 0.50f, 0.78f, 1.00f);
-    style.Colors[ROTATION_USING_FILL] = ImVec4(1.00f, 0.50f, 0.78f, 0.45f);
+    style.Colors[ROTATION_USING_BORDER] = ImVec4(0.95686274f, 0.60392156f, 0.21960784f, 1.0f);
+    style.Colors[ROTATION_USING_FILL] = ImVec4(0.95686274f, 0.60392156f, 0.21960784f, 0.4f);
 
     // Hatched axis lines: subtle, light on dark
     style.Colors[HATCHED_AXIS_LINES] = ImVec4(1.00f, 1.00f, 1.00f, 0.25f);

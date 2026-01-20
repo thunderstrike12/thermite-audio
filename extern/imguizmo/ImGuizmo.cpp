@@ -49,7 +49,7 @@ namespace IMGUIZMO_NAMESPACE
    static const float DEG2RAD = (ZPI / 180.f);
    const float screenRotateSize = 0.06f;
    // scale a bit so translate axis do not touch when in universal
-   const float rotationDisplayFactor = 1.2f;
+   const float rotationDisplayFactor = 0.6f;
 
    static OPERATION operator&(OPERATION lhs, OPERATION rhs)
    {
@@ -787,8 +787,8 @@ namespace IMGUIZMO_NAMESPACE
    static const char* scaleInfoMask[] = { "X : %5.2f", "Y : %5.2f", "Z : %5.2f", "XYZ : %5.2f" };
    static const char* rotationInfoMask[] = { "X : %5.2f deg %5.2f rad", "Y : %5.2f deg %5.2f rad", "Z : %5.2f deg %5.2f rad", "Screen : %5.2f deg %5.2f rad" };
    static const int translationInfoIndex[] = { 0,0,0, 1,0,0, 2,0,0, 1,2,0, 0,2,0, 0,1,0, 0,1,2 };
-   static const float quadMin = 0.5f;
-   static const float quadMax = 0.8f;
+   static const float quadMin = 0.4f;
+   static const float quadMax = 0.5f;
    static const float quadUV[8] = { quadMin, quadMin, quadMin, quadMax, quadMax, quadMax, quadMax, quadMin };
    static const int halfCircleSegmentCount = 64;
    static const float snapTension = 0.5f;
@@ -1129,7 +1129,7 @@ namespace IMGUIZMO_NAMESPACE
          switch (operation)
          {
          case TRANSLATE:
-            colors[0] = (type == MT_MOVE_SCREEN) ? selectionColor : IM_COL32_WHITE;
+            colors[0] = (type == MT_MOVE_SCREEN) ? selectionColor : ImGui::ColorConvertFloat4ToU32(ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
             for (int i = 0; i < 3; i++)
             {
                colors[i + 1] = (type == (int)(MT_MOVE_X + i)) ? selectionColor : GetColorU32(DIRECTION_X + i);
@@ -1138,7 +1138,7 @@ namespace IMGUIZMO_NAMESPACE
             }
             break;
          case ROTATE:
-            colors[0] = (type == MT_ROTATE_SCREEN) ? selectionColor : IM_COL32_WHITE;
+            colors[0] = (type == MT_ROTATE_SCREEN) ? selectionColor : ImGui::ColorConvertFloat4ToU32(ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
             for (int i = 0; i < 3; i++)
             {
                colors[i + 1] = (type == (int)(MT_ROTATE_X + i)) ? selectionColor : GetColorU32(DIRECTION_X + i);
@@ -1146,7 +1146,7 @@ namespace IMGUIZMO_NAMESPACE
             break;
          case SCALEU:
          case SCALE:
-            colors[0] = (type == MT_SCALE_XYZ) ? selectionColor : IM_COL32_WHITE;
+            colors[0] = (type == MT_SCALE_XYZ) ? selectionColor : ImGui::ColorConvertFloat4ToU32(ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
             for (int i = 0; i < 3; i++)
             {
                colors[i + 1] = (type == (int)(MT_SCALE_X + i)) ? selectionColor : GetColorU32(DIRECTION_X + i);
@@ -1292,7 +1292,7 @@ namespace IMGUIZMO_NAMESPACE
 
       viewDirNormalized.TransformVector(gContext.mModelInverse);
 
-      gContext.mRadiusSquareCenter = screenRotateSize * gContext.mHeight;
+      gContext.mRadiusSquareCenter = 128.0f; // screenRotateSize * gContext.mHeight;
 
       bool hasRSC = Intersects(op, ROTATE_SCREEN);
       for (int axis = 0; axis < 3; axis++)
@@ -1327,11 +1327,11 @@ namespace IMGUIZMO_NAMESPACE
             drawList->AddPolyline(circlePos, circleMul* halfCircleSegmentCount + 1, colors[3 - axis], false, gContext.mStyle.RotationLineThickness);
          }
 
-         float radiusAxis = sqrtf((ImLengthSqr(worldToPos(gContext.mModel.v.position, gContext.mViewProjection) - circlePos[0])));
-         if (radiusAxis > gContext.mRadiusSquareCenter)
-         {
-            gContext.mRadiusSquareCenter = radiusAxis;
-         }
+         // float radiusAxis = sqrtf((ImLengthSqr(worldToPos(gContext.mModel.v.position, gContext.mViewProjection) - circlePos[0])));
+         // if (radiusAxis > gContext.mRadiusSquareCenter)
+         // {
+         //    gContext.mRadiusSquareCenter = radiusAxis;
+         // }
       }
       if(hasRSC && (!gContext.mbUsing || type == MT_ROTATE_SCREEN) && (!isMultipleAxesMasked && isNoAxesMasked))
       {
@@ -1379,20 +1379,76 @@ namespace IMGUIZMO_NAMESPACE
       }
    }
 
+   static void DrawScaleCube(ImDrawList* drawList, vec_t position, float size, ImU32 color, vec_t dirAxis, vec_t dirPlaneX, vec_t dirPlaneY)
+   {
+      const float s = size * 0.02f;
+      
+      // Build rotation matrix from the axis directions
+      vec_t axisX = dirPlaneX;
+      vec_t axisY = dirPlaneY;
+      vec_t axisZ = dirAxis;
+      
+      // 8 vertices of a cube in local space, then rotated by axis directions
+      vec_t localVerts[8] = {
+         makeVect(-s, -s, -s),
+         makeVect( s, -s, -s),
+         makeVect( s,  s, -s),
+         makeVect(-s,  s, -s),
+         makeVect(-s, -s,  s),
+         makeVect( s, -s,  s),
+         makeVect( s,  s,  s),
+         makeVect(-s,  s,  s)
+      };
+      
+      // Transform vertices using axis directions and project to screen
+      ImVec2 screenVerts[8];
+      for (int i = 0; i < 8; i++)
+      {
+         vec_t worldPos = axisX * localVerts[i].x + axisY * localVerts[i].y + axisZ * localVerts[i].z;
+         worldPos += position;
+         screenVerts[i] = worldToPos(worldPos, gContext.mViewProjection);
+      }
+      
+      // 12 edges of the cube
+      static const int edges[12][2] = {
+         {0, 1}, {1, 2}, {2, 3}, {3, 0},
+         {4, 5}, {5, 6}, {6, 7}, {7, 4},
+         {0, 4}, {1, 5}, {2, 6}, {3, 7}
+      };
+      
+      // 6 faces of the cube
+      static const int faces[6][4] = {
+         {0, 1, 2, 3},
+         {5, 4, 7, 6},
+         {4, 0, 3, 7},
+         {1, 5, 6, 2},
+         {3, 2, 6, 7},
+         {4, 5, 1, 0}
+      };
+      
+      for (int i = 0; i < 6; i++)
+      {
+         ImVec2 faceScreen[4];
+         for (int j = 0; j < 4; j++)
+         {
+            faceScreen[j] = screenVerts[faces[i][j]];
+         }
+         drawList->AddConvexPolyFilled(faceScreen, 4, color);
+      }
+   }
+
    static void DrawScaleGizmo(OPERATION op, int type)
    {
       ImDrawList* drawList = gContext.mDrawList;
 
       if(!Intersects(op, SCALE))
       {
-        return;
+      return;
       }
 
-      // colors
       ImU32 colors[7];
       ComputeColors(colors, type, SCALE);
 
-      // draw
       vec_t scaleDisplay = { 1.f, 1.f, 1.f, 1.f };
 
       if (gContext.mbUsing && (gContext.GetCurrentID() == gContext.mEditingID))
@@ -1412,28 +1468,39 @@ namespace IMGUIZMO_NAMESPACE
             vec_t dirPlaneX, dirPlaneY, dirAxis;
             bool belowAxisLimit, belowPlaneLimit;
             ComputeTripodAxisAndVisibility(i, dirAxis, dirPlaneX, dirPlaneY, belowAxisLimit, belowPlaneLimit, true);
+            
+            // Transform directions by model matrix
+            vec_t worldDirAxis = dirAxis;
+            vec_t worldDirPlaneX = dirPlaneX;
+            vec_t worldDirPlaneY = dirPlaneY;
+            worldDirAxis.TransformVector(gContext.mModelLocal);
+            worldDirPlaneX.TransformVector(gContext.mModelLocal);
+            worldDirPlaneY.TransformVector(gContext.mModelLocal);
 
-            // draw axis
             if (belowAxisLimit)
             {
                bool hasTranslateOnAxis = Contains(op, static_cast<OPERATION>(TRANSLATE_X << i));
                float markerScale = hasTranslateOnAxis ? 1.4f : 1.0f;
-               ImVec2 baseSSpace = worldToPos(dirAxis * 0.1f * gContext.mScreenFactor, gContext.mMVP);
-               ImVec2 worldDirSSpaceNoScale = worldToPos(dirAxis * markerScale * gContext.mScreenFactor, gContext.mMVP);
-               ImVec2 worldDirSSpace = worldToPos((dirAxis * markerScale * scaleDisplay[i]) * gContext.mScreenFactor, gContext.mMVP);
+               ImVec2 baseSSpace = worldToPos(dirAxis * 0.15f * gContext.mScreenFactor, gContext.mMVPLocal);
+               ImVec2 worldDirSSpace = worldToPos((dirAxis * 0.75f * markerScale * scaleDisplay[i]) * gContext.mScreenFactor, gContext.mMVPLocal);
 
                if (gContext.mbUsing && (gContext.GetCurrentID() == gContext.mEditingID))
                {
                   ImU32 scaleLineColor = GetColorU32(SCALE_LINE);
+                  ImVec2 worldDirSSpaceNoScale = worldToPos(dirAxis * 0.75f * markerScale * gContext.mScreenFactor, gContext.mMVPLocal);
                   drawList->AddLine(baseSSpace, worldDirSSpaceNoScale, scaleLineColor, gContext.mStyle.ScaleLineThickness);
-                  drawList->AddCircleFilled(worldDirSSpaceNoScale, gContext.mStyle.ScaleLineCircleSize, scaleLineColor);
+                  
+                  vec_t cubeWorldPosNoScale = gContext.mModelLocal.v.position + worldDirAxis * 0.75f * markerScale * gContext.mScreenFactor;
+                  DrawScaleCube(drawList, cubeWorldPosNoScale, gContext.mStyle.ScaleLineCircleSize * gContext.mScreenFactor, scaleLineColor, worldDirAxis, worldDirPlaneX, worldDirPlaneY);
                }
 
                if (!hasTranslateOnAxis || gContext.mbUsing)
                {
                   drawList->AddLine(baseSSpace, worldDirSSpace, colors[i + 1], gContext.mStyle.ScaleLineThickness);
                }
-               drawList->AddCircleFilled(worldDirSSpace, gContext.mStyle.ScaleLineCircleSize, colors[i + 1]);
+               
+               vec_t cubeWorldPos = gContext.mModelLocal.v.position + worldDirAxis * 0.75f * markerScale * scaleDisplay[i] * gContext.mScreenFactor;
+               DrawScaleCube(drawList, cubeWorldPos, gContext.mStyle.ScaleLineCircleSize * gContext.mScreenFactor, colors[i + 1], worldDirAxis, worldDirPlaneX, worldDirPlaneY);
 
                if (gContext.mAxisFactor[i] < 0.f)
                {
@@ -1443,22 +1510,12 @@ namespace IMGUIZMO_NAMESPACE
          }
       }
 
-      // draw screen cirle
-      drawList->AddCircleFilled(gContext.mScreenSquareCenter, gContext.mStyle.CenterCircleSize, colors[0], 32);
+      drawList->AddCircle(gContext.mScreenSquareCenter, gContext.mStyle.CenterCircleSize, colors[0], 32, 2.5f);
 
       if (gContext.mbUsing && (gContext.GetCurrentID() == gContext.mEditingID) && IsScaleType(type))
       {
-         //ImVec2 sourcePosOnScreen = worldToPos(gContext.mMatrixOrigin, gContext.mViewProjection);
          ImVec2 destinationPosOnScreen = worldToPos(gContext.mModel.v.position, gContext.mViewProjection);
-         /*vec_t dif(destinationPosOnScreen.x - sourcePosOnScreen.x, destinationPosOnScreen.y - sourcePosOnScreen.y);
-         dif.Normalize();
-         dif *= 5.f;
-         drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
-         drawList->AddCircle(destinationPosOnScreen, 6.f, translationLineColor);
-         drawList->AddLine(ImVec2(sourcePosOnScreen.x + dif.x, sourcePosOnScreen.y + dif.y), ImVec2(destinationPosOnScreen.x - dif.x, destinationPosOnScreen.y - dif.y), translationLineColor, 2.f);
-         */
          char tmps[512];
-         //vec_t deltaInfo = gContext.mModel.v.position - gContext.mMatrixOrigin;
          int componentInfoIndex = (type - MT_SCALE_X) * 3;
          ImFormatString(tmps, sizeof(tmps), scaleInfoMask[type - MT_SCALE_X], scaleDisplay[translationInfoIndex[componentInfoIndex]]);
          drawList->AddText(ImVec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15), GetColorU32(TEXT_SHADOW), tmps);
@@ -1583,8 +1640,8 @@ namespace IMGUIZMO_NAMESPACE
             // draw axis
             if (belowAxisLimit && Intersects(op, static_cast<OPERATION>(TRANSLATE_X << i)))
             {
-               ImVec2 baseSSpace = worldToPos(dirAxis * 0.1f * gContext.mScreenFactor, gContext.mMVP);
-               ImVec2 worldDirSSpace = worldToPos(dirAxis * gContext.mScreenFactor, gContext.mMVP);
+               ImVec2 baseSSpace = worldToPos(dirAxis * 0.15f * gContext.mScreenFactor, gContext.mMVP);
+               ImVec2 worldDirSSpace = worldToPos(dirAxis * 0.75f * gContext.mScreenFactor, gContext.mMVP);
 
                drawList->AddLine(baseSSpace, worldDirSSpace, colors[i + 1], gContext.mStyle.TranslationLineThickness);
 
@@ -1597,7 +1654,7 @@ namespace IMGUIZMO_NAMESPACE
 
                ImVec2 ortogonalDir(dir.y, -dir.x); // Perpendicular vector
                ImVec2 a(worldDirSSpace + dir);
-               drawList->AddTriangleFilled(worldDirSSpace - dir, a + ortogonalDir, a - ortogonalDir, colors[i + 1]);
+               drawList->AddTriangleFilled(worldDirSSpace - dir * 2.0f, a + ortogonalDir, a - ortogonalDir, colors[i + 1]);
                // Arrow head end
 
                if (gContext.mAxisFactor[i] < 0.f)
@@ -1623,7 +1680,8 @@ namespace IMGUIZMO_NAMESPACE
          }
       }
 
-      drawList->AddCircleFilled(gContext.mScreenSquareCenter, gContext.mStyle.CenterCircleSize, colors[0], 32);
+      // draw screen cirle
+      drawList->AddCircle(gContext.mScreenSquareCenter, gContext.mStyle.CenterCircleSize, colors[0], 32, 2.5f);
 
       if (gContext.mbUsing && (gContext.GetCurrentID() == gContext.mEditingID) && IsTranslateType(type))
       {
