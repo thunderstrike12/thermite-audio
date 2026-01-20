@@ -3,7 +3,7 @@
 #include "engine/events/input.hpp"
 
 namespace tmt {
-class Viewport : public IWindow,public OnRetrieveMouseState {
+class Viewport : public IWindow, public OnRetrieveMouseState {
    public:
     Viewport() = default;
     ~Viewport() = default;

@@ -45,6 +45,8 @@ class EventListenerBase {
         }
     }
 
+    static const std::vector<T*>& get_listeners() { return listeners; }
+
    protected:
     int priority = 0;
     inline static bool break_on_handled = true;
@@ -74,6 +76,8 @@ class EventListenerBase<T, void> {
             listener->on_event();
         }
     }
+
+    static const std::vector<T*>& get_listeners() { return listeners; }
 
    protected:
     int priority = 0;

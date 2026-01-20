@@ -60,6 +60,7 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
 
     const std::vector<Entity>& get_selected_entities() const { return selected_entities; };
     bool is_entity_selected() const { return !selected_entities.empty(); }
+    bool is_entity_selected(const Entity entity) const { return selected_entities.contains(entity); }
 
    private:
     tmt::InsertionOrderedSet<Entity> selected_entities;

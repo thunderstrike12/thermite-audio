@@ -36,6 +36,7 @@
 #include "editor/windows/imgui_demo.hpp"
 #include "editor/windows/console.hpp"
 #include "editor/windows/motion_math.hpp"
+#include "editor/windows/debug_lines.hpp"
 
 /* Singleton */
 tmt::Editor tmt::editor;
@@ -67,6 +68,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     windows.add<Console>();
     windows.add<ImguiDemo>();
     windows.add<MotionMathPreview>();
+    windows.add<DebugLines>();
 
     for (auto& window : windows) {
         window->on_editor_start();

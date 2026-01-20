@@ -32,6 +32,7 @@ class IGameComponent {
     virtual void end() = 0;
     /* [ Optional ] */
     virtual void fixed_update(const FrameData& time) { (void)time; };
+    virtual void draw_debug_lines() const {};
 
     /* [ Auto ] Helpers for engine */
     virtual nlohmann::json serialize() const = 0;

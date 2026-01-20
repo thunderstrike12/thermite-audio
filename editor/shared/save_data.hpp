@@ -22,7 +22,8 @@ struct SaveData {
     }
 
     std::unordered_map<std::string, bool> open_windows;
+    std::unordered_map<std::string, bool> enabled_debug_renderers;
 };
 }  // namespace tmt
 
-TMT_OBJECT(tmt::SaveData, (open_windows));
+TMT_OBJECT(tmt::SaveData, (open_windows, enabled_debug_renderers));
