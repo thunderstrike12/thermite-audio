@@ -2,6 +2,7 @@
 #include "engine/tools/serializer.hpp"
 
 #include "engine/core/entity.hpp"
+#include "engine/core/ecs.hpp"
 #include "engine/core/reflection.hpp"
 
 #include "engine/core/components/all.hpp"
@@ -15,8 +16,10 @@ using Json = JsonReflect::json;
 
 struct SerializeState {
     const tmt::Ecs& ecs;
-    const std::set<tmt::Entity>& entities;
+    /* Original provided entities */
     const std::set<tmt::Entity>& original_entities;
+    /* Originals + children */
+    const std::set<tmt::Entity>& all_entities;
 };
 
 struct DeserializeState {
@@ -61,7 +64,7 @@ Json tag_invoke(JsonReflect::serialize_t, const tmt::Entity& entity, const tmt::
 
 void tag_invoke(JsonReflect::deserialize_t, const Json&, tmt::Entity&, tmt::Ecs&) {}
 
-/* Set of entities */
+/* [Serialize] Set of entities */
 Json tag_invoke(JsonReflect::serialize_t, const std::set<tmt::Entity>& entities_original, const tmt::Ecs& ecs) {
     TMT_ZONE_SCOPED_NS("Ecs::serialize");
     auto entities = entities_original;
@@ -71,7 +74,7 @@ Json tag_invoke(JsonReflect::serialize_t, const std::set<tmt::Entity>& entities_
         entities.merge(ecs.get_component<tmt::Transform>(entity).get_all_children());
     }
 
-    SerializeState state {ecs, entities, entities_original};
+    SerializeState state {ecs, entities_original, entities};
 
     Json result;
     result["version"] = tmt::Serializer::Config::VERSION;
@@ -92,7 +95,7 @@ Json tag_invoke(JsonReflect::serialize_t, const std::set<tmt::Entity>& entities_
 
         Json& components = result[COMPONENT_NAME];
 
-        for (const auto entity : state.entities) {
+        for (const auto entity : state.all_entities) {
             if (state.ecs.has_component<ComponentType>(entity) == false) continue;
 
             const auto key = tmt::EntityHelper::to_string(entity);
@@ -104,6 +107,7 @@ Json tag_invoke(JsonReflect::serialize_t, const std::set<tmt::Entity>& entities_
     return result;
 }
 
+/* [Deserialize] */
 void tag_invoke(JsonReflect::deserialize_t, const Json& j, std::set<tmt::Entity>& new_entities, tmt::Ecs& ecs) {
     TMT_ZONE_SCOPED_NS("Ecs::deserialize");
 
@@ -120,11 +124,14 @@ void tag_invoke(JsonReflect::deserialize_t, const Json& j, std::set<tmt::Entity>
 
     if (state.original_json["version"] != tmt::Serializer::Config::VERSION) {
         const Json& version = state.original_json["version"];
-        tmt::Log::warn(tmt::Log::Scope::ENGINE, "[Serialization] Using outdated version, something might break. using: %ui, expected: %ui", version, tmt::Serializer::Config::VERSION);
+        tmt::Log::warn(
+            tmt::Log::Scope::ENGINE, "[Serialization] Using outdated version, something might break. current version: %ui, provided version: %ui", version, tmt::Serializer::Config::VERSION
+        );
     }
 
     const auto& json_entities = state.original_json["entities"];
 
+    /* Create entities */
     for (const auto& json_entity : json_entities) {
         tmt::Entity deserialized_entity = entt::null;
         tmt::Serializer::deserialize(json_entity, deserialized_entity);
@@ -138,6 +145,7 @@ void tag_invoke(JsonReflect::deserialize_t, const Json& j, std::set<tmt::Entity>
         state.entity_mapping[deserialized_entity] = created_entity;
     }
 
+    /* Deserialize each component */
     tmt::SerializeComponents::for_each([&state](auto type_tag) {
         using ComponentType = typename decltype(type_tag)::type;
 

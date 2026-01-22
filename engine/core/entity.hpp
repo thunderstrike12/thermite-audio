@@ -3,6 +3,7 @@
 #include <string>
 #include <ranges>
 #include "engine/tools/fmt/helper.hpp"
+#include "engine/tools/uuid.hpp"
 
 namespace tmt {
 using Entity = entt::entity;

@@ -9,6 +9,7 @@
 #include "engine/tools/profiler.hpp"
 #include "engine/tools/timer.hpp"
 #include "engine/tools/svh_format.hpp"
+#include "engine/tools/uuid.hpp"
 
 #include <queue>
 #include <omp.h>
@@ -314,7 +315,7 @@ VoxelSceneNode parse_hierarchy(const vengi::Node* file_node) {
 
     /* Create a new scene node */
     VoxelSceneNode node {};
-    node.uuid = UUIDv4::UUID(file_node->uuid[0], file_node->uuid[1]);
+    node.uuid = UUID(file_node->uuid[0], file_node->uuid[1]);
 
     /* If this node is a voxel model node */
     if (file_node->type == vengi::NodeType::MODEL) {

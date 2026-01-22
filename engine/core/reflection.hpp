@@ -28,16 +28,19 @@ struct Component {
 };
 }  // namespace tmt
 
-/* Used to reflect components */
-#define TMT_COMPONENT_IMPL(Type, Name, ImguiFields, JsonFields)  \
+#define TMT_COMPONENT_NAME(Type, Name)                           \
     namespace tmt {                                              \
     template <>                                                  \
     struct Component<Type> {                                     \
         static constexpr const char* NAME = Name;                \
         static constexpr const char* get_name() { return NAME; } \
     };                                                           \
-    }                                                            \
-    TMT_REFLECTION_IMPL(Type, ImguiFields, JsonFields)
+    }
+
+/* Used to reflect components */
+#define TMT_COMPONENT_IMPL(Type, Name, ImguiFields, JsonFields) \
+    TMT_COMPONENT_NAME(Type, Name);                             \
+    TMT_REFLECTION_IMPL(Type, ImguiFields, JsonFields);
 
 #define TMT_COMPONENT(Type, Name, Fields) TMT_COMPONENT_IMPL(Type, Name, Fields, Fields)
 

@@ -2,6 +2,7 @@
 
 #include "core/logger.hpp"
 #include "core/resources/voxel_scene.hpp"
+#include "engine/tools/uuid.hpp"
 
 namespace tmt {
 
@@ -26,7 +27,7 @@ struct HierarchyHeader {
 static_assert(sizeof(HierarchyHeader) == 8);
 
 struct HierarchyNode {
-    UUIDv4::UUID uuid;  // *Technically* not trivially copyable, but has the same layout and will be copied right after.
+    UUID uuid;  // *Technically* not trivially copyable, but has the same layout and will be copied right after.
     uint32_t parent_index;
     uint32_t svt64_offset;
     uint32_t svt64_size;
