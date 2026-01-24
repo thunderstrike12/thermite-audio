@@ -110,7 +110,7 @@ std::unique_ptr<Svt64> decode_svt64_tree(const std::span<const char>& svt64_data
 
     tree->palette = read_data<MaterialPalette>(data_pointer);
 
-    tree->nodes = new Svt64Node[tree->node_count];
+    tree->nodes = new Svt64Node[tree->node_count + SVT64_BUFFER_MEMORY];
     read_data_to_buffer(data_pointer, tree->nodes, tree->node_count);
 
     tree->materials = new MaterialIndex[tree->voxel_count + SVT64_BUFFER_MEMORY];

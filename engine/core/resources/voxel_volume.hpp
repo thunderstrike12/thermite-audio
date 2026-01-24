@@ -17,6 +17,12 @@ class VoxelVolume : public tmt::RuntimeResource<VoxelScene> {
     bool load() override;
     void unload() override;
 
+    /* Updates the GPU buffers of this voxel volume if dirty. (note: this should only be called from the renderer) */
+    void update_if_dirty();
+
+    /* Mark this voxel volume as dirty, meaning it needs to be re-uploaded to the GPU. */
+    inline void set_dirty() { is_dirty = true; };
+
     /* 128 bit unique identifier. */
     uint64_t uuid[2] {};
 
@@ -26,6 +32,8 @@ class VoxelVolume : public tmt::RuntimeResource<VoxelScene> {
 
     /* Voxel acceleration structure buffers. */
     Buffer blas_nodes {}, blas_voxels {}, blas_palette {};
+    uint32_t blas_nodes_capacity = 0u, blas_voxels_capacity = 0u;
+    bool is_dirty = false;
 };
 
 }  // namespace tmt

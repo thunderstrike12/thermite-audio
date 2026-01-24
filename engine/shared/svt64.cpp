@@ -221,7 +221,7 @@ void Svt64::build(const RawVoxels& raw_data) {
     nodes[0] = subdivide(raw_data, depth * 2u, glm::uvec3(0u));
 
     /* Reallocate the nodes to save memory */
-    nodes = (Svt64Node*)realloc(nodes, node_count * sizeof(Svt64Node) + SVT64_BUFFER_MEMORY);
+    nodes = (Svt64Node*)realloc(nodes, (node_count + SVT64_BUFFER_MEMORY) * sizeof(Svt64Node));
 }
 
 inline uint32_t get_node_cell_index(const glm::vec3 pos, const int scale_exp) {
@@ -362,9 +362,9 @@ Svt64::Svt64(const Svt64& src) {
     node_count = src.node_count;
     voxel_count = src.voxel_count;
     depth = src.depth;
-    nodes = new Svt64Node[node_count + SVT64_BUFFER_MEMORY / sizeof(Svt64Node)];
-    materials = new MaterialIndex[voxel_count + SVT64_BUFFER_MEMORY / sizeof(MaterialIndex)];
-    physics_data = new PhysicsVoxel[voxel_count + SVT64_BUFFER_MEMORY / sizeof(PhysicsVoxel)];
+    nodes = new Svt64Node[node_count + SVT64_BUFFER_MEMORY];
+    materials = new MaterialIndex[voxel_count + SVT64_BUFFER_MEMORY];
+    physics_data = new PhysicsVoxel[voxel_count + SVT64_BUFFER_MEMORY];
     memcpy(nodes, src.nodes, node_count * sizeof(Svt64Node));
     memcpy(materials, src.materials, voxel_count * sizeof(MaterialIndex));
     memcpy(physics_data, src.physics_data, voxel_count * sizeof(PhysicsVoxel));
@@ -376,9 +376,9 @@ Svt64& Svt64::operator=(const Svt64& src) {
     node_count = src.node_count;
     voxel_count = src.voxel_count;
     depth = src.depth;
-    nodes = new Svt64Node[node_count + SVT64_BUFFER_MEMORY / sizeof(Svt64Node)];
-    materials = new MaterialIndex[voxel_count + SVT64_BUFFER_MEMORY / sizeof(MaterialIndex)];
-    physics_data = new PhysicsVoxel[voxel_count + SVT64_BUFFER_MEMORY / sizeof(PhysicsVoxel)];
+    nodes = new Svt64Node[node_count + SVT64_BUFFER_MEMORY];
+    materials = new MaterialIndex[voxel_count + SVT64_BUFFER_MEMORY];
+    physics_data = new PhysicsVoxel[voxel_count + SVT64_BUFFER_MEMORY];
     memcpy(nodes, src.nodes, node_count * sizeof(Svt64Node));
     memcpy(materials, src.materials, voxel_count * sizeof(MaterialIndex));
     memcpy(physics_data, src.physics_data, voxel_count * sizeof(PhysicsVoxel));

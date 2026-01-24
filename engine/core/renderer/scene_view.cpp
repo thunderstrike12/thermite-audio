@@ -44,6 +44,7 @@ void SceneView::update(RenderGraph& render_graph) {
 
         /* Don't render objects with a zero scale or null resource */
         if (glm::any(glm::equal(transform.get_world_scale(), glm::vec3(0.0f))) || renderer.resource == nullptr) continue;
+        renderer.resource->update_if_dirty();
 
         /* Convert the entity to a voxel object */
         VoxelObject object {};

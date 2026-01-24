@@ -8,7 +8,7 @@
 namespace tmt {
 
 /* How much space should be reserved for real-time modifications. */
-constexpr uint32_t SVT64_BUFFER_MEMORY = 1000u /* 1 kb */;
+constexpr uint32_t SVT64_BUFFER_MEMORY = 1000u;
 
 /* Raw uniform voxel input data. */
 struct RawVoxels {
