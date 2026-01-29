@@ -102,7 +102,7 @@ struct VoxelInformation {
 
 struct VoxelData {
     Region region;
-    std::vector<VoxelInformation> voxels;  // Stored in Z->Y->X order (not X->Y->Z)
+    std::vector<VoxelInformation> voxels;
 
     // Get voxel at specific position (returns nullptr if out of bounds)
     const VoxelInformation* get(int32_t x, int32_t y, int32_t z) const {
@@ -110,8 +110,7 @@ struct VoxelData {
             return nullptr;
         }
 
-        // Voxels are stored in Z->Y->X order
-        int32_t idx = (z - region.lower.z) * region.height() * region.width() + (y - region.lower.y) * region.width() + (x - region.lower.x);
+        int32_t idx = (x - region.lower.x) + (y - region.lower.y) * region.width() + (z - region.lower.z) * region.height() * region.width();
 
         if (idx >= 0 && idx < (int32_t)voxels.size()) {
             return &voxels[idx];
@@ -260,5 +259,5 @@ class VengiParser {
 
    private:
     static std::vector<char> zlib_decompress_vengi_file(std::vector<char>& compressed_data);
-    static void compute_ref_world_transforms(vengi::Node& node, const glm::mat4& parent_matrix);
+    static void compute_parent_transform_offsets(vengi::Node& node, const glm::vec3& parent_offset);
 };
