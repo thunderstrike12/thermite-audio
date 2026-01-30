@@ -89,8 +89,10 @@ void DebugScene::on_update(const tmt::FrameData& time) {
     tmt::engine.polyline.draw_aabb({4.0f, 0.0f, 0.0f}, {5.0f, 1.0f, 1.0f});
 
     /* OBB */
+    tmt::engine.polyline.use_depth_testing(false);
     tmt::engine.polyline.use_color(0.3f, 1.0f, 0.3f);
     tmt::engine.polyline.draw_obb({6.5f, 0.5f, 0.5f}, {0.5f, 0.5f, 0.5f}, glm::angleAxis(0.4f, glm::vec3(1.0f, 0.0f, 0.0f)));
+    tmt::engine.polyline.use_depth_testing(true);
 
     /* Sphere */
     tmt::engine.polyline.use_color(0.3f, 0.3f, 1.0f);

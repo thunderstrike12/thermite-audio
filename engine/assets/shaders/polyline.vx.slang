@@ -8,9 +8,13 @@ struct VertexIn {
     float3 point_b : POSITION1;
     float4 color : COLOR;
     float width : WIDTH;
+    float depth_bias : DEPTH_BIAS;
 
     /* Returns true if this line has a world-space width. */
     [ForceInline] bool is_world_space() { return width < 0.0f; }
+
+    /* Returns true if this line has depth testing enabled. */
+    [ForceInline] bool is_depth_tested() { return depth_bias != 1e30f; }
 };
 
 /* Vertex shader output. */
@@ -85,6 +89,7 @@ VertexOut main(VertexIn input, uint vertex_id: SV_VertexID) {
 
     /* Fade out thin lines, based on <https://acegikmo.com/shapes/docs/#anti-aliasing> */
     float line_width = input.is_world_space() ? -input.width / clip_zw.y : input.width;
+    float line_depth = input.is_depth_tested() ? clip_zw.x + input.depth_bias : 0.0f;
     float4 line_color = input.color;
     if (line_width < 1.0f) {
         line_color.a *= max(0.0f, line_width);
@@ -97,6 +102,6 @@ VertexOut main(VertexIn input, uint vertex_id: SV_VertexID) {
     /* Transform the vertex back into clip-space */
     const float2 point_uv = point_pixel / resolution;
     const float2 point_ndc = point_uv * 2.0f - 1.0f;
-    const float4 point_clip = float4(clip_zw.y * point_ndc, clip_zw.x, clip_zw.y);
+    const float4 point_clip = float4(clip_zw.y * point_ndc, line_depth, clip_zw.y);
     return VertexOut(point_clip, line_color);
 }

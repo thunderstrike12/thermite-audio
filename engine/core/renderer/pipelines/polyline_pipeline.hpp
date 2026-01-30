@@ -19,8 +19,10 @@ struct PolylineSegment {
     glm::vec3 point_b {0.0f, 0.0f, 0.0f};
     glm::vec4 color {1.0f, 0.0f, 0.0f, 1.0f};
     float line_width = 0.1f;
+    float depth_bias = 0.0f;
     PolylineSegment() = default;
-    PolylineSegment(glm::vec3 point_a, glm::vec3 point_b, glm::vec4 color, float line_width) : point_a(point_a), point_b(point_b), color(color), line_width(line_width) {};
+    PolylineSegment(glm::vec3 point_a, glm::vec3 point_b, glm::vec4 color, float line_width, float depth_bias)
+        : point_a(point_a), point_b(point_b), color(color), line_width(line_width), depth_bias(depth_bias) {};
 };
 
 /* Polyline segment with a timer attached. */
@@ -28,7 +30,8 @@ struct TimedPolylineSegment {
     PolylineSegment line {};
     float timer = 0.0f; /* Seconds */
     TimedPolylineSegment() = default;
-    TimedPolylineSegment(glm::vec3 point_a, glm::vec3 point_b, glm::vec4 color, float line_width, float time) : line(point_a, point_b, color, line_width), timer(time) {};
+    TimedPolylineSegment(glm::vec3 point_a, glm::vec3 point_b, glm::vec4 color, float line_width, float depth_bias, float time)
+        : line(point_a, point_b, color, line_width, depth_bias), timer(time) {};
 };
 
 /* Maximum number of polylines that can be drawn per frame. */

@@ -12,6 +12,7 @@ class Polyline {
     /* Polyline material state */
     glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     float line_width = 1.5f;
+    float depth_bias = 0.0f;
     bool logged_once = false;
 
    public:
@@ -23,6 +24,10 @@ class Polyline {
     inline void use_color(float r, float g, float b, float a = 1.0f) { color = glm::vec4(r, g, b, a); };
     /* Use the given line width when drawing subsequent lines. */
     inline void use_line_width(float new_width, bool screen_space = true) { line_width = screen_space ? abs(new_width) : -abs(new_width); };
+    /* Use a depth bias for the lines, this will be added to their depth values. (mutually exclusive with `use_depth_testing`) */
+    inline void use_depth_bias(float bias) { depth_bias = bias; };
+    /* Enable/disable depth testing for the lines. */
+    inline void use_depth_testing(bool value) { depth_bias = (value ? 0.0f : 1e30f); };
 
     /**
      * @brief Draw a polyline.

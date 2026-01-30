@@ -69,6 +69,7 @@ void PolylinePipeline::enqueue(RenderGraph& render_graph, RenderView& render_vie
         .attribute(AttrFormat::XYZ32_SFloat)  /* End */
         .attribute(AttrFormat::XYZW32_SFloat) /* Color */
         .attribute(AttrFormat::X32_SFloat)    /* Width */
+        .attribute(AttrFormat::X32_SFloat)    /* Depth Bias */
         .input_rate(VertexInputRate::Instance)
         .alpha_blending(true)
         .read(render_view.render_view_buffer, ShaderStages::Vertex)

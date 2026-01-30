@@ -26,12 +26,12 @@ void Polyline::draw_line(glm::vec3 a, glm::vec3 b, float time) {
 
     /* If the time is 0 that means this is an immediate line */
     if (time == 0.0f) {
-        engine.renderer.polyline_pipeline.immediate_lines.emplace_back(a, b, color, line_width);
+        engine.renderer.polyline_pipeline.immediate_lines.emplace_back(a, b, color, line_width, depth_bias);
         return;
     }
 
     /* If the time *is* set, create a timed line */
-    engine.renderer.polyline_pipeline.timed_lines.emplace_back(a, b, color, line_width, time);
+    engine.renderer.polyline_pipeline.timed_lines.emplace_back(a, b, color, line_width, depth_bias, time);
 }
 
 void Polyline::draw_circle(glm::vec3 origin, float radius, uint32_t segments, float time) {
