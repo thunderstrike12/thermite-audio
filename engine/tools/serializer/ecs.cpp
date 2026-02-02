@@ -48,12 +48,34 @@ Json tag_invoke(JsonReflect::serialize_t, const tmt::Ecs& ecs) {
     for (const auto entity : ecs.get_registry().view<entt::entity>()) {
         entities.insert(entity);
     }
-    return tmt::Serializer::serialize(entities, ecs);
+    tmt::json result = tmt::Serializer::serialize(entities, ecs);
+    tmt::json& systems = result["systems"];
+    const auto size = ecs.systems.size();
+    for (const auto& system : ecs.systems) {
+        const auto serialized = system->serialize();
+        if (serialized.empty() == false) {
+            const auto name = system->get_name();
+            systems[name] = serialized;
+        }
+    }
+
+    return result;
 }
 
 void tag_invoke(JsonReflect::deserialize_t, const Json& j, tmt::Ecs& ecs) {
     std::set<tmt::Entity> new_entities;
     tmt::Serializer::deserialize(j, new_entities, ecs);
+
+    if (j.contains("systems")) {
+        const Json& systems = j["systems"];
+        for (auto& system : ecs.systems) {
+            const auto name = system->get_name();
+            if (systems.contains(name)) {
+                const Json& system_json = systems[name];
+                system->deserialize(system_json);
+            }
+        }
+    }
 }
 
 /* Single entity */

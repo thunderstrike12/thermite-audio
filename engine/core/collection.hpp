@@ -80,23 +80,48 @@ class Collection {
         return get_systems_single().begin();
     }
 
+    auto begin() const
+        requires SINGLE_TYPE
+    {
+        return get_systems_single().begin();
+    }
+
     auto end()
         requires SINGLE_TYPE
     {
         return get_systems_single().end();
     }
 
+    auto end() const
+        requires SINGLE_TYPE
+    {
+        return get_systems_single().end();
+    }
+
+    size_t size() const
+        requires SINGLE_TYPE
+    {
+        return get_systems_single().size();
+    }
+
    protected:
     // std::vector<std::unique_ptr<CollectionType>> systems;
 
     template <typename CollectionType>
-    std::vector<std::unique_ptr<CollectionType>>& get_systems() {
+    std::vector<std::unique_ptr<CollectionType>>& get_systems() const {
         static std::vector<std::unique_ptr<CollectionType>> typed_systems;
         return typed_systems;
     }
 
    private:
     auto& get_systems_single()
+        requires(sizeof...(CollectionTypes) == 1)
+    {
+        // Extract the single type from the pack
+        return get_systems<SingleType>();
+    }
+
+    const auto& get_systems_single() const
         requires(sizeof...(CollectionTypes) == 1)
     {
         // Extract the single type from the pack

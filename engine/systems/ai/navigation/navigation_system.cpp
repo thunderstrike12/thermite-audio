@@ -2,7 +2,7 @@
 
 #include "engine/engine.hpp"
 
-std::string tmt::NavigationSystem::get_name() { return std::string(); }
+std::string tmt::NavigationSystem::get_name() { return "NavigationSystem"; }
 
 void tmt::NavigationSystem::on_start() {
     for (const auto& [entity, nav_mesh] : engine.ecs.get_registry().view<NavMesh>().each()) {
