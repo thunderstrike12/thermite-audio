@@ -96,15 +96,14 @@ void VengiParser::compute_parent_transform_offsets(vengi::Node& node, const glm:
 
     // If the node has a voxel data we should add offsets (vengi objects have their pivot in the corner instead of the center).
     if (node.voxel_data) {
-        glm::vec3 half_size(node.voxel_data->region.width(), node.voxel_data->region.height(), node.voxel_data->region.depth());
-        half_size /= static_cast<float>(VOXELS_PER_UNIT * 2);
-
-        offset = half_size;
+        // Vengi has a built-in way of offsetting the voxel grid, we account for that by adding the lower to the upper instead of subtracting.
+        offset = glm::vec3(node.voxel_data->region.upper + node.voxel_data->region.lower) * VOXEL_SIZE_HALF;
         offset.z = -offset.z;  // Flip the Z-axis to account for right-handed to left-handed coordinate system conversion.
 
-        local[3][0] += offset.x;
-        local[3][1] += offset.y;
-        local[3][2] += offset.z;
+        glm::vec3 local_offset = local * glm::vec4(offset, 0.0f);
+        local[3][0] += local_offset.x;
+        local[3][1] += local_offset.y;
+        local[3][2] += local_offset.z;
     }
 
     node.transform.set_world_matrix(local);
