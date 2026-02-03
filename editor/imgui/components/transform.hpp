@@ -30,9 +30,7 @@ inline void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Transform& value,
 
         rotation_settings.push<glm::vec3>().as_drag().speed(1.0f);
 
-        glm::vec3 euler = glm::eulerAngles(value.get_local_rotation());
-        euler = glm::degrees(euler);
-
+        glm::vec3 euler = glm::degrees(value.get_local_eulers());
         ImReflect::Input("Rotation", euler, rotation_settings, rotation_response);
 
         if (rotation_response.is_changed()) {

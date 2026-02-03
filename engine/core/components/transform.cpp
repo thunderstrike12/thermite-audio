@@ -19,18 +19,21 @@ void Transform::set_local_position(const glm::vec3& pos) {
 /* Quat */
 void Transform::set_local_rotation(const glm::quat& rot) {
     local_rotation = rot;
+    local_eulers = glm::eulerAngles(rot);
     mark_dirty();
 }
 
 /* Euler */
 void Transform::set_local_rotation(const glm::vec3& rot) {
     local_rotation = glm::quat(rot);
+    local_eulers = rot;
     mark_dirty();
 }
 
 /* Axis-Angle */
 void Transform::set_local_rotation(const glm::vec3& axis, float angle) {
     local_rotation = glm::angleAxis(angle, glm::normalize(axis));
+    local_eulers = glm::eulerAngles(local_rotation);
     mark_dirty();
 }
 
@@ -44,6 +47,8 @@ const glm::vec3& Transform::get_local_position() const { return local_position; 
 const glm::quat& Transform::get_local_rotation() const { return local_rotation; }
 
 const glm::vec3& Transform::get_local_scale() const { return local_scale; }
+
+const glm::vec3& Transform::get_local_eulers() const { return local_eulers; }
 
 void Transform::set_world_position(const glm::vec3& pos) {
     if (has_parent()) {
@@ -68,6 +73,7 @@ void Transform::set_world_rotation(const glm::quat& rot) {
     } else {
         local_rotation = rot;
     }
+    local_eulers = glm::eulerAngles(local_rotation);
     mark_dirty();
 }
 
@@ -175,6 +181,8 @@ void Transform::set_world_matrix(const glm::mat4& matrix) {
 
         glm::decompose(matrix, local_scale, local_rotation, local_position, skew, perspective);
     }
+    local_eulers = glm::eulerAngles(local_rotation);
+
     mark_dirty();
 }
 

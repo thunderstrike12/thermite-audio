@@ -17,6 +17,7 @@ struct Transform {
 
     const glm::vec3& get_local_position() const;
     const glm::quat& get_local_rotation() const;
+    const glm::vec3& get_local_eulers() const;
     const glm::vec3& get_local_scale() const;
 
     /* World */
@@ -77,6 +78,7 @@ struct Transform {
     glm::vec3 local_position {0.0f, 0.0f, 0.0f};
     glm::quat local_rotation {1.0f, 0.0f, 0.0f, 0.0f};
     glm::vec3 local_scale {1.0f, 1.0f, 1.0f};
+    glm::vec3 local_eulers {0.f, 0.f, 0.f};
 
     mutable glm::mat4 world_matrix {glm::identity<glm::mat4>()};
 
