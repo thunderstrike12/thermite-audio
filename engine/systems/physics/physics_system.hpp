@@ -10,6 +10,8 @@
 
 namespace tmt {
 
+using PhysicsGroup = decltype(std::declval<entt::registry>().group<VoxelBody>(entt::get<Transform>));
+
 class Physics : public ISystem {
    public:
     Physics() = default;
@@ -29,15 +31,17 @@ class Physics : public ISystem {
     ConstraintSolver solver = {};
     Bvh2<VoxelObject> bvh {};
 
-    template <typename... Args>
-    void generate_constraint(const int index, const entt::basic_group<Args...>& group);
-
     // Simulation functions
     bool sat_early_out(const VoxelBody& vb_a, const VoxelBody& vb_b);
     float ray_aabb(const glm::vec3& min, const glm::vec3& max, const glm::vec3& ro, const glm::vec3& rd) const;
     bool is_separated(const glm::vec3& axis, const VoxelBody::Box& box_a, const VoxelBody::Box& box_b, float& overlap) const;
     void apply_velocities() const;
     void generate_constraints();
+    void generate_constraint(int index, const PhysicsGroup& group);
+    void compare_trees(
+        tmt::Svt64* tree_a, const glm::vec3& center_a, const glm::quat& rotation_a, float half_extent_a, tmt::Svt64* tree_b, const glm::vec3& center_b, const glm::quat& rotation_b,
+        float half_extent_b, Collision& coll
+    );
 
    public:
     // Static utility functions

@@ -49,50 +49,112 @@ void draw_node(tmt::Bvh2<VoxelObject>& bvh, uint32_t current_node) {
     draw_node(bvh, bvh.nodes[current_node].left_first + 1);
 }
 
+void draw_solids(
+    tmt::Svt64* tree, uint32_t node_index, uint32_t current_depth, float node_half_extent, const glm::vec3& node_center, const glm::vec3& extents_diff, const glm::quat& rotation
+) {
+    // Get current node
+    const tmt::Svt64Node& node = tree->nodes[node_index];
+
+    // Calculate new half extent
+    const float child_half_extent = node_half_extent * 0.25f;
+
+    // Copy mask for iteration
+    uint64_t mask = node.child_mask;
+    while (mask != 0u) {
+        // Find index of first set bit
+        const uint32_t i = std::countr_zero(mask);
+
+        // Get local coordinates
+        const uint32_t local_x = (i >> 0u) & 3u;
+        const uint32_t local_y = (i >> 4u) & 3u;
+        const uint32_t local_z = (i >> 2u) & 3u;
+
+        // Calculate local child center
+        const glm::vec3 local_offset = glm::vec3(
+            (((float)local_x + 0.5f) * 0.25f - 0.5f) * node_half_extent * 2.0f, (((float)local_y + 0.5f) * 0.25f - 0.5f) * node_half_extent * 2.0f,
+            (((float)local_z + 0.5f) * 0.25f - 0.5f) * node_half_extent * 2.0f
+        );
+
+        // Calculate world position of child
+        const glm::vec3 child_center = node_center + (rotation * local_offset);
+
+        // Debug draw OBB
+        engine.polyline.use_color(0.1f, 0.9f, 0.1f);
+        engine.polyline.use_line_width(0.3f);
+        if (current_depth == 1) {
+            engine.polyline.use_color(0.7f, 0.9f, 0.1f);
+            engine.polyline.use_line_width(0.2f);
+        }
+
+        engine.polyline.draw_obb(child_center, glm::vec3(child_half_extent), rotation, Engine::Config::FIXED_TIME_STEP + 0.1f);
+
+        // Get child node index
+        const uint32_t child_node_offset = (uint32_t)__popcnt64(node.child_mask & ((1ull << i) - 1u));
+        const uint32_t child_node_index = node.abs_ptr() + child_node_offset;
+
+        // Recursively go deeper if child is not a leaf
+        if (current_depth + 1 < tree->depth) {
+            draw_solids(tree, child_node_index, current_depth + 1, child_half_extent, child_center, extents_diff, rotation);
+        }
+
+        // Clear bit
+        mask &= ~(1ull << i);
+    }
+}
+
 void Physics::on_update(const FrameData&) {
-    // engine.polyline.use_line_width(0.25f);
-    // for (const auto& [entity, vb, transform] : engine.ecs.get_registry().view<VoxelBody, Transform>().each()) {
-    //     auto edges = vb.get_world_edges();
-    //     engine.polyline.use_color(vb.type == VoxelBody::DYNAMIC ? glm::vec4(0, 1, 0, 1) : glm::vec4(1, 0, 0, 1));
-    //     for (size_t i = 0; i < edges.size(); i++) {
-    //         engine.polyline.draw_line(edges[i].start, edges[i].end);
-    //     }
+    engine.polyline.use_line_width(0.25f);
+    for (const auto& [entity, vb, transform] : engine.ecs.get_registry().view<VoxelBody, Transform>().each()) {
+        // auto* tree_a = vb.resource->blas.get();
+        // const float half_extent_a = powf(4.0f, (float)tree_a->depth) * 0.5f * UNITS_PER_VOXEL;
+        // const glm::vec3 extents_diff_a = half_extent_a - ((glm::vec3)vb.resource->size * 0.5f * UNITS_PER_VOXEL);
+        // const glm::vec3 root_center_a = vb.position + (vb.rotation * extents_diff_a);
 
-    //    engine.polyline.use_color(1.0f, 0.0f, 0.0f);
-    //    engine.polyline.draw_circle(vb.center_of_mass, 0.1f);  // glm::vec3(1.0f, 0.0f, 1.0f), 0.2f);
-    //    engine.polyline.use_color(0.0f, 1.0f, 0.0f);
-    //    engine.polyline.draw_circle(vb.position, 0.1f);
-    //    engine.polyline.use_color(0.0f, 0.0f, 1.0f);
-    //    engine.polyline.draw_circle(vb.position + vb.rotation * vb.com_local_offset, 0.1f);
-    //    // engine.renderer.draw_cross(vb.position, glm::vec3(1.0f, 0.0f, 0.0f), 0.2f);
-    //    // engine.renderer.draw_cross(vb.position + vb.rotation * vb.com_local_offset, glm::vec3(0.0f, 0.0f, 1.0f), 0.2f);
+        // draw_solids(tree_a, 0u, 0u, half_extent_a, root_center_a + glm::vec3(10, 0, 0), extents_diff_a, vb.rotation);
 
-    //    // // Draw voxel normals
-    //    // glm::uvec3 size = vb.resource.get()->size;
-    //    // auto* tree = vb.resource.get()->blas.get();
-    //    // for (size_t z = 0; z < size.z; z++) {
-    //    //     for (size_t y = 0; y < size.y; y++) {
-    //    //         for (size_t x = 0; x < size.x; x++) {
-    //    //             const tmt::PhysicsVoxel* voxel = tree->get_physics_voxel(x, y, z);
-    //    //             if (voxel == nullptr || voxel->normal_index == 0 || voxel->normal_index == 28) continue;
+        // auto edges = vb.get_world_edges();
+        // engine.polyline.use_color(vb.type == VoxelBody::DYNAMIC ? glm::vec4(0, 1, 0, 1) : glm::vec4(1, 0, 0, 1));
+        // for (size_t i = 0; i < edges.size(); i++) {
+        //     engine.polyline.draw_line(edges[i].start, edges[i].end);
+        // }
 
-    //    //            glm::ivec3 local_normal = voxel->get_normal();
-    //    //            glm::vec3 normal = vb.rotation * glm::vec3((float)local_normal.x, (float)local_normal.y, (float)local_normal.z);
-    //    //            glm::vec3 local_pos = glm::vec3(
-    //    //                ((float)x + 0.5f - (size.x * 0.5f)) * UNITS_PER_VOXEL, ((float)y + 0.5f - (size.y * 0.5f)) * UNITS_PER_VOXEL, ((float)z + 0.5f - (size.z * 0.5f)) * UNITS_PER_VOXEL
-    //    //            );
-    //    //            glm::vec3 world_pos = vb.position + (vb.rotation * local_pos);
-    //    //            tmt::engine.renderer.draw_arrow(world_pos, normal, glm::vec3(0.0f, 0.6f, 0.0f), 0.15f, 0.05f);
-    //    //        }
-    //    //    }
-    //    //}
-    //}
+        // engine.polyline.use_color(1.0f, 0.0f, 0.0f);
+        // engine.polyline.draw_circle(vb.center_of_mass, 0.1f);  // glm::vec3(1.0f, 0.0f, 1.0f), 0.2f);
+        // engine.polyline.use_color(0.0f, 1.0f, 0.0f);
+        // engine.polyline.draw_circle(vb.position, 0.1f);
+        // engine.polyline.use_color(0.0f, 0.0f, 1.0f);
+        // engine.polyline.draw_circle(vb.position + vb.rotation * vb.com_local_offset, 0.1f);
+        //  engine.renderer.draw_cross(vb.position, glm::vec3(1.0f, 0.0f, 0.0f), 0.2f);
+        //  engine.renderer.draw_cross(vb.position + vb.rotation * vb.com_local_offset, glm::vec3(0.0f, 0.0f, 1.0f), 0.2f);
+
+        // // Draw voxel normals
+        // glm::uvec3 size = vb.resource.get()->size;
+        // auto* tree = vb.resource.get()->blas.get();
+        // for (size_t z = 0; z < size.z; z++) {
+        //     for (size_t y = 0; y < size.y; y++) {
+        //         for (size_t x = 0; x < size.x; x++) {
+        //             const tmt::PhysicsVoxel* voxel = tree->get_physics_voxel(x, y, z);
+        //             if (voxel == nullptr || voxel->normal_index == 0 || voxel->normal_index == 28) continue;
+
+        //            glm::ivec3 local_normal = voxel->get_normal();
+        //            glm::vec3 normal = vb.rotation * glm::vec3((float)local_normal.x, (float)local_normal.y, (float)local_normal.z);
+        //            glm::vec3 local_pos = glm::vec3(
+        //                ((float)x + 0.5f - (size.x * 0.5f)) * UNITS_PER_VOXEL, ((float)y + 0.5f - (size.y * 0.5f)) * UNITS_PER_VOXEL, ((float)z + 0.5f - (size.z * 0.5f)) * UNITS_PER_VOXEL
+        //            );
+        //            glm::vec3 world_pos = vb.position + (vb.rotation * local_pos);
+        //            tmt::engine.renderer.draw_arrow(world_pos, normal, glm::vec3(0.0f, 0.6f, 0.0f), 0.15f, 0.05f);
+        //        }
+        //    }
+        //}
+    }
 
     // if (bvh.nodes) draw_node(bvh, 0u);
     //  draw_node(bvh, bvh.nodes[0].left_first + 1u);
 }
 
 void Physics::on_fixed_update(const FrameData&) {
+    TMT_ZONE_SCOPED_N("Physics")
+
     // Update Forces
     for (const auto& [entity, vb, transform] : engine.ecs.get_registry().view<VoxelBody, Transform>().each()) {
         // if (!transform.is_enabled()) continue;
@@ -139,7 +201,7 @@ void Physics::on_fixed_update(const FrameData&) {
     std::vector<VoxelObject> objects {};
     objects.reserve(group.size());
     {
-        TMT_ZONE_SCOPED_N("Physics BVH Build")
+        TMT_ZONE_SCOPED_N("Build BVH")
         for (auto&& [entity, vb, transform] : group.each()) {
             // TODO: THIS CAN CAUSE ISSUES WITH MISSING RESOURCES!!!!
 
@@ -156,8 +218,7 @@ void Physics::on_fixed_update(const FrameData&) {
     }
 
     {
-        TMT_ZONE_SCOPED_N("Physics Collision Detection")
-
+        TMT_ZONE_SCOPED_N("Collision Detection")
         // Detect Colllisions
         // Generate Contacts
         generate_constraints();
@@ -166,84 +227,85 @@ void Physics::on_fixed_update(const FrameData&) {
     engine.salvo.deactivate_workers();
 
     {
-        TMT_ZONE_SCOPED_N("Physics Solver")
-        // Solve Velocities
-        solver.solve_velocities(Engine::Config::FIXED_TIME_STEP);
+        TMT_ZONE_SCOPED_N("Solver") {
+            TMT_ZONE_SCOPED_N("Solve Velocity")
+            // Solve Velocities
+            solver.solve_velocities(Engine::Config::FIXED_TIME_STEP);
+        }
 
-        // Apply Velocities
-        // Update Positions
-        apply_velocities();
+        {
+            TMT_ZONE_SCOPED_N("Apply Velocity")
+            // Apply Velocities
+            // Update Positions
+            apply_velocities();
+        }
 
-        // Solve Positions
-        solver.solve_positions(Engine::Config::FIXED_TIME_STEP);
+        {
+            TMT_ZONE_SCOPED_N("Solve Position")
+            // Solve Positions
+            solver.solve_positions(Engine::Config::FIXED_TIME_STEP);
+        }
     }
 }
 
 void Physics::generate_constraints() {
-    solver.collisions.resize(MAX_CONTACTS);
-    const entt::basic_group group = engine.ecs.get_registry().group<VoxelBody>(entt::get<Transform>);
+    // solver.collisions.resize(MAX_CONTACTS);
+    const PhysicsGroup group = engine.ecs.get_registry().group<VoxelBody>(entt::get<Transform>);
     engine.salvo.parallel_for(group.size(), [this, &group](size_t i) { generate_constraint((int)i, group); });
 }
 
-void Physics::on_end() { Log::info("Physics on_end"); }
+void Physics::generate_constraint(int index, const PhysicsGroup& group) {
+    Entity entity = group[index];
+    VoxelBody& vb = group.get<VoxelBody>(entity);
+    Transform& transform = group.get<Transform>(entity);
+    // auto& [vb, transform] = group.get<VoxelBody, Transform>(entity);
 
-void draw_solids(
-    tmt::Svt64* tree, uint32_t node_index, uint32_t current_depth, float node_half_extent, const glm::vec3& node_center, const glm::vec3& extents_diff, const glm::quat& rotation
-) {
-    // Get current node
-    const tmt::Svt64Node& node = tree->nodes[node_index];
+    if (vb.type == VoxelBody::STATIC || vb.type == VoxelBody::SLEEPING) return;
+    if (vb.resource == nullptr) return;
 
-    // Calculate new half extent
-    const float child_half_extent = node_half_extent * 0.25f;
+    Aabb current_aabb = vb.aabb();
+    std::vector<uint32_t> hits = bvh.overlap(current_aabb);
 
-    // Copy mask for iteration
-    uint64_t mask = node.child_mask;
-    while (mask != 0u) {
-        // Find index of first set bit
-        const uint32_t i = std::countr_zero(mask);
+    for (uint32_t hit : hits) {
+        Entity other_entity = group[hit];
+        if (other_entity == entity) continue;
 
-        // Get local coordinates
-        const uint32_t local_x = (i >> 0u) & 3u;
-        const uint32_t local_y = (i >> 4u) & 3u;
-        const uint32_t local_z = (i >> 2u) & 3u;
+        VoxelBody& other_vb = group.get<VoxelBody>(other_entity);
+        Transform& other_transform = group.get<Transform>(other_entity);
+        // auto& [other_vb, other_transform] = group.get<VoxelBody, Transform>(other_entity);
 
-        // Calculate local child center
-        const glm::vec3 local_offset = glm::vec3(
-            (((float)local_x + 0.5f) * 0.25f - 0.5f) * node_half_extent * 2.0f, (((float)local_y + 0.5f) * 0.25f - 0.5f) * node_half_extent * 2.0f,
-            (((float)local_z + 0.5f) * 0.25f - 0.5f) * node_half_extent * 2.0f
-        );
+        if (sat_early_out(vb, other_vb)) continue;
 
-        // Calculate world position of child
-        const glm::vec3 child_center = node_center + (rotation * local_offset);
+        Collision coll(entity, other_entity);
+        coll.contacts.reserve(64);
 
-        // Debug draw OBB
-        engine.polyline.use_color(0.1f, 0.9f, 0.1f);
-        engine.polyline.use_line_width(0.15f);
-        if (current_depth == 1) {
-            engine.polyline.use_color(0.7f, 0.9f, 0.1f);
-            engine.polyline.use_line_width(0.1f);
-        }
+        auto* tree_a = vb.resource->blas.get();
+        const float half_extent_a = powf(4.0f, (float)tree_a->depth) * 0.5f * UNITS_PER_VOXEL;
+        const glm::vec3 extents_diff_a = half_extent_a - ((glm::vec3)vb.resource->size * 0.5f * UNITS_PER_VOXEL);
+        const glm::vec3 root_center_a = vb.position + (vb.rotation * extents_diff_a);
 
-        engine.polyline.draw_obb(child_center, glm::vec3(child_half_extent), rotation, Engine::Config::FIXED_TIME_STEP + 0.1f);
+        auto* tree_b = other_vb.resource->blas.get();
+        const float half_extent_b = powf(4.0f, (float)tree_b->depth) * 0.5f * UNITS_PER_VOXEL;
+        const glm::vec3 extents_diff_b = half_extent_b - ((glm::vec3)other_vb.resource->size * 0.5f * UNITS_PER_VOXEL);
+        const glm::vec3 root_center_b = other_vb.position + (other_vb.rotation * extents_diff_b);
 
-        // Get child node index
-        const uint32_t child_node_offset = (uint32_t)__popcnt64(node.child_mask & ((1ull << i) - 1u));
-        const uint32_t child_node_index = node.abs_ptr() + child_node_offset;
+        compare_trees(tree_a, root_center_a, vb.rotation, half_extent_a, tree_b, root_center_b, other_vb.rotation, half_extent_b, coll);
 
-        // Recursively go deeper if child is not a leaf
-        if (current_depth + 3 < tree->depth) {
-            draw_solids(tree, child_node_index, current_depth + 1, child_half_extent, child_center, extents_diff, rotation);
-        }
+        if (coll.contacts.empty()) continue;
 
-        // Clear bit
-        mask &= ~(1ull << i);
+        if (other_vb.type == VoxelBody::SLEEPING) other_vb.accumulated_forces = 10000;
+
+        coll.normal = glm::normalize(other_vb.position - vb.position);
+        solver.collisions[solver.contact_index.fetch_add(1)] = coll;
     }
 }
+void Physics::on_end() { Log::info("Physics on_end"); }
 
-void compare_trees(
+void Physics::compare_trees(
     tmt::Svt64* tree_a, const glm::vec3& center_a, const glm::quat& rotation_a, float half_extent_a, tmt::Svt64* tree_b, const glm::vec3& center_b, const glm::quat& rotation_b,
     float half_extent_b, Collision& coll
 ) {
+    TMT_ZONE_SCOPED_N("svt64 cd")
     struct StackEntry {
         uint32_t node_index_a;
         uint32_t node_index_b;
@@ -469,53 +531,9 @@ void compare_trees(
     }
 }
 
-template <typename... Args>
-void Physics::generate_constraint(const int index, const entt::basic_group<Args...>& group) {
-    const Entity entity = group[index];
-    const auto& [vb, transform] = group.get<VoxelBody, Transform>(entity);
-
-    if (vb.type == VoxelBody::STATIC || vb.type == VoxelBody::SLEEPING) return;
-    if (vb.resource == nullptr) return;
-
-    // Get current AABB
-    Aabb current_aabb = vb.aabb();
-
-    // Check against BVH
-    std::vector<uint32_t> hits = bvh.overlap(current_aabb);
-
-    // Collision checks for entities in bvh_overlaps
-    for (uint32_t hit : hits) {
-        const Entity other_entity = group[hit];
-        if (other_entity == entity) continue;
-
-        const auto& [other_vb, other_transform] = group.get<VoxelBody, Transform>(other_entity);
-
-        if (sat_early_out(vb, other_vb)) continue;
-
-        Collision coll(entity, other_entity);
-        coll.contacts.reserve(64);
-
-        auto* tree_a = vb.resource->blas.get();
-        const float half_extent_a = powf(4.0f, (float)tree_a->depth) * 0.5f * UNITS_PER_VOXEL;
-        const glm::vec3 extents_diff_a = half_extent_a - ((glm::vec3)vb.resource->size * 0.5f * UNITS_PER_VOXEL);
-        const glm::vec3 root_center_a = vb.position + (vb.rotation * extents_diff_a);
-
-        auto* tree_b = other_vb.resource->blas.get();
-        const float half_extent_b = powf(4.0f, (float)tree_b->depth) * 0.5f * UNITS_PER_VOXEL;
-        const glm::vec3 extents_diff_b = half_extent_b - ((glm::vec3)other_vb.resource->size * 0.5f * UNITS_PER_VOXEL);
-        const glm::vec3 root_center_b = other_vb.position + (other_vb.rotation * extents_diff_b);
-
-        compare_trees(tree_a, root_center_a, vb.rotation, half_extent_a, tree_b, root_center_b, other_vb.rotation, half_extent_b, coll);
-
-        if (coll.contacts.size() <= 0) continue;
-
-        if (other_vb.type == VoxelBody::SLEEPING) other_vb.accumulated_forces = 10000;
-        coll.normal = glm::normalize(other_vb.position - vb.position);
-        solver.collisions[solver.contact_index.fetch_add(1)] = coll;
-    }
-}
-
 bool Physics::sat_early_out(const VoxelBody& vb_a, const VoxelBody& vb_b) {
+    TMT_ZONE_SCOPED_N("SAT")
+
     auto vert_a = vb_a.get_world_bounds();
     auto vert_b = vb_b.get_world_bounds();
     auto axes_a = vb_a.get_axes();

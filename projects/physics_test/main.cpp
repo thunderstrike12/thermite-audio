@@ -10,6 +10,9 @@
 #include "engine/systems/physics/components/voxel_body.hpp"
 #include "engine/systems/camera/camera_system.hpp"
 #include "engine/systems/physics/physics_system.hpp"
+#include "engine/core/renderer/renderer.hpp"
+#include "engine/core/resources/stencil.hpp"
+#include "engine/core/polyline.hpp"
 
 class Game : public tmt::Application {
    public:
@@ -22,6 +25,9 @@ class Game : public tmt::Application {
     float cooldown = 0.0f;
 
     tmt::ResourceRef<tmt::VoxelVolume> voxel_volume_cube;
+    tmt::ResourceRef<tmt::VoxelVolume> volume_cube16;
+    tmt::ResourceRef<tmt::VoxelVolume> volume_cube64;
+    tmt::ResourceRef<tmt::Stencil> stencil;
 
     void on_start() override;
     void on_update(const tmt::FrameData& time) override;
@@ -50,7 +56,7 @@ void Game::on_start() {
         transform.set_world_position(glm::vec3(0.0f, 0.25f, -5.0f));
     }
 
-    auto voxel_file_cube = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "box-10.vengi"});
+    auto voxel_file_cube = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "cube64.vengi"});
     voxel_volume_cube = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file_cube);
 
     auto voxel_file_piece = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "piece_1.vengi"});
@@ -62,29 +68,50 @@ void Game::on_start() {
     auto voxel_file_ass7 = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "test_asteroid_7.vengi"});
     auto voxel_volume_ass7 = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file_ass7);
 
-    for (size_t z = 0; z < 5; z++) {
-        for (size_t i = 0; i < 0; i++) { /* Voxel Physics Entity */
-            auto entity = tmt::engine.ecs.create_entity();
-            auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
-            auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
-            renderer.resource = voxel_volume_piece;
-
-            auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
-            vb.resource = voxel_volume_piece;
-
-            vb.gravity = 0.0f;
-            vb.type = tmt::VoxelBody::DYNAMIC;
-            float random_x = ((float)(rand() % 1000) / 1000.0f - 0.5f) * 150.0f;
-            float random_y = ((float)(rand() % 1000) / 1000.0f - 0.5f) * 150.0f;
-            transform.set_world_position(glm::vec3(random_x, random_y, (5 - z) * 5.0f));
-
-            float random_rot_x = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
-            float random_rot_y = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
-            float random_rot_z = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
-            transform.set_world_rotation(glm::vec3(random_rot_x, random_rot_y, random_rot_z));
-            voxels.push_back(entity);
-        }
+    {
+        auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "cube64.vengi"});
+        volume_cube16 = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
+        stencil = tmt::engine.resources.copy_resource<tmt::Stencil>(voxel_file);
     }
+
+    //{
+    //    auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "cube64.vengi"});
+    //    volume_cube64 = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
+    //}
+
+    {
+        auto entity = tmt::engine.ecs.create_entity();
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+        auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
+        renderer.resource = voxel_volume_cube;
+        auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
+        vb.resource = voxel_volume_cube;
+        vb.gravity = 0.0f;
+    }
+
+    // for (size_t z = 0; z < 5; z++) {
+    //     for (size_t i = 0; i < 0; i++) { /* Voxel Physics Entity */
+    //         auto entity = tmt::engine.ecs.create_entity();
+    //         auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
+    //         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
+    //         renderer.resource = voxel_volume_piece;
+
+    //        auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
+    //        vb.resource = voxel_volume_piece;
+
+    //        vb.gravity = 0.0f;
+    //        vb.type = tmt::VoxelBody::DYNAMIC;
+    //        float random_x = ((float)(rand() % 1000) / 1000.0f - 0.5f) * 150.0f;
+    //        float random_y = ((float)(rand() % 1000) / 1000.0f - 0.5f) * 150.0f;
+    //        transform.set_world_position(glm::vec3(random_x, random_y, (5 - z) * 5.0f));
+
+    //        float random_rot_x = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
+    //        float random_rot_y = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
+    //        float random_rot_z = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
+    //        transform.set_world_rotation(glm::vec3(random_rot_x, random_rot_y, random_rot_z));
+    //        voxels.push_back(entity);
+    //    }
+    //}
 
     { /* Voxel Physics Entity, Asteroid 3 */
         auto entity = tmt::engine.ecs.create_entity();
@@ -238,66 +265,118 @@ void Game::on_start() {
         vb.gravity = 0.0f;
         vb.type = tmt::VoxelBody::STATIC;
         transform.set_world_position(glm::vec3(54.0f, -48.0f, 75.0f));
-        float random_rot_x = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
-        float random_rot_y = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
-        float random_rot_z = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
-        transform.set_world_rotation(glm::vec3(random_rot_x, random_rot_y, random_rot_z));
+        // float random_rot_x = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
+        // float random_rot_y = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
+        // float random_rot_z = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
+        // transform.set_world_rotation(glm::vec3(random_rot_x, random_rot_y, random_rot_z));
     }
 }
 
 void Game::on_update(const tmt::FrameData& time) {
+    // Debug Draw Stencil
+    // tmt::engine.polyline.use_color(0.3f, 0.3f, 1.0f);
+    // tmt::engine.polyline.use_line_width(0.25f);
+    // auto* stencil_resource = stencil.resource.get();
+    // glm::vec3 half_size = glm::vec3(stencil_resource->size) * UNITS_PER_VOXEL * 0.5f;
+    // for (size_t x = 0; x < stencil_resource->size.x; x++) {
+    //    for (size_t y = 0; y < stencil_resource->size.y; y++) {
+    //        for (size_t z = 0; z < stencil_resource->size.z; z++) {
+    //            if (stencil_resource->get_voxel(x, y, z) == 0) continue;
+
+    //            glm::vec3 min = glm::vec3(x, y, z) * UNITS_PER_VOXEL;
+    //            glm::vec3 max = min + UNITS_PER_VOXEL;
+    //            tmt::engine.polyline.draw_aabb(min - half_size, max - half_size);
+    //        }
+    //    }
+    //}
+
     time_passed += time.delta_time;
 
     cooldown -= time.delta_time;
 
-    if (tmt::engine.input.is_mouse_button_pressed(tmt::MouseButton::LEFT) && cooldown <= 0.0f) {
-        auto& cam_transform = tmt::engine.ecs.get_component<tmt::Transform>(cam);
-        const glm::vec3 cam_pos = cam_transform.get_world_position();
-        const glm::vec3 cam_forward = cam_transform.get_forward();
+    static float tool_radius = 2.0f;
+    tool_radius = fmaxf(fminf(tool_radius + tmt::engine.input.get_mouse_wheel_y() * 0.1f, 6.0f), 1.0f);
+    const int radius = (int)ceilf(tool_radius);
 
-        for (int x = -2; x <= 2; x++) {
-            for (int y = -2; y <= 2; y++) {
-                auto entity = tmt::engine.ecs.create_entity();
-                auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
-                auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
-                renderer.resource = voxel_volume_cube;
-                auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
-                vb.resource = voxel_volume_cube;
-                vb.gravity = 0.0f;
-                vb.type = tmt::VoxelBody::DYNAMIC;
-                tmt::Physics::initialize_voxel_body(vb);
+    /* Get the mouse position */
+    const glm::ivec2 mouse_pos = glm::ivec2(tmt::engine.input.get_mouse_x(), tmt::engine.input.get_mouse_y());
 
-                const glm::vec3 x_offset = cam_transform.get_right() * ((float)x * 1.5f);
-                const glm::vec3 y_offset = cam_transform.get_up() * ((float)y * 1.5f);
+    /* Create a ray from the mouse position for the current render view and trace it */
+    const tmt::Ray mouse_ray = tmt::engine.renderer.render_view.pixel_ray(mouse_pos);
+    const tmt::Hit hit = tmt::engine.renderer.trace_ray(mouse_ray);
 
-                tmt::Physics::set_position(vb, cam_pos + cam_forward * 2.0f + x_offset + y_offset);
+    if (hit.miss() == false) {
+        tmt::engine.polyline.use_color(0.95686274f, 0.60392156f, 0.21960784f);
+        tmt::engine.polyline.use_line_width(2.0f);
+        const float draw_radius = tool_radius * UNITS_PER_VOXEL;
+        tmt::engine.polyline.draw_circle(mouse_ray.origin + mouse_ray.dir * (hit.distance - draw_radius), draw_radius);
 
-                float random_rot_x = ((float)(rand() % 1000) / 1000.0f) * 3.1415f;
-                float random_rot_y = ((float)(rand() % 1000) / 1000.0f) * 3.1415f;
-                float random_rot_z = ((float)(rand() % 1000) / 1000.0f) * 3.1415f;
+        if (tmt::engine.input.is_mouse_button_pressed(tmt::MouseButton::LEFT)) {
+            auto* resource = tmt::engine.ecs.get_component<tmt::VoxelBody>(hit.entity).resource.resource.get();
 
-                tmt::Physics::set_rotation(vb, cam_transform.get_world_rotation() * glm::vec3(random_rot_x, random_rot_y, random_rot_z));
-                tmt::Physics::add_force(vb, cam_forward * 20.0f);
+            const float r2 = tool_radius * tool_radius;
+            for (int z = -radius; z <= radius; ++z) {
+                for (int y = -radius; y <= radius; ++y) {
+                    for (int x = -radius; x <= radius; ++x) {
+                        const float fx = (float)x + 0.5f, fy = (float)y + 0.5f, fz = (float)z + 0.5f;
+                        const float d2 = fx * fx + fy * fy + fz * fz;
+                        if (d2 > r2) continue;
+                        resource->blas->remove_voxel((uint32_t)((int)hit.coord.x + x), (uint32_t)((int)hit.coord.y + y), (uint32_t)((int)hit.coord.z + z));
+                    }
+                }
             }
+            resource->set_dirty();
         }
-
-        //{
-        //    auto entity = tmt::engine.ecs.create_entity();
-        //    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
-        //    auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
-        //    renderer.resource = voxel_volume_cube;
-        //    auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
-        //    vb.resource = voxel_volume_cube;
-        //    vb.gravity = 0.0f;
-        //    vb.type = tmt::VoxelBody::DYNAMIC;
-        //    tmt::Physics::initialize_voxel_body(vb);
-        //    tmt::Physics::set_position(vb, cam_pos + cam_forward * 2.0f);
-        //    tmt::Physics::set_rotation(vb, cam_transform.get_world_rotation());
-        //    tmt::Physics::add_force(vb, cam_forward * 20.0f);
-        //}
-
-        cooldown = 0.10f;
     }
+
+        // if (tmt::engine.input.is_mouse_button_pressed(tmt::MouseButton::LEFT) && cooldown <= 0.0f) {
+    //     auto& cam_transform = tmt::engine.ecs.get_component<tmt::Transform>(cam);
+    //     const glm::vec3 cam_pos = cam_transform.get_world_position();
+    //     const glm::vec3 cam_forward = cam_transform.get_forward();
+
+    //    for (int x = -2; x <= 2; x++) {
+    //        for (int y = -2; y <= 2; y++) {
+    //            auto entity = tmt::engine.ecs.create_entity();
+    //            auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+    //            auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
+    //            renderer.resource = voxel_volume_cube;
+    //            auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
+    //            vb.resource = voxel_volume_cube;
+    //            vb.gravity = 0.0f;
+    //            vb.type = tmt::VoxelBody::DYNAMIC;
+    //            tmt::Physics::initialize_voxel_body(vb);
+
+    //            const glm::vec3 x_offset = cam_transform.get_right() * ((float)x * 1.5f);
+    //            const glm::vec3 y_offset = cam_transform.get_up() * ((float)y * 1.5f);
+
+    //            tmt::Physics::set_position(vb, cam_pos + cam_forward * 2.0f + x_offset + y_offset);
+
+    //            float random_rot_x = ((float)(rand() % 1000) / 1000.0f) * 3.1415f;
+    //            float random_rot_y = ((float)(rand() % 1000) / 1000.0f) * 3.1415f;
+    //            float random_rot_z = ((float)(rand() % 1000) / 1000.0f) * 3.1415f;
+
+    //            tmt::Physics::set_rotation(vb, cam_transform.get_world_rotation() * glm::vec3(random_rot_x, random_rot_y, random_rot_z));
+    //            tmt::Physics::add_force(vb, cam_forward * 20.0f);
+    //        }
+    //    }
+
+    //    //{
+    //    //    auto entity = tmt::engine.ecs.create_entity();
+    //    //    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+    //    //    auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
+    //    //    renderer.resource = voxel_volume_cube;
+    //    //    auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
+    //    //    vb.resource = voxel_volume_cube;
+    //    //    vb.gravity = 0.0f;
+    //    //    vb.type = tmt::VoxelBody::DYNAMIC;
+    //    //    tmt::Physics::initialize_voxel_body(vb);
+    //    //    tmt::Physics::set_position(vb, cam_pos + cam_forward * 2.0f);
+    //    //    tmt::Physics::set_rotation(vb, cam_transform.get_world_rotation());
+    //    //    tmt::Physics::add_force(vb, cam_forward * 20.0f);
+    //    //}
+
+    //    cooldown = 0.10f;
+    //}
 
     if (time_passed > 0.005f) {
         if (num >= voxels.size()) return;

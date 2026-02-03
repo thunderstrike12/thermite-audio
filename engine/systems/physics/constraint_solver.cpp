@@ -142,6 +142,5 @@ void ConstraintSolver::solve_positions(const float) {
         }
     }
 
-    collisions.clear();
     contact_index = 0;
 }
