@@ -18,7 +18,6 @@ class Game : public tmt::Application {
 
     std::vector<tmt::Entity> voxels = {};
     tmt::Entity cam;
-    int num = 0;
     float time_passed = 0.0f;
     float cooldown = 0.0f;
 
@@ -54,52 +53,24 @@ void Game::on_start() {
     auto voxel_file_cube = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "box-10.vengi"});
     voxel_volume_cube = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file_cube);
 
-    auto voxel_file_piece = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "piece_1.vengi"});
-    auto voxel_volume_piece = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file_piece);
-
     auto voxel_file_ass3 = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "test_asteroid_3.vengi"});
     auto voxel_volume_ass3 = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file_ass3);
 
     auto voxel_file_ass7 = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "test_asteroid_7.vengi"});
     auto voxel_volume_ass7 = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file_ass7);
+    
+    auto voxel_file_1x1x1 = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "1x1x1.vengi"});
+    auto voxel_volume_1x1x1 = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file_1x1x1);
 
-    // auto voxel_file_sponza = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "sponza.vengi"});
-    // auto voxel_volume_sponza = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file_sponza);
-    // auto sponza_entity = tmt::engine.ecs.create_entity();
-    // auto& sponza_transform = tmt::engine.ecs.add_component<tmt::Transform>(sponza_entity);
-    // auto& sponza_renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(sponza_entity);
-    // auto& sponza_vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(sponza_entity);
-    // sponza_vb.resource = voxel_volume_sponza;
-    // sponza_transform.set_world_rotation(glm::vec3(0.0f, 0.0f, glm::radians(-90.0f)));
-    // sponza_renderer.resource = voxel_volume_sponza;
-    // sponza_vb.gravity = 0.0f;
-
-    for (size_t z = 0; z < 5; z++) {
-        for (size_t i = 0; i < 0; i++) { /* Voxel Physics Entity */
-            auto entity = tmt::engine.ecs.create_entity();
-            auto& transform = tmt::engine.ecs.add_component<tmt::Transform>(entity);
-            auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
-            renderer.resource = voxel_volume_piece;
-
-            auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
-            vb.resource = voxel_volume_piece;
-
-            vb.gravity = 0.0f;
-            vb.type = tmt::VoxelBody::DYNAMIC;
-            float random_x = ((float)(rand() % 1000) / 1000.0f - 0.5f) * 150.0f;
-            float random_y = ((float)(rand() % 1000) / 1000.0f - 0.5f) * 150.0f;
-            transform.set_world_position(glm::vec3(random_x, random_y, (5 - z) * 5.0f));
-
-            float random_rot_x = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
-            float random_rot_y = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
-            float random_rot_z = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
-            transform.set_world_rotation(glm::vec3(random_rot_x, random_rot_y, random_rot_z));
-            voxels.push_back(entity);
-        }
+    { /* 1x1x1 voxel entity */
+        auto entity = tmt::engine.ecs.create_entity("1x1x1");
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+        auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
+        renderer.resource = voxel_volume_1x1x1;
     }
 
     { /* Voxel Physics Entity, Asteroid 3 */
-        auto entity = tmt::engine.ecs.create_entity();
+        auto entity = tmt::engine.ecs.create_entity("Asteroid");
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
         renderer.resource = voxel_volume_ass3;
@@ -116,7 +87,7 @@ void Game::on_start() {
     }
 
     { /* Voxel Physics Entity, Asteroid 3 */
-        auto entity = tmt::engine.ecs.create_entity();
+        auto entity = tmt::engine.ecs.create_entity("Asteroid");
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
         renderer.resource = voxel_volume_ass3;
@@ -129,23 +100,10 @@ void Game::on_start() {
         float random_rot_y = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
         float random_rot_z = ((float)(rand() % 1000) / 1000.0f) * 3.1415f * 2.0f;
         transform.set_world_rotation(glm::vec3(random_rot_x, random_rot_y, random_rot_z));
-
-        //{
-        //    auto e = tmt::engine.ecs.create_entity();
-        //    auto& transform_e = tmt::engine.ecs.get_component<tmt::Transform>(e);
-        //    auto& renderer_e = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(e);
-        //    renderer_e.resource = voxel_volume_piece;
-        //    auto& vb_e = tmt::engine.ecs.add_component<tmt::VoxelBody>(e);
-        //    vb_e.resource = voxel_volume_piece;
-        //    vb_e.gravity = 3.0f;
-        //    vb_e.type = tmt::VoxelBody::DYNAMIC;
-        //    transform_e.set_world_position(glm::vec3(45.0f, 50.0f, 100.0f));
-        //    transform_e.set_world_rotation(glm::vec3(random_rot_x, random_rot_y, random_rot_z));
-        //}
     }
 
     { /* Voxel Physics Entity, Asteroid 3 */
-        auto entity = tmt::engine.ecs.create_entity();
+        auto entity = tmt::engine.ecs.create_entity("Asteroid");
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
         renderer.resource = voxel_volume_ass3;
@@ -161,7 +119,7 @@ void Game::on_start() {
     }
 
     { /* Voxel Physics Entity, Asteroid 7 (close to test) */
-        auto entity = tmt::engine.ecs.create_entity();
+        auto entity = tmt::engine.ecs.create_entity("Asteroid");
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
         renderer.resource = voxel_volume_ass7;
@@ -177,7 +135,7 @@ void Game::on_start() {
     }
 
     { /* Voxel Physics Entity, Asteroid 7 */
-        auto entity = tmt::engine.ecs.create_entity();
+        auto entity = tmt::engine.ecs.create_entity("Asteroid");
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
         renderer.resource = voxel_volume_ass7;
@@ -193,7 +151,7 @@ void Game::on_start() {
     }
 
     { /* Voxel Physics Entity, Asteroid 7 */
-        auto entity = tmt::engine.ecs.create_entity();
+        auto entity = tmt::engine.ecs.create_entity("Asteroid");
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
         renderer.resource = voxel_volume_ass7;
@@ -209,7 +167,7 @@ void Game::on_start() {
     }
 
     { /* Voxel Physics Entity, Asteroid 7 */
-        auto entity = tmt::engine.ecs.create_entity();
+        auto entity = tmt::engine.ecs.create_entity("Asteroid");
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
         renderer.resource = voxel_volume_ass7;
@@ -225,7 +183,7 @@ void Game::on_start() {
     }
 
     { /* Voxel Physics Entity, Asteroid 7 */
-        auto entity = tmt::engine.ecs.create_entity();
+        auto entity = tmt::engine.ecs.create_entity("Asteroid");
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
         renderer.resource = voxel_volume_ass7;
@@ -241,7 +199,7 @@ void Game::on_start() {
     }
 
     { /* Voxel Physics Entity, Asteroid 7 */
-        auto entity = tmt::engine.ecs.create_entity();
+        auto entity = tmt::engine.ecs.create_entity("Asteroid");
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
         renderer.resource = voxel_volume_ass7;
@@ -269,7 +227,7 @@ void Game::on_update(const tmt::FrameData& time) {
 
         for (int x = -2; x <= 2; x++) {
             for (int y = -2; y <= 2; y++) {
-                auto entity = tmt::engine.ecs.create_entity();
+                auto entity = tmt::engine.ecs.create_entity("Crate");
                 auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
                 auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
                 renderer.resource = voxel_volume_cube;
@@ -293,37 +251,8 @@ void Game::on_update(const tmt::FrameData& time) {
             }
         }
 
-        //{
-        //    auto entity = tmt::engine.ecs.create_entity();
-        //    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
-        //    auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
-        //    renderer.resource = voxel_volume_cube;
-        //    auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
-        //    vb.resource = voxel_volume_cube;
-        //    vb.gravity = 0.0f;
-        //    vb.type = tmt::VoxelBody::DYNAMIC;
-        //    tmt::Physics::initialize_voxel_body(vb);
-        //    tmt::Physics::set_position(vb, cam_pos + cam_forward * 2.0f);
-        //    tmt::Physics::set_rotation(vb, cam_transform.get_world_rotation());
-        //    tmt::Physics::add_force(vb, cam_forward * 20.0f);
-        //}
-
         cooldown = 0.10f;
     }
-
-    if (time_passed > 0.005f) {
-        if (num >= voxels.size()) return;
-        auto& vb = tmt::engine.ecs.get_component<tmt::VoxelBody>(voxels[num++]);
-        float random_x = ((float)(rand() % 1000) / 1000.0f - 0.5f) * 50.0f;
-        float random_y = ((float)(rand() % 1000) / 1000.0f - 0.5f) * 50.0f;
-        tmt::Physics::add_force(vb, glm::vec3(random_x, random_y, 35.0f));
-        time_passed = 0.0f;
-    }
-
-    // auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(voxel);
-    // transform.set_world_position(glm::vec3(1.0f, sinf(time_passed), 1.0f));
-    // transform.set_world_rotation(glm::vec3(sinf(time_passed), cosf(time_passed), 0.0f));
-    // transform.set_world_scale(glm::vec3(1.0f, 1.5f + sinf(time_passed), 1.0f));
 }
 
 void Game::on_end() {
