@@ -28,6 +28,18 @@
         "THERMITE_DEBUG_BUILD": "ON"
       }
     },
+      {
+    "name": "Developer-Packaging",
+    "inherits": "base",
+    "displayName": "Developer Packaging",
+    "cacheVariables": {
+      "CMAKE_BUILD_TYPE": "Release",
+      "THERMITE_EDITOR_BUILD": "ON",
+      "THERMITE_DEBUG_BUILD": "OFF",
+      "THERMITE_DEVELOPER_BUILD": "ON",
+      "THERMITE_SHARED_OUTPUT":  "OFF"
+      }
+    },
     {
       "name": "Unit-Tests",
       "inherits": "base",
@@ -116,6 +128,10 @@
     {
       "name": "RelWithDebInfo-Game",
       "configurePreset": "RelWithDebInfo-Game"
+    },
+    {
+    "name": "Developer-Packaging",
+    "configurePreset": "Developer-Packaging"
     }
   ],
   "testPresets": [

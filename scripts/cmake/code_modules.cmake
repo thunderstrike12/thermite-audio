@@ -34,11 +34,11 @@ function(find_and_add_targets)
 			
 			target_sources(${target_name} PRIVATE "${cfg_cpp}")
 
+
 			# Set runtime output directory to its own folder inside /bin/
 			set_target_properties(${target_name} PROPERTIES
 				RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${target_name}"
-				# Disables the windows console
-				# WIN32_EXECUTABLE TRUE
+				OUTPUT_NAME "${target_name}${BUILD_VERSION}"
 			)
 			# Disables the windows console
 			#if(MSVC)
@@ -57,6 +57,17 @@ function(find_and_add_targets)
 		                "${CMAKE_SOURCE_DIR}/extern/fmod/lib/fmodstudio${FMOD_POSTFIX}.dll"
 		                "${CMAKE_BINARY_DIR}/bin/${target_name}/fmodstudio${FMOD_POSTFIX}.dll"
 			)
+			# Copy over auxialliary assets for developer use
+			if(THERMITE_DEVELOPER_BUILD)
+				copy_directory_to_output(${target_name} 
+					"${CMAKE_SOURCE_DIR}/engine/assets" 
+					"engine/assets"
+				)
+				copy_directory_to_output(${target_name} 
+					"${CMAKE_SOURCE_DIR}/editor/assets" 
+					"editor/assets"
+				)
+			endif()
 
 			# Link with the Thermite Engine
 			target_link_libraries(${target_name} PRIVATE thermite-engine)
@@ -77,12 +88,17 @@ function(find_and_add_targets)
 				target_compile_definitions(${target_name} PRIVATE THERMITE_DEBUG=1)
 			endif()
 
-			# Set warning level
-			# if(THERMITE_CI)
-			# 	target_compile_options(${target_name} PRIVATE /W4 /permissive- /WX)
-			# else()
-			# 	target_compile_options(${target_name} PRIVATE /W4 /permissive-)
-			# endif()
 		endif()
 	endforeach()
+endfunction()
+
+function(copy_directory_to_output TARGET_NAME SOURCE_DIR OUTPUT_DIR)
+ 
+    add_custom_command(
+        TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${SOURCE_DIR}"
+                "$<TARGET_FILE_DIR:${TARGET_NAME}>/${OUTPUT_DIR}"
+        COMMENT "Copying ${SOURCE_DIR} to ${TARGET_NAME} output directory"
+    )
 endfunction()

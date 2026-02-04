@@ -1,0 +1,95 @@
+# =============================================================================
+# Release Workflow
+# =============================================================================
+# Generated with AI assistance
+# First prompt: "how to make a release with versioning and all that is needed 
+#               for pushing to a branch via CI CD github. I already have a 
+#               project on main setup. I only want the github action for 
+#               making a new release on push"
+# Date: February 3, 2026
+# Model: Claude Opus 4.5
+# =============================================================================
+name: release
+on:
+  workflow_dispatch:
+  push:
+    branches: 'main'
+jobs:
+  build:
+    name: Build Developer-Packaging
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.new_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0  # Needed for git describe to find tags
+      - name: Get next version
+        id: version
+        shell: bash
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          VERSION=${LATEST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Configure
+        shell: pwsh
+        run: cmake --preset Developer-Packaging -DBUILD_VERSION="_${{ steps.version.outputs.new_version }}"
+      - name: Build
+        shell: pwsh
+        run: cmake --build --preset Developer-Packaging -j
+      - name: Package build
+        shell: pwsh
+        run: |
+          $outputDir = "build/Developer-Packaging/bin/game"
+          Compress-Archive -Path "$outputDir/*" -DestinationPath "thermite-Developer-Packaging.zip"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: thermite-Developer-Packaging
+          path: thermite-Developer-Packaging.zip
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: thermite-Developer-Packaging
+      - name: Generate changelog
+        id: changelog
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LATEST_TAG" ]; then
+            CHANGES=$(git log --pretty=format:"- %s" HEAD | grep -iE "^- (feat|fix|breaking|docs|chore):" | head -20)
+          else
+            CHANGES=$(git log --pretty=format:"- %s" ${LATEST_TAG}..HEAD | grep -iE "^- (feat|fix|breaking|docs|chore):" | head -20)
+          fi
+          [ -z "$CHANGES" ] && CHANGES="- Minor updates and improvements"
+          echo "changes<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.build.outputs.version }}
+          name: Release ${{ needs.build.outputs.version }}
+          body: |
+            ## What's Changed
+            ${{ steps.changelog.outputs.changes }}
+          files: thermite-Developer-Packaging.zip
+          draft: false
+          prerelease: false
