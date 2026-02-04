@@ -70,6 +70,7 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     app = std::move(user_app);
     Log::init(app->specs.log_file.string());
 
+    IO::init_mounts();
     window.init(app->specs);
     input.init();
     renderer.init();

@@ -1,26 +1,3 @@
-function(create_symlink SRC DST)
-	if (EXISTS "${SRC}")
-		#set(ASSETS_DST )
-		
-		# Make sure the parent dir exists so CREATE_LINK doesn't fail
-		file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${target_name}")
-		
-		if (EXISTS "${DST}")
-		    if (IS_SYMLINK "${DST}")
-		        message(STATUS "Assets symlink already exists: ${DST}")
-		    else()
-		        message(FATAL_ERROR
-		            "Path '${DST}' already exists and is not a symlink.\n"
-		            "Delete it if you want CMake to manage it.\n")
-		    endif()
-		else()
-		    message(STATUS "Creating assets symlink: ${DST} -> ${SRC}")
-		    file(CREATE_LINK "${SRC}" "${DST}" SYMBOLIC)
-		endif()
-	endif()
-endfunction()
-
-
 # Find and add project targets
 function(find_and_add_targets)
 	# Find project directories
@@ -45,7 +22,18 @@ function(find_and_add_targets)
 			add_executable(${target_name}
 				${PROJECT_SOURCES}
 			)
+
+			# Generate a small config source file that the engine can access to know where the current relative project assets live
+			set(gen_dir "${CMAKE_CURRENT_BINARY_DIR}/generated/${target_name}")
+			file(MAKE_DIRECTORY "${gen_dir}")
 			
+			set(cfg_cpp "${gen_dir}/tmt_project_config.cpp")
+			file(WRITE "${cfg_cpp}"
+			"extern \"C\" const char* TMT_PROJECT_RELATIVE_ASSETS_DIR = \"projects/${target_name}/assets\";\n"
+			)
+			
+			target_sources(${target_name} PRIVATE "${cfg_cpp}")
+
 			# Set runtime output directory to its own folder inside /bin/
 			set_target_properties(${target_name} PROPERTIES
 				RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${target_name}"
@@ -69,25 +57,6 @@ function(find_and_add_targets)
 		                "${CMAKE_SOURCE_DIR}/extern/fmod/lib/fmodstudio${FMOD_POSTFIX}.dll"
 		                "${CMAKE_BINARY_DIR}/bin/${target_name}/fmodstudio${FMOD_POSTFIX}.dll"
 			)
-
-			# Make sure target has assets folder
-			file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${target_name}/assets")
-
-			# Create symlink for asset folders to its executable
-			message(STATUS "Finding and attempting symlinks to found asset folders..") 
-			set(GAME_ASSETS_SRC "${project_dir}/assets")
-			set(ENGINE_ASSETS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/engine/assets")
-			set(EDITOR_ASSETS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/editor/assets")
-
-			file(MAKE_DIRECTORY "${GAME_ASSETS_SRC}")
-
-			create_symlink("${GAME_ASSETS_SRC}" "${CMAKE_BINARY_DIR}/bin/${target_name}/assets/game")
-			create_symlink("${ENGINE_ASSETS_SRC}" "${CMAKE_BINARY_DIR}/bin/${target_name}/assets/engine")
-
-			# If this is an editor build, symlink editor assets
-			if(THERMITE_EDITOR_BUILD)
-				create_symlink("${EDITOR_ASSETS_SRC}" "${CMAKE_BINARY_DIR}/bin/${target_name}/assets/editor")
-			endif()
 
 			# Link with the Thermite Engine
 			target_link_libraries(${target_name} PRIVATE thermite-engine)
