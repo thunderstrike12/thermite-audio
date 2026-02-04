@@ -1,0 +1,7 @@
+create Player
+create Enemy
+create NPC_Merchant
+create NPC_Guard
+list
+destroy NPC_Merchant
+list

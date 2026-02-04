@@ -1,0 +1,14 @@
+create Landmark_A
+create Landmark_B
+create Landmark_C
+teleport Landmark_A 0 0 0
+teleport Landmark_B 20 5 10
+teleport Landmark_C -15 2 -20
+draw_color 1 1 0
+draw_sphere 0 0 0 0.5
+draw_sphere 20 5 10 0.5
+draw_sphere -15 2 -20 0.5
+tp_facing 5 3 5 0 0 0
+tp_facing 25 8 15 20 5 10
+tp_facing -10 5 -15 -15 2 -20
+tp_facing 0 10 0 0 0 0

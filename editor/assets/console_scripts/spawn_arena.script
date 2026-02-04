@@ -1,0 +1,20 @@
+create Arena_Center
+create Arena_North
+create Arena_South
+create Arena_East
+create Arena_West
+teleport Arena_Center 0 0 0
+teleport Arena_North 0 0 -20
+teleport Arena_South 0 0 20
+teleport Arena_East 20 0 0
+teleport Arena_West -20 0 0
+draw_color 1 1 0
+draw_circle 0 0.1 0 20
+draw_color 1 0 0
+draw_sphere 0 0 -20 1
+draw_sphere 0 0 20 1
+draw_sphere 20 0 0 1
+draw_sphere -20 0 0 1
+draw_color 0 1 0
+draw_sphere 0 0.5 0 0.5
+list

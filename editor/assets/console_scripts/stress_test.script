@@ -1,0 +1,33 @@
+create Entity_01
+create Entity_02
+create Entity_03
+create Entity_04
+create Entity_05
+create Entity_06
+create Entity_07
+create Entity_08
+create Entity_09
+create Entity_10
+list
+teleport Entity_01 0 0 0
+teleport Entity_02 5 0 0
+teleport Entity_03 10 0 0
+teleport Entity_04 15 0 0
+teleport Entity_05 20 0 0
+teleport Entity_06 0 0 5
+teleport Entity_07 5 0 5
+teleport Entity_08 10 0 5
+teleport Entity_09 15 0 5
+teleport Entity_10 20 0 5
+destroy Entity_10
+destroy Entity_09
+destroy Entity_08
+destroy Entity_07
+destroy Entity_06
+destroy Entity_05
+destroy Entity_04
+destroy Entity_03
+destroy Entity_02
+destroy Entity_01
+list
+```
