@@ -28,7 +28,7 @@ void ScenesWindow::display() {
 
 void ScenesWindow::on_editor_start() {}
 
-void ScenesWindow::on_editor_update(const FrameData& time) {}
+void ScenesWindow::on_editor_update(const FrameData&) {}
 
 void ScenesWindow::on_editor_end() {}
 

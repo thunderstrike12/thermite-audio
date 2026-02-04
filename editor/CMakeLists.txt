@@ -9,6 +9,10 @@ add_library(thermite-editor STATIC ${THERMITE_SOURCES})
 # Link editor to engine
 target_link_libraries(thermite-editor PRIVATE thermite-engine)
 
+# Supress SPDLOG warnings
+# "warning C4459: declaration of 'formattable' hides global declaration"
+target_compile_options(thermite-editor PRIVATE /wd4459)
+
 # Add compile definitons
 target_compile_definitions(thermite-engine PRIVATE NOMINMAX) # Makes windows.h not define min and max
 

@@ -7,8 +7,6 @@
 #include "implot.h"
 
 void tmt::MotionMathPreview::display() {
-    auto& motion_math_sys = tmt::engine.ecs.systems.get<tmt::MotionMathSystem>();
-
     recompute |= ImGui::SliderFloat("Frequency", &frequency, 0.f, 10.f);
     recompute |= ImGui::SliderFloat("Damping", &damping, 0.f, 10.f);
     recompute |= ImGui::SliderFloat("Initial response", &initial_response, -10.f, 10.f);

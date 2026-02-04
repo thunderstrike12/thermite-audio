@@ -3,7 +3,7 @@
 
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
-#include "engine/systems/animation/rig_model.hpp";
+#include "engine/systems/animation/rig_model.hpp"
 
 void AnimationPlayer::start() {
     auto& rigmodel = tmt::engine.ecs.add_component<tmt::RigModel>(entity);
@@ -15,8 +15,6 @@ void AnimationPlayer::start() {
     rigmodel.play_animation(animation_name, 0.0f, true);
 }
 
-void AnimationPlayer::update(const tmt::FrameData& time) {}
+void AnimationPlayer::update(const tmt::FrameData&) {}
 
-void AnimationPlayer::end() {
-    //
-}
+void AnimationPlayer::end() {}

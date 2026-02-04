@@ -30,7 +30,7 @@ void Console::on_editor_start() {
     register_scripts();
 }
 
-void Console::on_editor_update(const FrameData& time) {}
+void Console::on_editor_update(const FrameData&) {}
 
 void Console::on_editor_end() { Log::remove_sink(sink); }
 void Console::register_variables() {}

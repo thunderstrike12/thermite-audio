@@ -12,7 +12,7 @@ class ImguiDemo : public IWindow {
     void display() override { ImGui::ShowDemoWindow(); }
 
     void on_editor_start() override {};
-    void on_editor_update(const tmt::FrameData& time) override {};
+    void on_editor_update(const tmt::FrameData&) override {};
     void on_editor_end() override {};
 };
 }  // namespace tmt

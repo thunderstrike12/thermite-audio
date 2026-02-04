@@ -27,7 +27,7 @@ namespace tmt {
 
 void Inspector::on_editor_start() {}
 
-void Inspector::on_editor_update(const tmt::FrameData& time) {}
+void Inspector::on_editor_update(const tmt::FrameData&) {}
 
 void Inspector::on_editor_end() {}
 
@@ -174,8 +174,8 @@ void Inspector::display_compile_time_components(const tmt::Inspector::MenuContex
         for (const Entity& entity : menu_context.selected_entities) {
             if (entity == menu_context.primary_entity) continue;
 
-            const bool has_component = tmt::engine.ecs.has_component<T>(entity);
-            if (has_component == false) continue;
+            const bool has_component_2 = tmt::engine.ecs.has_component<T>(entity);
+            if (has_component_2 == false) continue;
 
             T& other_instance = tmt::engine.ecs.get_component<T>(entity);
             json other_json = tmt::Serializer::serialize(other_instance);
@@ -207,14 +207,14 @@ void Inspector::display_runtime_components(const MenuContext& menu_context) {
 
         if (context_response.remove_component) {
             for (const Entity& entity : menu_context.selected_entities) {
-                const bool has_collection = engine.ecs.has_component<ComponentCollection>(entity);
-                if (has_collection == false) continue;
+                const bool has_collection_2 = engine.ecs.has_component<ComponentCollection>(entity);
+                if (has_collection_2 == false) continue;
 
-                auto& component_collection = engine.ecs.get_component<ComponentCollection>(entity);
-                const bool has_component = component_collection.has_component(component_index);
-                if (has_component == false) continue;
+                auto& component_collection_2 = engine.ecs.get_component<ComponentCollection>(entity);
+                const bool has_component_2 = component_collection_2.has_component(component_index);
+                if (has_component_2 == false) continue;
 
-                component_collection.remove_component(component_index);
+                component_collection_2.remove_component(component_index);
             }
             continue;
         }
@@ -251,12 +251,12 @@ void Inspector::display_runtime_components(const MenuContext& menu_context) {
         for (const Entity& entity : menu_context.selected_entities) {
             if (entity == menu_context.primary_entity) continue;
 
-            const bool has_collection = engine.ecs.has_component<ComponentCollection>(entity);
-            if (has_collection == false) continue;
+            const bool has_collection_2 = engine.ecs.has_component<ComponentCollection>(entity);
+            if (has_collection_2 == false) continue;
 
             auto& other_component_collection = engine.ecs.get_component<ComponentCollection>(entity);
-            const bool has_component = other_component_collection.has_component(component_index);
-            if (has_component == false) continue;
+            const bool has_component_2 = other_component_collection.has_component(component_index);
+            if (has_component_2 == false) continue;
 
             IGameComponent& other_instance = other_component_collection.get_component(component_index);
             json other_json = tmt::Serializer::serialize(other_instance);
@@ -383,7 +383,7 @@ void Inspector::paste_runtime_component(const tmt::json& deserialized, const tmt
         if (name_in_clipboard != component_info.name) continue;
         const json data = deserialized.value("data", json::object());
         for (const Entity& entity : menu_context.selected_entities) {
-            const bool has_collection = tmt::engine.ecs.has_component<ComponentCollection>(entity);
+            // const bool has_collection = tmt::engine.ecs.has_component<ComponentCollection>(entity);
             auto& component_collection = tmt::engine.ecs.add_or_get_component<ComponentCollection>(entity);
             IGameComponent& target_instance = component_collection.add_or_get_component(component_index, entity);
             Serializer::deserialize(data, target_instance);

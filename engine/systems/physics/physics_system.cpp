@@ -257,7 +257,7 @@ void Physics::generate_constraints() {
 void Physics::generate_constraint(int index, const PhysicsGroup& group) {
     Entity entity = group[index];
     VoxelBody& vb = group.get<VoxelBody>(entity);
-    Transform& transform = group.get<Transform>(entity);
+    // Transform& transform = group.get<Transform>(entity);
     // auto& [vb, transform] = group.get<VoxelBody, Transform>(entity);
 
     if (vb.type == VoxelBody::STATIC || vb.type == VoxelBody::SLEEPING) return;
@@ -271,7 +271,7 @@ void Physics::generate_constraint(int index, const PhysicsGroup& group) {
         if (other_entity == entity) continue;
 
         VoxelBody& other_vb = group.get<VoxelBody>(other_entity);
-        Transform& other_transform = group.get<Transform>(other_entity);
+        // Transform& other_transform = group.get<Transform>(other_entity);
         // auto& [other_vb, other_transform] = group.get<VoxelBody, Transform>(other_entity);
 
         if (sat_early_out(vb, other_vb)) continue;

@@ -329,7 +329,7 @@ void Game::on_update(const tmt::FrameData& time) {
         }
     }
 
-        // if (tmt::engine.input.is_mouse_button_pressed(tmt::MouseButton::LEFT) && cooldown <= 0.0f) {
+    // if (tmt::engine.input.is_mouse_button_pressed(tmt::MouseButton::LEFT) && cooldown <= 0.0f) {
     //     auto& cam_transform = tmt::engine.ecs.get_component<tmt::Transform>(cam);
     //     const glm::vec3 cam_pos = cam_transform.get_world_position();
     //     const glm::vec3 cam_forward = cam_transform.get_forward();

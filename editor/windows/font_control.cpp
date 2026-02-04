@@ -6,7 +6,7 @@
 
 void tmt::FontControl::on_editor_start() {}
 
-void tmt::FontControl::on_editor_update(const tmt::FrameData& time) {}
+void tmt::FontControl::on_editor_update(const tmt::FrameData&) {}
 
 void tmt::FontControl::on_editor_end() {}
 

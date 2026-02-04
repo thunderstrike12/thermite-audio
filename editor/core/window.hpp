@@ -15,7 +15,7 @@ class IWindow : public IEditorEvents {
 
     /* IEditorEvents made optional */
     virtual void on_editor_start() {};
-    virtual void on_editor_update(const tmt::FrameData& time) {};
+    virtual void on_editor_update(const tmt::FrameData& time) { (void)time; };
     virtual void on_editor_end() {};
 
     /* [Required] */

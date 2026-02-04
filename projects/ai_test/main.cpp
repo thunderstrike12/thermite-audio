@@ -64,11 +64,12 @@ class Game : public tmt::Application {
 
         enemy1.goal_ids = {"PatrolArea", "KillPlayer"};
 
+        // NOTE: You really shouldn't convert a 64bit hash to 32bits!!!!
         enemy1.default_world_state = {
-            {std::hash<std::string>()("player_visible"), true},
-            {std::hash<std::string>()("player_in_range"), false},
-            {std::hash<std::string>()("player_alive"), true},
-            {std::hash<std::string>()("area_secure"), false}
+            {(uint32_t)std::hash<std::string>()("player_visible"), true},
+            {(uint32_t)std::hash<std::string>()("player_in_range"), false},
+            {(uint32_t)std::hash<std::string>()("player_alive"), true},
+            {(uint32_t)std::hash<std::string>()("area_secure"), false}
         };
 
         type_reg.register_type(enemy1);
@@ -80,7 +81,7 @@ class Game : public tmt::Application {
 
         enemy2.goal_ids = {"PatrolArea"};
 
-        enemy2.default_world_state = {{std::hash<std::string>()("area_secure"), false}};
+        enemy2.default_world_state = {{(uint32_t)std::hash<std::string>()("area_secure"), false}};
 
         type_reg.register_type(enemy2);
     }

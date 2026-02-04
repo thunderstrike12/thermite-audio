@@ -240,7 +240,7 @@ void GoapDebugger::draw_details_view(GoapAgent& agent, WorldState& ws) {
 
             bool can_run = true;
             for (auto& [fact, val] : effective.preconditions) {
-                auto it = ws.facts.find(std::hash<std::string>()(fact));
+                auto it = ws.facts.find((uint32_t)std::hash<std::string>()(fact));
                 if (it == ws.facts.end() || it->second.bool_val != val) {
                     can_run = false;
                     break;

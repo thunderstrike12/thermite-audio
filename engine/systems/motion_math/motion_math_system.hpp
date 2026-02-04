@@ -72,7 +72,7 @@ class MotionMathSystem : public ISystem {
     // Inherited via ISystem
     void on_start() override;
     void on_end() override;
-    void on_update(const tmt::FrameData& time) override {};
+    void on_update(const tmt::FrameData&) override {};
     void on_fixed_update(const tmt::FrameData& time) override;
 
     constexpr std::string get_name() { return "Motion Math System"; };

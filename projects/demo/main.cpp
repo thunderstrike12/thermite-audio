@@ -67,8 +67,8 @@ class
     dragon.action_ids = {"ChasePlayer", "Wander"};
 
     dragon.default_world_state = {
-        {std::hash<std::string>()("player_in_range"), false},
-        {std::hash<std::string>()("in_attack_range"), false},
+        {(uint32_t)std::hash<std::string>()("player_in_range"), false},
+        {(uint32_t)std::hash<std::string>()("in_attack_range"), false},
     };
 
     {

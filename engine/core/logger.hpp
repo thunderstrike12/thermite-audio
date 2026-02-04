@@ -1,18 +1,14 @@
 #pragma once
 
-#pragma warning(push)
-#pragma warning(disable : 4459)
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks-inl.h"
-#pragma warning(pop)
 
 namespace tmt {
 
 class Log {
    public:
     // Call once at the beginning of the setup
-
     static void init(const std::string& log_file = "") {
         static bool initialized = false;
         assert(initialized == false);
@@ -43,6 +39,7 @@ class Log {
             }
         }
     }
+
     enum class Scope {
         ENGINE,
         RENDERER,
@@ -80,8 +77,8 @@ class Log {
     template <typename... Args>
     static void error(spdlog::format_string_t<Args...> fmt, Args&&... args) {
         loggers[Scope::GLOBAL]->error(fmt, std::forward<Args>(args)...);
-        ;
     }
+
     static void add_sink(const std::shared_ptr<spdlog::sinks::sink>& sink) {
         for (auto& [scope, logger] : loggers) {
             logger->sinks().push_back(sink);

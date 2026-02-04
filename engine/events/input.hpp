@@ -13,6 +13,7 @@ class OnRetrieveMouseState : public EventListenerBase<OnRetrieveMouseState, Mous
     OnRetrieveMouseState() : EventListenerBase() {}
     virtual void on_retrieve_mouse_state(MouseOverride& event) = 0;
     void on_event(MouseOverride& event) final override { on_retrieve_mouse_state(event); }
-    void on_event(const MouseOverride& event) final override { /* Empty */ }
+    void on_event(const MouseOverride& event) final override { (void)event; /* Empty */ }
 };
+
 }  // namespace tmt

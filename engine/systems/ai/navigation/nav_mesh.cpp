@@ -235,7 +235,7 @@ std::optional<glm::vec3> tmt::NavMesh::follow_path(glm::vec3 start, glm::vec3 en
     glm::vec3 target_pos = nodes[new_path[0]].world_pos;
     if (path.size() > 2) {
         float attraction_distance = 1.5f;
-        int current_node = new_path.size() - 1;
+        int current_node = (int)new_path.size() - 1;
         glm::vec3 current_pos = nodes[new_path[current_node]].world_pos;
         float travelled_distance = 0.0f;
         while (current_node >= 1) {
