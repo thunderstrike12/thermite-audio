@@ -1,0 +1,839 @@
+{
+    "version": 1,
+    "entities": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        1048576,
+        1048577,
+        1048578,
+        1048579,
+        1048580,
+        1048581,
+        1048582,
+        1048583,
+        1048584,
+        1048585
+    ],
+    "Name": {
+        "10": {
+            "name": "SphereLightBlue"
+        },
+        "11": {
+            "name": "SphereLightRed"
+        },
+        "12": {
+            "name": "SphereLightGreen"
+        },
+        "13": {
+            "name": "SphereLightPurple"
+        },
+        "14": {
+            "name": "SunLight"
+        },
+        "15": {
+            "name": "SpotLight"
+        },
+        "16": {
+            "name": "TubeLight"
+        },
+        "1048576": {
+            "name": "Camera"
+        },
+        "1048577": {
+            "name": "Asteroid0"
+        },
+        "1048578": {
+            "name": "Asteroid1"
+        },
+        "1048579": {
+            "name": "Asteroid2"
+        },
+        "1048580": {
+            "name": "Asteroid3"
+        },
+        "1048581": {
+            "name": "Asteroid4"
+        },
+        "1048582": {
+            "name": "Asteroid5"
+        },
+        "1048583": {
+            "name": "Asteroid6"
+        },
+        "1048584": {
+            "name": "Asteroid7"
+        },
+        "1048585": {
+            "name": "Asteroid8"
+        }
+    },
+    "Transform": {
+        "10": {
+            "local_position": {
+                "x": 35.42694091796875,
+                "y": 30.44483184814453,
+                "z": 84.0319595336914
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "11": {
+            "local_position": {
+                "x": 42.98033905029297,
+                "y": 28.49297523498535,
+                "z": 109.31867218017578
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "12": {
+            "local_position": {
+                "x": -10.124200820922852,
+                "y": 46.07029342651367,
+                "z": 96.64696502685547
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "13": {
+            "local_position": {
+                "x": -5.795581817626953,
+                "y": -0.38616469502449036,
+                "z": 87.49974822998047
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "14": {
+            "local_position": {
+                "x": -20.90081024169922,
+                "y": 48.80633544921875,
+                "z": 94.17949676513672
+            },
+            "local_rotation": {
+                "w": 0.8136083483695984,
+                "x": 0.11243993043899536,
+                "y": 0.5088412761688232,
+                "z": -0.25783571600914
+            },
+            "local_scale": {
+                "x": 0.999997079372406,
+                "y": 0.9999963045120239,
+                "z": 0.9999980330467224
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "15": {
+            "local_position": {
+                "x": 29.44918441772461,
+                "y": 1.8779538869857788,
+                "z": 78.78814697265625
+            },
+            "local_rotation": {
+                "w": 0.9342567324638367,
+                "x": 0.029628628864884377,
+                "y": -0.3551798164844513,
+                "z": 0.011567392386496067
+            },
+            "local_scale": {
+                "x": 0.9999998807907104,
+                "y": 0.9999997615814209,
+                "z": 0.9999998211860657
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "16": {
+            "local_position": {
+                "x": 15.302366256713867,
+                "y": -27.01534652709961,
+                "z": 120.85078430175781
+            },
+            "local_rotation": {
+                "w": 0.999171793460846,
+                "x": -0.017934195697307587,
+                "y": -0.0356765054166317,
+                "z": -0.007827133871614933
+            },
+            "local_scale": {
+                "x": 0.9999999403953552,
+                "y": 0.9999998807907104,
+                "z": 8.999999046325684
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048576": {
+            "local_position": {
+                "x": 0.0,
+                "y": 10.0,
+                "z": 40.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048577": {
+            "local_position": {
+                "x": 0.0,
+                "y": 50.0,
+                "z": 110.0
+            },
+            "local_rotation": {
+                "w": -0.18021416664123535,
+                "x": 0.6233622431755066,
+                "y": 0.300370991230011,
+                "z": 0.6990848183631897
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048578": {
+            "local_position": {
+                "x": 40.0,
+                "y": 20.0,
+                "z": 100.0
+            },
+            "local_rotation": {
+                "w": 0.5741472244262695,
+                "x": 0.40059298276901245,
+                "y": -0.5181487798690796,
+                "z": 0.4913268983364105
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048579": {
+            "local_position": {
+                "x": -24.0,
+                "y": -20.0,
+                "z": 90.0
+            },
+            "local_rotation": {
+                "w": 0.0035063177347183228,
+                "x": 0.888383686542511,
+                "y": -0.20262585580348969,
+                "z": 0.41195255517959595
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048580": {
+            "local_position": {
+                "x": 50.0,
+                "y": 31.600000381469727,
+                "z": 100.0
+            },
+            "local_rotation": {
+                "w": -0.2172316163778305,
+                "x": 0.5522385239601135,
+                "y": -0.34575381875038147,
+                "z": -0.7268406748771667
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048581": {
+            "local_position": {
+                "x": 20.0,
+                "y": -35.0,
+                "z": 120.0
+            },
+            "local_rotation": {
+                "w": -0.31929266452789307,
+                "x": 0.5862007737159729,
+                "y": 0.5204053521156311,
+                "z": 0.5325401425361633
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048582": {
+            "local_position": {
+                "x": -20.0,
+                "y": 55.0,
+                "z": 100.0
+            },
+            "local_rotation": {
+                "w": 0.4905301332473755,
+                "x": -0.6125855445861816,
+                "y": 0.12602297961711884,
+                "z": 0.6068257093429565
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048583": {
+            "local_position": {
+                "x": -18.474620819091797,
+                "y": 17.0,
+                "z": 96.56648254394531
+            },
+            "local_rotation": {
+                "w": 0.17991310358047485,
+                "x": -0.33836764097213745,
+                "y": 0.9231442213058472,
+                "z": 0.03071458823978901
+            },
+            "local_scale": {
+                "x": 1.0000001192092896,
+                "y": 0.9999995231628418,
+                "z": 1.0000004768371582
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048584": {
+            "local_position": {
+                "x": 19.0,
+                "y": 0.0,
+                "z": 90.0
+            },
+            "local_rotation": {
+                "w": 0.37876540422439575,
+                "x": -0.18312320113182068,
+                "y": -0.6876142621040344,
+                "z": -0.5917679071426392
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048585": {
+            "local_position": {
+                "x": 54.0,
+                "y": -48.0,
+                "z": 75.0
+            },
+            "local_rotation": {
+                "w": 0.38926902413368225,
+                "x": 0.5804814100265503,
+                "y": -0.027246326208114624,
+                "z": 0.7146808505058289
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        }
+    },
+    "Voxel Renderer": {
+        "1048577": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_3.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 169,
+                        "y": 183,
+                        "z": 209
+                    }
+                }
+            }
+        },
+        "1048578": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_3.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 169,
+                        "y": 183,
+                        "z": 209
+                    }
+                }
+            }
+        },
+        "1048579": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_3.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 169,
+                        "y": 183,
+                        "z": 209
+                    }
+                }
+            }
+        },
+        "1048580": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_7.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 151,
+                        "y": 121,
+                        "z": 121
+                    }
+                }
+            }
+        },
+        "1048581": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_7.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 151,
+                        "y": 121,
+                        "z": 121
+                    }
+                }
+            }
+        },
+        "1048582": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_7.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 151,
+                        "y": 121,
+                        "z": 121
+                    }
+                }
+            }
+        },
+        "1048583": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_7.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 151,
+                        "y": 121,
+                        "z": 121
+                    }
+                }
+            }
+        },
+        "1048584": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_7.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 151,
+                        "y": 121,
+                        "z": 121
+                    }
+                }
+            }
+        },
+        "1048585": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_7.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 151,
+                        "y": 121,
+                        "z": 121
+                    }
+                }
+            }
+        }
+    },
+    "Camera": {
+        "1048576": {
+            "fov": 80.0,
+            "pitch": 0.0,
+            "yaw": 90.0,
+            "active": true
+        }
+    },
+    "Voxel Body": {
+        "1048577": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_3.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 169,
+                        "y": 183,
+                        "z": 209
+                    }
+                }
+            },
+            "type": "STATIC",
+            "gravity": 0.0
+        },
+        "1048578": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_3.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 169,
+                        "y": 183,
+                        "z": 209
+                    }
+                }
+            },
+            "type": "STATIC",
+            "gravity": 0.0
+        },
+        "1048579": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_3.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 169,
+                        "y": 183,
+                        "z": 209
+                    }
+                }
+            },
+            "type": "STATIC",
+            "gravity": 0.0
+        },
+        "1048580": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_7.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 151,
+                        "y": 121,
+                        "z": 121
+                    }
+                }
+            },
+            "type": "STATIC",
+            "gravity": 0.0
+        },
+        "1048581": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_7.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 151,
+                        "y": 121,
+                        "z": 121
+                    }
+                }
+            },
+            "type": "STATIC",
+            "gravity": 0.0
+        },
+        "1048582": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_7.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 151,
+                        "y": 121,
+                        "z": 121
+                    }
+                }
+            },
+            "type": "STATIC",
+            "gravity": 0.0
+        },
+        "1048583": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_7.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 151,
+                        "y": 121,
+                        "z": 121
+                    }
+                }
+            },
+            "type": "STATIC",
+            "gravity": 0.0
+        },
+        "1048584": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_7.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 151,
+                        "y": 121,
+                        "z": 121
+                    }
+                }
+            },
+            "type": "STATIC",
+            "gravity": 0.0
+        },
+        "1048585": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_7.vengi"
+                },
+                "data": {
+                    "size": {
+                        "x": 151,
+                        "y": 121,
+                        "z": 121
+                    }
+                }
+            },
+            "type": "STATIC",
+            "gravity": 0.0
+        }
+    },
+    "Light": {
+        "10": {
+            "color": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "temperature": 16000.0,
+            "type": "SPHERE_LIGHT",
+            "light": {
+                "index": 0,
+                "value": {
+                    "source_radius": 1.0,
+                    "attenuation_radius": 25.0,
+                    "luminous_flux": 3000.0
+                }
+            }
+        },
+        "11": {
+            "color": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "temperature": 3030.0,
+            "type": "SPHERE_LIGHT",
+            "light": {
+                "index": 0,
+                "value": {
+                    "source_radius": 1.0,
+                    "attenuation_radius": 20.0,
+                    "luminous_flux": 1000.0
+                }
+            }
+        },
+        "12": {
+            "color": {
+                "x": 0.27799999713897705,
+                "y": 1.0,
+                "z": 0.23800000548362732
+            },
+            "temperature": 6500.0,
+            "type": "SPHERE_LIGHT",
+            "light": {
+                "index": 0,
+                "value": {
+                    "source_radius": 1.5,
+                    "attenuation_radius": 20.600000381469727,
+                    "luminous_flux": 1000.0
+                }
+            }
+        },
+        "13": {
+            "color": {
+                "x": 0.6830000281333923,
+                "y": 0.15000000596046448,
+                "z": 1.0
+            },
+            "temperature": 6500.0,
+            "type": "SPHERE_LIGHT",
+            "light": {
+                "index": 0,
+                "value": {
+                    "source_radius": 3.0,
+                    "attenuation_radius": 30.0,
+                    "luminous_flux": 16000.0
+                }
+            }
+        },
+        "14": {
+            "color": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "temperature": 5500.0,
+            "type": "SUN_LIGHT",
+            "light": {
+                "index": 1,
+                "value": {
+                    "source_angle": 0.06632251292467117,
+                    "luminous_intensity": 0.0
+                }
+            }
+        },
+        "15": {
+            "color": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "temperature": 3500.0,
+            "type": "SPOT_LIGHT",
+            "light": {
+                "index": 2,
+                "value": {
+                    "source_radius": 1.149999976158142,
+                    "attenuation_distance": 23.399999618530273,
+                    "beam_angle": 0.7853981852531433,
+                    "spot_blend": 0.6710000038146973,
+                    "luminous_intensity": 115.01000213623047
+                }
+            }
+        },
+        "16": {
+            "color": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "temperature": 3500.0,
+            "type": "TUBE_LIGHT",
+            "light": {
+                "index": 3,
+                "value": {
+                    "source_radius": 0.20000000298023224,
+                    "attenuation_distance": 11.5,
+                    "luminous_flux": 800.0
+                }
+            }
+        }
+    }
+}

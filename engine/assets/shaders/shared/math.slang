@@ -2,6 +2,8 @@ module math;
 
 /* Large floating point constant. */
 public static const float BIG_F32 = 1e30f;
+/* PI constant. */
+public static const float PI_F32 = 3.14159265359f;
 
 /* Number of voxels per unit in world-space. */
 public static const uint VOXELS_PER_UNIT = 10u;
@@ -74,17 +76,32 @@ public [ForceInline] Basis orthonormal_basis(const float3 n) {
 
 /* R1 quasi-random sequence. */
 public float r1(const uint n) {
-    const float g = 1.6180339887498948482f;
-    const float a1 = 1.0f / g;
-    return frac(0.5f + a1 * n);
+    /* Improved coefficients from <https://www.martysmods.com/a-better-r2-sequence/> */
+    /* (1.0 - original coefficients) */
+    return frac(n * 0.38196601125010515179366115080745f);
 }
 
 /* R2 quasi-random sequence. */
 public float2 r2(const uint n) {
-    const float g = 1.32471795724f;
-    const float a1 = 1.0f / g;
-    const float a2 = 1.0f / (g * g);
-    return frac(float2(a1, a2) * n + 0.5f);
+    /* Improved coefficients from <https://www.martysmods.com/a-better-r2-sequence/> */
+    /* (1.0 - original coefficients) */
+    return frac(n * float2(0.2451223337533073f, 0.4301597090019468f));
+}
+
+uint pcg(inout uint state) {
+    state = state * 747796405u + 2891336453u;
+    uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return (word >> 22u) ^ word;
+}
+
+/* Random float in range [0, 1) */
+public float rand_float(inout uint state) {
+    return pcg(state) / 4294967296.0f;
+}
+
+/* Random float2 in range [0, 1) */
+public float2 rand_float2(inout uint state) {
+    return float2(rand_float(state), rand_float(state));
 }
 
 /* Generate a sample direction within a cone around a direction vector. */
@@ -98,12 +115,23 @@ public float3 sample_cone(const float3 dir, const float half_angle, const float2
 }
 
 /* Generate a cosine weighted sample in the hemisphere around a normal vector. */
-public float3 sample_hemisphere(const float3 n, const float2 uv) {
+public float3 sample_hemisphere_cosine(const float3 n, const float2 uv) {
     const float r = sqrt(uv.x);
     const float phi = 2.0f * 3.14f * uv.y;
     const float x = r * cos(phi);
     const float y = r * sin(phi);
     const float z = sqrt(1.0f - uv.x);
+    const Basis basis = orthonormal_basis(n);
+    return normalize(x * basis.a + y * basis.b + z * n);
+}
+
+/* Generate a uniformly weighted sample in the hemisphere around a normal vector. */
+public float3 sample_hemisphere_uniform(const float3 n, const float2 uv) {
+    const float z = uv.x; 
+    const float r = sqrt(1.0f - z * z); 
+    const float phi = 2.0f * 3.14159265f * uv.y;
+    const float x = r * cos(phi);
+    const float y = r * sin(phi);
     const Basis basis = orthonormal_basis(n);
     return normalize(x * basis.a + y * basis.b + z * n);
 }

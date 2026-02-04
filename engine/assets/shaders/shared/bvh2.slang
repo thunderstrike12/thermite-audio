@@ -32,7 +32,7 @@ public [ForceInline] Hit trace_bvh2<let DEBUG : bool>(
     StructuredBuffer<float4> nodes,
     StructuredBuffer<uint> indices,
     StructuredBuffer<VoxelObject> prims,
-    Ray ray
+    Ray ray, float tmax = 1e30f
 ) {
     /* Check to make sure the root node of the BVH is valid */
     if (asuint(nodes[0].w) == 0u && asuint(nodes[3].w) == 0u) {
@@ -44,6 +44,7 @@ public [ForceInline] Hit trace_bvh2<let DEBUG : bool>(
 
     /* Traversal state */
     Hit hit = Hit::miss();
+    hit.t = tmax;
     uint node_index = 0u, stack[14], stack_ptr = 0u;
     for (;;) {
         const float4 rmax_prim_count = nodes[node_index + 3u];
@@ -118,7 +119,7 @@ public [ForceInline] float occlusion_bvh2(
     Ray ray, float tmax
 ) {
     /* Check to make sure the root node of the BVH is valid */
-    if (asuint(nodes[0].w) == 0u && asuint(nodes[3].w) == 0u) {
+    if ((asuint(nodes[0].w) == 0u && asuint(nodes[3].w) == 0u) || tmax <= 0.0f) {
         return tmax;
     }
 

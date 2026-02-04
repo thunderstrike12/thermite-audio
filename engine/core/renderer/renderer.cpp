@@ -96,7 +96,7 @@ void Renderer::update() {
 
     /* Update the rendering views */
     render_view.update();
-    scene_view.update(render_graph);
+    scene_view.update(render_graph, render_view);
 
     /* Update the camera view */
     Entity cam_entity = Camera::get_active_camera();

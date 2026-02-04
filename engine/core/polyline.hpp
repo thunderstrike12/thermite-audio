@@ -19,7 +19,7 @@ class Polyline {
     Polyline() = default;
 
     /* Use the given color when drawing subsequent lines. */
-    inline void use_color(glm::vec3 new_color) { color = glm::vec4(new_color, 1.0f); };
+    inline void use_color(glm::vec3 new_color, float alpha = 1.0f) { color = glm::vec4(new_color, alpha); };
     inline void use_color(glm::vec4 new_color) { color = new_color; };
     inline void use_color(float r, float g, float b, float a = 1.0f) { color = glm::vec4(r, g, b, a); };
     /* Use the given line width when drawing subsequent lines. */
@@ -45,6 +45,16 @@ class Polyline {
      * @param time Optional timer for how long the polyline should stay alive. *(default is 1 frame)*
      */
     void draw_circle(glm::vec3 origin, float radius, uint32_t segments = 32u, float time = 0.0f);
+
+    /**
+     * @brief Draw a polyline circle in world-space.
+     * @param origin The center point of the circle in world-space.
+     * @param dir The direction of the circle in world-space.
+     * @param radius The radius of the circle in world-space.
+     * @param segments The number of line segments which make up the circle.
+     * @param time Optional timer for how long the polyline should stay alive. *(default is 1 frame)*
+     */
+    void draw_world_circle(glm::vec3 origin, glm::vec3 dir, float radius, uint32_t segments = 32u, float time = 0.0f);
 
     /**
      * @brief Draw a polyline sphere using 3 orthogonal circles.

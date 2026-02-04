@@ -19,7 +19,7 @@ static const uint THREADS = (CAPACITY + 8u - 1u) / 8u;
 [numthreads(128, 1, 1)]
 void main(int thread_id: SV_DispatchThreadID) {
     /* Find the id of the slot for the current thread */
-    const int offset = THREADS * (render_view.frame_index & 0b111);
+    const int offset = THREADS * (render_view.frame_index & 0b111u);
     const int slot_id = offset + thread_id;
 
     /* Bounds check */

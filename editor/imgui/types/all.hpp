@@ -5,3 +5,4 @@
 #include "editor/imgui/types/std.hpp"
 #include "editor/imgui/types/tmt.hpp"
 #include "editor/imgui/types/audio.hpp"
+#include "editor/imgui/types/light.hpp"

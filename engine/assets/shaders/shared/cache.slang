@@ -6,11 +6,11 @@ import voxel;
 namespace cache {
 
 /* Fuse length for the cache read/write operations. */
-public static const uint FUSE_LENGTH = 32u;
+public static const uint FUSE_LENGTH = 16u;
 /* Empty slot key. */
 public static const uint64_t EMPTY_KEY = 0ull;
 /* Number of inactive frames after which to free a slot. */
-public static const uint INACTIVE_THRESHOLD = 60u;
+public static const uint INACTIVE_THRESHOLD = 240u;
 /* Number of slots available in the cache. */
 static const uint CAPACITY = 10000000u;
 
@@ -86,20 +86,21 @@ public struct Slot {
     }
 
     /* How many samples must be accumulated before we normalize illuminance. */
-    static const uint NORM_THRESHOLD = 512u;
+    static const uint NORM_THRESHOLD = 1u << 9u;
     /* How many samples do we normalize into. */
-    static const uint NORM_COUNT = 256u;
+    static const uint NORM_COUNT = 1u << 8u;
 
     /* Normalize the accumulated illuminance in the cache slot. */
     public [ForceInline] [mutating] void normalize() {
         if (sample_count <= NORM_THRESHOLD) return;
+        const uint last_sampled_index = last_sampled;
 
         /* Reduce sample count back to NORM_COUNT */
         const uint3 fxp = uint3(illuminance * NORM_COUNT * QFACTOR);
         illuminance_r = fxp.r;
         illuminance_g = fxp.g;
         illuminance_b = fxp.b;
-        samples = NORM_COUNT;
+        samples = NORM_COUNT | (last_sampled_index << SAMPLE_COUNT_BITS);
     }
 };
 
