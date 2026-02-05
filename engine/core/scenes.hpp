@@ -57,6 +57,8 @@ class Scenes {
         swap_scenes();
     }
 
+    void load_scene(const SceneIndex& type_id);
+
     bool is_scene_loaded() const { return active_scene_type != NULL_SCENE && active_scene != nullptr; }
 
     std::unique_ptr<SceneBase>& get_active_scene() { return active_scene; }

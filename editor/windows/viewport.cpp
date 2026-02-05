@@ -1,6 +1,5 @@
 #include "viewport.hpp"
 #include <imgui.h>
-#include "ImGuizmo.h"
 #include "editor/editor.hpp"
 #include "hierarchy.hpp"
 #include "engine/core/components/camera.hpp"
@@ -14,12 +13,8 @@
 #include "editor/windows/scenes.hpp"
 
 void tmt::Viewport::on_editor_start() {
-    ImGuizmo::AllowAxisFlip(false);
-
     // Setup Input Actions
     register_input_actions();
-
-    setup_gizmo_style();
 }
 
 void tmt::Viewport::register_input_actions() {
@@ -56,7 +51,7 @@ std::string tmt::Viewport::get_title() const {
 int tmt::Viewport::get_window_flags() const {
     if (engine.game_controller.is_running()) return ImGuiWindowFlags_None;
 
-    const bool is_scene_dirty = editor.windows.get<ScenesWindow>().is_scene_dirty();
+    const bool is_scene_dirty = editor.windows[Editor::Mode::SCENE].get<ScenesWindow>().is_scene_dirty();
     return is_scene_dirty ? ImGuiWindowFlags_UnsavedDocument : 0;
 };
 
@@ -67,8 +62,6 @@ void tmt::Viewport::display() {
     height = size.y;
 
     const glm::vec2 image_pos = glm::vec2(ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y);
-
-    ImGuizmo::SetRect(image_pos.x, image_pos.y, width, height);
 
     if (height <= 0.f) return;
 
@@ -81,9 +74,10 @@ void tmt::Viewport::display() {
     mouse_pos.x = imgui_mouse_pos.x - image_pos.x;
     mouse_pos.y = imgui_mouse_pos.y - image_pos.y;
 
-    ImGuizmo::SetDrawlist();
+    const std::vector<Entity>& selected_entities = editor.windows[Editor::Mode::SCENE].get<Hierarchy>().get_selected_entities();
 
-    gizmo_manip();
+    const bool gizmo_changed = editor.gizmo.manip(image_pos.x, image_pos.y, width, height, selected_entities);
+    if (gizmo_changed) OnSceneModified::dispatch();
 
     toolbar(image_pos);
 
@@ -106,22 +100,22 @@ void tmt::Viewport::toolbar(const glm::vec2& image_pos) {
     ImVec2 btn_pos = ImVec2(image_pos.x + width - total_w - pad, image_pos.y + pad);
 
     ImGui::SetCursorScreenPos(btn_pos);
-    const char* space_button_icon = gizmo_space ? ICON_MS_LANGUAGE : ICON_MS_VIEW_IN_AR;
+    const char* space_button_icon = editor.gizmo.space ? ICON_MS_LANGUAGE : ICON_MS_VIEW_IN_AR;
     if (ImGui::Button(space_button_icon, ImVec2(btn_w, btn_h))) {
-        gizmo_space = static_cast<uint8_t>(!gizmo_space);
+        editor.gizmo.space = static_cast<uint8_t>(!editor.gizmo.space);
     }
 
     ImGui::SameLine();
-    const char* mode_button_icon = gizmo_op_icons[gizmo_operation];
+    const char* mode_button_icon = Gizmo::gizmo_op_icons[editor.gizmo.operation];
     if (ImGui::Button(mode_button_icon, ImVec2(btn_w, btn_h))) {
-        ++gizmo_operation;
-        if (gizmo_operation == GIZMO_OP_COUNT) gizmo_operation = 0;
+        ++editor.gizmo.operation;
+        if (editor.gizmo.operation == Gizmo::GIZMO_OP_COUNT) editor.gizmo.operation = 0;
     }
 
     ImGui::SameLine();
-    const char* multi_button_icon = gizmo_multiselect_mode ? ICON_MS_FILTER_NONE : ICON_MS_FILTER_1;
+    const char* multi_button_icon = editor.gizmo.multiselect_mode ? ICON_MS_FILTER_NONE : ICON_MS_FILTER_1;
     if (ImGui::Button(multi_button_icon, ImVec2(btn_w, btn_h))) {
-        gizmo_multiselect_mode = static_cast<uint8_t>(!gizmo_multiselect_mode);
+        editor.gizmo.multiselect_mode = static_cast<uint8_t>(!editor.gizmo.multiselect_mode);
     }
 }
 
@@ -129,87 +123,6 @@ void tmt::Viewport::on_retrieve_mouse_state(MouseOverride& event) {
     event.x = mouse_pos.x;
     event.y = mouse_pos.y;
     event.handled = true;
-}
-
-void tmt::Viewport::gizmo_manip() {
-    if (engine.game_controller.is_running()) return;
-
-    auto& hierarchy = editor.windows.get<Hierarchy>();
-    auto& selected_entities = hierarchy.get_selected_entities();
-    if (selected_entities.empty()) return;
-
-    Transform& transform = engine.renderer.get_debug_transform();
-    Camera& camera = engine.renderer.get_debug_camera();
-
-    auto view = glm::inverse(transform.get_world_matrix());
-    const float aspect_ratio = width / height;
-    auto perspective = glm::perspective(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
-
-    bool changed = false;
-
-    Entity selected_entity = hierarchy.get_first_selected_entity();
-    if (engine.ecs.valid(selected_entity) == false) return;
-
-    // relative to first
-    if (gizmo_multiselect_mode == 0) {
-        Transform& selected_transform = engine.ecs.get_component<Transform>(selected_entity);
-        auto& selected_matrix = selected_transform.get_world_matrix();
-        glm::mat4 imguizmo_input_matrix = selected_matrix;
-
-        glm::mat4 delta;
-        changed = ImGuizmo::Manipulate(
-            &view[0][0], &perspective[0][0], static_cast<ImGuizmo::OPERATION>(gizmo_operations[gizmo_operation]), static_cast<ImGuizmo::MODE>(gizmo_space), &imguizmo_input_matrix[0][0],
-            &delta[0][0]
-        );
-        if (changed) {
-            selected_transform.set_world_matrix(imguizmo_input_matrix);
-
-            for (auto entity : selected_entities) {
-                if (entity == selected_entity) continue;
-
-                Transform& multi_select_transform = engine.ecs.get_component<Transform>(entity);
-                auto& multi_matrix = multi_select_transform.get_world_matrix();
-
-                multi_select_transform.set_world_matrix(delta * multi_matrix);
-            }
-        }
-    } else {  // relative to average
-        uint32_t amount = static_cast<uint32_t>(selected_entities.size());
-
-        glm::vec3 avg_translation = glm::vec3(0.f);
-        glm::quat avg_rotation = glm::quat();
-        glm::vec3 scale = glm::vec3(1.f);
-
-        float weight = 1.f / static_cast<float>(amount);
-
-        for (auto entity : selected_entities) {
-            Transform& multi_select_transform = engine.ecs.get_component<Transform>(entity);
-            auto& multi_matrix = multi_select_transform.get_world_matrix();
-
-            avg_translation += glm::vec3(multi_matrix[3]);
-            avg_rotation += weight * multi_select_transform.get_world_rotation();
-        }
-        avg_translation /= static_cast<float>(amount);
-        avg_rotation = glm::normalize(avg_rotation);
-
-        glm::mat4 avg = glm::translate(glm::mat4(1.f), avg_translation) * glm::mat4_cast(avg_rotation) * glm::scale(glm::mat4(1.f), scale);
-        glm::mat4 delta;
-        changed = ImGuizmo::Manipulate(
-            &view[0][0], &perspective[0][0], static_cast<ImGuizmo::OPERATION>(gizmo_operations[gizmo_operation]), static_cast<ImGuizmo::MODE>(gizmo_space), &avg[0][0], &delta[0][0]
-        );
-        if (changed) {
-            for (auto entity : selected_entities) {
-                Transform& multi_select_transform = engine.ecs.get_component<Transform>(entity);
-                auto& multi_matrix = multi_select_transform.get_world_matrix();
-
-                multi_select_transform.set_world_matrix(delta * multi_matrix);
-            }
-        }
-    }
-
-    if (changed) {
-        OnSceneModified::dispatch();
-    }
 }
 
 void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {
@@ -280,49 +193,4 @@ void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {
     }
 
     transform.set_world_position(pos);
-}
-
-void tmt::Viewport::setup_gizmo_style() {
-    using namespace ImGuizmo;
-    // style..
-    auto& style = ImGuizmo::GetStyle();
-    style.TranslationLineThickness = 2.0f;
-    style.TranslationLineArrowSize = 8.0f;
-    style.RotationLineThickness = 3.0f;
-    style.RotationOuterLineThickness = 3.0f;
-    style.ScaleLineThickness = 2.0f;
-    style.ScaleLineCircleSize = 1.5f;
-    style.HatchedAxisLineThickness = 5.0f;
-    style.CenterCircleSize = 24.0f;
-
-    // Slightly neon, softer axis colors
-    style.Colors[DIRECTION_X] = ImVec4(0.93725490f, 0.28235294f, 0.35686274f, 1.00f); /* red */
-    style.Colors[DIRECTION_Y] = ImVec4(0.52941176f, 0.81176470f, 0.21176470f, 1.00f); /* green */
-    style.Colors[DIRECTION_Z] = ImVec4(0.27843137f, 0.56078431f, 0.94509803f, 1.00f); /* blue */
-
-    // Matching planes, with lower alpha
-    style.Colors[PLANE_X] = ImVec4(0.93725490f, 0.28235294f, 0.35686274f, 0.4f);
-    style.Colors[PLANE_Y] = ImVec4(0.52941176f, 0.81176470f, 0.21176470f, 0.4f);
-    style.Colors[PLANE_Z] = ImVec4(0.27843137f, 0.56078431f, 0.94509803f, 0.4f);
-
-    // Selection: warm golden accent
-    style.Colors[SELECTION] = ImVec4(0.95686274f, 0.60392156f, 0.21960784f, 1.0f);
-
-    // Inactive: cooler desaturated grey-blue
-    style.Colors[INACTIVE] = ImVec4(0.32f, 0.35f, 0.42f, 0.85f);
-
-    // Lines: slightly brighter/cleaner on dark background
-    style.Colors[TRANSLATION_LINE] = ImVec4(0.60f, 0.63f, 0.70f, 0.80f);
-    style.Colors[SCALE_LINE] = ImVec4(0.92f, 0.92f, 0.96f, 0.90f);
-
-    // Rotation highlight: vivid magenta/orange mix
-    style.Colors[ROTATION_USING_BORDER] = ImVec4(0.95686274f, 0.60392156f, 0.21960784f, 1.0f);
-    style.Colors[ROTATION_USING_FILL] = ImVec4(0.95686274f, 0.60392156f, 0.21960784f, 0.4f);
-
-    // Hatched axis lines: subtle, light on dark
-    style.Colors[HATCHED_AXIS_LINES] = ImVec4(1.00f, 1.00f, 1.00f, 0.25f);
-
-    // Text: soft white with subtle shadow
-    style.Colors[TEXT] = ImVec4(0.96f, 0.97f, 0.99f, 1.00f);
-    style.Colors[TEXT_SHADOW] = ImVec4(0.00f, 0.00f, 0.00f, 0.75f);
 }

@@ -117,7 +117,7 @@ void DragonScene::on_update(const tmt::FrameData& /*time*/) {
 
         if (hit) {
             // tmt::engine.ecs.destroy_entity(hit.entity);
-            tmt::Log::info("pixel: {}, {} | hit: {}, {}, {}", mouse_pos.x, mouse_pos.y, hit.coord.x, hit.coord.y, hit.coord.z);
+            tmt::Log::info("pixel: {}, {} | hit: {}, {}, {}", mouse_pos.x, mouse_pos.y, hit.normal.x, hit.normal.y, hit.normal.z);
         }
     }
 

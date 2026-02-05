@@ -20,10 +20,6 @@ constexpr MaterialIndex AIR_INDEX = 0xFFu;
 struct MaterialPalette {
     static constexpr size_t ENTRY_COUNT = (1u << (sizeof(MaterialIndex) * 8u));
     Material entries[ENTRY_COUNT] {};
-
-    /* Subscript operator */
-    Material& operator[](size_t i) { return entries[i + 1u]; }
-    const Material& operator[](size_t i) const { return entries[i + 1u]; }
 };
 
 }  // namespace tmt

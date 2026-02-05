@@ -26,19 +26,10 @@ class Viewport : public IWindow, public OnRetrieveMouseState {
     bool get_is_hovered() const { return is_hovered; }
 
    private:
-    void gizmo_manip();
-    void setup_gizmo_style();
+    friend class ModelViewer;
+
     void update_debug_camera(const tmt::FrameData& frame_data);
     void toolbar(const glm::vec2& image_pos);
-
-    uint8_t gizmo_space = 1;
-    uint8_t gizmo_multiselect_mode = 0;
-    uint8_t gizmo_operation = 0;
-
-    static constexpr uint8_t GIZMO_OP_COUNT = 3;
-
-    uint32_t gizmo_operations[GIZMO_OP_COUNT] = {7, 120, 896};
-    const char* gizmo_op_icons[GIZMO_OP_COUNT] = {ICON_MS_DRAG_PAN, ICON_MS_ROTATE_RIGHT, ICON_MS_ZOOM_OUT_MAP};
 
     float width = -1;
     float height = -1;

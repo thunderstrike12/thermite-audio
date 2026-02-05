@@ -111,6 +111,11 @@ void Scenes::enqueue_scene(const SceneIndex& type_id) {
     next_scene_type = type_id;
 }
 
+void Scenes::load_scene(const SceneIndex& type_id) {
+    enqueue_scene(type_id);
+    swap_scenes();
+}
+
 const SceneInfo& Scenes::get_active_scene_info() const { return get_scene_info(active_scene_type); }
 
 const SceneInfo& Scenes::get_scene_info(const SceneIndex& type_index) const {

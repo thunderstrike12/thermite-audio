@@ -165,7 +165,7 @@ void draw_lights_overlay() {
         /* Get the position of the light source */
         const glm::vec3 light_pos = transform.get_world_position();
         /* Check if this sphere light is selected */
-        const bool selected = editor.windows.get<Hierarchy>().is_entity_selected(entity);
+        const bool selected = editor.windows[Editor::Mode::SCENE].get<Hierarchy>().is_entity_selected(entity);
 
         /* Draw the reticle */
         engine.polyline.use_color(selected ? colors::SELECTED : colors::DARK);

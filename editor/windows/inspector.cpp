@@ -98,7 +98,7 @@ void paste_values(const auto& name, const tmt::Inspector::MenuContext& menu_cont
 }
 
 void Inspector::display() {
-    const auto& hierarchy = editor.windows.get<Hierarchy>();
+    const auto& hierarchy = editor.windows[Editor::Mode::SCENE].get<Hierarchy>();
 
     const MenuContext menu_context {
         .primary_entity = hierarchy.get_first_selected_entity(),

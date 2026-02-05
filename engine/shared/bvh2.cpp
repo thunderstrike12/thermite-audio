@@ -269,6 +269,9 @@ inline float intersect_aabb(const Ray ray, const glm::vec3 box_min, const glm::v
 
 template <typename T>
 Hit Bvh2<T>::trace(const Ray& ray) const {
+    /* Avoid an infinite loop when the BVH has nothing inside it */
+    if (nodes[0].left_first == 0u && nodes[0].prim_count == 0u) return Hit();
+
     /* Traversal state */
     uint32_t stack[32] {}, stack_ptr = 0u, node_index = 0u;
 
@@ -276,6 +279,7 @@ Hit Bvh2<T>::trace(const Ray& ray) const {
     float hit_t = 1e30f;
     uint32_t hit_index = 0xFFFFFFFFu;
     glm::uvec3 hit_coord {};
+    glm::vec3 hit_normal {};
 
     for (;;) {
         const Bvh2Node& node = nodes[node_index];
@@ -290,6 +294,7 @@ Hit Bvh2<T>::trace(const Ray& ray) const {
                     hit_t = hit.distance;
                     hit_index = indices[node.left_first + i];
                     hit_coord = hit.coord;
+                    hit_normal = hit.normal;
                 }
             }
 
@@ -325,7 +330,7 @@ Hit Bvh2<T>::trace(const Ray& ray) const {
     }
 
     if (hit_t == 1e30f) return Hit(); /* miss */
-    return Hit(hit_t, engine.renderer.scene_view.entities[hit_index], hit_coord);
+    return Hit(hit_t, engine.renderer.scene_view.entities[hit_index], hit_coord, hit_normal);
 }
 
 template <typename T>

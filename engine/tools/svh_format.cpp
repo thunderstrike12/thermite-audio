@@ -106,6 +106,8 @@ std::unique_ptr<Svt64> decode_svt64_tree(const std::span<const char>& svt64_data
     auto tree = std::make_unique<Svt64>();
     tree->node_count = header.tree_node_count;
     tree->voxel_count = header.voxel_count;
+    tree->voxels_capacity = header.voxel_count + SVT64_BUFFER_MEMORY;
+    tree->nodes_capacity = header.tree_node_count + SVT64_BUFFER_MEMORY;
     tree->depth = header.depth;
 
     tree->palette = read_data<MaterialPalette>(data_pointer);
@@ -199,11 +201,11 @@ void recurse_encode_voxel_node(const VoxelSceneNode& node, const uint32_t parent
 
 }  // namespace
 
-bool decode_svh(const std::vector<char>& data, VoxelSceneNode& hierarchy) {
+std::vector<VoxelSceneNode> decode_svh(const std::vector<char>& data) {
     const auto* data_pointer = data.data();
 
     const auto& file_header = read_data<FileHeader>(data_pointer);
-    if (file_header.magic_number != MAGIC_NUMBER) return false;  // Make sure the magic number matches.
+    if (file_header.magic_number != MAGIC_NUMBER) return {};  // Make sure the magic number matches.
     assert(
         (file_header.major_version < CURRENT_MAJOR_VERSION || (file_header.major_version == CURRENT_MAJOR_VERSION && file_header.minor_version <= CURRENT_MINOR_VERSION)) &&
         "File format version not supported!"
@@ -217,12 +219,19 @@ bool decode_svh(const std::vector<char>& data, VoxelSceneNode& hierarchy) {
     decode_data.svt64_data = std::span<const char> {data_pointer, data.data() + data.size()};  // The rest of the file is svt64_data.
 
     size_t node_index = 0;
-    recurse_decode_scene_node(hierarchy, decode_data, node_index);
+    std::vector<VoxelSceneNode> root_nodes;
 
-    return true;
+    while (node_index < decode_data.hierarchy_nodes.size()) {
+        VoxelSceneNode& root_node = root_nodes.emplace_back();
+
+        recurse_decode_scene_node(root_node, decode_data, node_index);
+        ++node_index;
+    }
+
+    return root_nodes;
 }
 
-std::vector<char> encode_svh(const VoxelScene& scene) {
+std::vector<char> encode_svh(const std::span<VoxelSceneNode>& root_nodes) {
     std::vector<char> data {};
 
     constexpr FileHeader file_header {
@@ -233,7 +242,9 @@ std::vector<char> encode_svh(const VoxelScene& scene) {
     write_data(data, file_header);
 
     VoxelSceneEncodeData encode_data;
-    recurse_encode_voxel_node(scene.hierarchy, UINT_MAX, encode_data);
+    for (const VoxelSceneNode& root_node : root_nodes) {
+        recurse_encode_voxel_node(root_node, UINT_MAX, encode_data);
+    }
 
     HierarchyHeader hierarchy_header {
         .node_count = static_cast<uint32_t>(encode_data.hierarchy_nodes.size()),

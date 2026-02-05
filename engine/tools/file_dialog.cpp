@@ -72,7 +72,7 @@ void save_file_dialog(const std::function<void(IO::FileLocation)>& callback, con
 
     // Using path.string() instead of path.generic_string() because SDL3 will complain otherwise, it'll still work, but it'll *also* give an error.
     const std::string& default_location_string = default_location.get_absolute_path().string();
-    SDL_ShowSaveFileDialog(&multi_file_dialog_function, nullptr, engine.window.window, filters.data(), static_cast<int>(filters.size()), default_location_string.c_str());
+    SDL_ShowSaveFileDialog(&single_file_dialog_function, nullptr, engine.window.window, filters.data(), static_cast<int>(filters.size()), default_location_string.c_str());
 }
 
 }  // namespace tmt

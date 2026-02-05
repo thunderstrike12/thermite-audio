@@ -11,15 +11,15 @@
 
 #include "engine/core/ecs.hpp"
 #include "engine/core/logger.hpp"
-#include "engine/core/window.hpp"
 #include "engine/core/renderer/renderer.hpp"
-#include "engine/core/renderer/pipelines/di_pipeline.hpp"
 #include "engine/core/scenes.hpp"
 
 #include "editor/imgui/manager.hpp"
-#include "editor/core/font_manager.hpp"
-#include "engine/tools/profiler.hpp"
-#include "engine/tools/file_dialog.hpp"
+#include "editor/gizmo.hpp"
+
+/* Modes */
+#include "editor/modes/scene.hpp"
+#include "editor/modes/voxel.hpp"
 
 /* Windows */
 #include "editor/windows/hierarchy.hpp"
@@ -38,6 +38,10 @@
 #include "editor/windows/motion_math.hpp"
 #include "editor/windows/debug_lines.hpp"
 #include "editor/windows/rendering.hpp"
+#include "editor/windows/model_viewer.hpp"
+#include "editor/windows/node_hierarchy.hpp"
+#include "editor/windows/palette.hpp"
+#include "editor/windows/brush.hpp"
 
 /* Singleton */
 tmt::Editor tmt::editor;
@@ -54,26 +58,38 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     tmt::Log::info("Starting Thermite Editor...");
     imgui_manager.init();
     save_data.load();
+    gizmo.init();
 
-    windows.add<Hierarchy>();
-    windows.add<GameFlow>();
-    windows.add<Inspector>();
-    windows.add<Viewport>();
-    windows.add<Profiler>();
-    windows.add<GoapDebugger>();
-    windows.add<GoapActionEditor>();
-    windows.add<FontControl>();
-    windows.add<AudioMixer>();
-    windows.add<ScenesWindow>();
-    windows.add<AssetBrowser>();
-    windows.add<Console>();
-    windows.add<ImguiDemo>();
-    windows.add<MotionMathPreview>();
-    windows.add<DebugLines>();
-    windows.add<Rendering>();
+    mode_handlers[Mode::SCENE] = std::make_unique<SceneMode>();
+    mode_handlers[Mode::VOXEL] = std::make_unique<VoxelMode>();
 
-    for (auto& window : windows) {
-        window->on_editor_start();
+    windows[Mode::SCENE].add<Hierarchy>();
+    windows[Mode::SCENE].add<GameFlow>();
+    windows[Mode::SCENE].add<Inspector>();
+    windows[Mode::SCENE].add<Viewport>();
+    windows[Mode::SCENE].add<Profiler>();
+    windows[Mode::SCENE].add<GoapDebugger>();
+    windows[Mode::SCENE].add<GoapActionEditor>();
+    windows[Mode::SCENE].add<FontControl>();
+    windows[Mode::SCENE].add<AudioMixer>();
+    windows[Mode::SCENE].add<ScenesWindow>();
+    windows[Mode::SCENE].add<AssetBrowser>();
+    windows[Mode::SCENE].add<Console>();
+    windows[Mode::SCENE].add<ImguiDemo>();
+    windows[Mode::SCENE].add<MotionMathPreview>();
+    windows[Mode::SCENE].add<DebugLines>();
+    windows[Mode::SCENE].add<Rendering>();
+
+    engine.scenes.register_scene<VoxelEditScene>();
+    windows[Mode::VOXEL].add<ModelViewer>();
+    windows[Mode::VOXEL].add<NodeHierarchy>();
+    windows[Mode::VOXEL].add<Palette>();
+    windows[Mode::VOXEL].add<Brush>();
+
+    for (auto& [mode, collection] : windows) {
+        for (const auto& window : collection) {
+            window->on_editor_start();
+        }
     }
 }
 
@@ -86,12 +102,12 @@ void Editor::on_engine_update(const FrameData& time) {
 
     main_menu_bar();
 
-    for (auto& window : windows) {
+    for (const auto& window : windows[editor_mode]) {
         window->on_editor_update(time);
     }
 
     auto& open_windows = editor.save_data.open_windows;
-    for (auto& window : windows) {
+    for (const auto& window : windows[editor_mode]) {
         const auto& name = window->get_title();
         TMT_ZONE_SCOPED_STRING(name);
 
@@ -117,14 +133,18 @@ void Editor::on_engine_update(const FrameData& time) {
 }
 
 void Editor::on_engine_fixed_update(const FrameData& time) {
-    for (auto& window : windows) {
+    for (const auto& window : windows[editor_mode]) {
         window->on_editor_fixed_update(time);
     }
 }
 
 void Editor::on_engine_end() {
-    for (auto& window : windows) {
-        window->on_editor_end();
+    mode_handlers.clear();
+
+    for (auto& [mode, collection] : windows) {
+        for (const auto& window : collection) {
+            window->on_editor_end();
+        }
     }
 
     tmt::Log::info("Shutting down Thermite Editor...");
@@ -134,21 +154,10 @@ void Editor::on_engine_end() {
 
 void Editor::main_menu_bar() {
     if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Import Assets...")) {
-                windows.get<AssetBrowser>().import_assets_dialog();
-            }
-            ImGui::EndMenu();
-        }
+        mode_handlers[editor_mode]->display_main_menu();
 
-        if (ImGui::BeginMenu("Scene")) {
-            if (ImGui::MenuItem("Save Scene")) {
-                engine.scenes.serialize_active_scene();
-            }
-            ImGui::EndMenu();
-        }
         if (ImGui::BeginMenu("Windows")) {
-            for (const auto& window : windows) {
+            for (const auto& window : windows[editor_mode]) {
                 const auto& name = window->get_title();
                 bool& open = save_data.open_windows[name];
                 ImGui::MenuItem(name.c_str(), nullptr, &open);
@@ -158,21 +167,17 @@ void Editor::main_menu_bar() {
 
         if (ImGui::BeginMenu("Renderer")) {
             /* List of display mode labels */
-            const char* DISPLAY_MODE_LABELS[] {"Default", "Steps (0..128)", "Visibility", "Depth (0..100)", "Normals", "Albedo", "Illuminance"};
+            static const std::vector<std::string> DISPLAY_MODE_LABELS {"Default", "Steps (0..128)", "Visibility", "Depth (0..100)", "Normals", "Albedo", "Illuminance"};
 
             static uint32_t display_mode_index = 0u;
-            const std::string display_mode = DISPLAY_MODE_LABELS[display_mode_index];
+            const std::string& display_mode = DISPLAY_MODE_LABELS[display_mode_index];
 
             if (ImGui::BeginMenu(("Display Mode (" + display_mode + ")").c_str())) {
                 /* Render all display mode options */
-                constexpr uint32_t COUNT = sizeof(DISPLAY_MODE_LABELS) / sizeof(char*);
-                const char* SELECTED_PREFIX = "* ";
-                const char* DEFAULT_PREFIX = "";
-                for (uint32_t i = 0u; i < COUNT; ++i) {
+                for (uint32_t i = 0u; i < DISPLAY_MODE_LABELS.size(); ++i) {
                     const bool selected = engine.renderer.display_mode == magic_enum::enum_cast<DisplayMode>(i).value_or(DisplayMode::DEFAULT);
-                    const std::string prefix = selected ? SELECTED_PREFIX : DEFAULT_PREFIX;
 
-                    if (ImGui::MenuItem((prefix + DISPLAY_MODE_LABELS[i]).c_str())) {
+                    if (ImGui::MenuItem(DISPLAY_MODE_LABELS[i].c_str(), nullptr, selected)) {
                         display_mode_index = i;
                         engine.renderer.display_mode = magic_enum::enum_cast<DisplayMode>(i).value_or(DisplayMode::DEFAULT);
                     }
@@ -180,31 +185,23 @@ void Editor::main_menu_bar() {
                 ImGui::EndMenu();
             }
 
-            /* List of shading rate labels */
-            const char* SHADING_RATE_LABELS[] {"Full-Rate", "Half-Rate (1:2)", "Quarter-Rate (1:4)"};
-
-            static uint32_t shading_rate_index = 0u;
-            const std::string shading_rate = SHADING_RATE_LABELS[shading_rate_index];
-
-            if (ImGui::BeginMenu(("Shading Rate (" + shading_rate + ")").c_str())) {
-                /* Render all shading rate options */
-                constexpr uint32_t COUNT = sizeof(SHADING_RATE_LABELS) / sizeof(char*);
-                const char* SELECTED_PREFIX = "* ";
-                const char* DEFAULT_PREFIX = "";
-                for (uint32_t i = 0u; i < COUNT; ++i) {
-                    const bool selected = engine.renderer.di_pipeline.get_shading_rate() == magic_enum::enum_cast<ShadingRate>(i).value_or(ShadingRate::FULL_RATE);
-                    const std::string prefix = selected ? SELECTED_PREFIX : DEFAULT_PREFIX;
-
-                    if (ImGui::MenuItem((prefix + SHADING_RATE_LABELS[i]).c_str())) {
-                        shading_rate_index = i;
-                        engine.renderer.di_pipeline.set_shading_rate(magic_enum::enum_cast<ShadingRate>(i).value_or(ShadingRate::FULL_RATE));
-                    }
-                }
-                ImGui::EndMenu();
-            }
-
             ImGui::EndMenu();
         }
+
+        ImGui::BeginDisabled(engine.game_controller.is_playing());
+        if (ImGui::BeginMenu("Editor Mode")) {
+            for (auto&& [mode, handler] : mode_handlers) {
+                const bool is_selected = (editor_mode == mode);
+                if (!ImGui::MenuItem(handler->get_name().c_str(), nullptr, is_selected) || is_selected) continue;
+
+                mode_handlers[editor_mode]->on_switch_away();
+                editor_mode = mode;
+
+                handler->on_switch_to();
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndDisabled();
 
         ImGui::EndMainMenuBar();
     }

@@ -24,8 +24,8 @@ namespace {
 // Function from: https://stackoverflow.com/questions/67144806/c-check-if-path-is-outside-a-given-directory
 // Function to check if a file path is below a certain directory/folder in the file hierarchy.
 bool directory_contains_path(const std::filesystem::path& directory, const std::filesystem::path& path) {
-    const auto& cannon_directory = canonical(directory);
-    const auto& cannon_path = canonical(path);
+    const std::filesystem::path& cannon_directory = canonical(directory);
+    const std::filesystem::path& cannon_path = (exists(path) ? canonical(path) : path);
 
     auto directory_iterator = cannon_directory.begin();
     for (const auto& sub_path : cannon_path) {
@@ -231,11 +231,6 @@ TimeStamp IO::get_file_last_modified_time(const FileLocation& file_location) {
 }
 
 IO::FileLocation IO::path_to_file_location(const std::filesystem::path& path) {
-    if (!exists(path)) {
-        Log::error("Failed to make FileLocation from path: path does not exist.");
-        return {};
-    }
-
     size_t location_index = 0;
     for (const std::filesystem::path& sub_location : sub_locations) {
         if (directory_contains_path(sub_location, path)) return {static_cast<Location>(location_index), relative(path, absolute(sub_location))};

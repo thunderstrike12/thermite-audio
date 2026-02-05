@@ -76,9 +76,9 @@ class Resources {
     }
 
     /* Runtime resources loading that takes in a file resource */
-    template <typename T>
+    template <typename T, typename... Args>
         requires std::derived_from<T, RuntimeResource<typename T::ResourceType>>
-    ResourceRef<T> copy_resource(const ResourceRef<typename T::ResourceType>& file_resource) {
+    ResourceRef<T> copy_resource(const ResourceRef<typename T::ResourceType>& file_resource, Args&&... args) {
         if (file_resource == nullptr) {
             Log::error(Log::Scope::ENGINE, "[Resources] Cannot copy nullptr file resource");
             ResourceRef<T> ref;
@@ -90,7 +90,7 @@ class Resources {
             return ref;
         }
 
-        std::shared_ptr<T> resource = std::make_shared<T>(file_resource.resource);
+        std::shared_ptr<T> resource = std::make_shared<T>(file_resource.resource, std::forward<Args>(args)...);
 
         if (!resource->load()) {
             tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to load runtime resource!");

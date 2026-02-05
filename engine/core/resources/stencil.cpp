@@ -6,11 +6,17 @@
 namespace tmt {
 
 /* Recursively find the first model inside a voxel model hierarchy. */
-const VoxelSceneNode* first_model(const VoxelSceneNode* parent);
+const VoxelSceneNode* first_model(const VoxelSceneNode& parent);
 
 bool Stencil::load() {
     // TEMP: It's currently just grabbing the first model node
-    const VoxelSceneNode* model = first_model(&file_resource->hierarchy);
+    const VoxelSceneNode* model = nullptr;
+    for (VoxelSceneNode& root_node : file_resource->root_nodes) {
+        model = first_model(root_node);
+
+        if (model != nullptr) break;  // If a first node was found in a root node, then we exit the loop.
+    }
+
     if (model == nullptr || model->tree == nullptr) return false;
 
     // Initialize uniform grid sized to the model dimensions

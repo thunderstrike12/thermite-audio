@@ -167,6 +167,12 @@ if (THERMITE_EDITOR_BUILD)
     target_compile_features(imgui-console PUBLIC cxx_std_17)
     target_link_libraries(imgui-console PUBLIC csys)
 
+    # ogt_voxel_meshify - voxel to mesh
+    # https://github.com/jpaver/opengametools
+    target_include_directories(thermite-editor
+        PRIVATE "./ogt"
+    )
+
 endif()
 
 

@@ -3,6 +3,8 @@
 namespace tmt {
 
 Hit VoxelObject::intersect(Ray ray, const float tmax) const {
+    if (!volume->blas) return Hit();
+
     /* Transform the ray into the local space of the object */
     const glm::vec3 world_origin = ray.origin;
     ray.origin = glm::vec3(world_to_local * glm::vec4(ray.origin, 1.0f));
@@ -37,8 +39,19 @@ Hit VoxelObject::intersect(Ray ray, const float tmax) const {
     const float hit_dist = distance(world_origin, hit_point);
     if (hit_dist > tmax) return Hit(); /* miss */
 
+    /* Calculate world-space hit normal */
+    glm::vec3 hit_normal = glm::vec3(local_to_world * glm::vec4(local_hit.normal, 0.0f));
+    if (glm::length(hit_normal) > 1.0f) {
+        const glm::vec3 entry_ndc = entry_uvw * 2.0f - 1.0f;
+        const glm::vec3 entry_abs = glm::abs(entry_ndc);
+        const float max_axis = glm::max(entry_abs.x, glm::max(entry_abs.y, entry_abs.z));
+        hit_normal = glm::vec3(
+            entry_abs.x == max_axis ? glm::sign(entry_ndc.x) : 0.0f, entry_abs.y == max_axis ? glm::sign(entry_ndc.y) : 0.0f, entry_abs.z == max_axis ? glm::sign(entry_ndc.z) : 0.0f
+        );
+    }
+
     /* Overwrite the current hit with the closer one */
-    return Hit(hit_dist, {}, local_hit.coord);
+    return Hit(hit_dist, {}, local_hit.coord, glm::normalize(hit_normal));
 }
 
 }  // namespace tmt
