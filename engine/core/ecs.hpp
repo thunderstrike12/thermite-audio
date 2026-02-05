@@ -92,7 +92,7 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
         if constexpr (COUNT == 1) {
             return EcsComponentTraits<Component...>::add(registry, entity);
         } else {
-            return std::make_tuple(add_component<Component>(entity)...);
+            return std::forward_as_tuple(add_component<Component>(entity)...);
         }
     }
 
@@ -114,7 +114,7 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
         if constexpr (COUNT == 1) {
             return EcsComponentTraits<Component...>::get(registry, entity);
         } else {
-            return std::make_tuple(get_component<Component>(entity)...);
+            return std::forward_as_tuple(get_component<Component>(entity)...);
         }
     }
 
@@ -125,7 +125,7 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
         if constexpr (COUNT == 1) {
             return EcsComponentTraits<Component...>::get(registry, entity);
         } else {
-            return std::make_tuple(get_component<Component>(entity)...);
+            return std::forward_as_tuple(get_component<Component>(entity)...);
         }
     }
 
