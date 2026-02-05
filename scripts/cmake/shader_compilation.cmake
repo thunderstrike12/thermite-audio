@@ -35,6 +35,11 @@ function(compile_shaders)
             )
         endif()
 
+        set(SHADER_DEBUG_FLAG "")
+        if (THERMITE_DEBUG_BUILD)
+            set(SHADER_DEBUG_FLAG --debug)
+        endif()
+
         add_custom_command(
             OUTPUT ${OUTPUT_SPV}
             COMMAND ${Python3_EXECUTABLE}
@@ -44,6 +49,7 @@ function(compile_shaders)
                     --output ${OUTPUT_SPV}
                     --root ${SHADER_SOURCE_DIR}
                     --depfile ${DEPFILE}
+                    ${SHADER_DEBUG_FLAG}
             DEPENDS ${SHADER}
             ${DEPFILE_OPT}
             COMMENT "Compiling shader: ${REL_PATH_NO_EXT}"

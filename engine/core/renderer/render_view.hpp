@@ -25,6 +25,8 @@ struct GpuView {
     glm::uvec2 resolution {1, 1};
     /* Index of the current frame. */
     glm::uint frame_index = 0u;
+    /* Delta Time in seconds. */
+    glm::float32 dt {};
 };
 
 /* Screen buffer resource. */

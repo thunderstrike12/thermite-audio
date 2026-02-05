@@ -3,6 +3,7 @@
 #include "engine/core/resources.hpp"
 #include "engine/core/resources/voxel_volume.hpp"
 #include "engine/core/components/transform.hpp"
+#include "engine/core/components/emitter.hpp"
 #include "engine/core/components/camera.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
 #include "engine/core/input/input.hpp"
@@ -32,6 +33,8 @@ class DragonScene : public tmt::Scene<DragonScene> {
     void on_end() override;
 
     tmt::Entity voxel {};
+    tmt::Entity emitter1 {};
+    tmt::Entity emitter2 {};
     float elapsed_time = 0.0f;
 };
 
@@ -92,7 +95,37 @@ void DragonScene::on_start() {
     // generate_random_entities(voxel_volume);
 
     /* Load a Bojan */
-    tmt::engine.resources.load_resource<tmt::Texture2D>({tmt::IO::Location::PROJECT, "bojan.png"}, "Bojan");
+    tmt::ResourceRef<tmt::Texture2D> tex = tmt::engine.resources.load_resource<tmt::Texture2D>({tmt::IO::Location::PROJECT, "bojan.png"});
+
+    /* Particle Emitters */
+    {
+        emitter1 = tmt::engine.ecs.create_entity("Emitter 1");
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(emitter1);
+        auto& p_emitter = tmt::engine.ecs.add_component<tmt::ParticleEmitter>(emitter1);
+        p_emitter.pos = transform.get_world_position();
+        p_emitter.dir = {0.0f, 1.0f, 0.0f};
+        p_emitter.cone_angle = 90.0f;
+        p_emitter.min_speed = 2.0f;
+        p_emitter.max_speed = 7.0f;
+        p_emitter.particle_lifetime = 3.0f;
+        p_emitter.spawn_count = 4900;
+        p_emitter.active = true;
+        p_emitter.texture = tex;
+
+        emitter2 = tmt::engine.ecs.create_entity("Emitter 2");
+        auto& transform2 = tmt::engine.ecs.get_component<tmt::Transform>(emitter2);
+        auto& p2_emitter = tmt::engine.ecs.add_component<tmt::ParticleEmitter>(emitter2);
+        transform2.set_world_position({20.0f, 0.0f, 0.0f});
+        p2_emitter.pos = transform2.get_world_position();
+        p2_emitter.dir = {0.0f, 1.0f, 0.0f};
+        p2_emitter.cone_angle = 90.0f;
+        p2_emitter.min_speed = 2.0f;
+        p2_emitter.max_speed = 7.0f;
+        p2_emitter.particle_lifetime = 3.0f;
+        p2_emitter.spawn_count = 5000;
+        p2_emitter.active = true;
+        p2_emitter.texture = tex;
+    }
 }
 
 #include "engine/core/renderer/renderer.hpp"
@@ -124,6 +157,25 @@ void DragonScene::on_update(const tmt::FrameData& /*time*/) {
     // if (tmt::engine.input.is_keyboard_button_released(tmt::Key::SPACE)) {
     //     tmt::engine.scenes.enqueue_scene<TableScene>();
     // }
+
+    /* Emitter Update */
+    {
+        auto& e_transform = tmt::engine.ecs.get_component<tmt::Transform>(emitter1);
+        auto& p_emitter = tmt::engine.ecs.get_component<tmt::ParticleEmitter>(emitter1);
+        p_emitter.pos = e_transform.get_world_position();
+
+        auto& e2_transform = tmt::engine.ecs.get_component<tmt::Transform>(emitter2);
+        auto& p2_emitter = tmt::engine.ecs.get_component<tmt::ParticleEmitter>(emitter2);
+        p2_emitter.pos = e2_transform.get_world_position();
+
+        /* Burst Both Emitters */
+        if (tmt::engine.input.is_keyboard_button_just_pressed(tmt::Key::O)) {
+            p_emitter.active = true;
+        }
+        if (tmt::engine.input.is_keyboard_button_just_pressed(tmt::Key::P)) {
+            p2_emitter.active = true;
+        }
+    }
 }
 
 void DragonScene::on_end() {}

@@ -15,6 +15,7 @@
 #include "engine/engine.hpp"
 #include "engine/core/io.hpp"
 #include "pipelines/polyline_pipeline.hpp"
+#include "pipelines/vfx_pipeline.hpp"
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/di_pipeline.hpp"
 #include "tools/profiler.hpp"
@@ -22,11 +23,17 @@
 namespace tmt {
 
 Renderer::Renderer()
-    : gpu(*new GPUAdapter()), render_graph(*new RenderGraph()), geometry_pipeline(*new GeometryPipeline()), di_pipeline(*new DiPipeline()), polyline_pipeline(*new PolylinePipeline()) {}
+    : gpu(*new GPUAdapter()),
+      render_graph(*new RenderGraph()),
+      geometry_pipeline(*new GeometryPipeline()),
+      di_pipeline(*new DiPipeline()),
+      polyline_pipeline(*new PolylinePipeline()),
+      vfx_pipeline(*new VfxPipeline()) {}
 
 Renderer::~Renderer() {
     delete &polyline_pipeline;
     delete &di_pipeline;
+    delete &vfx_pipeline;
     delete &geometry_pipeline;
     delete &render_graph;
     delete &gpu;
@@ -85,6 +92,7 @@ void Renderer::init() {
     /* Initialize pipelines */
     polyline_pipeline.init(gpu);
     di_pipeline.init(gpu);
+    vfx_pipeline.init(gpu);
 
     debug_transform.set_local_position({0.0f, 0.0f, -1.0f});
 }
@@ -111,8 +119,22 @@ void Renderer::update() {
 
     /* Enqueue pipelines */
     geometry_pipeline.enqueue(render_graph, render_view, scene_view);
+    /* clang-format on */
+    /* Depth transfer pass */
+    const glm::uvec2 render_res = render_view.gpu_view.resolution;
+    RasterNode& transfer_pass = render_graph.add_raster_pass("depth transfer pass", "depth_transfer.vx", "depth_transfer.px")
+                                    .topology(Topology::TriangleList)
+                                    .read(render_view.render_view_buffer, ShaderStages::Pixel)
+                                    .read(render_view.vbuffer.image, ShaderStages::Pixel)
+                                    .read(scene_view.object_data, ShaderStages::Pixel)
+                                    .load_op_depth(LoadOp::Clear) /* Clear the depth buffer */
+                                    .depth_stencil(render_view.dbuffer.image, true, true)
+                                    .raster_extent(render_res.x, render_res.y);
+    transfer_pass.draw(NULL_BUFFER, 3u);
+    /* clang-format off */
     di_pipeline.enqueue(render_graph, render_view, scene_view);
     polyline_pipeline.enqueue(render_graph, render_view, scene_view);
+    vfx_pipeline.enqueue(render_graph, render_view);
 
 #ifdef THERMITE_EDITOR
     /* Add the immediate mode GUI to the render graph */
@@ -142,6 +164,7 @@ void Renderer::end() {
     /* Pipelines cleanup */
     polyline_pipeline.deinit(gpu);
     di_pipeline.deinit(gpu);
+    vfx_pipeline.deinit(gpu);
 
     /* Cleanup the VRAM bank & GPU adapter */
     render_graph.deinit().expect("failed to destroy render graph.");

@@ -50,17 +50,7 @@ void PolylinePipeline::enqueue(RenderGraph& render_graph, RenderView& render_vie
 
     /* clang-format off */
 
-    /* Depth transfer pass */
     const glm::uvec2 render_res = render_view.gpu_view.resolution;
-    RasterNode& transfer_pass = render_graph.add_raster_pass("depth transfer pass", "depth_transfer.vx", "depth_transfer.px")
-        .topology(Topology::TriangleList)
-        .read(render_view.render_view_buffer, ShaderStages::Pixel)
-        .read(render_view.vbuffer.image, ShaderStages::Pixel)
-        .read(scene_view.object_data, ShaderStages::Pixel)
-        .load_op_depth(LoadOp::Clear) /* Clear the depth buffer */
-        .depth_stencil(render_view.dbuffer.image, true, true)
-        .raster_extent(render_res.x, render_res.y);
-    transfer_pass.draw(NULL_BUFFER, 3u);
 
     /* Polyline render pass */
     RasterNode& line_pass = render_graph.add_raster_pass("polyline pass", "polyline.vx", "polyline.px")
