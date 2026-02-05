@@ -17,8 +17,8 @@ class ChasePlayer : public tmt::GoapAction {
 
     std::string get_id() const override { return "ChasePlayer"; };
 
-    void on_start(tmt::Entity, tmt::Registry&) override;
-    void on_tick(tmt::Entity agent, tmt::Registry& ecs, float dt) override;
-    bool is_done(tmt::Entity agent, tmt::Registry& ecs) const override;
-    void on_finished(tmt::Entity, tmt::Registry&) override {}
+    void on_start(tmt::Entity) override;
+    void on_tick(tmt::Entity agent, float dt) override;
+    bool is_done(tmt::Entity agent) const override;
+    void on_finished(tmt::Entity) override {}
 };

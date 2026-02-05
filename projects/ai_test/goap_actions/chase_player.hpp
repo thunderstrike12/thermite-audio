@@ -18,15 +18,15 @@ class ChasePlayer : public GoapAction {
     float time_chasing = 0.f;
     float chase_duration = 1.f;  // seconds
 
-    void on_start(Entity /*agent*/, Registry& /*ecs*/) override { time_chasing = 0.f; }
+    void on_start(Entity /*agent*/) override { time_chasing = 0.f; }
 
-    void on_tick(Entity /*agent*/, Registry& /*ecs*/, float dt) override { time_chasing += dt; }
+    void on_tick(Entity /*agent*/, float dt) override { time_chasing += dt; }
 
-    bool is_done(Entity /*agent*/, Registry& /*ecs*/) const override { return time_chasing >= chase_duration; }
+    bool is_done(Entity /*agent*/) const override { return time_chasing >= chase_duration; }
 
-    void on_finished(Entity /*agent*/, Registry& /*ecs*/) override {}
+    void on_finished(Entity /*agent*/) override {}
 
-    void on_interrupt(Entity /*agent*/, Registry& /*ecs*/) override {}
+    void on_interrupt(Entity /*agent*/) override {}
 };
 
 }  // namespace tmt

@@ -22,15 +22,15 @@ class KillPlayer : public GoapAction {
     float time_killing = 0.f;
     float kill_duration = 0.5f;  // seconds
 
-    void on_start(Entity /*agent*/, Registry& /*ecs*/) override { time_killing = 0.f; }
+    void on_start(Entity /*agent*/) override { time_killing = 0.f; }
 
-    void on_tick(Entity /*agent*/, Registry& /*ecs*/, float dt) override { time_killing += dt; }
+    void on_tick(Entity /*agent*/, float dt) override { time_killing += dt; }
 
-    bool is_done(Entity /*agent*/, Registry& /*ecs*/) const override { return time_killing >= kill_duration; }
+    bool is_done(Entity /*agent*/) const override { return time_killing >= kill_duration; }
 
-    void on_finished(Entity /*agent*/, Registry& /*ecs*/) override {}
+    void on_finished(Entity /*agent*/) override {}
 
-    void on_interrupt(Entity /*agent*/, Registry& /*ecs*/) override {}
+    void on_interrupt(Entity /*agent*/) override {}
 };
 
 }  // namespace tmt

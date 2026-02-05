@@ -50,10 +50,10 @@ struct GoapAgentType {
 class GoapAgentTypeRegistry {
    public:
     // Get the singleton instance of the registry.
-    static GoapAgentTypeRegistry& instance() {
+    /*static GoapAgentTypeRegistry& instance() {
         static GoapAgentTypeRegistry inst;
         return inst;
-    }
+    }*/
 
     // Registers a new agent type
     void register_type(const GoapAgentType& type) { types[type.id] = type; }

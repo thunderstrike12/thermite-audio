@@ -5,6 +5,10 @@
 #include "components/goap_agent.hpp"
 #include "components/goap_action_editor_data.hpp"
 #include "components/goap_action_overrides.hpp"
+#include "components/goap_agent_type_registry.hpp"
+#include "components/goap_action_registry.hpp"
+#include "components/goap_goal_registry.hpp"
+#include "components/goap_action_overrides.hpp"
 
 /**
  * Class Goap
@@ -26,6 +30,12 @@ namespace tmt {
 class Goap : public ISystem {
    public:
     Goap() = default;
+
+    // Publicly accesable registries
+    GoapActionRegistry& actions() { return action_registry; }
+    GoapActionOverrides& overrides() { return action_overrides; }
+    GoapGoalRegistry& goals() { return goal_registry; }
+    GoapAgentTypeRegistry& agent_types() { return agent_type_registry; }
 
     // Inherited via ISystem
     std::string get_name() override { return "Goap System"; }
@@ -51,8 +61,15 @@ class Goap : public ISystem {
     // Builds a plan toward the current goal (A*).
     void update_plan(Entity entity, GoapAgent& agent, WorldState& ws);
 
-    // Executes or advances the current action.
-    void update_action(Entity entity, GoapAgent& agent, WorldState& ws, float dt);
+    // Starts & validates the current action, actual running of the action happens
+    // in on_update() and on_fixed_update().
+    void update_action(Entity entity, GoapAgent& agent, WorldState& ws);
+
+    // Registries & overrides
+    GoapActionRegistry action_registry;
+    GoapActionOverrides action_overrides;
+    GoapGoalRegistry goal_registry;
+    GoapAgentTypeRegistry agent_type_registry;
 
     // Set to true if you want more logging to see whats happening internally
     bool show_logging = false;

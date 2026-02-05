@@ -19,10 +19,10 @@ namespace tmt {
  */
 class GoapGoalRegistry {
    public:
-    static GoapGoalRegistry& instance() {
+    /*static GoapGoalRegistry& instance() {
         static GoapGoalRegistry inst;
         return inst;
-    }
+    }*/
 
     void register_goal(const std::string& id, const GoapGoal& goal) { goals[id] = goal; }
 

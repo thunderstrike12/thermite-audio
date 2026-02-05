@@ -11,6 +11,7 @@
 #include "engine/systems/ai/goap/components/goap_agent_type_registry.hpp"
 #include "engine/systems/ai/goap/components/goap_action_registry.hpp"
 #include "engine/systems/ai/goap/goap_system.hpp"
+#include "engine/core/logger.hpp"
 
 #include <extern/imgui-node-editor/imgui_node_editor.h>
 namespace ignode = ax::NodeEditor;
@@ -55,37 +56,6 @@ void GoapDebugger::display() {
     }
 
     ImGui::Begin("GOAP Debugger");
-
-    //// --- Agent Selector ---
-    // if (!agents.empty()) {
-    //     static std::vector<std::string> agent_name_storage;
-    //     agent_name_storage.clear();
-
-    //    std::vector<const char*> agent_names;
-    //    for (auto a : agents) {
-    //        agent_name_storage.emplace_back("Agent " + std::to_string((uint32_t)a));
-    //        agent_names.push_back(agent_name_storage.back().c_str());
-    //    }
-
-    //    static int current_index = 0;
-    //    if (selected_agent != entt::null) {
-    //        for (size_t i = 0; i < agents.size(); ++i) {
-    //            if (agents[i] == selected_agent) current_index = (int)i;
-    //        }
-    //    }
-
-    //    static const char* combo_preview_val = "Select Agent..";
-    //    if (ImGui::BeginCombo("Select Agent", combo_preview_val)) {
-    //        for (auto agent : agents) {
-    //            const char*& name = agent_names[static_cast<uint32_t>(agent) - 1];
-    //            if (ImGui::Selectable(name)) {
-    //                selected_agent = agents[current_index];
-    //                combo_preview_val = name;
-    //            }
-    //        }
-    //        ImGui::EndCombo();
-    //    }
-    //}
 
     // --- Agent Selector ---
     if (!agents.empty()) {
@@ -158,7 +128,17 @@ void GoapDebugger::display() {
  * Allows forcing a manual replan if needed.
  */
 void GoapDebugger::draw_details_view(GoapAgent& agent, WorldState& ws) {
-    auto& overrides = GoapActionOverrides::instance();
+    // auto& overrides = GoapActionOverrides::instance();
+    auto& ecs = engine.ecs;
+
+    // --- Get GOAP system ---
+    Goap* goap = ecs.systems.try_get<Goap>();
+    if (!goap) {
+        Log::warn("GOAP system not active.");
+        return;
+    }
+
+    auto& overrides = goap->overrides();
 
     // --- Active goal ---
     if (agent.has_goal()) {

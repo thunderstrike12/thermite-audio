@@ -1,6 +1,6 @@
 #pragma once
 #include "editor/core/window.hpp"
-#include "engine/systems/ai//goap/components/goap_action_overrides.hpp"
+#include "engine/systems/ai/goap/components/goap_action_overrides.hpp"
 
 namespace tmt {
 

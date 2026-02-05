@@ -12,38 +12,60 @@
 #include "goap_agent_factory.hpp"
 #include "goap_agent_type_registry.hpp"
 
+#include "../goap_system.hpp"
+
 namespace tmt {
 
-void GoapAgentFactory::spawn_agent_from_type(const std::string& type_id, const Entity e) {
+void GoapAgentFactory::spawn_agent_from_type(const std::string& type_id, Entity e) {
     auto& ecs = engine.ecs;
 
+    // --- Get GOAP system ---
+    Goap* goap = ecs.systems.try_get<Goap>();
+    if (!goap) {
+        Log::warn("GOAP system not active, cannot spawn agent '{}'", type_id);
+        return;
+    }
+
+    auto& type_registry = goap->agent_types();
+    auto& action_registry = goap->actions();
+    auto& goal_registry = goap->goals();
+
     // --- Look up the agent type ---
-    auto* type = GoapAgentTypeRegistry::instance().get(type_id);
+    const GoapAgentType* type = type_registry.get(type_id);
     if (!type) {
         Log::warn("Unknown agent type: {}", type_id);
         return;
     }
 
+    // --- Required components ---
+    ecs.get_component<Transform>(e);  // ensure exists
     // --- Create the entity ---
     auto& agent = ecs.add_component<GoapAgent>(e);
     auto& ws = ecs.add_component<WorldState>(e);
 
     // --- Assign actions ---
-    for (auto& id : type->action_ids) {
-        if (auto* a = GoapActionRegistry::instance().get(id)) {
-            agent.available_actions.push_back(a);
+    for (const auto& action_id : type->action_ids) {
+        if (GoapAction* action = action_registry.get(action_id)) {
+            agent.available_actions.push_back(action);
+        } else {
+            Log::warn("GOAP Agent '{}': unknown action '{}'", type_id, action_id);
         }
     }
 
     // --- Assign goals ---
-    for (auto& gid : type->goal_ids) {
-        if (auto* g = GoapGoalRegistry::instance().get(gid)) {
-            agent.available_goals.push_back(*g);
+    for (const auto& goal_id : type->goal_ids) {
+        if (const GoapGoal* goal = goal_registry.get(goal_id)) {
+            agent.available_goals.push_back(*goal);
+        } else {
+            Log::warn("GOAP Agent '{}': unknown goal '{}'", type_id, goal_id);
         }
     }
 
     // --- Initialize world state ---
     ws.facts = type->default_world_state;
+
+    // Force initial planning
+    agent.needs_replan = true;
 }
 
 }  // namespace tmt

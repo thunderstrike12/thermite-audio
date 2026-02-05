@@ -22,8 +22,6 @@ class GoapActionOverrides {
     // Map of action ID to override data
     std::unordered_map<std::string, GoapActionEditorData> data;
 
-    static GoapActionOverrides& instance();
-
     // Access override data for the given action ID.
     GoapActionEditorData& get(const std::string& id);
 

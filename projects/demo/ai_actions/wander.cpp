@@ -5,12 +5,13 @@
 #include "engine/systems/ai/navigation/nav_mesh.hpp"
 #include "../components/walking.hpp"
 #include "engine/core/components/camera.hpp"
+#include "engine/engine.hpp"
 
 #include "engine/core/polyline.hpp"
 
 #include <cstdlib>
 
-void Wander::on_start(tmt::Entity, tmt::Registry&) {
+void Wander::on_start(tmt::Entity) {
     for (const auto& [camEntity, camera] : tmt::engine.ecs.get_registry().view<tmt::Camera>().each()) {
         player = camEntity;
         break;
@@ -20,7 +21,7 @@ void Wander::on_start(tmt::Entity, tmt::Registry&) {
     has_path = false;
 }
 
-void Wander::on_tick(tmt::Entity walking_entity, tmt::Registry& ecs, float dt) {
+void Wander::on_tick(tmt::Entity walking_entity, float dt) {
     const auto& walking = tmt::engine.ecs.get_component<Walking>(walking_entity);
     auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(walking.walkable_asteroid);
 
@@ -32,7 +33,8 @@ void Wander::on_tick(tmt::Entity walking_entity, tmt::Registry& ecs, float dt) {
 
     // in chase range, update world state
     if (dist < walking.max_chase_distance) {
-        auto& ws = ecs.get<tmt::WorldState>(walking_entity);
+        auto& ecs = tmt::engine.ecs;
+        auto& ws = ecs.get_component<tmt::WorldState>(walking_entity);
         ws.facts[std::hash<std::string>()("player_in_range")] = true;
         done_walking = true;
         return;
@@ -70,4 +72,4 @@ void Wander::on_tick(tmt::Entity walking_entity, tmt::Registry& ecs, float dt) {
     }
 }
 
-bool Wander::is_done(tmt::Entity agent, tmt::Registry& ecs) const { return false; }
+bool Wander::is_done(tmt::Entity) const { return false; }

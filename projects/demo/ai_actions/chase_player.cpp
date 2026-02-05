@@ -5,12 +5,13 @@
 // todo: make projects not have to use realtive paths
 #include "../components/walking.hpp"
 #include "engine/core/components/camera.hpp"
+#include "engine/engine.hpp"
 
 #include "engine/core/polyline.hpp"
 
 #include <cstdlib>
 
-void ChasePlayer::on_start(tmt::Entity entity, tmt::Registry& registry) {
+void ChasePlayer::on_start(tmt::Entity) {
     //
     for (const auto& [CamEntity, camera] : tmt::engine.ecs.get_registry().view<tmt::Camera>().each()) {
         player = CamEntity;
@@ -21,7 +22,7 @@ void ChasePlayer::on_start(tmt::Entity entity, tmt::Registry& registry) {
     has_path = false;
 }
 
-void ChasePlayer::on_tick(tmt::Entity walking_entity, tmt::Registry& ecs, float dt) {
+void ChasePlayer::on_tick(tmt::Entity walking_entity, float dt) {
     const auto& walking = tmt::engine.ecs.get_component<Walking>(walking_entity);
     auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(walking.walkable_asteroid);
 
@@ -33,7 +34,8 @@ void ChasePlayer::on_tick(tmt::Entity walking_entity, tmt::Registry& ecs, float 
 
     // Stop chasing only if player is too far
     if (dist > walking.max_chase_distance) {
-        auto& ws = ecs.get<tmt::WorldState>(walking_entity);
+        auto& ecs = tmt::engine.ecs;
+        auto& ws = ecs.get_component<tmt::WorldState>(walking_entity);
         ws.facts[std::hash<std::string>()("player_in_range")] = false;
         done_walking = true;
         return;
@@ -60,4 +62,4 @@ void ChasePlayer::on_tick(tmt::Entity walking_entity, tmt::Registry& ecs, float 
     }
 }
 
-bool ChasePlayer::is_done(tmt::Entity, tmt::Registry&) const { return false; }
+bool ChasePlayer::is_done(tmt::Entity) const { return false; }

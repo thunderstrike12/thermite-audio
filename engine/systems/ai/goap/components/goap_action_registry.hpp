@@ -16,10 +16,10 @@ namespace tmt {
  */
 class GoapActionRegistry {
    public:
-    static GoapActionRegistry& instance() {
+    /*static GoapActionRegistry& instance() {
         static GoapActionRegistry inst;
         return inst;
-    }
+    }*/
 
     // Register a new action.
     void register_action(std::unique_ptr<GoapAction> action) { actions[action->get_id()] = std::move(action); }

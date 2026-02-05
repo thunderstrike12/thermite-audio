@@ -10,6 +10,7 @@
 #include "engine/core/components/voxel_renderer.hpp"
 #include "engine/systems/camera/camera_system.hpp"
 
+#include "engine/systems/ai/goap/goap_system.hpp"
 #include "engine/systems/ai/goap/components/goap_agent.hpp"
 #include "engine/systems/ai/goap/components/goap_agent_type_registry.hpp"
 #include "engine/systems/ai/goap/components/goap_agent_factory.hpp"
@@ -56,8 +57,12 @@ class
     tmt::engine.component_registry.register_component<Walking>();
 
     /* Register actions */
-    auto& action_reg = tmt::GoapActionRegistry::instance();
-    auto& goal_reg = tmt::GoapGoalRegistry::instance();
+    auto& ecs = tmt::engine.ecs;
+    auto& goap = ecs.systems.get<tmt::Goap>();
+
+    auto& action_reg = goap.actions();
+    auto& goal_reg = goap.goals();
+    auto& type_reg = goap.agent_types();
 
     action_reg.register_action(std::make_unique<ChasePlayer>());
     action_reg.register_action(std::make_unique<Wander>());
@@ -92,8 +97,6 @@ class
     }
 
     dragon.goal_ids = {"ChasePlayer", "Wander"};
-
-    auto& type_reg = tmt::GoapAgentTypeRegistry::instance();
 
     type_reg.register_type(dragon);
 
