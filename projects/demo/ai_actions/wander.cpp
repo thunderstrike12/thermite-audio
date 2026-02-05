@@ -40,12 +40,14 @@ void Wander::on_tick(tmt::Entity walking_entity, float dt) {
         return;
     }
 
+    auto nm_nodes = nav_mesh.nodes;
+
     // generate wander path only once when no path
     if (!has_path) {
         // pick a random node on the nav mesh
-        if (!nav_mesh.nodes.empty()) {
-            int random_node_index = rand() % static_cast<int>(nav_mesh.nodes.size());
-            wander_target = nav_mesh.nodes[random_node_index].world_pos;
+        if (!nav_mesh.nodes->empty()) {
+            int random_node_index = rand() % static_cast<int>(nav_mesh.nodes->size());
+            wander_target = (*nm_nodes)[random_node_index].world_pos;
             has_path = true;
         }
     }
@@ -65,8 +67,8 @@ void Wander::on_tick(tmt::Entity walking_entity, float dt) {
     // Debug drawing
     if (nav_mesh.path.size() > 1) {
         for (size_t i = 0; i < nav_mesh.path.size() - 1; ++i) {
-            const glm::vec3 from = nav_mesh.nodes[nav_mesh.path[i]].world_pos;
-            const glm::vec3 to = nav_mesh.nodes[nav_mesh.path[i + 1]].world_pos;
+            const glm::vec3 from = (*nm_nodes)[nav_mesh.path[i]].world_pos;
+            const glm::vec3 to = (*nm_nodes)[nav_mesh.path[i + 1]].world_pos;
             tmt::engine.polyline.draw_line(from, to);
         }
     }

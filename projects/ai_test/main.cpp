@@ -39,8 +39,10 @@ class AIScene : public tmt::Scene<AIScene> {
 
     tmt::Entity voxel {};
     tmt::NavMesh* nav_mesh;
+    tmt::ResourceRef<tmt::VoxelVolume> volumes[3];
+    int index = 0;
     void on_start() override;
-    void on_update(const tmt::FrameData& time) override {};
+    void on_update(const tmt::FrameData&) override {};
     void on_end() override {};
 };
 
@@ -154,8 +156,15 @@ void AIScene::on_start() {
     }
 
     {  // voxel entity with navmesh
-        auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "test_asteroid_7.vengi"});
+        auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "test_asteroid_5.vengi"});
         auto voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
+        volumes[0] = voxel_volume;
+        voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "test_asteroid_6.vengi"});
+        voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
+        volumes[1] = voxel_volume;
+        voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "test_asteroid_7.vengi"});
+        voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
+        volumes[2] = voxel_volume;
         voxel = tmt::engine.ecs.create_entity("Moving Voxel");
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(voxel);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(voxel);
@@ -166,6 +175,6 @@ void AIScene::on_start() {
         nav_mesh = &tmt::engine.ecs.add_component<tmt::NavMesh>(voxel);
         nav_mesh->voxel_volume = voxel_volume;
         nav_mesh->lod_level = 1;
-        nav_mesh->generate_mesh();
+        nav_mesh->generate_mesh_over_time();
     }
 }
