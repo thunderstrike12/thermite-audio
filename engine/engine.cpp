@@ -169,6 +169,7 @@ void Engine::end() {
 
     salvo.end();
     ecs.clear();
+    scenes.end();
     audio.end();  // Needs to be ended after the ecs.
     resources.unload_unused();
     renderer.end();

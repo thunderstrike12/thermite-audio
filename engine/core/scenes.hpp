@@ -19,6 +19,8 @@ class Scenes {
     /* Checks if the scenes need to be switched */
     void update();
 
+    void end();
+
     /* Swaps the active scene with the next scene */
     void swap_scenes();
 

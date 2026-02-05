@@ -16,6 +16,18 @@ void Scenes::update() {
     swap_scenes();
 }
 
+void Scenes::end() {
+    if (active_scene_type == NULL_SCENE) return;
+
+    OnPreUnloadScene::dispatch();
+    if (active_scene) active_scene->on_end();
+    active_scene_type = NULL_SCENE;
+    engine.ecs.clear();
+    OnSceneEnd::dispatch();
+    active_scene.reset();
+    next_scene_type = NULL_SCENE;
+}
+
 void Scenes::swap_scenes() {
     if (next_scene_type == NULL_SCENE) {
         Log::error(Log::Scope::ENGINE, "[Scenes] swap_scenes: No scene enqueued");
