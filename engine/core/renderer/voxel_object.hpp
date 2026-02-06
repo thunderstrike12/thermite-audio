@@ -27,6 +27,12 @@ struct alignas(16) GpuVoxelObject {
     uint32_t blas_handle = 0xFFFFFFFFu;
     uint32_t voxels_handle = 0xFFFFFFFFu;
     uint32_t palette_handle = 0xFFFFFFFFu;
+
+    /* Object flags, 0b = outlined. */
+    uint32_t object_flags = 0u;
+
+    /* Padding. */
+    glm::uvec3 padding {};
 };
 
 struct VoxelObject {

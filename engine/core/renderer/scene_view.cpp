@@ -84,13 +84,14 @@ inline std::vector<T> reserved(const size_t count) {
 
 void SceneView::update_voxel_objects(RenderGraph& render_graph) {
     /* Capture all voxel renderers in the scene */
-    const entt::basic_group group = engine.ecs.get_registry().group<const VoxelRenderer>(entt::get<Transform>);
+    const entt::basic_group group = engine.ecs.get_registry().group<VoxelRenderer>(entt::get<Transform>);
 
     /* Allocate space for all voxel objects */
     const size_t count = std::min(group.size(), (size_t)MAX_VOXEL_OBJECTS);
     std::vector cpu_objects = reserved<VoxelObject>(count);
     std::vector gpu_objects = reserved<GpuVoxelObject>(count);
     entities = reserved<Entity>(count);
+    render_outlines = false;
 
     /* Iterate over all voxel renderers */
     for (auto&& [entity, renderer, transform] : group.each()) {
@@ -119,6 +120,9 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
         gpu_object.blas_handle = renderer.resource->blas_nodes.get_index();
         gpu_object.voxels_handle = renderer.resource->blas_voxels.get_index();
         gpu_object.palette_handle = renderer.resource->blas_palette.get_index();
+        gpu_object.object_flags = renderer.outlined ? 0b1u : 0b0u;
+        if (renderer.outlined) render_outlines = true;
+        renderer.outlined = false; /* Reset outlined flag */
 
         /* Save the entity id */
         entities.push_back(entity);

@@ -55,7 +55,7 @@ class PolylinePipeline : public OnEngineUpdate {
    public:
     void init(GPUAdapter& gpu);
     void on_engine_update(const FrameData& time) override;
-    void enqueue(RenderGraph& render_graph, RenderView& render_view, SceneView& scene_view);
+    void enqueue(RenderGraph& render_graph, RenderView& render_view);
     void deinit(GPUAdapter& gpu);
 
     PolylinePipeline() = default;

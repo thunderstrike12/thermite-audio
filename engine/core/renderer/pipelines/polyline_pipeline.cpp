@@ -29,7 +29,7 @@ void PolylinePipeline::on_engine_update(const FrameData& time) {
     line_segment_count = (uint32_t)timed_lines.size() + (uint32_t)immediate_lines.size();
 }
 
-void PolylinePipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, SceneView& scene_view) {
+void PolylinePipeline::enqueue(RenderGraph& render_graph, RenderView& render_view) {
     /* Get Render Image */
     const BindHandle render_image = render_view.get_render_image();
 

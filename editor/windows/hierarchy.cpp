@@ -9,9 +9,12 @@
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
 #include "engine/core/logger.hpp"
+#include "engine/core/renderer/renderer.hpp"
+#include "engine/core/renderer/scene_view.hpp"
 
 #include "engine/core/components/name.hpp"
 #include "engine/core/components/transform.hpp"
+#include "engine/core/components/voxel_renderer.hpp"
 
 #include "engine/tools/serializer/ecs.hpp"
 
@@ -149,6 +152,12 @@ void Hierarchy::clear_selection() {
 int Hierarchy::get_window_flags() const { return ImGuiWindowFlags_MenuBar; }
 
 void Hierarchy::on_editor_update(const FrameData&) {
+    for (int i = 0; i < selected_entities.size(); ++i) {
+        if (!engine.ecs.valid(selected_entities[i])) continue;
+        VoxelRenderer* renderer = engine.ecs.try_get_component<VoxelRenderer>(selected_entities[i]);
+        if (renderer) renderer->outlined = true;
+    }
+
     for (int i = 0; i < selected_entities.size(); ++i) {
         const auto entity = *std::next(selected_entities.begin(), i);
         if (engine.ecs.valid(entity) == false) {

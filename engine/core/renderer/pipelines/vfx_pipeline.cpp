@@ -13,8 +13,9 @@
 #include "core/components/emitter.hpp"
 
 namespace tmt {
+
 void VfxPipeline::init(GPUAdapter& gpu) {
-    auto& bank = engine.renderer.vram_bank();
+    VRAMBank& bank = gpu.get_vram_bank();
 
     /* Initialize the Counters Buffer */
     {
@@ -115,8 +116,6 @@ void VfxPipeline::init(GPUAdapter& gpu) {
 }
 
 void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
-    VRAMBank& bank = engine.renderer.vram_bank();
-
     const BindHandle render_image = render_view.get_render_image();
     std::swap(alive_list, alive_list_new);
 

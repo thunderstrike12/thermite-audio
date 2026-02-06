@@ -5,6 +5,7 @@
 #include <graphite/gpu_adapter.hh>
 #include <graphite/render_graph.hh>
 #include <graphite/nodes/raster_node.hh>
+#include <graphite/nodes/compute_node.hh>
 
 #include "core/window.hpp"
 #include "core/logger.hpp"
@@ -119,21 +120,22 @@ void Renderer::update() {
 
     /* Enqueue pipelines */
     geometry_pipeline.enqueue(render_graph, render_view, scene_view);
-    /* clang-format on */
-    /* Depth transfer pass */
-    const glm::uvec2 render_res = render_view.gpu_view.resolution;
-    RasterNode& transfer_pass = render_graph.add_raster_pass("depth transfer pass", "depth_transfer.vx", "depth_transfer.px")
-                                    .topology(Topology::TriangleList)
-                                    .read(render_view.render_view_buffer, ShaderStages::Pixel)
-                                    .read(render_view.vbuffer.image, ShaderStages::Pixel)
-                                    .read(scene_view.object_data, ShaderStages::Pixel)
-                                    .load_op_depth(LoadOp::Clear) /* Clear the depth buffer */
-                                    .depth_stencil(render_view.dbuffer.image, true, true)
-                                    .raster_extent(render_res.x, render_res.y);
-    transfer_pass.draw(NULL_BUFFER, 3u);
-    /* clang-format off */
     di_pipeline.enqueue(render_graph, render_view, scene_view);
-    polyline_pipeline.enqueue(render_graph, render_view, scene_view);
+
+    if (scene_view.render_outlines) {
+        /* clang-format on */
+        /* Object outline render pass */
+        render_graph.add_compute_pass("object outline", "outline.cs")
+            .read(render_view.render_view_buffer)
+            .read(scene_view.object_data)
+            .read(render_view.vbuffer.image)
+            .write(render_view.get_render_image())
+            .group_size(16, 8)
+            .work_size(render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y);
+        /* clang-format off */
+    }
+
+    polyline_pipeline.enqueue(render_graph, render_view);
     vfx_pipeline.enqueue(render_graph, render_view);
 
 #ifdef THERMITE_EDITOR

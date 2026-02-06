@@ -40,6 +40,7 @@ struct SceneView {
     /* Acceleration structures */
     Bvh2<struct VoxelObject> bvh {};
     std::vector<Entity> entities {};
+    bool render_outlines = false;
 
    private:
     /* Collect and upload all voxel objects in the scene. */
