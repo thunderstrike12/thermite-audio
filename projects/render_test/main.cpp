@@ -64,6 +64,12 @@ void MainScene::on_update(const tmt::FrameData& time) {
     time_passed += time.delta_time;
     cooldown -= time.delta_time;
 
+    // Use to test the logging please
+    /*  static int i = 0;
+      for (int j = 0; j < 2; j++) {
+          tmt::Log::warn("{}", i);
+          i += j;
+      }*/
     if (tmt::engine.input.is_mouse_button_pressed(tmt::MouseButton::LEFT) && cooldown <= 0.0f) {
         /* Get the camera position and forward direction */
         const tmt::Entity camera = tmt::Camera::get_active_camera();

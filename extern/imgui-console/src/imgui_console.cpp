@@ -204,6 +204,12 @@ void ImGuiConsole::DrawLogTypeButtons() {
     ToggleButton(ICON_FA_CIRCLE_XMARK, "Errors", &m_ShowError, m_ColorPalette[COL_ERROR], errCount);
 }
 void ImGuiConsole::LogWindow() {
+    auto& items = m_ConsoleSystem.Items();
+    constexpr size_t MAX_LOG_ITEMS = 512;
+    const size_t log_count = items.size();
+    if (log_count > MAX_LOG_ITEMS) {
+        items.erase(items.begin(), items.begin() + static_cast<int64_t>(log_count - MAX_LOG_ITEMS));
+    }
     const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
     if (ImGui::BeginChild("ScrollRegion##", ImVec2(0, -footerHeightToReserve), false, 0)) {
         static const float timestamp_width = ImGui::CalcTextSize("00:00:00:0000").x;
