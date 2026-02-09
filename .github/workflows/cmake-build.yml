@@ -1,9 +1,9 @@
 name: build
-
 on:
+  workflow_dispatch:
   pull_request:
-    branches: 'main'
-
+    branches:
+      - main
 jobs:
   build:
     name: "Build ${{ matrix.preset }}"
@@ -15,25 +15,35 @@ jobs:
           - Debug-Game
           - Release-Game
     runs-on: windows-latest
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+      # Normalize paths for cache hits across runners
+      SCCACHE_BASEDIRS: ${{ github.workspace }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
       
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
       
       - name: Configure with preset
         shell: pwsh
         run: |
-          cmake --preset ${{ matrix.preset }}
+          cmake --preset ${{ matrix.preset }} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
       
       - name: Build with preset
         shell: pwsh
         run: |
           cmake --build --preset ${{ matrix.preset }} -j
-  
+      - name: Run sccache stat for check
+        shell: bash
+        run: ${SCCACHE_PATH} --show-stats
+        
   cpp-linter-windows:
     name: "Run cpp-linter (Windows)"
     runs-on: windows-latest
@@ -84,23 +94,32 @@ jobs:
         include:
           - preset: Debug-Game
     runs-on: windows-latest
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+      SCCACHE_BASEDIRS: ${{ github.workspace }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
+      
+      
       - name: Cache FetchContent downloads
         uses: actions/cache@v4
         with:
-            path: build/${{ matrix.preset }}/_deps
-            key: fetchcontent-${{ runner.os }}-${{ hashFiles('tests/CMakeLists.txt') }}
+          path: build/${{ matrix.preset }}
+          key: test-${{ runner.os }}-${{ matrix.preset }}-${{ hashFiles('**/CMakeLists.txt', 'CMakePresets.json') }}
+          restore-keys: |
+            test-${{ runner.os }}-${{ matrix.preset }}-
       - name: Configure with tests enabled
         shell: pwsh
         run: |
-          cmake --preset ${{ matrix.preset }} -DTHERMITE_BUILD_TESTS=ON
+          cmake --preset ${{ matrix.preset }} -DTHERMITE_BUILD_TESTS=ON -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+      
       
       - name: Build with tests
         shell: pwsh
