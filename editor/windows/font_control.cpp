@@ -2,7 +2,7 @@
 #include <imgui.h>
 #include "editor.hpp"
 #include "editor/imgui/manager.hpp"
-#include "editor/core/font_manager.hpp"
+#include "editor/core/systems/font_manager.hpp"
 
 void tmt::FontControl::on_editor_start() {}
 

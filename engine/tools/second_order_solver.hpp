@@ -8,7 +8,7 @@ template <typename T>
 concept ValidTarget = requires(T a, T b, float f) {
     { a + b } -> std::convertible_to<T>;
     { a - b } -> std::convertible_to<T>;
-    { a * f } -> std::convertible_to<T>;
+    { a* f } -> std::convertible_to<T>;
 };
 
 class SecondOrderSolver {

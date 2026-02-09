@@ -7,7 +7,7 @@
 #include "engine/events/engine.hpp"
 #include "engine/events/sdl.hpp"
 
-#include "editor/core/font_manager.hpp"
+#include "editor/core/systems/font_manager.hpp"
 
 class ImGUI;
 

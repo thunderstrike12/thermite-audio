@@ -15,6 +15,10 @@
 #include "engine/core/scenes.hpp"
 
 #include "editor/imgui/manager.hpp"
+#include "editor/core/systems/font_manager.hpp"
+#include "editor/core/systems/undo_redo/undo_redo_manager.hpp"
+#include "engine/tools/profiler.hpp"
+#include "engine/tools/file_dialog.hpp"
 #include "editor/gizmo.hpp"
 
 /* Modes */
@@ -79,6 +83,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     windows[Mode::SCENE].add<MotionMathPreview>();
     windows[Mode::SCENE].add<DebugLines>();
     windows[Mode::SCENE].add<Rendering>();
+    windows[Mode::SCENE].add<UndoRedoManager>();
 
     engine.scenes.register_scene<VoxelEditScene>();
     windows[Mode::VOXEL].add<ModelViewer>();
