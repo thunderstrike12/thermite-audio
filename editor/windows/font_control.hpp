@@ -3,6 +3,7 @@
 #include "editor/core/window.hpp"
 
 namespace tmt {
+
 class FontControl : public IWindow {
    public:
     // Inherited via IWindow

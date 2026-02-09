@@ -4,6 +4,11 @@
 #include "engine/core/io.hpp"
 
 namespace tmt {
+struct FontSize {
+    float text_size {-1.0f};
+    float icon_size {-1.0f};
+};
+
 struct SaveData {
     struct Config {
         static inline const IO::FileLocation FILE_LOCATION {IO::Location::EDITOR, "save_data/editor_save.json"};
@@ -23,7 +28,9 @@ struct SaveData {
 
     std::unordered_map<std::string, bool> open_windows;
     std::unordered_map<std::string, bool> enabled_debug_renderers;
+    FontSize font_size;
 };
 }  // namespace tmt
+TMT_OBJECT(tmt::FontSize, (text_size, icon_size));
 
-TMT_OBJECT(tmt::SaveData, (open_windows, enabled_debug_renderers));
+TMT_OBJECT(tmt::SaveData, (open_windows, enabled_debug_renderers, font_size));
