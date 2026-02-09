@@ -199,6 +199,35 @@ PhysicsVoxel* Svt64::get_physics_voxel(const uint32_t x, const uint32_t y, const
     return nullptr;
 }
 
+/* Remove child node from node without corrupting child indices. */
+inline void evict_node(Svt64Node* node, Svt64Node* root_node, const uint32_t pos, const uint32_t idx) {
+    /* Find the number of children present in the node */
+    const uint32_t child_count = popcnt(node->child_mask);
+
+    /* Remove the child at `pos` from the child mask */
+    node->child_mask &= ~(1ull << pos);
+    if (idx >= child_count) return; /* No re-alignment required */
+
+    /* Shift child data over to keep indices aligned */
+    const uint32_t ptr = node->abs_ptr() + idx;
+    memmove(root_node + ptr, root_node + ptr + 1, (child_count - idx) * sizeof(Svt64Node));
+}
+
+/* Remove child node from node without corrupting child indices. */
+inline void evict_voxel(Svt64Node* node, MaterialIndex* material_data, PhysicsVoxel* physics_data, const uint32_t pos, const uint32_t idx) {
+    /* Find the number of children present in the node */
+    const uint32_t child_count = popcnt(node->child_mask);
+
+    /* Remove the child at `pos` from the child mask */
+    node->child_mask &= ~(1ull << pos);
+    if (idx >= child_count) return; /* No re-alignment required */
+
+    /* Shift child data over to keep indices aligned */
+    const uint32_t ptr = node->abs_ptr() + idx;
+    memmove(material_data + ptr, material_data + ptr + 1, (child_count - idx) * sizeof(MaterialIndex));
+    memmove(physics_data + ptr, physics_data + ptr + 1, (child_count - idx) * sizeof(PhysicsVoxel));
+}
+
 void Svt64::subtract(const Stencil* stencil, glm::ivec3 offset) {
     TMT_ZONE_SCOPED
 
@@ -216,25 +245,16 @@ void Svt64::subtract_recursive(uint32_t node_id, glm::ivec3 node_pos, uint32_t n
         memcpy(palette_lookup, &materials[node.abs_ptr()], sizeof(tmt::MaterialIndex) * 64);
 
         // Loop over solid voxels
-        uint8_t voxels_subtracted = 0;
         uint64_t mask = node.child_mask;
         while (mask != 0ull) {
             // Get child index and clear bit
-            const uint32_t voxel_id = std::countr_zero(mask);
+            const uint32_t voxel_pos = std::countr_zero(mask);
             mask &= mask - 1;
 
-            // Apply indices offset
-            if (voxels_subtracted > 0) {
-                // Get current material index
-                const uint32_t child_pos = (uint32_t)__popcnt64(node.child_mask & ((1ull << voxel_id) - 1u));
-                // Update material index
-                materials[node.abs_ptr() + child_pos] = palette_lookup[child_pos + voxels_subtracted];
-            }
-
             // Calculate position of this child in the stencil
-            const glm::ivec3 voxel_local = glm::ivec3((voxel_id >> 0) & 3, (voxel_id >> 4) & 3, (voxel_id >> 2) & 3);
-            const glm::ivec3 voxel_pos = node_pos + voxel_local * (int)child_scale;
-            const glm::ivec3 voxel_relative = voxel_pos - offset;
+            const glm::ivec3 voxel_local = glm::ivec3((voxel_pos >> 0) & 3, (voxel_pos >> 4) & 3, (voxel_pos >> 2) & 3);
+            const glm::ivec3 voxel_world = node_pos + voxel_local * (int)child_scale;
+            const glm::ivec3 voxel_relative = voxel_world - offset;
 
             // Bounds check
             if (voxel_relative.x < 0 || voxel_relative.x >= (int)stencil->size.x) continue;
@@ -245,9 +265,9 @@ void Svt64::subtract_recursive(uint32_t node_id, glm::ivec3 node_pos, uint32_t n
             const uint32_t stencil_index = voxel_relative.x + stencil->size.x * (voxel_relative.y + stencil->size.y * voxel_relative.z);
             if (stencil->data[stencil_index] == 0) continue;
 
+            const uint32_t child_id = (uint32_t)__popcnt64(node.child_mask & ((1ull << voxel_pos) - 1u));
             // Remove voxel from this node
-            node.child_mask &= ~(1ull << voxel_id);
-            voxels_subtracted++;
+            evict_voxel(&node, materials, physics_data, voxel_pos, child_id);
         }
 
         return;
@@ -278,6 +298,11 @@ void Svt64::subtract_recursive(uint32_t node_id, glm::ivec3 node_pos, uint32_t n
 
         // Recurse into child
         subtract_recursive(node.abs_ptr() + child_ptr, child_pos, child_scale, stencil, offset);
+
+        // Remove indices when all children become empty
+        if (nodes[node.abs_ptr() + child_ptr].child_mask == 0) {
+            evict_node(&node, nodes, child_id, child_ptr);
+        }
     }
 }
 
@@ -327,21 +352,6 @@ inline uint32_t get_level_local_pos(const uint32_t x, const uint32_t y, const ui
     return local_x | (local_z << 2) | (local_y << 4); /* x & y need to be flipped */
 }
 
-/* Remove child node / voxel from node without corrupting child indices. */
-template <typename T>
-inline void remove_child(Svt64Node* node, T* data, const uint32_t pos, const uint32_t idx) {
-    /* Find the number of children present in the node */
-    const uint32_t child_count = popcnt(node->child_mask);
-
-    /* Remove the child at `pos` from the child mask */
-    node->child_mask &= ~(1ull << pos);
-    if (idx >= child_count) return; /* No re-alignment required */
-
-    /* Shift child data over to keep indices aligned */
-    const uint32_t ptr = node->abs_ptr() + idx;
-    memmove(data + ptr, data + ptr + 1, (child_count - idx) * sizeof(T));
-}
-
 void Svt64::remove_voxel(const uint32_t x, const uint32_t y, const uint32_t z) {
     /* Bounds check */
     const uint32_t tree_width = 1u << (depth * 2u);
@@ -364,7 +374,7 @@ void Svt64::remove_voxel(const uint32_t x, const uint32_t y, const uint32_t z) {
 
         /* If we're at the bottom level we're done traversing down */
         if (level == 0u) {
-            remove_child(node, materials, child_pos, child_ptr);
+            evict_voxel(node, materials, physics_data, child_pos, child_ptr);
             break;
         }
 
@@ -381,7 +391,7 @@ void Svt64::remove_voxel(const uint32_t x, const uint32_t y, const uint32_t z) {
         /* Find the node position & pointer, remove the child */
         const uint32_t node_pos = get_level_local_pos(x, y, z, level);
         const uint32_t node_ptr = popcnt_var64(node->child_mask, node_pos);
-        remove_child(node, nodes, node_pos, node_ptr);
+        evict_node(node, nodes, node_pos, node_ptr);
     }
 }
 

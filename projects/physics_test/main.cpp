@@ -74,10 +74,10 @@ void Game::on_start() {
         stencil = tmt::engine.resources.copy_resource<tmt::Stencil>(voxel_file);
     }
 
-    //{
-    //    auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "cube64.vengi"});
-    //    volume_cube64 = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
-    //}
+    {
+        auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "cube64.vengi"});
+        volume_cube64 = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
+    }
 
     {
         auto entity = tmt::engine.ecs.create_entity();
@@ -313,19 +313,21 @@ void Game::on_update(const tmt::FrameData& time) {
 
         if (tmt::engine.input.is_mouse_button_pressed(tmt::MouseButton::LEFT)) {
             auto* resource = tmt::engine.ecs.get_component<tmt::VoxelBody>(hit.entity).resource.resource.get();
-
-            const float r2 = tool_radius * tool_radius;
-            for (int z = -radius; z <= radius; ++z) {
-                for (int y = -radius; y <= radius; ++y) {
-                    for (int x = -radius; x <= radius; ++x) {
-                        const float fx = (float)x + 0.5f, fy = (float)y + 0.5f, fz = (float)z + 0.5f;
-                        const float d2 = fx * fx + fy * fy + fz * fz;
-                        if (d2 > r2) continue;
-                        resource->blas->remove_voxel((uint32_t)((int)hit.coord.x + x), (uint32_t)((int)hit.coord.y + y), (uint32_t)((int)hit.coord.z + z));
-                    }
-                }
-            }
+            resource->blas->subtract(stencil.resource.get(), hit.coord);
             resource->set_dirty();
+
+            //const float r2 = tool_radius * tool_radius;
+            //for (int z = -radius; z <= radius; ++z) {
+            //    for (int y = -radius; y <= radius; ++y) {
+            //        for (int x = -radius; x <= radius; ++x) {
+            //            const float fx = (float)x + 0.5f, fy = (float)y + 0.5f, fz = (float)z + 0.5f;
+            //            const float d2 = fx * fx + fy * fy + fz * fz;
+            //            if (d2 > r2) continue;
+            //            resource->blas->remove_voxel((uint32_t)((int)hit.coord.x + x), (uint32_t)((int)hit.coord.y + y), (uint32_t)((int)hit.coord.z + z));
+            //        }
+            //    }
+            //}
+            //resource->set_dirty();
         }
     }
 
