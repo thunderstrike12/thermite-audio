@@ -5,6 +5,8 @@
 namespace tmt {
 
 struct ParticleEmitter {
+    ParticleEmitter();
+
     glm::vec3 pos = {0.0f, 0.0f, 0.0f};
     float particle_lifetime = 1.0f;
 
