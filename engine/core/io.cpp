@@ -200,7 +200,6 @@ bool IO::stream_open(std::fstream& file_stream, const std::filesystem::path& abs
         file_stream.open(absolute, open_mode);
     } catch (const std::exception& exception) {
         tmt::Log::error(tmt::Log::Scope::ENGINE, "Exception when opening file: {}\nreason: {}", absolute.string(), exception.what());
-        file_stream.close();
         return false;
     }
     return true;
