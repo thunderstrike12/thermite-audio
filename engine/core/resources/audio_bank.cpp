@@ -26,7 +26,7 @@ bool AudioBank::load() {
     bank = engine.audio.init_bank(bank_data);
     if (bank == nullptr) return false;
 
-    // Defined check to skip trying to load the string bank when not in the editor and/or not in debug mode.
+        // Defined check to skip trying to load the string bank when not in the editor and/or not in debug mode.
 #if defined(THERMITE_EDITOR) || defined(THERMITE_DEBUG)
     if (!master_bank_ref) {  // (If it doesn't have a master bank reference, it means it *is* the master bank).
         // The string bank has the same name as the master bank but with the extension ".strings.bank", so we check for that here.

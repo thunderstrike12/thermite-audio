@@ -1,0 +1,138 @@
+{
+    "version": 1,
+    "entities": [
+        0,
+        1
+    ],
+    "UUID": {
+        "0": "bccbcc97-5733-43e4-b966-ff07cb507b76",
+        "1": "1aff0a7f-20df-475f-ab75-6e4502175707"
+    },
+    "Name": {
+        "0": {
+            "name": "Parent"
+        },
+        "1": {
+            "name": "Child"
+        }
+    },
+    "Transform": {
+        "0": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": [
+                1
+            ]
+        },
+        "1": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 1.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 0,
+            "children": []
+        }
+    },
+    "UIComponent": {
+        "0": {
+            "size": {
+                "x": 300.0,
+                "y": 300.0
+            },
+            "pivot": {
+                "x": 0.5,
+                "y": 0.5
+            },
+            "block_raycasts": false,
+            "scale_with_parent_x": false,
+            "scale_with_parent_y": false,
+            "aspect_mode": "STRETCH",
+            "aspect_ratio": {
+                "x": 1.0,
+                "y": 1.0
+            },
+            "anchor": "MIDDLE_CENTER"
+        },
+        "1": {
+            "size": {
+                "x": 50.0,
+                "y": 50.0
+            },
+            "pivot": {
+                "x": 0.0,
+                "y": 0.0
+            },
+            "block_raycasts": false,
+            "scale_with_parent_x": false,
+            "scale_with_parent_y": false,
+            "aspect_mode": "STRETCH",
+            "aspect_ratio": {
+                "x": 1.0,
+                "y": 1.0
+            },
+            "anchor": "TOP_LEFT"
+        }
+    },
+    "ImageRenderer": {
+        "0": {
+            "texture": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": ""
+                },
+                "data": null
+            },
+            "color": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0,
+                "w": 1.0
+            }
+        },
+        "1": {
+            "texture": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "bojan.png"
+                },
+                "data": {
+                    "dummy": 0
+                }
+            },
+            "color": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0,
+                "w": 1.0
+            }
+        }
+    },
+    "systems": null
+}

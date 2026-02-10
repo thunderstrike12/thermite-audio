@@ -1,0 +1,134 @@
+{
+    "version": 1,
+    "entities": [
+        0,
+        1,
+        2
+    ],
+    "UUID": {
+        "0": "b223c4c1-475b-4305-873e-2d8374347749",
+        "1": "54861566-8fbe-4061-9666-9f2f1abe9bd0",
+        "2": "64c318b1-6adc-4f96-a173-d91f40699d7c"
+    },
+    "Name": {
+        "0": {
+            "name": "Particle Emitter"
+        },
+        "1": {
+            "name": "Camera"
+        },
+        "2": {
+            "name": "Asteroid"
+        }
+    },
+    "Transform": {
+        "0": {
+            "local_position": {
+                "x": 0.0,
+                "y": 8.908308982849121,
+                "z": 0.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1": {
+            "local_position": {
+                "x": -4.282343864440918,
+                "y": 12.474018096923828,
+                "z": 19.609268188476563
+            },
+            "local_rotation": {
+                "w": 0.05138295516371727,
+                "x": 0.0029177332762628794,
+                "y": 0.9970685243606567,
+                "z": -0.05661759898066521
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "2": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        }
+    },
+    "Voxel Renderer": {
+        "2": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_3.vengi"
+                }
+            }
+        }
+    },
+    "Camera": {
+        "1": {
+            "fov": 80.0,
+            "pitch": -6.499996185302734,
+            "yaw": -84.09986877441406,
+            "active": true
+        }
+    },
+    "ParticleEmitter": {
+        "0": {
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "particle_lifetime": 1.0,
+            "dir": {
+                "x": 0.0,
+                "y": 1.0,
+                "z": 0.0
+            },
+            "cone_angle": 0.5,
+            "min_speed": 1.0,
+            "max_speed": 10.0,
+            "spawn_count": 8,
+            "active": true,
+            "texture": {
+                "file_location": {
+                    "sub_location": "ENGINE",
+                    "relative_path": "missing.png"
+                },
+                "data": {
+                    "dummy": 0
+                }
+            }
+        }
+    },
+    "systems": null
+}

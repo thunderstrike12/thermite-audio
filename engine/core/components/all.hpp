@@ -13,6 +13,8 @@
 #include "engine/core/components/audio_emitter.hpp"
 #include "engine/core/components/light.hpp"
 #include "engine/core/components/emitter.hpp"
+#include "engine/core/components/ui_component.hpp"
+#include "engine/core/components/image_renderer.hpp"
 #include "engine/tools/uuid.hpp"
 
 namespace tmt {
@@ -31,7 +33,9 @@ using SerializeComponents = ComponentRegistry<
 	AudioListener,
 	AudioEmitter,
 	Light,
-	ParticleEmitter
+	ParticleEmitter,
+	UIComponent,
+	ImageRenderer
 >;
 // clang-format on
 
@@ -47,7 +51,9 @@ using InspectComponents = ComponentRegistry<
 	AudioListener,
 	AudioEmitter,
 	Light,
-	ParticleEmitter
+	ParticleEmitter,
+	UIComponent,
+	ImageRenderer
 >;
 // clang-format on
 

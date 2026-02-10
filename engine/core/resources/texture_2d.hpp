@@ -21,8 +21,11 @@ class Texture2D : public FileResource {
 
     uint32_t width {};
     uint32_t height {};
+    uint32_t dummy {};
 
     std::string name = "Unknown Texture";
 };
 
 }  // namespace tmt
+
+TMT_OBJECT(tmt::Texture2D, (dummy));
