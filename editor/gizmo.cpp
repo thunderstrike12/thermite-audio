@@ -1,10 +1,17 @@
 #include "gizmo.hpp"
 
 #include "engine/engine.hpp"
+#include "engine/core/logger.hpp"
 #include "engine/core/components/camera.hpp"
 #include "engine/core/renderer/renderer.hpp"
 
 #include "editor/windows/hierarchy.hpp"
+
+#include "editor/events/scene.hpp"
+
+#include "editor/core/systems/undo_redo/component_diff.hpp"
+
+#include "engine/tools/serializer/all.hpp"
 
 #include <imgui.h>
 #include <ImGuizmo.h>
@@ -23,7 +30,7 @@ void Gizmo::init() {
     setup_style();
 }
 
-bool Gizmo::manip(const float x, const float y, const float width, const float height, const std::span<const Entity>& selected_entities) const {
+bool Gizmo::manip(const float x, const float y, const float width, const float height, const std::span<const Entity>& selected_entities, const float snap) const {
     ImGuizmo::SetRect(x, y, width, height);
     ImGuizmo::SetDrawlist();
 
@@ -51,8 +58,22 @@ bool Gizmo::manip(const float x, const float y, const float width, const float h
 
         glm::mat4 delta;
         changed = ImGuizmo::Manipulate(
-            &view[0][0], &perspective[0][0], static_cast<ImGuizmo::OPERATION>(OPERATIONS[operation]), static_cast<ImGuizmo::MODE>(space), &imguizmo_input_matrix[0][0], &delta[0][0]
+            &view[0][0], &perspective[0][0], static_cast<ImGuizmo::OPERATION>(OPERATIONS[operation]), static_cast<ImGuizmo::MODE>(space), &imguizmo_input_matrix[0][0], &delta[0][0], &snap
         );
+
+        static std::unordered_map<Entity, ComponentDiff<Transform>> component_diffs;
+
+        static bool was_using = false;
+        const bool is_using = ImGuizmo::IsUsing();
+        if (!was_using && is_using) {
+            for (const Entity& entity : selected_entities) {
+                ComponentDiff<Transform> diff(entity);
+                diff.before();
+                component_diffs.emplace(entity, std::move(diff));
+            }
+            was_using = true;
+        }
+
         if (changed) {
             selected_transform.set_world_matrix(imguizmo_input_matrix);
 
@@ -64,6 +85,19 @@ bool Gizmo::manip(const float x, const float y, const float width, const float h
 
                 multi_select_transform.set_world_matrix(delta * multi_matrix);
             }
+
+            OnSceneModified::dispatch();
+        }
+
+        if (!is_using && was_using) {
+            UndoRedoCollection collection;
+            for (auto& [entity, diff] : component_diffs) {
+                diff.after();
+                collection.add_action(std::move(diff));
+            }
+            collection.commit("Edit Gizmo");
+            component_diffs.clear();
+            was_using = false;
         }
 
         return changed;
@@ -90,6 +124,19 @@ bool Gizmo::manip(const float x, const float y, const float width, const float h
     glm::mat4 avg = glm::translate(glm::mat4(1.f), avg_translation) * glm::mat4_cast(avg_rotation) * glm::scale(glm::mat4(1.f), scale);
     glm::mat4 delta;
     changed = ImGuizmo::Manipulate(&view[0][0], &perspective[0][0], static_cast<ImGuizmo::OPERATION>(OPERATIONS[operation]), static_cast<ImGuizmo::MODE>(space), &avg[0][0], &delta[0][0]);
+
+    static std::unordered_map<Entity, ComponentDiff<Transform>> component_diffs;
+    static bool was_using = false;
+    const bool is_using = ImGuizmo::IsUsing();
+    if (!was_using && is_using) {
+        for (const Entity& entity : selected_entities) {
+            ComponentDiff<Transform> diff(entity);
+            diff.before();
+            component_diffs.emplace(entity, std::move(diff));
+        }
+        was_using = true;
+    }
+
     if (changed) {
         for (const Entity entity : selected_entities) {
             Transform& multi_select_transform = engine.ecs.get_component<Transform>(entity);
@@ -97,6 +144,19 @@ bool Gizmo::manip(const float x, const float y, const float width, const float h
 
             multi_select_transform.set_world_matrix(delta * multi_matrix);
         }
+
+        OnSceneModified::dispatch();
+    }
+
+    if (!is_using && was_using) {
+        UndoRedoCollection collection;
+        for (auto& [entity, diff] : component_diffs) {
+            diff.after();
+            collection.add_action(std::move(diff));
+        }
+        collection.commit("Edit Gizmo");
+        component_diffs.clear();
+        was_using = false;
     }
 
     return changed;

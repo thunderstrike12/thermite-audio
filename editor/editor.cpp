@@ -46,6 +46,7 @@
 #include "editor/windows/node_hierarchy.hpp"
 #include "editor/windows/palette.hpp"
 #include "editor/windows/brush.hpp"
+#include "editor/windows/editor_settings.hpp"
 
 /* Singleton */
 tmt::Editor tmt::editor;
@@ -84,6 +85,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     windows[Mode::SCENE].add<DebugLines>();
     windows[Mode::SCENE].add<Rendering>();
     windows[Mode::SCENE].add<UndoRedoManager>();
+    windows[Mode::SCENE].add<EditorSettingsWindow>();
 
     engine.scenes.register_scene<VoxelEditScene>();
     windows[Mode::VOXEL].add<ModelViewer>();

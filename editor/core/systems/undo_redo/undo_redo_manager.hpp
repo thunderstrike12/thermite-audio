@@ -42,6 +42,8 @@ class UndoRedoCollection : public IUndoRedo {
     void redo() override;
     void inspect() override;
 
+    void clear() { actions.clear(); }
+
    private:
     std::vector<std::shared_ptr<IUndoRedo>> actions;
 };

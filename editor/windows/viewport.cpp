@@ -1,5 +1,6 @@
 #include "viewport.hpp"
 #include <imgui.h>
+#include <ImGuizmo.h>
 #include "editor/editor.hpp"
 #include "hierarchy.hpp"
 #include "engine/core/components/camera.hpp"
@@ -76,7 +77,37 @@ void tmt::Viewport::display() {
 
     const std::vector<Entity>& selected_entities = editor.windows[Editor::Mode::SCENE].get<Hierarchy>().get_selected_entities();
 
-    const bool gizmo_changed = editor.gizmo.manip(image_pos.x, image_pos.y, width, height, selected_entities);
+    float snap_value = 0.0f;
+    const bool ctrl_held = ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
+    if (ctrl_held) {
+        const auto operation = Gizmo::OPERATIONS[editor.gizmo.operation];
+        switch (operation) {
+            case ImGuizmo::OPERATION::TRANSLATE:
+                snap_value = editor.save_data.snap_values.move;
+                break;
+            case ImGuizmo::OPERATION::ROTATE:
+                snap_value = editor.save_data.snap_values.rotation;
+                break;
+            case ImGuizmo::OPERATION::SCALE:
+                snap_value = editor.save_data.snap_values.scale;
+                break;
+            default:
+                break;
+        }
+    }
+
+    const bool wants_to_capture_keyboard = ImGui::GetIO().WantCaptureKeyboard;
+    if (wants_to_capture_keyboard == false && using_debug_camera == false) {
+        if (ImGui::IsKeyPressed(ImGuiKey_W, false)) {
+            editor.gizmo.operation = 0;
+        } else if (ImGui::IsKeyPressed(ImGuiKey_E, false)) {
+            editor.gizmo.operation = 1;
+        } else if (ImGui::IsKeyPressed(ImGuiKey_R, false)) {
+            editor.gizmo.operation = 2;
+        }
+    }
+
+    const bool gizmo_changed = editor.gizmo.manip(image_pos.x, image_pos.y, width, height, selected_entities, snap_value);
     if (gizmo_changed) OnSceneModified::dispatch();
 
     toolbar(image_pos);
@@ -137,8 +168,10 @@ void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {
         /* Show mouse cursor */
         input.set_mouse_relative_to_window(false);
         input.lock_mouse(false);
+        using_debug_camera = false;
         return;
     }
+    using_debug_camera = true;
     /* Cancel any text fields in editor you may interact with */
     ImGui::SetWindowFocus();
 
