@@ -55,7 +55,7 @@ def main():
         str(shader_path),
         "-I", f"{str(shader_dir)}/shared",
         "-target", "spirv",
-        "-profile", info["profile"],
+        # "-profile", info["profile"],
         "-entry", "main",
         "-o", str(output_file)
     ]
@@ -68,6 +68,10 @@ def main():
 
     all_outputs = []
 
+    # print("[CMD]", end="")
+    # for arg in cmd:
+    #     print(f" {arg}", end="")
+    # print("")
     print(f"[Slang] {stage.upper()} -> {output_file}")
     subprocess.run(cmd, check=True)
 
