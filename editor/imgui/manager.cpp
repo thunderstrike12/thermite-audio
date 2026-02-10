@@ -69,8 +69,13 @@ void ImGuiManager::deinit() {
 
 void ImGuiManager::on_sdl_event(internal::SdlEvent& event) {
     ImGui_ImplSDL3_ProcessEvent(&event.event);
-    const auto& viewport = editor.windows[Editor::Mode::SCENE].get<Viewport>();
-    if (viewport.get_is_hovered()) {
+    const auto* viewport = editor.windows[editor.editor_mode].try_get<Viewport>();
+
+    if (viewport == nullptr) {
+        return;
+    }
+
+    if (viewport->get_is_hovered()) {
         /* Don't let imgui capture input if hovering viewport */
         event.imgui_capture_mouse = false;
         event.imgui_capture_keyboard = false;

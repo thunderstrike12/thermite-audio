@@ -21,7 +21,7 @@ void SceneMode::display_main_menu() {
     }
 }
 
-void SceneMode::on_switch_to() {
+void SceneMode::on_switch_to(const std::any& meta_data) {
     is_switching_to = true;
     engine.scenes.load_scene(previous_scene_type);
     is_switching_to = false;

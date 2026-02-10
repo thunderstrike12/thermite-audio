@@ -18,7 +18,7 @@ class VoxelMode : public IEditorMode {
     // Inherited via IEditorMode.
     constexpr std::string get_name() override { return "Voxel"; }
     void display_main_menu() override;
-    void on_switch_to() override;
+    void on_switch_to(const std::any& meta_data = {}) override;
     void on_switch_away() override;
 
    private:

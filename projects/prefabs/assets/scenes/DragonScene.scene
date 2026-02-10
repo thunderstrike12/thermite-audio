@@ -1,0 +1,30 @@
+{
+    "version": 1,
+    "entities": [
+        1048576,
+        1048577
+    ],
+    "Transform": {
+        "1048577": {
+            "diff": [
+                {
+                    "op": "replace",
+                    "path": "/local_position/x",
+                    "value": 2.4966750144958496
+                }
+            ]
+        }
+    },
+    "Prefab": {
+        "1048576": {
+            "source_location": {
+                "sub_location": "PROJECT",
+                "relative_path": "A.prefab"
+            },
+            "source_entity": 1048576,
+            "root_entity": 1048576,
+            "instance_id": "85188361-81f6-45e2-bb7a-adf5aa3d2f50"
+        }
+    },
+    "systems": null
+}

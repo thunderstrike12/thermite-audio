@@ -316,18 +316,18 @@ void Game::on_update(const tmt::FrameData& time) {
             resource->blas->subtract(stencil.resource.get(), hit.coord);
             resource->set_dirty();
 
-            //const float r2 = tool_radius * tool_radius;
-            //for (int z = -radius; z <= radius; ++z) {
-            //    for (int y = -radius; y <= radius; ++y) {
-            //        for (int x = -radius; x <= radius; ++x) {
-            //            const float fx = (float)x + 0.5f, fy = (float)y + 0.5f, fz = (float)z + 0.5f;
-            //            const float d2 = fx * fx + fy * fy + fz * fz;
-            //            if (d2 > r2) continue;
-            //            resource->blas->remove_voxel((uint32_t)((int)hit.coord.x + x), (uint32_t)((int)hit.coord.y + y), (uint32_t)((int)hit.coord.z + z));
-            //        }
-            //    }
-            //}
-            //resource->set_dirty();
+            // const float r2 = tool_radius * tool_radius;
+            // for (int z = -radius; z <= radius; ++z) {
+            //     for (int y = -radius; y <= radius; ++y) {
+            //         for (int x = -radius; x <= radius; ++x) {
+            //             const float fx = (float)x + 0.5f, fy = (float)y + 0.5f, fz = (float)z + 0.5f;
+            //             const float d2 = fx * fx + fy * fy + fz * fz;
+            //             if (d2 > r2) continue;
+            //             resource->blas->remove_voxel((uint32_t)((int)hit.coord.x + x), (uint32_t)((int)hit.coord.y + y), (uint32_t)((int)hit.coord.z + z));
+            //         }
+            //     }
+            // }
+            // resource->set_dirty();
         }
     }
 

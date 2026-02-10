@@ -51,4 +51,12 @@ inline void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Transform& value,
             value.set_local_scale(scale);
         }
     }
+    {
+        const auto& parent = value.get_parent();
+        ImReflect::Input("Parent", parent);
+    }
+    {
+        const auto& children = value.get_children();
+        ImReflect::Input("Children", children);
+    }
 }

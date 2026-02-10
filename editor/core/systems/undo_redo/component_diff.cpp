@@ -1,5 +1,6 @@
 #include "component_diff.hpp"
 #include "engine/core/components/component_collection.hpp"
+#include "engine/tools/serializer/all.hpp"
 
 namespace tmt {
 

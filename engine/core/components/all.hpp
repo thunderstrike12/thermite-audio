@@ -11,6 +11,7 @@
 #include "engine/systems/ai/navigation/nav_mesh.hpp"
 #include "engine/core/components/audio_listener.hpp"
 #include "engine/core/components/audio_emitter.hpp"
+#include "engine/core/components/prefab.hpp"
 #include "engine/core/components/light.hpp"
 #include "engine/core/components/emitter.hpp"
 #include "engine/core/components/ui_component.hpp"
@@ -22,7 +23,7 @@ namespace tmt {
 // clang-format off
 using SerializeComponents = ComponentRegistry<
 	/* Order in which components are serialized */
-	UUID,
+	Prefab,
 	Name, 
 	Transform, 
 	VoxelRenderer, 

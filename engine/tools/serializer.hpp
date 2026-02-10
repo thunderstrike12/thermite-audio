@@ -2,15 +2,13 @@
 #define JSON_REFLECT_ENABLE_CONST_CAST
 // #define JSON_REFLECT_INITIALIZE_SMART_POINTERS
 #include <JsonReflect.hpp>
-#include <nlohmann/json.hpp>
+#include "engine/tools/json.hpp"
 
 #define BEFRIEND_VISITABLE()      \
     template <typename, typename> \
     friend struct ::visit_struct::traits::visitable;
 
 namespace tmt {
-
-using json = nlohmann::ordered_json;
 
 class Serializer {
    public:

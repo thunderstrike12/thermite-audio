@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <any>
 
 namespace tmt {
 
@@ -13,7 +14,7 @@ class IEditorMode {
 
     virtual void display_main_menu() = 0;
 
-    virtual void on_switch_to() = 0;
+    virtual void on_switch_to(const std::any& meta_data = {}) = 0;
     virtual void on_switch_away() = 0;
 };
 

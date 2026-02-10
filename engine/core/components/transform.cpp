@@ -127,6 +127,9 @@ glm::quat Transform::get_world_rotation() const {
 }
 
 glm::vec3 Transform::get_world_scale() const {
+    if (has_parent() == false) {
+        return local_scale;
+    }
     const glm::mat4& wm = get_world_matrix();
     return glm::vec3(glm::length(glm::vec3(wm[0])), glm::length(glm::vec3(wm[1])), glm::length(glm::vec3(wm[2])));
 }
@@ -220,12 +223,13 @@ void Transform::set_parent(Entity new_parent) {
     glm::quat world_rot;
     glm::vec3 world_scale;
     const bool unparenting = (new_parent == entt::null && has_parent());
-    const bool changing_parent = (new_parent != parent || parent != entt::null);
+    const bool changing_parent = (new_parent != entt::null && parent != entt::null && new_parent != parent);
 
     if (unparenting || changing_parent) {
         world_pos = get_world_position();
         world_rot = get_world_rotation();
         world_scale = get_world_scale();
+        world_scale = glm::round(world_scale * 100000.0f) / 100000.0f;  // Avoid floating point precision issues
     }
 
     if (has_parent()) {

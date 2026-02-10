@@ -1,6 +1,7 @@
 #include "gameplay.hpp"
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
+#include "engine/systems/gameplay/game_component.hpp"
 #include "engine/core/components/component_collection.hpp"
 #include "engine/systems/gameplay/game_component_registry.hpp"
 #include "engine/tools/profiler.hpp"

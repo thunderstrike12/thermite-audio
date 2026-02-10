@@ -14,6 +14,9 @@
 
 #include "engine/engine.hpp"
 #include "engine/core/resources.hpp"
+#include "engine/tools/prefab_helper.hpp"
+
+#include "editor/editor.hpp"
 
 namespace {
 
@@ -537,6 +540,8 @@ void AssetBrowser::display_viewing_location() {
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
             if (location_is_directory) {
                 pending_viewing_location = location;
+            } else if (location.get_relative_path().extension() == PrefabHelper::Config::PREFAB_EXTENSION) {
+                editor.switch_mode(Editor::Mode::PREFAB, location);
             } else {
                 const std::string open_file_command = std::format(R"(start "" "{}")", location.get_relative_path().generic_string());
                 if (system(open_file_command.c_str()) != 0) Log::warn(Log::Scope::ENGINE, "Couldn't open file.");

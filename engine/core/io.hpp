@@ -79,5 +79,14 @@ class IO {
 
 }  // namespace tmt
 
+namespace std {
+
+template <>
+struct hash<tmt::IO::FileLocation> {
+    size_t operator()(const tmt::IO::FileLocation& fl) const noexcept { return tmt::IO::FileLocationHash {}(fl); }
+};
+
+}  // namespace std
+
 FMT_LOGGING(tmt::IO::FileLocation, "({}, \"{}\")", obj.sub_location, obj.relative_path);
 TMT_OBJECT(tmt::IO::FileLocation, (sub_location, relative_path));

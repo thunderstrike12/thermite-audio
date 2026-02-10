@@ -1,5 +1,6 @@
 #pragma once
 #include <entt/entt.hpp>
+#include <set>
 #include <string>
 #include <ranges>
 #include "engine/tools/fmt/helper.hpp"

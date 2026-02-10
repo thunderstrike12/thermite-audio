@@ -6,6 +6,8 @@
 
 #include <ImReflect.hpp>
 
+#include "editor/editor.hpp"
+
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
 #include "engine/core/logger.hpp"
@@ -17,27 +19,42 @@
 #include "engine/core/components/voxel_renderer.hpp"
 
 #include "engine/tools/serializer/ecs.hpp"
+#include "engine/tools/prefab_helper.hpp"
 
 #include "editor/events/scene.hpp"
+
+#include "editor/shared/colors.hpp"
+#include "editor/shared/icons.hpp"
 
 namespace tmt {
 
 void Hierarchy::before_begin() {
     /* zero margin */
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    const bool prefab_mode = editor.editor_mode == Editor::Mode::PREFAB;
+    if (prefab_mode) {
+        /* nice blue-ish background color */
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, colors::to_u32(colors::PREFAB_BACKGROUND));
+    }
 }
 
 void Hierarchy::display() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
-
     top_bar();
     render_hierarchy();
     context_menu(entt::null);
+    file_drag_drop(entt::null);
 
     ImGui::PopStyleVar();
 }
 
-void Hierarchy::end_display() { ImGui::PopStyleVar(); }
+void Hierarchy::end_display() {
+    const bool prefab_mode = editor.editor_mode == Editor::Mode::PREFAB;
+    if (prefab_mode) {
+        ImGui::PopStyleColor();
+    }
+    ImGui::PopStyleVar();
+}
 
 void Hierarchy::start_section() {
     /* Begin child section for hierarchy */
@@ -74,6 +91,8 @@ void Hierarchy::end_section() {
 }
 
 void Hierarchy::context_menu(const Entity hovered_entity) {
+    const ImGuiID prefab_popup_id = ImGui::GetID(Config::PREFAB_POP_UP);
+
     if (ImGui::BeginPopup(Config::RIGHT_CLICK_CONTEXT)) {
         if (selected_entities.empty() == false) { /* Delete selection */
             const auto text = selected_entities.size() > 1 ? "Delete Entities" : "Delete Entity";
@@ -99,6 +118,51 @@ void Hierarchy::context_menu(const Entity hovered_entity) {
                 ImGui::CloseCurrentPopup();
             }
         }
+        const bool is_playing = engine.game_controller.is_playing();
+        if (selected_entities.size() == 1 && is_playing == false) { /* Make Prefab */
+            ImGui::Separator();
+            const auto text = "Make Prefab...";
+            // TODO: give extra pop-up for name
+            if (ImGui::MenuItem(text)) {
+                ImGui::OpenPopup(prefab_popup_id);
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopupModal(Config::PREFAB_POP_UP, nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings)) {
+        static std::string prefab_name = "NewPrefab";
+        static std::string error_message = "";
+        ImGui::InputText("Prefab Name", &prefab_name, ImGuiInputTextFlags_AlwaysOverwrite);
+        ImGui::SameLine();
+        ImGui::Text(".prefab");
+        if (ImGui::Button("Create")) {
+            const IO::FileLocation temp_location = {IO::Location::PROJECT, prefab_name + ".prefab"};
+            if (IO::file_exists(temp_location) == false) {
+                const Entity root_entity = *EntityHelper::upper_parents(selected_entities).begin();
+                const bool has_prefab = engine.ecs.has_component<Prefab>(root_entity);
+                if (has_prefab == false) {
+                    PrefabHelper::create_prefab(temp_location, root_entity);
+                    prefab_name = "NewPrefab";
+                    ImGui::CloseCurrentPopup();
+                } else {
+                    error_message = "Selected entity is already part of a prefab, cannot create prefab from it.";
+                }
+            } else {
+                error_message = "A prefab with the name \"" + prefab_name + "\" already exists.";
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            prefab_name = "NewPrefab";
+            ImGui::CloseCurrentPopup();
+        }
+
+        if (error_message.empty() == false) {
+            ImGui::TextColored(colors::to_imvec4(colors::ERROR), "%s", error_message.c_str());
+        }
+
         ImGui::EndPopup();
     }
 }
@@ -130,7 +194,7 @@ void Hierarchy::paste_entities(const Entity hovered_entity) {
     }
 
     clear_selection();
-    for (const auto entity : new_entities) {
+    for (const auto entity : parents) {
         selected_entities.insert(entity);
     }
     OnSceneModified::dispatch();
@@ -164,6 +228,28 @@ void Hierarchy::on_editor_update(const FrameData&) {
             selected_entities.erase(entity);
             break;
         }
+    }
+}
+
+void Hierarchy::file_drag_drop(const tmt::Entity parent) {
+    if (ImGui::BeginDragDropTarget()) {
+        // Get the current payload to check if its a FileLocation.
+        const ImGuiPayload* payload = ImGui::GetDragDropPayload();
+        if (payload != nullptr && payload->IsDataType("FileLocation")) {
+            const std::string_view json_string {static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize)};
+            tmt::IO::FileLocation file_location;
+            tmt::Serializer::deserialize(nlohmann::ordered_json::parse(json_string), file_location);
+
+            const std::string& extension = file_location.relative_path.extension().generic_string();
+            if (extension == PrefabHelper::Config::PREFAB_EXTENSION && ImGui::AcceptDragDropPayload("FileLocation") != nullptr) {
+                const Entity root = PrefabHelper::instantiate_prefab(file_location, parent);
+                clear_selection();
+                selected_entities.insert(root);
+                OnSceneModified::dispatch();
+            }
+        }
+
+        ImGui::EndDragDropTarget();
     }
 }
 
@@ -220,10 +306,18 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
 
     /* Debug name */
     // const auto name = state.name.name + " " + std::to_string(state.position.x) + "-" + std::to_string(state.position.y);
-    const auto name = state.name.name.empty() ? "Entity_" + EntityHelper::to_string(state.entity) : state.name.name;
+    auto name = state.name.name.empty() ? "Entity_" + EntityHelper::to_string(state.entity) : state.name.name;
+
+    const bool is_prefab = engine.ecs.has_component<Prefab>(state.entity);
+    if (is_prefab) {
+        name = tmt::icons::PREFAB_ICON + name;
+    }
 
     const ImGuiID tree_node_id = ImGui::GetID(name.c_str());
+
+    if (is_prefab) ImGui::PushStyleColor(ImGuiCol_Text, tmt::colors::to_u32(tmt::colors::PREFAB));
     bool open_node = ImGui::TreeNodeBehavior(tree_node_id, flags, name.c_str(), NULL);
+    if (is_prefab) ImGui::PopStyleColor();
 
     const bool is_hovered = ImGui::IsItemHovered();
     const bool is_left_mouse_released = ImGui::IsMouseReleased(ImGuiMouseButton_Left);
@@ -309,6 +403,7 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
         ImGui::OpenPopup(Config::RIGHT_CLICK_CONTEXT);
     }
     context_menu(state.entity);
+    file_drag_drop(state.entity);
 
     /* If the node is closed, don't display children */
     if (open_node == false) return true;
@@ -321,7 +416,9 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
     /* Display children */
     if (has_children) {
         uint32_t level_index = state.index() + 1;
-        for (auto child : state.transform.get_children()) {
+        /* copy since the list can change while we loop */
+        auto children = state.transform.get_children();
+        for (const auto child : children) {
             const bool has_components = engine.ecs.has_component<Name, Transform>(child);
             if (!has_components) continue;
 

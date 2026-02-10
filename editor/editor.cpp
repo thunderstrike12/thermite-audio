@@ -24,6 +24,7 @@
 /* Modes */
 #include "editor/modes/scene.hpp"
 #include "editor/modes/voxel.hpp"
+#include "editor/modes/prefab.hpp"
 
 /* Windows */
 #include "editor/windows/hierarchy.hpp"
@@ -41,6 +42,7 @@
 #include "editor/windows/console.hpp"
 #include "editor/windows/motion_math.hpp"
 #include "editor/windows/debug_lines.hpp"
+#include "editor/windows/ecs.hpp"
 #include "editor/windows/rendering.hpp"
 #include "editor/windows/model_viewer.hpp"
 #include "editor/windows/node_hierarchy.hpp"
@@ -59,6 +61,14 @@ Editor::~Editor() { delete &imgui_manager; }
 
 void Editor::init() { Log::info("Thermite Editor initialized."); }
 
+void Editor::switch_mode(Mode new_mode, const std::any& meta_data) {
+    // if (editor_mode == new_mode) return;
+
+    mode_handlers[editor_mode]->on_switch_away();
+    editor_mode = new_mode;
+    mode_handlers[editor_mode]->on_switch_to(meta_data);
+}
+
 void Editor::on_engine_init(const ApplicationSpecs&) {
     tmt::Log::info("Starting Thermite Editor...");
     imgui_manager.init();
@@ -67,6 +77,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
 
     mode_handlers[Mode::SCENE] = std::make_unique<SceneMode>();
     mode_handlers[Mode::VOXEL] = std::make_unique<VoxelMode>();
+    mode_handlers[Mode::PREFAB] = std::make_unique<PrefabMode>();
 
     windows[Mode::SCENE].add<Hierarchy>();
     windows[Mode::SCENE].add<GameFlow>();
@@ -83,6 +94,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     windows[Mode::SCENE].add<ImguiDemo>();
     windows[Mode::SCENE].add<MotionMathPreview>();
     windows[Mode::SCENE].add<DebugLines>();
+    windows[Mode::SCENE].add<EcsInspector>();
     windows[Mode::SCENE].add<Rendering>();
     windows[Mode::SCENE].add<UndoRedoManager>();
     windows[Mode::SCENE].add<EditorSettingsWindow>();
@@ -92,6 +104,14 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     windows[Mode::VOXEL].add<NodeHierarchy>();
     windows[Mode::VOXEL].add<Palette>();
     windows[Mode::VOXEL].add<Brush>();
+
+    engine.scenes.register_scene<PrefabEditScene>();
+    windows[Mode::PREFAB].add<Hierarchy>();
+    windows[Mode::PREFAB].add<Inspector>();
+    windows[Mode::PREFAB].add<Viewport>();
+    windows[Mode::PREFAB].add<AssetBrowser>();
+    windows[Mode::PREFAB].add<Console>();
+    windows[Mode::PREFAB].add<ScenesWindow>();
 
     for (auto& [mode, collection] : windows) {
         for (const auto& window : collection) {
@@ -201,10 +221,7 @@ void Editor::main_menu_bar() {
                 const bool is_selected = (editor_mode == mode);
                 if (!ImGui::MenuItem(handler->get_name().c_str(), nullptr, is_selected) || is_selected) continue;
 
-                mode_handlers[editor_mode]->on_switch_away();
-                editor_mode = mode;
-
-                handler->on_switch_to();
+                switch_mode(mode);
             }
             ImGui::EndMenu();
         }

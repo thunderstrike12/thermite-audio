@@ -2,6 +2,7 @@
 #include "engine/core/components/transform.hpp"
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
+#include "engine/tools/insertion_ordered_set.hpp"
 
 namespace tmt {
 
@@ -52,5 +53,6 @@ std::set<Entity> EntityHelper::upper_parents(const R& container) {
 template std::set<Entity> EntityHelper::upper_parents(const std::vector<Entity>&);
 template std::set<Entity> EntityHelper::upper_parents(const std::set<Entity>&);
 template std::set<Entity> EntityHelper::upper_parents(const std::unordered_set<Entity>&);
+template std::set<Entity> EntityHelper::upper_parents(const InsertionOrderedSet<Entity>&);
 
 }  // namespace tmt

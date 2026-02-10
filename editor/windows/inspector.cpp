@@ -33,18 +33,28 @@ void Inspector::on_editor_update(const tmt::FrameData&) {}
 void Inspector::on_editor_end() {}
 
 void Inspector::display() {
-    const auto& hierarchy = editor.windows[Editor::Mode::SCENE].get<Hierarchy>();
+    const auto& hierarchy = editor.windows[editor.editor_mode].get<Hierarchy>();
 
     const MenuContext menu_context {
         .primary_entity = hierarchy.get_first_selected_entity(),
         .selected_entities = hierarchy.get_selected_entities(),
     };
 
+    display_entity_info(menu_context);
+
     display_compile_time_components(menu_context);
 
     display_runtime_components(menu_context);
 
     add_component(menu_context);
+}
+
+void Inspector::display_entity_info(const MenuContext& menu_context) {
+    if (menu_context.primary_entity == entt::null) {
+        return;
+    }
+    const tmt::Entity& entity = menu_context.primary_entity;
+    ImGui::Text("Entity: %s", tmt::EntityHelper::to_string(entity).c_str());
 }
 
 void Inspector::display_compile_time_components(const tmt::Inspector::MenuContext& menu_context) {

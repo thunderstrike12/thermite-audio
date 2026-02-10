@@ -96,4 +96,6 @@ struct Transform {
 }  // namespace tmt
 
 FMT_LOGGING(tmt::Transform, "Position: {}, Rotation: {}, Scale: {}", obj.get_world_position(), obj.get_world_rotation(), obj.get_world_scale());
-TMT_COMPONENT_EX(tmt::Transform, "Transform", (local_position, local_rotation, local_scale, parent, children), (local_position, local_rotation, local_scale));
+TMT_COMPONENT_NAME(tmt::Transform, "Transform");
+TMT_COMPONENT_SERIALIZE(tmt::Transform, (local_position, local_rotation, local_scale, parent, children));
+TMT_COMPONENT_INSPECT(tmt::Transform, (local_position, local_rotation, local_scale));

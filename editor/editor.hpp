@@ -18,12 +18,15 @@ class Editor : public OnEngineInit, public OnEngineUpdate, public OnEngineFixedU
     enum class Mode : uint8_t {
         SCENE,
         VOXEL,
+        PREFAB,
     };
 
     Editor();
     ~Editor();
 
     void init();
+
+    void switch_mode(Mode new_mode, const std::any& meta_data = {});
 
     Mode editor_mode {Mode::SCENE};
     std::map<Mode, std::unique_ptr<IEditorMode>> mode_handlers;

@@ -15,10 +15,6 @@
 #include "engine/core/renderer/voxel_object.hpp"
 #include "engine/systems/gameplay/game_component.hpp"
 
-// Game Components
-#include "components/player.hpp"
-#include "components/wallet.hpp"
-
 class Game : public tmt::Application {
    public:
     Game(const tmt::ApplicationSpecs& specs) : Application(specs) {}
@@ -28,14 +24,16 @@ class Game : public tmt::Application {
     void on_end() override {};
 };
 
-class MainMenuScene : public tmt::Scene<MainMenuScene> {
+class DragonScene : public tmt::Scene<DragonScene> {
    public:
-    static constexpr std::string_view scene_name() { return "MainMenuScene"; }
-};
+    static constexpr std::string_view scene_name() { return "DragonScene"; }
 
-class MainGameScene : public tmt::Scene<MainGameScene> {
-   public:
-    static constexpr std::string_view scene_name() { return "MainGameScene"; }
+    void on_start() override;
+    void on_update(const tmt::FrameData& time) override;
+    void on_end() override;
+
+    tmt::Entity voxel {};
+    float elapsed_time = 0.0f;
 };
 
 class EntityRef : public tmt::GameComponent<EntityRef> {
@@ -43,6 +41,7 @@ class EntityRef : public tmt::GameComponent<EntityRef> {
     using GameComponent::GameComponent;
 
     tmt::Entity entity_ref = entt::null;
+    std::set<tmt::Entity> entity_set {};
 
     static constexpr std::string_view get_name() { return "EntityRef"; }
 
@@ -54,27 +53,46 @@ class EntityRef : public tmt::GameComponent<EntityRef> {
     void update(const tmt::FrameData& time) override {}
     void end() override {}
 };
-TMT_OBJECT(EntityRef, (entity_ref));
+TMT_OBJECT(EntityRef, (entity_ref, entity_set));
 
 std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs& args) {
     // clang-format off
     tmt::ApplicationSpecs specs {
-        .name = "Mining Game",
+        .name = "Example Game",
         .command_args = args,
-        .log_file = "mining_game_logs.txt"
+        .log_file = "example_game_logs.txt"
     };
     // clang-format on
 
-    /* Register Scenes */
-    tmt::engine.scenes.register_scene<MainGameScene>();
-    tmt::engine.scenes.register_scene<MainMenuScene>();
+    /* Register Systems */
+    tmt::engine.ecs.systems.add<tmt::CameraSystem>();
 
-    /* Register Components */
-    tmt::engine.component_registry.register_component<Player>();
-    tmt::engine.component_registry.register_component<Wallet>();
+    /* Register Scenes */
+    tmt::engine.scenes.register_scene<DragonScene>();
 
     /* Register Game Components */
     tmt::engine.component_registry.register_component<EntityRef>();
 
     return std::make_unique<Game>(specs);
 }
+
+#include "engine/core/resources/texture_2d.hpp"
+
+/* Dragon Scene */
+void DragonScene::on_start() {
+    { /* Camera entity */
+        tmt::Entity entity = tmt::engine.ecs.create_entity("Camera");
+        auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
+
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+        transform.set_world_position(glm::vec3(0.0f, 0.25f, -120.0f));
+    }
+}
+
+#include "engine/core/renderer/renderer.hpp"
+#include "engine/core/renderer/render_view.hpp"
+#include "engine/shared/ray.hpp"
+
+void DragonScene::on_update(const tmt::FrameData& /*time*/) {}
+
+void DragonScene::on_end() {}

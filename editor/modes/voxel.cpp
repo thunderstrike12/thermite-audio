@@ -43,7 +43,7 @@ void VoxelMode::display_main_menu() {
     ImGui::EndMenu();
 }
 
-void VoxelMode::on_switch_to() {
+void VoxelMode::on_switch_to(const std::any& meta_data) {
     engine.scenes.load_scene<VoxelEditScene>();
 
     if (!edit_data.empty()) {
