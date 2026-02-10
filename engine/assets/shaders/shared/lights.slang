@@ -67,7 +67,6 @@ public [ForceInline] float evaluate_weight(const float3 p, const float3 n, const
 
     /* Calculate the weight based on the perceived brightness of the light */
     const float luminance = cs::acescg_luminance(light.luminance);
-    if (light.type == LightType::SUN_LIGHT) return luminance * 0.1f;
     return 1.0f + luminance * distance_attenuation(src_dist, light.culling_radius);
 }
 
@@ -78,15 +77,36 @@ public struct LightSample {
     public float tmax;
 };
 
+/* Generate a sample for the sun light source. */
+public [ForceInline] LightSample sample_sun(const float3 point, const SceneView scene_view, const float2 r01) {
+    LightSample sample;
+
+    /* Generate a direction within a cone in local-space */
+    const float cos_theta = 1.0f - r01.x * (1.0f - scene_view.sun_angle);
+    const float sin_theta = sqrt(1.0f - cos_theta * cos_theta);
+    const float phi = 2.0f * PI_F32 * r01.y;
+    const float3 local_dir = float3(sin_theta * cos(phi), sin_theta * sin(phi), cos_theta);
+
+    /* Form an orthonormal basis around the light source direction */
+    const Basis basis = orthonormal_basis(scene_view.sun_dir);
+
+    /* Convert the local-space direction to a world-space one */
+    sample.dir = local_dir.x * basis.a + local_dir.y * basis.b + local_dir.z * scene_view.sun_dir;
+    sample.tmax = BIG_F32;
+
+    /* Calculate the PDF of the sample */
+    sample.rcp_pdf = 2.0f * PI_F32 * (1.0f - scene_view.sun_angle);
+    return sample;
+}
+
 /* Generate a sample for a universal light source. */
 public [ForceInline] LightSample sample_light(const float3 point, const Light light, const float2 r01) {
     LightSample sample;
 
     /* Sphere, Sun, and Spot lights take the same path */
-    const bool is_sun = light.type == LightType::SUN_LIGHT;
-    const float3 light_dir = is_sun ? -light.direction : normalize(light.origin - point);
-    const float light_dist = is_sun ? BIG_F32 : max(0.001f, distance(light.origin, point));
-    const float sample_angle = is_sun ? light.source_radius : sqrt(1.0f - pow(light.source_radius / light_dist, 2.0f));
+    const float3 light_dir = normalize(light.origin - point);
+    const float light_dist = max(0.001f, distance(light.origin, point));
+    const float sample_angle = sqrt(1.0f - pow(light.source_radius / light_dist, 2.0f));
 
     /* Tube light requires special path */
     if (light.type == LightType::TUBE_LIGHT) {
@@ -123,7 +143,7 @@ public [ForceInline] LightSample sample_light(const float3 point, const Light li
     const float3 light_local = point - light.origin;
     const float b = dot(light_local, sample.dir);
     const float c = dot(light_local, light_local) - light.source_radius * light.source_radius;
-    sample.tmax = is_sun ? BIG_F32 : max(0.0f, -b + sqrt(b * b - c));
+    sample.tmax = max(0.0f, -b + sqrt(b * b - c));
 
     /* Calculate the PDF of the sample */
     sample.rcp_pdf = 2.0f * PI_F32 * (1.0f - sample_angle);

@@ -18,6 +18,12 @@ static_assert(MAX_VOXEL_OBJECTS < (1u << 14));
 constexpr uint32_t MAX_LIGHTS = 1000u;
 
 struct GpuSceneView {
+    /* Direction pointing towards the sun. */
+    glm::vec3 sun_dir {};
+    /* Radius as cos(theta) of the sun, defines the softness of its shadows. */
+    float sun_angle = 0.0f;
+    /* Exitent luminance of the light source. (in cd/m2, in ACEScg color-space) */
+    glm::vec3 sun_luminance {};
     uint32_t light_count = 0u;
 };
 

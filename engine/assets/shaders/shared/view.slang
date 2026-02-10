@@ -18,8 +18,14 @@ public struct RenderView {
     public float dt;
 };
 
-/* Holds information about the active scene. */ 
+/* Holds information about the active scene. */
 public struct SceneView {
+    /* Direction pointing towards the sun. */
+    public float3 sun_dir;
+    /* Radius as cos(theta) of the sun, defines the softness of its shadows. */
+    public float sun_angle;
+    /* Exitent luminance of the light source. (in cd/m2, in ACEScg color-space) */
+    public float3 sun_luminance;
     /* Number of lights present in the scene. */
     public uint light_count;
 };
