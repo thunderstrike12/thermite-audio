@@ -58,7 +58,8 @@ bool Gizmo::manip(const float x, const float y, const float width, const float h
 
         glm::mat4 delta;
         changed = ImGuizmo::Manipulate(
-            &view[0][0], &perspective[0][0], static_cast<ImGuizmo::OPERATION>(OPERATIONS[operation]), static_cast<ImGuizmo::MODE>(space), &imguizmo_input_matrix[0][0], &delta[0][0], &snap
+            &view[0][0], &perspective[0][0], static_cast<ImGuizmo::OPERATION>(OPERATIONS[operation]), static_cast<ImGuizmo::MODE>(space), &imguizmo_input_matrix[0][0], &delta[0][0],
+            snap == 0.0f ? nullptr : &glm::vec3(snap)[0]
         );
 
         static std::unordered_map<Entity, ComponentDiff<Transform>> component_diffs;
