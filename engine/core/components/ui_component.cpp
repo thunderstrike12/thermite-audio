@@ -113,4 +113,5 @@ bool AnchorHelper::is_inside(const Entity entity, const glm::vec2& viewport_poin
 
     return contains(rect, viewport_point, world_pos + offset, world_scale, world_rotation, ui_component->pivot);
 }
+
 }  // namespace tmt

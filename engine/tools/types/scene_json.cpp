@@ -3,9 +3,13 @@
 
 namespace tmt {
 
-std::string SceneJson::dump() const { return json_value.dump(4); }
+std::string SceneJson::dump() const {
+    return json_value.dump(4);
+}
 
-bool SceneJson::has_version() const { return json_value.contains("version"); }
+bool SceneJson::has_version() const {
+    return json_value.contains("version");
+}
 
 uint64_t SceneJson::get_version() const {
     if (json_value.contains("version")) {
@@ -15,19 +19,33 @@ uint64_t SceneJson::get_version() const {
     return 0;
 }
 
-void SceneJson::set_version(uint64_t version) { json_value["version"] = version; }
+void SceneJson::set_version(uint64_t version) {
+    json_value["version"] = version;
+}
 
-bool SceneJson::has_entities() const { return json_value.contains("entities"); }
+bool SceneJson::has_entities() const {
+    return json_value.contains("entities");
+}
 
-json& SceneJson::entities() { return json_value["entities"]; }
+json& SceneJson::entities() {
+    return json_value["entities"];
+}
 
-const json& SceneJson::entities() const { return json_value.at("entities"); }
+const json& SceneJson::entities() const {
+    return json_value.at("entities");
+}
 
-bool SceneJson::has_components(const std::string& component_name) const { return json_value.contains(component_name); }
+bool SceneJson::has_components(const std::string& component_name) const {
+    return json_value.contains(component_name);
+}
 
-json& SceneJson::components(const std::string& component_name) { return json_value[component_name]; }
+json& SceneJson::components(const std::string& component_name) {
+    return json_value[component_name];
+}
 
-const json& SceneJson::components(const std::string& component_name) const { return json_value.at(component_name); }
+const json& SceneJson::components(const std::string& component_name) const {
+    return json_value.at(component_name);
+}
 
 bool SceneJson::has_component_entry(const std::string& component_name, const Entity entity_id) const {
     if (has_components(component_name) == false) return false;
@@ -43,7 +61,7 @@ std::optional<json> SceneJson::component_value(const std::string& component_name
     const json& component_container = components(component_name);
     if (has_entity_entry(component_container, entity_id) == false) return std::nullopt;
 
-    return std::optional<json> {get_entity_entry(component_container, entity_id)};
+    return std::optional<json> { get_entity_entry(component_container, entity_id) };
 }
 
 bool SceneJson::has_entity_entry(const json& container, const Entity entity_id) const {

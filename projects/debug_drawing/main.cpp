@@ -53,7 +53,7 @@ void DebugScene::on_start() {
         transform.set_world_position(glm::vec3(0.0f, 0.0f, -16.0f));
     }
 
-    auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "dragon128.vengi"});
+    auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "dragon128.vengi" });
     auto voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
 
     auto entity = tmt::engine.ecs.create_entity();
@@ -68,57 +68,57 @@ void DebugScene::on_update(const tmt::FrameData& time) {
     /* Lines */
     tmt::engine.polyline.use_line_width(15.0f, false);
     tmt::engine.polyline.use_color(1.0f, 0.3f, 0.3f);
-    tmt::engine.polyline.draw_line({0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
+    tmt::engine.polyline.draw_line({ 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f });
     tmt::engine.polyline.use_color(0.3f, 1.0f, 0.3f);
-    tmt::engine.polyline.draw_line({0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
+    tmt::engine.polyline.draw_line({ 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
     tmt::engine.polyline.use_color(0.3f, 0.3f, 1.0f);
-    tmt::engine.polyline.draw_line({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f});
+    tmt::engine.polyline.draw_line({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f });
 
     /* Circle */
     tmt::engine.polyline.use_color(0.9f, 0.9f, 0.9f);
-    tmt::engine.polyline.draw_circle({2.0f, 0.5f, 0.5f}, 0.5f, 64);
+    tmt::engine.polyline.draw_circle({ 2.0f, 0.5f, 0.5f }, 0.5f, 64);
 
     /* Arrow */
     tmt::engine.polyline.use_color(0.9f, 0.9f, 0.9f);
     tmt::engine.polyline.use_line_width(1.5f);
-    tmt::engine.polyline.draw_arrow({3.25f, 0.0f, 0.5f}, {0.0f, 1.0f, 0.0f}, 1.0f);
+    tmt::engine.polyline.draw_arrow({ 3.25f, 0.0f, 0.5f }, { 0.0f, 1.0f, 0.0f }, 1.0f);
 
     /* AABB */
     tmt::engine.polyline.use_line_width(15.0f, false);
     tmt::engine.polyline.use_color(1.0f, 0.3f, 0.3f);
-    tmt::engine.polyline.draw_aabb({4.0f, 0.0f, 0.0f}, {5.0f, 1.0f, 1.0f});
+    tmt::engine.polyline.draw_aabb({ 4.0f, 0.0f, 0.0f }, { 5.0f, 1.0f, 1.0f });
 
     /* OBB */
     tmt::engine.polyline.use_depth_testing(false);
     tmt::engine.polyline.use_color(0.3f, 1.0f, 0.3f);
-    tmt::engine.polyline.draw_obb({6.5f, 0.5f, 0.5f}, {0.5f, 0.5f, 0.5f}, glm::angleAxis(0.4f, glm::vec3(1.0f, 0.0f, 0.0f)));
+    tmt::engine.polyline.draw_obb({ 6.5f, 0.5f, 0.5f }, { 0.5f, 0.5f, 0.5f }, glm::angleAxis(0.4f, glm::vec3(1.0f, 0.0f, 0.0f)));
     tmt::engine.polyline.use_depth_testing(true);
 
     /* Sphere */
     tmt::engine.polyline.use_color(0.3f, 0.3f, 1.0f);
-    tmt::engine.polyline.draw_sphere({8.0f, 0.5f, 0.5f}, 0.5f, 64);
+    tmt::engine.polyline.draw_sphere({ 8.0f, 0.5f, 0.5f }, 0.5f, 64);
 
     /* Cone */
     tmt::engine.polyline.use_color(0.9f, 0.9f, 0.9f);
-    tmt::engine.polyline.draw_cone({9.0f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, 0.2f, 2.0f, 64);
+    tmt::engine.polyline.draw_cone({ 9.0f, 0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f }, 0.2f, 2.0f, 64);
 
     /* Tube */
     tmt::engine.polyline.use_color(0.9f, 0.9f, 0.9f);
-    tmt::engine.polyline.draw_tube({10.0f, 0.5f, 0.0f}, {10.0f, 0.5f, 1.0f}, 0.1f, 32);
+    tmt::engine.polyline.draw_tube({ 10.0f, 0.5f, 0.0f }, { 10.0f, 0.5f, 1.0f }, 0.1f, 32);
 
     /* Bones */
     tmt::engine.polyline.use_line_width(1.5f);
     tmt::engine.polyline.use_color(0.9f, 0.9f, 0.9f);
-    tmt::engine.polyline.draw_bone({11.0f, 0.5f, 0.5f}, glm::angleAxis(0.0f, glm::vec3(1.0f, 0.0f, 0.0f)), 1.0f);
+    tmt::engine.polyline.draw_bone({ 11.0f, 0.5f, 0.5f }, glm::angleAxis(0.0f, glm::vec3(1.0f, 0.0f, 0.0f)), 1.0f);
     tmt::engine.polyline.use_color(1.0f, 0.3f, 0.3f);
-    tmt::engine.polyline.draw_bone({11.0f, 1.5f, 0.5f}, glm::angleAxis(1.1f, glm::vec3(0.0f, 0.0f, 1.0f)), 1.5f);
+    tmt::engine.polyline.draw_bone({ 11.0f, 1.5f, 0.5f }, glm::angleAxis(1.1f, glm::vec3(0.0f, 0.0f, 1.0f)), 1.5f);
     tmt::engine.polyline.use_color(0.3f, 0.3f, 1.0f);
-    tmt::engine.polyline.draw_bone({11.0f, 1.5f, 0.5f}, glm::angleAxis(-0.8f, glm::vec3(0.0f, 0.0f, 1.0f)), 1.0f);
+    tmt::engine.polyline.draw_bone({ 11.0f, 1.5f, 0.5f }, glm::angleAxis(-0.8f, glm::vec3(0.0f, 0.0f, 1.0f)), 1.0f);
 
     /* Text */
     tmt::engine.polyline.use_line_width(1.5f);
     tmt::engine.polyline.use_color(0.9f, 0.9f, 0.9f);
-    tmt::engine.polyline.draw_text({12.0f, 0.5f, 0.5f}, "HP: 100", 0.15f, 0.0f);
+    tmt::engine.polyline.draw_text({ 12.0f, 0.5f, 0.5f }, "HP: 100", 0.15f, 0.0f);
 
     /* Scene grid */
     tmt::engine.polyline.draw_scene_grid(1.0f, 8, 64);

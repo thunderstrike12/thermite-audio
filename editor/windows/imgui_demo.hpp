@@ -3,6 +3,7 @@
 #include <imgui.h>
 
 namespace tmt {
+
 class ImguiDemo : public IWindow {
    public:
     // Inherited via IWindow
@@ -15,4 +16,5 @@ class ImguiDemo : public IWindow {
     void on_editor_update(const tmt::FrameData&) override {};
     void on_editor_end() override {};
 };
+
 }  // namespace tmt

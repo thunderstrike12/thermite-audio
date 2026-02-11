@@ -55,7 +55,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
 
 void MainScene::on_start() {
     /* Load the throwable box model */
-    const tmt::ResourceRef box_scene = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "box-10.vengi"});
+    const tmt::ResourceRef box_scene = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "box-10.vengi" });
     box_model = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(box_scene);
 }
 

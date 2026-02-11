@@ -19,7 +19,9 @@ void Resources::unload_unused() {
     }
 }
 
-size_t Resources::resource_count() const { return resources.size(); }
+size_t Resources::resource_count() const {
+    return resources.size();
+}
 
 void Resources::reload_collection(ResourceCollection& collection) const {
     const bool success = reload_resource(collection.file_resource);
@@ -58,7 +60,9 @@ bool Resources::reload_resource(const std::shared_ptr<FileResource>& resource) c
     return true;
 }
 
-void Resources::ResourceCollection::push_back(const std::shared_ptr<Resource>& resource) { runtime_resources.push_back(resource); }
+void Resources::ResourceCollection::push_back(const std::shared_ptr<Resource>& resource) {
+    runtime_resources.push_back(resource);
+}
 
 void Resources::ResourceCollection::clean_up() {
     std::erase_if(runtime_resources, [](const std::weak_ptr<Resource>& res) { return res.expired(); });

@@ -3,6 +3,7 @@
 #include "engine/core/application.hpp"
 
 namespace tmt {
+
 class OnEngineInit : public EventListenerBase<OnEngineInit, ApplicationSpecs> {
    public:
     OnEngineInit() : EventListenerBase() {}

@@ -14,4 +14,5 @@ class NavigationSystem : public ISystem {
     void on_update(const FrameData& time) override;
     void on_end() override;
 };
+
 }  // namespace tmt

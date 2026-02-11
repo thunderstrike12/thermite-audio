@@ -5,6 +5,7 @@
 namespace tmt {
 
 namespace action {
+
 constexpr auto CONFIRM = "confirm";
 constexpr auto CANCEL = "cancel";
 constexpr auto LEFT_CLICK = "left_click";
@@ -21,6 +22,7 @@ constexpr auto LOOK_RIGHT = "Look_right";
 constexpr auto LOOK_LEFT = "Look_left";
 constexpr auto LEFT_TRIGGER = "left_trigger";
 constexpr auto RIGHT_TRIGGER = "right_trigger";
+
 }  // namespace action
 
 struct InputAction {
@@ -158,4 +160,5 @@ class InputMap {
     void setup_default_actions();
     std::unordered_map<std::string, InputAction> actions {};
 };
+
 }  // namespace tmt

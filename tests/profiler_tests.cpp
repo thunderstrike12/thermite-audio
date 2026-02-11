@@ -50,7 +50,11 @@ TEST_F(TracyProfilerTest, ZoneValueWorks) {
 }
 
 #ifdef TRACY_ENABLE
-TEST_F(TracyProfilerTest, TracyIsEnabled) { EXPECT_TRUE(true) << "TRACY_ENABLE is defined"; }
+TEST_F(TracyProfilerTest, TracyIsEnabled) {
+    EXPECT_TRUE(true) << "TRACY_ENABLE is defined";
+}
 #else
-TEST_F(TracyProfilerTest, TracyIsDisabled) { GTEST_SKIP() << "Tracy is disabled (TRACY_ENABLE not defined)"; }
+TEST_F(TracyProfilerTest, TracyIsDisabled) {
+    GTEST_SKIP() << "Tracy is disabled (TRACY_ENABLE not defined)";
+}
 #endif

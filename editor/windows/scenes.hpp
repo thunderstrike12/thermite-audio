@@ -4,6 +4,7 @@
 #include "editor/events/scene.hpp"
 
 namespace tmt {
+
 class ScenesWindow : public IWindow, OnSceneModified, OnSceneSerialized, OnPostLoadScene {
    public:
     ScenesWindow() = default;
@@ -32,4 +33,5 @@ class ScenesWindow : public IWindow, OnSceneModified, OnSceneSerialized, OnPostL
     // Inherited via OnPostLoadScene
     void on_post_load_scene() override;
 };
+
 }  // namespace tmt

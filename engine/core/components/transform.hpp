@@ -75,16 +75,16 @@ struct Transform {
    private:
     BEFRIEND_VISITABLE();
 
-    glm::vec3 local_position {0.0f, 0.0f, 0.0f};
-    glm::quat local_rotation {1.0f, 0.0f, 0.0f, 0.0f};
-    glm::vec3 local_scale {1.0f, 1.0f, 1.0f};
-    glm::vec3 local_eulers {0.f, 0.f, 0.f};
+    glm::vec3 local_position { 0.0f, 0.0f, 0.0f };
+    glm::quat local_rotation { 1.0f, 0.0f, 0.0f, 0.0f };
+    glm::vec3 local_scale { 1.0f, 1.0f, 1.0f };
+    glm::vec3 local_eulers { 0.f, 0.f, 0.f };
 
-    mutable glm::mat4 world_matrix {glm::identity<glm::mat4>()};
+    mutable glm::mat4 world_matrix { glm::identity<glm::mat4>() };
 
     mutable bool is_dirty = true;
 
-    Entity parent {entt::null};
+    Entity parent { entt::null };
     std::set<Entity> children;
 
     /* Recalculate world matrix if dirty */

@@ -31,7 +31,7 @@ void PrefabHelper::create_prefab(const IO::FileLocation& location, const Entity&
     IO::write_text_file(location, dump);
 
     /* Add Prefab components */
-    std::set<Entity> entities = {root};
+    std::set<Entity> entities = { root };
     entities.merge(root_transform.get_all_children());
 
     const PrefabInstanceID instance_id = UUIDGenerator::generate();
@@ -40,11 +40,13 @@ void PrefabHelper::create_prefab(const IO::FileLocation& location, const Entity&
         const bool has_prefab = engine.ecs.has_component<Prefab>(entity);
         if (has_prefab) {
             auto& prefab_comp = engine.ecs.get_component<Prefab>(entity);
-            prefab_comp.prefab_chain.push_back({
-                location,
-                entity,
-                instance_id,
-            });
+            prefab_comp.prefab_chain.push_back(
+                {
+                    location,
+                    entity,
+                    instance_id,
+                }
+            );
         } else {
             auto& prefab_comp = engine.ecs.add_or_get_component<Prefab>(entity);
             prefab_comp.source_location = location;

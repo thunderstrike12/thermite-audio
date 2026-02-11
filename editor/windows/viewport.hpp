@@ -3,6 +3,7 @@
 #include "engine/events/input.hpp"
 
 namespace tmt {
+
 class Viewport : public IWindow, public OnRetrieveMouseState {
    public:
     Viewport() = default;
@@ -35,7 +36,7 @@ class Viewport : public IWindow, public OnRetrieveMouseState {
     float height = -1;
 
     bool is_hovered = false;
-    glm::vec2 mouse_pos = {0.0f, 0.0f};
+    glm::vec2 mouse_pos = { 0.0f, 0.0f };
 
     float camera_speed = 4.0f;
     bool using_debug_camera = false;
@@ -58,4 +59,5 @@ class Viewport : public IWindow, public OnRetrieveMouseState {
     // Inherited via OnRetrieveMouseState
     void on_retrieve_mouse_state(MouseOverride& event) override;
 };
+
 }  // namespace tmt

@@ -130,17 +130,17 @@ void RigData::extract_bone_keyframes_fbx(const ufbx_scene* animation_fbx, const 
 
             for (const ufbx_baked_vec3& translation : bake_node.translation_keys) {
                 bone_comp.animations[animation_name].keyframes_pos.push_back(
-                    KeyframePos {static_cast<float>(translation.time), glm::vec3 {translation.value.x, translation.value.y, translation.value.z}}
+                    KeyframePos { static_cast<float>(translation.time), glm::vec3 { translation.value.x, translation.value.y, translation.value.z } }
                 );
             }
 
             for (const ufbx_baked_vec3& scale : bake_node.scale_keys) {
-                bone_comp.animations[animation_name].keyframes_scale.push_back(KeyframeScale {static_cast<float>(scale.time), glm::vec3 {scale.value.x, scale.value.y, scale.value.z}});
+                bone_comp.animations[animation_name].keyframes_scale.push_back(KeyframeScale { static_cast<float>(scale.time), glm::vec3 { scale.value.x, scale.value.y, scale.value.z } });
             }
 
             for (const ufbx_baked_quat& rotation : bake_node.rotation_keys) {
                 bone_comp.animations[animation_name].keyframes_rot.push_back(
-                    KeyframeRot {static_cast<float>(rotation.time), glm::quat((float)rotation.value.w, (float)rotation.value.x, (float)rotation.value.y, (float)rotation.value.z)}
+                    KeyframeRot { static_cast<float>(rotation.time), glm::quat((float)rotation.value.w, (float)rotation.value.x, (float)rotation.value.y, (float)rotation.value.z) }
                 );
             }
         }
@@ -156,11 +156,11 @@ void RigData::init_bone_fbx(const ufbx_node* node, const std::map<const ufbx_nod
     const ufbx_transform& node_transform = node->local_transform;
 
     const ufbx_vec3& node_translation = node_transform.translation;
-    const glm::vec3 position {node_translation.x, node_translation.y, node_translation.z};
+    const glm::vec3 position { node_translation.x, node_translation.y, node_translation.z };
     bone.default_trans.set_local_position(position);
 
     const ufbx_quat& node_rotation = node_transform.rotation;
-    const glm::quat local_rotation {static_cast<float>(node_rotation.w), static_cast<float>(node_rotation.x), static_cast<float>(node_rotation.y), static_cast<float>(node_rotation.z)};
+    const glm::quat local_rotation { static_cast<float>(node_rotation.w), static_cast<float>(node_rotation.x), static_cast<float>(node_rotation.y), static_cast<float>(node_rotation.z) };
     bone.default_trans.set_local_rotation(local_rotation);
 
     const auto mesh_connection = mesh_connections.find(node);
@@ -168,11 +168,11 @@ void RigData::init_bone_fbx(const ufbx_node* node, const std::map<const ufbx_nod
         const ufbx_node* mesh_node = mesh_connection->second;
         const ufbx_mesh* mesh = mesh_node->mesh;
 
-        glm::vec3 min {1e30f};
-        glm::vec3 max {-1e30f};
+        glm::vec3 min { 1e30f };
+        glm::vec3 max { -1e30f };
 
         for (const auto& vertex : mesh->skinned_position.values) {
-            const glm::vec3 vertex_position {vertex.x, vertex.y, vertex.z};
+            const glm::vec3 vertex_position { vertex.x, vertex.y, vertex.z };
             min = glm::min(min, vertex_position);
             max = glm::max(max, vertex_position);
         }

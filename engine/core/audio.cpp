@@ -14,6 +14,7 @@
 namespace tmt {
 
 namespace {
+
 // Logs the message as an error if the result is not FMOD_OK.
 bool TryLogError(const FMOD_RESULT result, const spdlog::string_view_t message) {
     if (result) {
@@ -35,7 +36,9 @@ std::vector<AudioInstance> paused_game_audio;
 
 }  // namespace
 
-bool AudioInstance::is_valid() const { return engine.audio.active_instances.contains(instance); }
+bool AudioInstance::is_valid() const {
+    return engine.audio.active_instances.contains(instance);
+}
 
 void AudioInstance::stop(const FMOD_STUDIO_STOP_MODE stop_mode) const {
     if (TryLogError(!is_valid(), "Invalid AudioInstance for get_path")) return;
@@ -146,7 +149,9 @@ FMOD_3D_ATTRIBUTES AudioInstance3D::get_3d_attributes() const {
     return attributes;
 }
 
-bool AudioEvent::is_valid() const { return source_bank && description->isValid(); }
+bool AudioEvent::is_valid() const {
+    return source_bank && description->isValid();
+}
 
 bool AudioEvent::is_3d() const {
     bool is_3d = false;
@@ -208,32 +213,32 @@ std::vector<AudioParameter> AudioEvent::get_parameters() const {
 }
 
 AudioInstance AudioEvent::play() const {
-    if (TryLogError(!is_valid(), "Invalid AudioEvent for play.")) return {nullptr};
+    if (TryLogError(!is_valid(), "Invalid AudioEvent for play.")) return { nullptr };
 
     // Play the event, creating an instance.
     FMOD::Studio::EventInstance* event_instance = nullptr;
     FMOD_RESULT result = description->createInstance(&event_instance);
-    if (TryLogError(result, "Event instance with this description could not be created")) return {nullptr};
+    if (TryLogError(result, "Event instance with this description could not be created")) return { nullptr };
 
     engine.audio.active_instances.emplace(event_instance);
 
     result = event_instance->start();
-    if (TryLogError(result, "Event instance failed to start")) return {nullptr};
+    if (TryLogError(result, "Event instance failed to start")) return { nullptr };
 
     // Mark it for release immediately, once it ends it can immediately be cleaned up.
     result = event_instance->release();
-    if (TryLogError(result, "Event instance failed to mark for release")) return {nullptr};
+    if (TryLogError(result, "Event instance failed to mark for release")) return { nullptr };
 
-    return {event_instance};
+    return { event_instance };
 }
 
 AudioInstance3D AudioEvent::play_3d() const {
-    if (TryLogError(!is_valid(), "Invalid AudioEvent for play_3d.")) return {nullptr};
+    if (TryLogError(!is_valid(), "Invalid AudioEvent for play_3d.")) return { nullptr };
 
-    if (TryLogError(!is_3d(), "AudioEvent isn't 3d, invalid call to play_3d.")) return {nullptr};
+    if (TryLogError(!is_3d(), "AudioEvent isn't 3d, invalid call to play_3d.")) return { nullptr };
 
     AudioInstance instance = play();
-    return {instance.instance};
+    return { instance.instance };
 }
 
 glm::vec2 AudioEvent::get_min_max_distance() const {
@@ -244,10 +249,12 @@ glm::vec2 AudioEvent::get_min_max_distance() const {
     const FMOD_RESULT result = description->getMinMaxDistance(&min, &max);
     if (TryLogError(result, "Failed to get VCA volume")) return {};
 
-    return {min, max};
+    return { min, max };
 }
 
-bool VolumeControl::is_valid() const { return source_bank && vca->isValid(); }
+bool VolumeControl::is_valid() const {
+    return source_bank && vca->isValid();
+}
 
 std::string VolumeControl::get_path() const {
 #if defined(THERMITE_EDITOR) || defined(THERMITE_DEBUG)
@@ -411,7 +418,9 @@ void Audio::set_global_parameter(const AudioParameter& parameter, const float va
     TryLogError(result, "Failed to set parameter");
 }
 
-void Audio::set_global_parameter(const AudioParameter& parameter, const int value) const { set_global_parameter(parameter, static_cast<float>(value)); }
+void Audio::set_global_parameter(const AudioParameter& parameter, const int value) const {
+    set_global_parameter(parameter, static_cast<float>(value));
+}
 
 void Audio::set_global_label_parameter(const AudioParameter& parameter, const std::string& value) const {
     const FMOD_RESULT result = system->setParameterByIDWithLabel(parameter.get_id(), value.c_str());

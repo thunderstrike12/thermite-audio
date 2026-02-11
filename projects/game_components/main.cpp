@@ -117,7 +117,9 @@ void DragonScene::on_update(const tmt::FrameData&) {}
 
 void DragonScene::on_end() {}
 
-void MoveUp::start() { printf("MoveUp component started on entity %u\n", entity); }
+void MoveUp::start() {
+    printf("MoveUp component started on entity %u\n", entity);
+}
 
 void MoveUp::update(const tmt::FrameData&) {
     const float elapsed_time = tmt::engine.frame_data().elapsed_time;
@@ -127,7 +129,9 @@ void MoveUp::update(const tmt::FrameData&) {
     transform.set_local_position(position);
 }
 
-void MoveUp::end() { printf("MoveUp component ended on entity %u\n", entity); }
+void MoveUp::end() {
+    printf("MoveUp component ended on entity %u\n", entity);
+}
 
 void MoveSide::update(const tmt::FrameData&) {
     const float elapsed_time = tmt::engine.frame_data().elapsed_time;

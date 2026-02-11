@@ -9,4 +9,6 @@ void tmt::MotionMathSystem::on_fixed_update(const tmt::FrameData& time) {
     }
 }
 
-void tmt::MotionMathSystem::on_end() { motion_buckets.clear(); }
+void tmt::MotionMathSystem::on_end() {
+    motion_buckets.clear();
+}

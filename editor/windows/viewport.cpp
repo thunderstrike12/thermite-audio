@@ -30,7 +30,9 @@ void tmt::Viewport::register_input_actions() {
     engine.input_map.add_action_keys(Config::DOWN, Key::LEFT_CTRL);
 }
 
-void tmt::Viewport::on_editor_update(const tmt::FrameData& frame_data) { update_debug_camera(frame_data); }
+void tmt::Viewport::on_editor_update(const tmt::FrameData& frame_data) {
+    update_debug_camera(frame_data);
+}
 
 void tmt::Viewport::on_editor_end() {}
 
@@ -42,7 +44,9 @@ void tmt::Viewport::before_begin() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 }
 
-void tmt::Viewport::end_display() { ImGui::PopStyleVar(); }
+void tmt::Viewport::end_display() {
+    ImGui::PopStyleVar();
+}
 
 std::string tmt::Viewport::get_title() const {
     const auto window_id = "###" ICON_MS_VISIBILITY " Viewport";
@@ -214,7 +218,7 @@ void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {
         pos += (horizontal_move + vertical_move);
     } else {
         // Movement (WASD + QE)
-        glm::vec3 move_dir = {0.0f, 0.0f, 0.0f};
+        glm::vec3 move_dir = { 0.0f, 0.0f, 0.0f };
         if (input.is_action_pressed(Config::FORWARD)) move_dir += transform.get_forward();
         if (input.is_action_pressed(Config::BACKWARD)) move_dir -= transform.get_forward();
         if (input.is_action_pressed(Config::LEFT)) move_dir -= transform.get_right();

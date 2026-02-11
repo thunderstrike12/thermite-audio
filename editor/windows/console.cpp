@@ -8,7 +8,9 @@
 
 using namespace tmt;
 
-void Console::display() { console.DrawContent(); }
+void Console::display() {
+    console.DrawContent();
+}
 
 void Console::on_editor_start() {
     sink = std::make_shared<ConsoleSink_st>(console.System());
@@ -22,7 +24,9 @@ void Console::on_editor_start() {
 
 void Console::on_editor_update(const FrameData&) {}
 
-void Console::on_editor_end() { Log::remove_sink(sink); }
+void Console::on_editor_end() {
+    Log::remove_sink(sink);
+}
 void Console::register_variables() {}
 void Console::register_scripts() {
     const auto scripts_path = std::filesystem::path(tmt::IO::get_sub_location_path(tmt::IO::Location::EDITOR)) / "console_scripts";

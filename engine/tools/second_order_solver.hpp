@@ -15,7 +15,7 @@ class SecondOrderSolver {
    public:
     // requires the operators -, +, * with float
     template <typename T>
-        requires ValidTarget<T>
+    requires ValidTarget<T>
     struct State {
         T current_target, current_state, current_velocity;
     };
@@ -33,4 +33,5 @@ class SecondOrderSolver {
         state.current_velocity = state.current_velocity + delta_time * (target + k3 * estimated_velocity - state.current_state - k1 * state.current_velocity) / k2;
     }
 };
+
 }  // namespace tmt

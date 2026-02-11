@@ -295,10 +295,10 @@ inline RawVoxels gather_voxels(const vengi::Node* file_node) {
                 const vengi::VoxelInformation& voxel = file_node->voxel_data->voxels[i];
                 if (voxel.is_air) {
                     voxels.materials[i] = AIR_INDEX;
-                    voxels.physics_data[i] = {PhysicsVoxelType::EMPTY, 0};
+                    voxels.physics_data[i] = { PhysicsVoxelType::EMPTY, 0 };
                 } else {
                     voxels.materials[i] = voxel.color_index;
-                    voxels.physics_data[i] = {PhysicsVoxelType::INSIDE, 0};
+                    voxels.physics_data[i] = { PhysicsVoxelType::INSIDE, 0 };
                 }
             }
         }
@@ -373,6 +373,8 @@ bool VoxelScene::load() {
     return true;
 }
 
-void VoxelScene::unload() { root_nodes.clear(); }
+void VoxelScene::unload() {
+    root_nodes.clear();
+}
 
 }  // namespace tmt

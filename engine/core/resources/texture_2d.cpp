@@ -31,7 +31,7 @@ bool Texture2D::load() {
 
     /* Initialise the texture */
     std::string texture_name = name + " Texture";
-    texture = bank.create_texture(texture_name.c_str(), TextureUsage::Sampled | TextureUsage::TransferDst, TextureFormat::RGBA8Unorm, {(u32)tex_width, (u32)tex_height, 0})
+    texture = bank.create_texture(texture_name.c_str(), TextureUsage::Sampled | TextureUsage::TransferDst, TextureFormat::RGBA8Unorm, { (u32)tex_width, (u32)tex_height, 0 })
                   .expect("failed to initialise texture.");
 
     bank.upload_texture(texture, data, tex_width * tex_height * 4).expect("failed to upload texture.");

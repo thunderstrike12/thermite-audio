@@ -25,4 +25,5 @@ class Serializer {
         constexpr static uint64_t VERSION = 1;
     };
 };
+
 }  // namespace tmt

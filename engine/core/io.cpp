@@ -4,11 +4,11 @@
 #include "logger.hpp"
 
 #ifndef NOMINMAX
-#define NOMINMAX
+    #define NOMINMAX
 #endif
 
 #ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
+    #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
 
@@ -94,7 +94,9 @@ std::pair<bool, std::filesystem::path> IO::find_root(const std::filesystem::path
 }
 
 /* Absolute path */
-std::filesystem::path IO::FileLocation::get_absolute_path() const { return absolute(get_relative_path()); }
+std::filesystem::path IO::FileLocation::get_absolute_path() const {
+    return absolute(get_relative_path());
+}
 
 bool IO::write_file(const FileLocation& file_location, const char* data, const size_t size) {
     const std::filesystem::path absolute = file_location.get_absolute_path();
@@ -138,7 +140,9 @@ bool IO::write_text_file(const FileLocation& file_location, const std::string& t
     return true;
 }
 
-bool IO::file_exists(const FileLocation& file_location) { return std::filesystem::exists(file_location.get_absolute_path()); }
+bool IO::file_exists(const FileLocation& file_location) {
+    return std::filesystem::exists(file_location.get_absolute_path());
+}
 
 std::vector<char> IO::read_file(const FileLocation& file_location) {
     const std::filesystem::path& absolute = file_location.get_absolute_path();
@@ -174,7 +178,7 @@ std::string IO::read_text_file(const FileLocation& file_location) {
         return {};
     }
 
-    return {bytes.data(), bytes.size()};
+    return { bytes.data(), bytes.size() };
 }
 
 std::string IO::read_or_create_text_file(const FileLocation& file_location, const std::string& default_contents) {
@@ -232,7 +236,7 @@ TimeStamp IO::get_file_last_modified_time(const FileLocation& file_location) {
 IO::FileLocation IO::path_to_file_location(const std::filesystem::path& path) {
     size_t location_index = 0;
     for (const std::filesystem::path& sub_location : sub_locations) {
-        if (directory_contains_path(sub_location, path)) return {static_cast<Location>(location_index), relative(path, absolute(sub_location))};
+        if (directory_contains_path(sub_location, path)) return { static_cast<Location>(location_index), relative(path, absolute(sub_location)) };
         ++location_index;
     }
 

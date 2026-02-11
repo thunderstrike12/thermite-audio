@@ -15,8 +15,10 @@ TEST(LogTest, DoubleInitAsserts) {
     );
 }
 
-TEST(LogTest, GlobalLoggingToConsoleOnly) { ASSERT_NO_THROW(tmt::Log::info("No scope here!")); }
-std::string log_file {"log_tests.txt"};
+TEST(LogTest, GlobalLoggingToConsoleOnly) {
+    ASSERT_NO_THROW(tmt::Log::info("No scope here!"));
+}
+std::string log_file { "log_tests.txt" };
 std::string read_log_file() {
     spdlog::apply_all([](const std::shared_ptr<spdlog::logger>& l) { l->flush(); });
 

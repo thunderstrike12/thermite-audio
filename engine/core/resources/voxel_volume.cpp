@@ -38,11 +38,11 @@ const VoxelSceneNode* first_model(const VoxelSceneNode& parent) {
 }
 
 VoxelVolume::VoxelVolume(const glm::uvec3& grid_size) : RuntimeResource<VoxelScene>({}) {
-    RawVoxels raw_voxels {.w = grid_size.x, .h = grid_size.y, .d = grid_size.z};
+    RawVoxels raw_voxels { .w = grid_size.x, .h = grid_size.y, .d = grid_size.z };
 
     const size_t total_size = grid_size.x * grid_size.y * grid_size.z;
     raw_voxels.materials.resize(total_size, AIR_INDEX);
-    raw_voxels.physics_data.resize(total_size, {EMPTY, 0});
+    raw_voxels.physics_data.resize(total_size, { EMPTY, 0 });
 
     /* Create and build the voxel acceleration structure */
     blas = std::make_unique<Svt64>();

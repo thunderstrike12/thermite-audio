@@ -10,6 +10,7 @@
 #include "engine/core/input/keys.hpp"
 
 namespace tmt {
+
 void CameraSystem::on_start() {
     // Setup Input Actions
     engine.input_map.add_action_keys(SPRINT, Key::LEFT_SHIFT);
@@ -80,7 +81,7 @@ void CameraSystem::on_update(const FrameData& time) {
         pos += (horizontal_move + vertical_move);
     } else {
         // Movement (WASD + QE)
-        glm::vec3 move_dir = {0.0f, 0.0f, 0.0f};
+        glm::vec3 move_dir = { 0.0f, 0.0f, 0.0f };
         if (input.is_action_pressed(FORWARD)) move_dir += transform.get_forward();
         if (input.is_action_pressed(BACKWARD)) move_dir -= transform.get_forward();
         if (input.is_action_pressed(LEFT)) move_dir -= transform.get_right();
@@ -95,4 +96,5 @@ void CameraSystem::on_update(const FrameData& time) {
 }
 
 void CameraSystem::on_end() {}
+
 }  // namespace tmt

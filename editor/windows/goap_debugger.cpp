@@ -288,7 +288,7 @@ void GoapDebugger::draw_goap_graph(GoapAgent& agent, WorldState& ws) {
 
     // --- Plan ---
     for (int i = 0; i < (int)agent.plan.size(); ++i) {
-        PlanNode n {nodeId++, pinId++, pinId++};
+        PlanNode n { nodeId++, pinId++, pinId++ };
         planNodes.push_back(n);
 
         ignode::BeginNode(n.node);

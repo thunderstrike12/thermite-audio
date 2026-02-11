@@ -5,8 +5,10 @@
 #include "engine/tools/serializer.hpp"
 
 namespace tmt {
+
 struct SerializeState;
 struct DeserializeState;
+
 }  // namespace tmt
 
 // Specialization for std::set

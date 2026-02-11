@@ -18,8 +18,8 @@
 namespace tmt {
 
 struct SerializeState {
-    SerializeState(const tmt::Ecs& ecs_ref, const std::set<tmt::Entity>& original_entities_ref, const std::set<tmt::Entity>& all_entities_ref)
-        : ecs(ecs_ref), original_entities(original_entities_ref), all_entities(all_entities_ref) {}
+    SerializeState(const tmt::Ecs& ecs_ref, const std::set<tmt::Entity>& original_entities_ref, const std::set<tmt::Entity>& all_entities_ref) :
+        ecs(ecs_ref), original_entities(original_entities_ref), all_entities(all_entities_ref) {}
 
     const tmt::Ecs& ecs;
     /* Original provided entities */
@@ -80,15 +80,15 @@ struct DeserializeState {
     tmt::Ecs& ecs;
     const tmt::SceneJson& json;
 
-    tmt::PrefabInstanceID current_prefab_instance_id {tmt::NULL_UUID};
+    tmt::PrefabInstanceID current_prefab_instance_id { tmt::NULL_UUID };
     tmt::Entity current_root_entity = entt::null;
     tmt::IO::FileLocation current_prefab_location;
 
-    std::unordered_map<tmt::PrefabInstanceID, tmt::PrefabInstanceID> instance_id_mapping {{tmt::NULL_UUID, tmt::NULL_UUID}};
+    std::unordered_map<tmt::PrefabInstanceID, tmt::PrefabInstanceID> instance_id_mapping { { tmt::NULL_UUID, tmt::NULL_UUID } };
 
     /* Prefab sequence to entity mapping */
     using EntityMap = tmt::TreeMap<tmt::PrefabInstanceID, std::unordered_map<tmt::Entity, tmt::Entity>>;
-    EntityMap entity_mapping {tmt::NULL_UUID, {{entt::null, entt::null}}}; /* Default null to null value */
+    EntityMap entity_mapping { tmt::NULL_UUID, { { entt::null, entt::null } } }; /* Default null to null value */
     EntityMap* current_entity_mapping = nullptr;
 };
 
@@ -170,7 +170,7 @@ void tag_invoke(JsonReflect::deserialize_t, const tmt::json& j, tmt::Ecs& ecs, c
 
 /* Single entity */
 tmt::json tag_invoke(JsonReflect::serialize_t, const tmt::Entity& entity, const tmt::Ecs& ecs) {
-    const std::set<tmt::Entity> entities {entity};
+    const std::set<tmt::Entity> entities { entity };
     return tmt::Serializer::serialize(entities, ecs);
 }
 
@@ -225,7 +225,7 @@ std::optional<tmt::json> recursive_find_component_json(const tmt::SceneJson& pre
 static void apply_patch_override(tmt::json& base, const tmt::json& override) {
     for (const auto& operation : override) {
         try {
-            nlohmann::json singlePatch = nlohmann::json::array({operation});
+            nlohmann::json singlePatch = nlohmann::json::array({ operation });
             base = base.patch(singlePatch);
         } catch (const nlohmann::json::out_of_range& e) {
             tmt::Log::warn(
@@ -360,7 +360,7 @@ tmt::json tag_invoke(JsonReflect::serialize_t, const std::set<tmt::Entity>& enti
         entities.merge(ecs.get_component<tmt::Transform>(entity).get_all_children());
     }
 
-    tmt::SerializeState state {ecs, entities_original, entities};
+    tmt::SerializeState state { ecs, entities_original, entities };
 
     state.json.set_version(tmt::Serializer::Config::VERSION);
 
@@ -441,7 +441,7 @@ void deserialize_component(tmt::DeserializeState& state) {
             if (json_value.is_object() && json_value.contains("diff")) {
                 TMT_ZONE_SCOPED_N("Ecs::deserialize_component::apply_diff");
                 const tmt::json diff = json_value.at("diff");
-                tmt::SerializeState temp_state {state.ecs, {}, {}};
+                tmt::SerializeState temp_state { state.ecs, {}, {} };
                 tmt::json base = tmt::Serializer::serialize(component_value, temp_state);
                 // tmt::json patched = base.patch(diff);
                 apply_patch_override(base, diff);
@@ -501,20 +501,20 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
                 continue;
             }
             if (state.current_entity_mapping->has_value() == false) {
-                state.current_entity_mapping->set_value({{entt::null, entt::null}});
+                state.current_entity_mapping->set_value({ { entt::null, entt::null } });
             }
             auto& mapping = state.current_entity_mapping->value();
 
             if (mapping.contains(deserialized_entity_id)) {
                 /* Entity already exists in mapping, skip */
-                new_to_old.insert({mapping.at(deserialized_entity_id), deserialized_entity_id});
+                new_to_old.insert({ mapping.at(deserialized_entity_id), deserialized_entity_id });
                 continue;
             } else {
                 /* Create entity and add to mapping */
                 const tmt::Entity created_entity = state.ecs.create_empty_entity(deserialized_entity_id);
                 /* Register scene entities */
-                mapping.insert({deserialized_entity_id, created_entity});
-                new_to_old.insert({created_entity, deserialized_entity_id});
+                mapping.insert({ deserialized_entity_id, created_entity });
+                new_to_old.insert({ created_entity, deserialized_entity_id });
                 new_entities.insert(created_entity);
             }
         }
@@ -567,10 +567,10 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
             const tmt::Entity& source_entity = prefab_comp.source_entity;
             auto& branch = state.current_entity_mapping->get(instance_id);
             if (branch.has_value() == false) {
-                branch.set_value({{entt::null, entt::null}});
+                branch.set_value({ { entt::null, entt::null } });
             }
             auto& mapping = branch.value();
-            mapping.insert({source_entity, new_entity});
+            mapping.insert({ source_entity, new_entity });
         }
 
         /* Deserialize Prefabs */
@@ -582,7 +582,7 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
             for (const auto& [prefab_instance_id, prefab_info] : prefab_instance_ids) {
                 auto original_prefab_json = tmt::engine.resources.load_resource<tmt::Json>(prefab_info.source_location);
 
-                tmt::DeserializeState prefab_state {state.ecs, tmt::SceneJson(original_prefab_json->get_parsed_json())};
+                tmt::DeserializeState prefab_state { state.ecs, tmt::SceneJson(original_prefab_json->get_parsed_json()) };
 
                 prefab_state.current_entity_mapping = &state.current_entity_mapping->get(prefab_instance_id);
                 prefab_state.current_prefab_instance_id = prefab_instance_id;
@@ -659,7 +659,7 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
 }
 
 void tag_invoke(JsonReflect::deserialize_t, const tmt::json& j, std::set<tmt::Entity>& new_entities, tmt::Ecs& ecs, const std::optional<tmt::Prefab> prefab_data) {
-    tmt::DeserializeState state {ecs, tmt::SceneJson(j)};
+    tmt::DeserializeState state { ecs, tmt::SceneJson(j) };
     state.current_entity_mapping = &state.entity_mapping[tmt::NULL_UUID];
     if (prefab_data.has_value()) {
         state.current_prefab_instance_id = prefab_data->instance_id;

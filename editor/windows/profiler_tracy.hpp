@@ -5,6 +5,7 @@
 #include "engine/core/io.hpp"
 
 namespace tmt {
+
 struct ProfilerSettings {
     bool overwrite = true;
     bool use_timer = false;
@@ -27,7 +28,7 @@ class Profiler : public IWindow {
 
     class Config {
        public:
-        static inline const IO::FileLocation FILE_LOCATION {IO::Location::EDITOR, "profiler_settings.json"};
+        static inline const IO::FileLocation FILE_LOCATION { IO::Location::EDITOR, "profiler_settings.json" };
     };
 };
 

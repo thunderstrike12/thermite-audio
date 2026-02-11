@@ -3,6 +3,7 @@
 #include "glm/vec3.hpp"
 
 namespace tmt {
+
 struct ContactPoint {
     glm::vec3 point = {};
     float penetration = 0.0f;
@@ -32,4 +33,5 @@ class Collision {
 
     inline uint64_t get_id() const { return id; };
 };
+
 }  // namespace tmt

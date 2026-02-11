@@ -11,7 +11,9 @@
 
 namespace tmt {
 
-void Goap::on_start() { Log::info("Goap on_start"); }
+void Goap::on_start() {
+    Log::info("Goap on_start");
+}
 
 /**
  * Main update loop called every frame.
@@ -47,7 +49,9 @@ void Goap::on_fixed_update(const FrameData& time) {
     }
 }
 
-void Goap::on_end() { Log::info("Goap on_end"); }
+void Goap::on_end() {
+    Log::info("Goap on_end");
+}
 
 // ------------------------------------------------------
 // Main per-agent update

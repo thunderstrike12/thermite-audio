@@ -5,6 +5,7 @@
 #include "engine/events/scene.hpp"
 
 namespace tmt {
+
 class GameFlow : public IWindow, public OnGameEnd, public OnPreLoadScene {
    public:
     // Inherited via IWindow
@@ -32,4 +33,5 @@ class GameFlow : public IWindow, public OnGameEnd, public OnPreLoadScene {
     void unlock_mouse();
     void lock_mouse();
 };
+
 }  // namespace tmt

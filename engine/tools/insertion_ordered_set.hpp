@@ -58,4 +58,5 @@ class InsertionOrderedSet {
         lookup.clear();
     }
 };
+
 }  // namespace tmt

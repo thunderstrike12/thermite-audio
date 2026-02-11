@@ -10,7 +10,9 @@
 
 using namespace tmt;
 
-std::string tmt::RigModelManager::get_name() { return "animation system"; }
+std::string tmt::RigModelManager::get_name() {
+    return "animation system";
+}
 
 void tmt::RigModelManager::on_start() {}
 

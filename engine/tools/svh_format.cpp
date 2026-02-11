@@ -8,9 +8,9 @@ namespace tmt {
 
 namespace {
 
-constexpr uint32_t MAGIC_NUMBER {0xFE2032A1};
-constexpr uint32_t CURRENT_MAJOR_VERSION {1};
-constexpr uint32_t CURRENT_MINOR_VERSION {0};
+constexpr uint32_t MAGIC_NUMBER { 0xFE2032A1 };
+constexpr uint32_t CURRENT_MAJOR_VERSION { 1 };
+constexpr uint32_t CURRENT_MINOR_VERSION { 0 };
 
 // Helper structs with correct size to easily parse the binary data.
 struct FileHeader {
@@ -59,7 +59,7 @@ std::span<const Type> read_data(const char*& data_pointer, const uint32_t size) 
     const Type* data_start = reinterpret_cast<const Type*>(data_pointer);
     data_pointer += size * sizeof(Type);
 
-    return {data_start, data_start + size};
+    return { data_start, data_start + size };
 }
 
 template <typename Type>
@@ -182,16 +182,14 @@ void recurse_encode_voxel_node(const VoxelSceneNode& node, const uint32_t parent
     const uint32_t string_offset = static_cast<uint32_t>(encode_data.string_data.size());
     encode_data.string_data += node.name;
 
-    const HierarchyNode hierarchy_node {
-        .uuid = node.uuid,
-        .parent_index = parent_index,
-        .svt64_offset = svt64_offset,
-        .svt64_size = svt64_size,
-        .name_offset = string_offset,
-        .name_length = static_cast<uint32_t>(node.name.size()),
-        .size = node.size,
-        .transform = node.transform
-    };
+    const HierarchyNode hierarchy_node { .uuid = node.uuid,
+                                         .parent_index = parent_index,
+                                         .svt64_offset = svt64_offset,
+                                         .svt64_size = svt64_size,
+                                         .name_offset = string_offset,
+                                         .name_length = static_cast<uint32_t>(node.name.size()),
+                                         .size = node.size,
+                                         .transform = node.transform };
     encode_data.hierarchy_nodes.push_back(hierarchy_node);
 
     for (const VoxelSceneNode& child : node.children) {
@@ -214,9 +212,9 @@ std::vector<VoxelSceneNode> decode_svh(const std::vector<char>& data) {
 
     VoxelSceneDecodeData decode_data;
     decode_data.hierarchy_nodes = read_data<HierarchyNode>(data_pointer, hierarchy_header.node_count);
-    decode_data.string_data = std::string_view {data_pointer, hierarchy_header.char_count};
+    decode_data.string_data = std::string_view { data_pointer, hierarchy_header.char_count };
     data_pointer += hierarchy_header.char_count;
-    decode_data.svt64_data = std::span<const char> {data_pointer, data.data() + data.size()};  // The rest of the file is svt64_data.
+    decode_data.svt64_data = std::span<const char> { data_pointer, data.data() + data.size() };  // The rest of the file is svt64_data.
 
     size_t node_index = 0;
     std::vector<VoxelSceneNode> root_nodes;

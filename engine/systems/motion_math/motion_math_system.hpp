@@ -12,6 +12,7 @@
 #include "glm/gtx/quaternion.hpp"
 
 namespace tmt {
+
 class MotionMathSystem : public ISystem {
    public:
     struct MotionSettings {
@@ -200,4 +201,5 @@ class MotionMathSystem : public ISystem {
 
     std::unordered_map<std::type_index, Bucket> motion_buckets;
 };
+
 }  // namespace tmt

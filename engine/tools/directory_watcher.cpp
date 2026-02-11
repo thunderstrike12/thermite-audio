@@ -7,11 +7,11 @@
 
 namespace tmt {
 
-DirectoryWatcher::DirectoryWatcher(const IO::FileLocation& location, const bool watch_recursively, bool avoid_double_notify, const WatchReason watch_reasons)
-    : DirectoryWatcher {absolute(location.get_relative_path()), watch_recursively, avoid_double_notify, watch_reasons} {}
+DirectoryWatcher::DirectoryWatcher(const IO::FileLocation& location, const bool watch_recursively, bool avoid_double_notify, const WatchReason watch_reasons) :
+    DirectoryWatcher { absolute(location.get_relative_path()), watch_recursively, avoid_double_notify, watch_reasons } {}
 
-DirectoryWatcher::DirectoryWatcher(const std::filesystem::path& path, const bool watch_recursively, bool avoid_double_notify, const WatchReason watch_reasons)
-    : avoid_double_notify {avoid_double_notify} {
+DirectoryWatcher::DirectoryWatcher(const std::filesystem::path& path, const bool watch_recursively, bool avoid_double_notify, const WatchReason watch_reasons) :
+    avoid_double_notify { avoid_double_notify } {
     if (!is_directory(path)) {
         Log::error("DirectoryWatcher: Failed to create directory watcher because the given path is not a directory.");
 
@@ -34,8 +34,8 @@ DirectoryWatcher::DirectoryWatcher(const std::filesystem::path& path, const bool
     }
 }
 
-DirectoryWatcher::DirectoryWatcher(DirectoryWatcher&& other) noexcept
-    : watching_handle {other.watching_handle}, avoid_double_notify {other.avoid_double_notify}, last_update_time {other.last_update_time} {
+DirectoryWatcher::DirectoryWatcher(DirectoryWatcher&& other) noexcept :
+    watching_handle { other.watching_handle }, avoid_double_notify { other.avoid_double_notify }, last_update_time { other.last_update_time } {
     other.watching_handle = nullptr;
     other.last_update_time = INVALID_TIME;
 }
@@ -92,8 +92,8 @@ void DirectoryWatcher::clear() {
     watching_handle = nullptr;
 }
 
-FileWatcher::FileWatcher(const IO::FileLocation& location, bool avoid_double_notify, WatchReason watch_reasons)
-    : FileWatcher {absolute(location.get_relative_path()), avoid_double_notify, watch_reasons} {}
+FileWatcher::FileWatcher(const IO::FileLocation& location, bool avoid_double_notify, WatchReason watch_reasons) :
+    FileWatcher { absolute(location.get_relative_path()), avoid_double_notify, watch_reasons } {}
 
 FileWatcher::FileWatcher(const std::filesystem::path& path, bool avoid_double_notify, WatchReason watch_reasons) {
     if (is_directory(path)) {
@@ -115,12 +115,12 @@ FileWatcher::FileWatcher(const std::filesystem::path& path, bool avoid_double_no
     }
 
     file_path = path;
-    directory_watcher = DirectoryWatcher {path.parent_path(), false, avoid_double_notify, watch_reasons};
+    directory_watcher = DirectoryWatcher { path.parent_path(), false, avoid_double_notify, watch_reasons };
     last_write_time_cache = std::filesystem::last_write_time(path);
 }
 
-FileWatcher::FileWatcher(FileWatcher&& other) noexcept
-    : file_path {std::move(other.file_path)}, directory_watcher {std::move(other.directory_watcher)}, last_write_time_cache {other.last_write_time_cache} {
+FileWatcher::FileWatcher(FileWatcher&& other) noexcept :
+    file_path { std::move(other.file_path) }, directory_watcher { std::move(other.directory_watcher) }, last_write_time_cache { other.last_write_time_cache } {
     other.last_write_time_cache = {};
 }
 

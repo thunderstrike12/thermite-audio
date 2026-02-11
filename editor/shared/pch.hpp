@@ -6,7 +6,7 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #define GLM_FORCE_LEFT_HANDED
-#include <glm/glm.hpp> /* vector math */
+#include <glm/glm.hpp>               /* vector math */
 
 #include "engine/tools/profiler.hpp" /* adds tracy profiling */
 /* Large 32-bit floating point constant. */

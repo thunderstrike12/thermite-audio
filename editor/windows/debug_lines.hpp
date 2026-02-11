@@ -3,6 +3,7 @@
 #include "engine/events/debug.hpp"
 
 namespace tmt {
+
 class DebugLines : public IWindow {
    public:
     void display() override;
@@ -12,4 +13,5 @@ class DebugLines : public IWindow {
     constexpr std::string get_title() const override { return "Debug Lines"; };
     constexpr bool default_open() const override { return false; }
 };
+
 }  // namespace tmt

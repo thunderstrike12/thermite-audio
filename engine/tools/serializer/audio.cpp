@@ -28,7 +28,7 @@ void tag_invoke(JsonReflect::deserialize_t, const JsonReflect::json& j, tmt::Aud
     FMOD_GUID guid {};
     if (j.contains("guid")) tmt::Serializer::deserialize(j["guid"], guid);
 
-    if (bank) event = tmt::AudioEvent {bank, tmt::engine.audio.get_event_description(guid)};
+    if (bank) event = tmt::AudioEvent { bank, tmt::engine.audio.get_event_description(guid) };
 }
 
 JsonReflect::json tag_invoke(JsonReflect::serialize_t, const tmt::VolumeControl& control) {
@@ -49,7 +49,7 @@ void tag_invoke(JsonReflect::deserialize_t, const JsonReflect::json& j, tmt::Vol
     FMOD_GUID guid {};
     if (j.contains("guid")) tmt::Serializer::deserialize(j["guid"], guid);
 
-    if (bank) control = tmt::VolumeControl {bank, tmt::engine.audio.get_vca(guid)};
+    if (bank) control = tmt::VolumeControl { bank, tmt::engine.audio.get_vca(guid) };
 }
 
 void tag_invoke(JsonReflect::deserialize_t, const JsonReflect::json& j, tmt::AudioListener& audio_listener) {

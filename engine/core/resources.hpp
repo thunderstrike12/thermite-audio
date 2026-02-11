@@ -33,7 +33,7 @@ class Resources {
    public:
     /* file resources loading */
     template <ResourceType T, typename... Args>
-        requires std::constructible_from<T, const IO::FileLocation&, Args...>
+    requires std::constructible_from<T, const IO::FileLocation&, Args...>
     ResourceRef<T> load_resource(const IO::FileLocation& file_location, Args&&... args) {
         // duplicate checking
         if (resources.contains(file_location)) {
@@ -77,7 +77,7 @@ class Resources {
 
     /* Runtime resources loading that takes in a file resource */
     template <typename T, typename... Args>
-        requires std::derived_from<T, RuntimeResource<typename T::ResourceType>>
+    requires std::derived_from<T, RuntimeResource<typename T::ResourceType>>
     ResourceRef<T> copy_resource(const ResourceRef<typename T::ResourceType>& file_resource, Args&&... args) {
         if (file_resource == nullptr) {
             Log::error(Log::Scope::ENGINE, "[Resources] Cannot copy nullptr file resource");
@@ -109,7 +109,7 @@ class Resources {
 
     /* Runtime resources loading that takes in a file resource args */
     template <typename T, typename... Args>
-        requires std::derived_from<T, RuntimeResource<typename T::ResourceType>> && std::constructible_from<typename T::ResourceType, const IO::FileLocation&, Args...>
+    requires std::derived_from<T, RuntimeResource<typename T::ResourceType>> && std::constructible_from<typename T::ResourceType, const IO::FileLocation&, Args...>
     ResourceRef<T> copy_resource(const IO::FileLocation& file_location, Args&&... args) {
         auto file_resource = load_resource<typename T::ResourceType>(file_location, std::forward<Args>(args)...);
         if (file_resource == nullptr) {
@@ -139,4 +139,5 @@ class Resources {
     /* File location -> file resource & runtime resources */
     std::unordered_map<IO::FileLocation, ResourceCollection, IO::FileLocationHash> resources;
 };
+
 }  // namespace tmt

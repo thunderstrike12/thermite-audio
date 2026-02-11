@@ -2,6 +2,7 @@
 
 namespace game {
 namespace action {
+
 constexpr auto MOVE_FORWARD = "move_forward";
 constexpr auto MOVE_BACKWARD = "move_backward";
 constexpr auto MOVE_LEFT = "move_left";
@@ -13,5 +14,6 @@ constexpr auto SHOOT = "shoot";
 constexpr auto SWITCH_WEAPON_1 = "switch_1";
 constexpr auto SWITCH_WEAPON_2 = "switch_2";
 constexpr auto SWITCH_WEAPON_3 = "switch_3";
+
 }  // namespace action
 }  // namespace game

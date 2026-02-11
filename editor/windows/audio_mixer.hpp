@@ -8,6 +8,7 @@
 #include "editor/core/window.hpp"
 
 namespace tmt {
+
 class AudioEvent;
 class AudioBank;
 
@@ -40,4 +41,5 @@ class AudioMixer : public IWindow, public OnGameEnd {
     std::variant<std::weak_ptr<AudioBank>, AudioEvent, VolumeControl> selection = AudioEvent {};
     std::vector<ResourceRef<AudioBank>> cached_banks;
 };
+
 }  // namespace tmt

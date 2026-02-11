@@ -42,13 +42,21 @@ void Transform::set_local_scale(const glm::vec3& scale) {
     mark_dirty();
 }
 
-const glm::vec3& Transform::get_local_position() const { return local_position; }
+const glm::vec3& Transform::get_local_position() const {
+    return local_position;
+}
 
-const glm::quat& Transform::get_local_rotation() const { return local_rotation; }
+const glm::quat& Transform::get_local_rotation() const {
+    return local_rotation;
+}
 
-const glm::vec3& Transform::get_local_scale() const { return local_scale; }
+const glm::vec3& Transform::get_local_scale() const {
+    return local_scale;
+}
 
-const glm::vec3& Transform::get_local_eulers() const { return local_eulers; }
+const glm::vec3& Transform::get_local_eulers() const {
+    return local_eulers;
+}
 
 void Transform::set_world_position(const glm::vec3& pos) {
     if (has_parent()) {
@@ -78,10 +86,14 @@ void Transform::set_world_rotation(const glm::quat& rot) {
 }
 
 /* Euler */
-void Transform::set_world_rotation(const glm::vec3& rot) { set_world_rotation(glm::quat(rot)); }
+void Transform::set_world_rotation(const glm::vec3& rot) {
+    set_world_rotation(glm::quat(rot));
+}
 
 /* Axis-Angle */
-void Transform::set_world_rotation(const glm::vec3& axis, float angle) { set_world_rotation(glm::angleAxis(angle, glm::normalize(axis))); }
+void Transform::set_world_rotation(const glm::vec3& axis, float angle) {
+    set_world_rotation(glm::angleAxis(angle, glm::normalize(axis)));
+}
 
 void Transform::set_world_scale(const glm::vec3& scale) {
     if (has_parent()) {
@@ -134,30 +146,52 @@ glm::vec3 Transform::get_world_scale() const {
     return glm::vec3(glm::length(glm::vec3(wm[0])), glm::length(glm::vec3(wm[1])), glm::length(glm::vec3(wm[2])));
 }
 
-void Transform::translate(const glm::vec3& delta) { set_local_position(local_position + delta); }
+void Transform::translate(const glm::vec3& delta) {
+    set_local_position(local_position + delta);
+}
 
 /* Quat */
-void Transform::rotate_local(const glm::quat& delta) { set_local_rotation(local_rotation * delta); }
+void Transform::rotate_local(const glm::quat& delta) {
+    set_local_rotation(local_rotation * delta);
+}
 
 /* Euler */
-void Transform::rotate_local(const glm::vec3& euler_delta) { set_local_rotation(local_rotation * glm::quat(euler_delta)); }
+void Transform::rotate_local(const glm::vec3& euler_delta) {
+    set_local_rotation(local_rotation * glm::quat(euler_delta));
+}
 
 /* Axis-Angle */
-void Transform::rotate_local(const glm::vec3& axis, float angle) { set_local_rotation(local_rotation * glm::angleAxis(angle, glm::normalize(axis))); }
+void Transform::rotate_local(const glm::vec3& axis, float angle) {
+    set_local_rotation(local_rotation * glm::angleAxis(angle, glm::normalize(axis)));
+}
 
-void Transform::rotate_world(const glm::quat& delta) { set_local_rotation(delta * local_rotation); }
+void Transform::rotate_world(const glm::quat& delta) {
+    set_local_rotation(delta * local_rotation);
+}
 
-void Transform::rotate_world(const glm::vec3& euler_delta) { set_local_rotation(glm::quat(euler_delta) * local_rotation); }
+void Transform::rotate_world(const glm::vec3& euler_delta) {
+    set_local_rotation(glm::quat(euler_delta) * local_rotation);
+}
 
-void Transform::rotate_world(const glm::vec3& axis, float angle) { set_local_rotation(glm::angleAxis(angle, glm::normalize(axis)) * local_rotation); }
+void Transform::rotate_world(const glm::vec3& axis, float angle) {
+    set_local_rotation(glm::angleAxis(angle, glm::normalize(axis)) * local_rotation);
+}
 
-void Transform::scale(const glm::vec3& factor) { set_local_scale(local_scale * factor); }
+void Transform::scale(const glm::vec3& factor) {
+    set_local_scale(local_scale * factor);
+}
 
-glm::vec3 Transform::get_forward() const { return glm::normalize(get_world_rotation() * glm::vec3(0, 0, 1)); }
+glm::vec3 Transform::get_forward() const {
+    return glm::normalize(get_world_rotation() * glm::vec3(0, 0, 1));
+}
 
-glm::vec3 Transform::get_up() const { return glm::normalize(get_world_rotation() * glm::vec3(0, 1, 0)); }
+glm::vec3 Transform::get_up() const {
+    return glm::normalize(get_world_rotation() * glm::vec3(0, 1, 0));
+}
 
-glm::vec3 Transform::get_right() const { return glm::normalize(get_world_rotation() * glm::vec3(1, 0, 0)); }
+glm::vec3 Transform::get_right() const {
+    return glm::normalize(get_world_rotation() * glm::vec3(1, 0, 0));
+}
 
 void Transform::look_at(const glm::vec3& target, const glm::vec3& up) {
     glm::vec3 world_pos = get_world_position();
@@ -253,11 +287,17 @@ void Transform::set_parent(Entity new_parent) {
     mark_dirty();
 }
 
-void Transform::clear_parent() { set_parent(entt::null); }
+void Transform::clear_parent() {
+    set_parent(entt::null);
+}
 
-bool Transform::has_parent() const { return parent != entt::null; }
+bool Transform::has_parent() const {
+    return parent != entt::null;
+}
 
-Entity Transform::get_parent() const { return parent; }
+Entity Transform::get_parent() const {
+    return parent;
+}
 
 void Transform::add_child(Entity child) {
     if (child == get_self()) {
@@ -278,9 +318,13 @@ void Transform::remove_child(Entity child) {
     }
 }
 
-bool Transform::has_children() const { return !children.empty(); }
+bool Transform::has_children() const {
+    return !children.empty();
+}
 
-const std::set<Entity>& Transform::get_children() const { return children; }
+const std::set<Entity>& Transform::get_children() const {
+    return children;
+}
 
 std::set<Entity> Transform::get_all_children() const {
     std::set<Entity> result = get_children();
@@ -319,6 +363,8 @@ void Transform::calculate_world_matrix() const {
     }
 }
 
-Entity Transform::get_self() const { return engine.ecs.get_entity(*this); }
+Entity Transform::get_self() const {
+    return engine.ecs.get_entity(*this);
+}
 
 }  // namespace tmt

@@ -28,7 +28,7 @@ class Editor : public OnEngineInit, public OnEngineUpdate, public OnEngineFixedU
 
     void switch_mode(Mode new_mode, const std::any& meta_data = {});
 
-    Mode editor_mode {Mode::SCENE};
+    Mode editor_mode { Mode::SCENE };
     std::map<Mode, std::unique_ptr<IEditorMode>> mode_handlers;
     std::map<Mode, Collection<IWindow>> windows;
     ImGuiManager& imgui_manager;

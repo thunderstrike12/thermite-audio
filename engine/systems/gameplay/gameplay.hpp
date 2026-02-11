@@ -2,6 +2,7 @@
 #include "engine/core/system.hpp"
 
 namespace tmt {
+
 class Gameplay : public ISystem {
    public:
     constexpr virtual std::string get_name() override { return "Gameplay"; };
@@ -14,4 +15,5 @@ class Gameplay : public ISystem {
 
     void on_fixed_update(const tmt::FrameData&) override;
 };
+
 }  // namespace tmt

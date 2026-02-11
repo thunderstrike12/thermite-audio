@@ -40,7 +40,7 @@ class AssetBrowser : public internal::OnSdlEvent, public IWindow {
         DirectoryWatcher location_watcher;
     };
 
-    std::optional<IO::FileLocation> pending_viewing_location {viewing_location};
+    std::optional<IO::FileLocation> pending_viewing_location { viewing_location };
     IO::FileLocation viewing_location {};
     DirectoryWatcher viewing_location_watcher {};
     std::vector<IO::FileLocation> viewing_locations;
@@ -73,4 +73,5 @@ class AssetBrowser : public internal::OnSdlEvent, public IWindow {
     void display_bookmarks();
     void display_viewing_location();
 };
+
 }  // namespace tmt

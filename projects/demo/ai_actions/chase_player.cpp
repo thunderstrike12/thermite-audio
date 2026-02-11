@@ -63,4 +63,6 @@ void ChasePlayer::on_tick(tmt::Entity walking_entity, float dt) {
     }
 }
 
-bool ChasePlayer::is_done(tmt::Entity) const { return false; }
+bool ChasePlayer::is_done(tmt::Entity) const {
+    return false;
+}

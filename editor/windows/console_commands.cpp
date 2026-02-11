@@ -87,7 +87,7 @@ void Console::register_commands() {
                 Log::error("No active camera");
                 return;
             }
-            engine.ecs.get_component<Transform>(entity).set_world_position({x, y, z});
+            engine.ecs.get_component<Transform>(entity).set_world_position({ x, y, z });
             Log::info("Teleported to ({}, {}, {})", x, y, z);
         },
         csys::Arg<float>("x"), csys::Arg<float>("y"), csys::Arg<float>("z")
@@ -122,8 +122,8 @@ void Console::register_commands() {
                 return;
             }
             auto& transform = engine.ecs.get_component<Transform>(entity);
-            transform.set_world_position({x, y, z});
-            transform.look_at({lx, ly, lz}, {0.0f, 1.0f, 0.0f});
+            transform.set_world_position({ x, y, z });
+            transform.look_at({ lx, ly, lz }, { 0.0f, 1.0f, 0.0f });
             Log::info("Teleported to ({}, {}, {}) facing ({}, {}, {})", x, y, z, lx, ly, lz);
         },
         csys::Arg<float>("x"), csys::Arg<float>("y"), csys::Arg<float>("z"), csys::Arg<float>("look_x"), csys::Arg<float>("look_y"), csys::Arg<float>("look_z")
@@ -149,7 +149,7 @@ void Console::register_commands() {
             }
             auto& transform = engine.ecs.get_component<Transform>(entity);
             transform.set_world_position(engine.ecs.get_component<Transform>(target_entity).get_world_position());
-            transform.look_at(engine.ecs.get_component<Transform>(look_at_entity).get_world_position(), {0.0f, 1.0f, 0.0f});
+            transform.look_at(engine.ecs.get_component<Transform>(look_at_entity).get_world_position(), { 0.0f, 1.0f, 0.0f });
             Log::info("Teleported to '{}' facing '{}'", target, look_at_name);
         },
         csys::Arg<csys::String>("target"), csys::Arg<csys::String>("look_at")
@@ -164,7 +164,7 @@ void Console::register_commands() {
                 Log::error("Entity '{}' not found", name);
                 return;
             }
-            engine.ecs.get_component<Transform>(entity).set_world_position({x, y, z});
+            engine.ecs.get_component<Transform>(entity).set_world_position({ x, y, z });
             Log::info("Teleported '{}' to ({}, {}, {})", name, x, y, z);
         },
         csys::Arg<csys::String>("entity"), csys::Arg<float>("x"), csys::Arg<float>("y"), csys::Arg<float>("z")
@@ -199,8 +199,8 @@ void Console::register_commands() {
                 return;
             }
             auto& transform = engine.ecs.get_component<Transform>(entity);
-            transform.set_world_position({x, y, z});
-            transform.look_at({lx, ly, lz}, {0.0f, 1.0f, 0.0f});
+            transform.set_world_position({ x, y, z });
+            transform.look_at({ lx, ly, lz }, { 0.0f, 1.0f, 0.0f });
             Log::info("Teleported '{}' to ({}, {}, {}) facing ({}, {}, {})", name, x, y, z, lx, ly, lz);
         },
         csys::Arg<csys::String>("entity"), csys::Arg<float>("x"), csys::Arg<float>("y"), csys::Arg<float>("z"), csys::Arg<float>("look_x"), csys::Arg<float>("look_y"),
@@ -227,7 +227,7 @@ void Console::register_commands() {
             }
             auto& transform = engine.ecs.get_component<Transform>(entity);
             transform.set_world_position(engine.ecs.get_component<Transform>(target_entity).get_world_position());
-            transform.look_at(engine.ecs.get_component<Transform>(look_at_entity).get_world_position(), {0.0f, 1.0f, 0.0f});
+            transform.look_at(engine.ecs.get_component<Transform>(look_at_entity).get_world_position(), { 0.0f, 1.0f, 0.0f });
             Log::info("Teleported '{}' to '{}' facing '{}'", name, target, look_at_name);
         },
         csys::Arg<csys::String>("entity"), csys::Arg<csys::String>("target"), csys::Arg<csys::String>("look_at")
@@ -347,7 +347,7 @@ void Console::register_commands() {
     register_command(
         "warp_mouse", "Warp mouse cursor: warp_mouse <x> <y>",
         [](float x, float y) {
-            engine.input.warp_mouse({x, y});
+            engine.input.warp_mouse({ x, y });
             Log::info("Mouse warped to ({}, {})", x, y);
         },
         csys::Arg<float>("x"), csys::Arg<float>("y")
@@ -377,25 +377,25 @@ void Console::register_commands() {
 
     register_command(
         "draw_line", "Draw line: draw_line <x1> <y1> <z1> <x2> <y2> <z2> [time=5]",
-        [](float x1, float y1, float z1, float x2, float y2, float z2, float time) { engine.polyline.draw_line({x1, y1, z1}, {x2, y2, z2}, time); }, csys::Arg<float>("x1"),
+        [](float x1, float y1, float z1, float x2, float y2, float z2, float time) { engine.polyline.draw_line({ x1, y1, z1 }, { x2, y2, z2 }, time); }, csys::Arg<float>("x1"),
         csys::Arg<float>("y1"), csys::Arg<float>("z1"), csys::Arg<float>("x2"), csys::Arg<float>("y2"), csys::Arg<float>("z2"), csys::Arg<float>("time", 5.0f)
     );
 
     register_command(
         "draw_circle", "Draw circle: draw_circle <x> <y> <z> <radius> [segments=32] [time=5]",
-        [](float x, float y, float z, float radius, int segments, float time) { engine.polyline.draw_circle({x, y, z}, radius, segments, time); }, csys::Arg<float>("x"), csys::Arg<float>("y"),
-        csys::Arg<float>("z"), csys::Arg<float>("radius"), csys::Arg<int>("segments", 32), csys::Arg<float>("time", 5.0f)
+        [](float x, float y, float z, float radius, int segments, float time) { engine.polyline.draw_circle({ x, y, z }, radius, segments, time); }, csys::Arg<float>("x"),
+        csys::Arg<float>("y"), csys::Arg<float>("z"), csys::Arg<float>("radius"), csys::Arg<int>("segments", 32), csys::Arg<float>("time", 5.0f)
     );
 
     register_command(
         "draw_sphere", "Draw sphere: draw_sphere <x> <y> <z> <radius> [segments=16] [time=5]",
-        [](float x, float y, float z, float radius, int segments, float time) { engine.polyline.draw_sphere({x, y, z}, radius, segments, time); }, csys::Arg<float>("x"), csys::Arg<float>("y"),
-        csys::Arg<float>("z"), csys::Arg<float>("radius"), csys::Arg<int>("segments", 16), csys::Arg<float>("time", 5.0f)
+        [](float x, float y, float z, float radius, int segments, float time) { engine.polyline.draw_sphere({ x, y, z }, radius, segments, time); }, csys::Arg<float>("x"),
+        csys::Arg<float>("y"), csys::Arg<float>("z"), csys::Arg<float>("radius"), csys::Arg<int>("segments", 16), csys::Arg<float>("time", 5.0f)
     );
 
     register_command(
         "draw_aabb", "Draw AABB: draw_aabb <minX> <minY> <minZ> <maxX> <maxY> <maxZ> [time=5]",
-        [](float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float time) { engine.polyline.draw_aabb({minX, minY, minZ}, {maxX, maxY, maxZ}, time); },
+        [](float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float time) { engine.polyline.draw_aabb({ minX, minY, minZ }, { maxX, maxY, maxZ }, time); },
         csys::Arg<float>("minX"), csys::Arg<float>("minY"), csys::Arg<float>("minZ"), csys::Arg<float>("maxX"), csys::Arg<float>("maxY"), csys::Arg<float>("maxZ"),
         csys::Arg<float>("time", 5.0f)
     );
@@ -403,7 +403,7 @@ void Console::register_commands() {
     register_command(
         "draw_arrow", "Draw arrow: draw_arrow <x> <y> <z> <dirX> <dirY> <dirZ> [length=1] [time=5]",
         [](float x, float y, float z, float dirX, float dirY, float dirZ, float length, float time) {
-            engine.polyline.draw_arrow({x, y, z}, glm::normalize(glm::vec3 {dirX, dirY, dirZ}), length, time);
+            engine.polyline.draw_arrow({ x, y, z }, glm::normalize(glm::vec3 { dirX, dirY, dirZ }), length, time);
         },
         csys::Arg<float>("x"), csys::Arg<float>("y"), csys::Arg<float>("z"), csys::Arg<float>("dirX"), csys::Arg<float>("dirY"), csys::Arg<float>("dirZ"), csys::Arg<float>("length", 1.0f),
         csys::Arg<float>("time", 5.0f)
@@ -412,7 +412,7 @@ void Console::register_commands() {
     register_command(
         "draw_cone", "Draw cone: draw_cone <x> <y> <z> <dirX> <dirY> <dirZ> [angle=45] [length=1] [segments=16] [time=5]",
         [](float x, float y, float z, float dirX, float dirY, float dirZ, float angle, float length, int segments, float time) {
-            engine.polyline.draw_cone({x, y, z}, glm::normalize(glm::vec3 {dirX, dirY, dirZ}), angle, length, segments, time);
+            engine.polyline.draw_cone({ x, y, z }, glm::normalize(glm::vec3 { dirX, dirY, dirZ }), angle, length, segments, time);
         },
         csys::Arg<float>("x"), csys::Arg<float>("y"), csys::Arg<float>("z"), csys::Arg<float>("dirX"), csys::Arg<float>("dirY"), csys::Arg<float>("dirZ"), csys::Arg<float>("angle", 45.0f),
         csys::Arg<float>("length", 1.0f), csys::Arg<int>("segments", 16), csys::Arg<float>("time", 5.0f)
@@ -421,7 +421,7 @@ void Console::register_commands() {
     register_command(
         "draw_tube", "Draw tube: draw_tube <x1> <y1> <z1> <x2> <y2> <z2> [radius=0.1] [segments=16] [time=5]",
         [](float x1, float y1, float z1, float x2, float y2, float z2, float radius, int segments, float time) {
-            engine.polyline.draw_tube({x1, y1, z1}, {x2, y2, z2}, radius, segments, time);
+            engine.polyline.draw_tube({ x1, y1, z1 }, { x2, y2, z2 }, radius, segments, time);
         },
         csys::Arg<float>("x1"), csys::Arg<float>("y1"), csys::Arg<float>("z1"), csys::Arg<float>("x2"), csys::Arg<float>("y2"), csys::Arg<float>("z2"), csys::Arg<float>("radius", 0.1f),
         csys::Arg<int>("segments", 16), csys::Arg<float>("time", 5.0f)
@@ -430,8 +430,8 @@ void Console::register_commands() {
     register_command(
         "draw_obb", "Draw OBB: draw_obb <x> <y> <z> <hx> <hy> <hz> [axisX=0] [axisY=1] [axisZ=0] [angle=0] [time=5]",
         [](float x, float y, float z, float hx, float hy, float hz, float axisX, float axisY, float axisZ, float angle, float time) {
-            glm::vec3 axis = glm::normalize(glm::vec3 {axisX, axisY, axisZ});
-            engine.polyline.draw_obb({x, y, z}, {hx, hy, hz}, glm::angleAxis(angle, axis), time);
+            glm::vec3 axis = glm::normalize(glm::vec3 { axisX, axisY, axisZ });
+            engine.polyline.draw_obb({ x, y, z }, { hx, hy, hz }, glm::angleAxis(angle, axis), time);
         },
         csys::Arg<float>("x"), csys::Arg<float>("y"), csys::Arg<float>("z"), csys::Arg<float>("hx"), csys::Arg<float>("hy"), csys::Arg<float>("hz"), csys::Arg<float>("axisX", 0.0f),
         csys::Arg<float>("axisY", 1.0f), csys::Arg<float>("axisZ", 0.0f), csys::Arg<float>("angle", 0.0f), csys::Arg<float>("time", 5.0f)
@@ -440,8 +440,8 @@ void Console::register_commands() {
     register_command(
         "draw_bone", "Draw bone: draw_bone <x> <y> <z> [length=1] [axisX=0] [axisY=1] [axisZ=0] [angle=0] [time=5]",
         [](float x, float y, float z, float length, float axisX, float axisY, float axisZ, float angle, float time) {
-            glm::vec3 axis = glm::normalize(glm::vec3 {axisX, axisY, axisZ});
-            engine.polyline.draw_bone({x, y, z}, glm::angleAxis(angle, axis), length, time);
+            glm::vec3 axis = glm::normalize(glm::vec3 { axisX, axisY, axisZ });
+            engine.polyline.draw_bone({ x, y, z }, glm::angleAxis(angle, axis), length, time);
         },
         csys::Arg<float>("x"), csys::Arg<float>("y"), csys::Arg<float>("z"), csys::Arg<float>("length", 1.0f), csys::Arg<float>("axisX", 0.0f), csys::Arg<float>("axisY", 1.0f),
         csys::Arg<float>("axisZ", 0.0f), csys::Arg<float>("angle", 0.0f), csys::Arg<float>("time", 5.0f)
@@ -449,7 +449,7 @@ void Console::register_commands() {
 
     register_command(
         "draw_text", "Draw text: draw_text <x> <y> <z> <text> [size=1] [time=5]",
-        [](float x, float y, float z, const std::string& text, float size, float time) { engine.polyline.draw_text({x, y, z}, text, size, time); }, csys::Arg<float>("x"),
+        [](float x, float y, float z, const std::string& text, float size, float time) { engine.polyline.draw_text({ x, y, z }, text, size, time); }, csys::Arg<float>("x"),
         csys::Arg<float>("y"), csys::Arg<float>("z"), csys::Arg<csys::String>("text"), csys::Arg<float>("size", 1.0f), csys::Arg<float>("time", 5.0f)
     );
 }

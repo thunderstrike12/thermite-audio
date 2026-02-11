@@ -30,11 +30,11 @@ class Palette : public IWindow {
     void display_palette(const ResourceRef<VoxelVolume>& resource);
     void display_material_editor() const;
 
-    MaterialIndex selected_material_index {0};
+    MaterialIndex selected_material_index { 0 };
 
     struct Config {
-        constexpr static inline glm::ivec2 GRID_SIZE {8, 32};
-        constexpr static inline ImVec2 OUTSET {2.0f, 2.0f};
+        constexpr static inline glm::ivec2 GRID_SIZE { 8, 32 };
+        constexpr static inline ImVec2 OUTSET { 2.0f, 2.0f };
     };
 };
 

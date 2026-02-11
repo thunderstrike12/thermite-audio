@@ -1,6 +1,7 @@
 #pragma once
 
 namespace tmt {
+
 class GameController {
    public:
     bool is_playing() const { return is_game_playing; }
@@ -35,4 +36,5 @@ class GameController {
     bool should_resume_game = false;
     bool should_end_game = false;
 };
+
 }  // namespace tmt

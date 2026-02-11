@@ -7,7 +7,7 @@
 namespace tmt {
 
 template <typename R>
-    requires TypeRange<R, Entity>
+requires TypeRange<R, Entity>
 std::set<Entity> EntityHelper::upper_parents(const R& container) {
     std::set<Entity> input_entities(container.begin(), container.end());
     std::set<Entity> root_parents;

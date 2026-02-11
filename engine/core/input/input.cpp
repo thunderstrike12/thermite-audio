@@ -18,8 +18,12 @@
 
 using namespace tmt;
 
-bool Input::can_use_input_mouse() const { return !can_capture_mouse; }
-bool Input::can_use_input_keyboard() const { return !can_capture_keyboard; }
+bool Input::can_use_input_mouse() const {
+    return !can_capture_mouse;
+}
+bool Input::can_use_input_keyboard() const {
+    return !can_capture_keyboard;
+}
 
 void Input::init() {
     int32_t number_keys;
@@ -265,7 +269,9 @@ float Input::get_action_raw_strength(const std::string& name) {
     }
     return max_strength;
 }
-float Input::get_axis(const std::string& negative_action, const std::string& positive_action) { return get_action_strength(positive_action) - get_action_strength(negative_action); }
+float Input::get_axis(const std::string& negative_action, const std::string& positive_action) {
+    return get_action_strength(positive_action) - get_action_strength(negative_action);
+}
 // https://github.com/godotengine/godot/blob/79603b2f28fdd8b0dce14064e488a3783d51d1ff/core/input/input.cpp#L548C1-L572C2
 glm::vec2 Input::get_vector(
     const std::string& negative_action_x, const std::string& positive_action_x, const std::string& negative_action_y, const std::string& positive_action_y, float deadzone
@@ -281,7 +287,7 @@ glm::vec2 Input::get_vector(
     float pos_y = filter(get_action_raw_strength(positive_action_y));
     float neg_y = filter(get_action_raw_strength(negative_action_y));
 
-    glm::vec2 vector {pos_x - neg_x, pos_y - neg_y};
+    glm::vec2 vector { pos_x - neg_x, pos_y - neg_y };
 
     float length = glm::length(vector);
     if (length < deadzone) {
@@ -318,8 +324,12 @@ float Input::get_mouse_delta_y() const {
     if (!can_use_input_mouse()) return 0.0f;
     return mouse_dy;
 }
-void Input::set_mouse_relative_to_window(bool value) { SDL_SetWindowRelativeMouseMode(engine.window.window, value); }
-bool Input::get_mouse_relative_to_window() { return SDL_GetWindowRelativeMouseMode(engine.window.window); }
+void Input::set_mouse_relative_to_window(bool value) {
+    SDL_SetWindowRelativeMouseMode(engine.window.window, value);
+}
+bool Input::get_mouse_relative_to_window() {
+    return SDL_GetWindowRelativeMouseMode(engine.window.window);
+}
 
 void Input::lock_mouse(bool value) {
     if (value) {
@@ -327,7 +337,7 @@ void Input::lock_mouse(bool value) {
         float temp_mouse_y = 0.0f;
         SDL_GetMouseState(&temp_mouse_x, &temp_mouse_y);
 
-        const SDL_Rect rect {static_cast<int32_t>(temp_mouse_x), static_cast<int32_t>(temp_mouse_y), 1, 1};
+        const SDL_Rect rect { static_cast<int32_t>(temp_mouse_x), static_cast<int32_t>(temp_mouse_y), 1, 1 };
         SDL_SetWindowMouseRect(engine.window.window, &rect);
     } else {
         SDL_SetWindowMouseRect(engine.window.window, nullptr);
@@ -335,7 +345,9 @@ void Input::lock_mouse(bool value) {
     mouse_locked = value;
 }
 
-bool Input::is_mouse_locked() const { return mouse_locked; }
+bool Input::is_mouse_locked() const {
+    return mouse_locked;
+}
 
 void Input::warp_mouse(const glm::vec2& pos, bool relative) {
     if (relative) {
@@ -345,14 +357,24 @@ void Input::warp_mouse(const glm::vec2& pos, bool relative) {
     }
 }
 
-void Input::add_key_to_action(const std::string& name, Key key) { add_action_event(name, std::make_unique<InputEventKey>(key)); }
+void Input::add_key_to_action(const std::string& name, Key key) {
+    add_action_event(name, std::make_unique<InputEventKey>(key));
+}
 
-void Input::add_action_event(const std::string& name, std::unique_ptr<InputEvent> event) { engine.input_map.actions[name].events.push_back(std::move(event)); }
+void Input::add_action_event(const std::string& name, std::unique_ptr<InputEvent> event) {
+    engine.input_map.actions[name].events.push_back(std::move(event));
+}
 
-void Input::add_action_mouse(const std::string& name, MouseButton button) { add_action_event(name, std::make_unique<InputEventMouseButton>(button)); }
+void Input::add_action_mouse(const std::string& name, MouseButton button) {
+    add_action_event(name, std::make_unique<InputEventMouseButton>(button));
+}
 
-void Input::remove_action(const std::string& name) { engine.input_map.actions.erase(name); }
-void Input::add_action_mouse_motion(const std::string& name) { add_action_event(name, std::make_unique<InputEventMouseMotion>()); }
+void Input::remove_action(const std::string& name) {
+    engine.input_map.actions.erase(name);
+}
+void Input::add_action_mouse_motion(const std::string& name) {
+    add_action_event(name, std::make_unique<InputEventMouseMotion>());
+}
 
 int32_t Input::get_default_gamepad_id() const {
     if (gamepads.empty()) {
@@ -421,4 +443,6 @@ const char* Input::get_gamepad_button_name(GamepadButton button, int32_t device_
     return magic_enum::enum_name(button).data();
 }
 
-const char* Input::get_gamepad_axis_name(GamepadAxis axis) const { return magic_enum::enum_name(axis).data(); }
+const char* Input::get_gamepad_axis_name(GamepadAxis axis) const {
+    return magic_enum::enum_name(axis).data();
+}

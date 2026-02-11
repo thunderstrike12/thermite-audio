@@ -11,13 +11,13 @@ struct SnapValues {
     float scale = 0.1f;
 };
 struct FontSize {
-    float text_size {-1.0f};
-    float icon_size {-1.0f};
+    float text_size { -1.0f };
+    float icon_size { -1.0f };
 };
 
 struct SaveData {
     struct Config {
-        static inline const IO::FileLocation FILE_LOCATION {IO::Location::EDITOR, "save_data/editor_save.json"};
+        static inline const IO::FileLocation FILE_LOCATION { IO::Location::EDITOR, "save_data/editor_save.json" };
     };
 
     void save() const {
@@ -38,6 +38,7 @@ struct SaveData {
     SnapValues snap_values;
     FontSize font_size;
 };
+
 }  // namespace tmt
 TMT_OBJECT(tmt::FontSize, (text_size, icon_size));
 

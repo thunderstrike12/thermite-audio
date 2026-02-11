@@ -114,6 +114,7 @@ void VengiParser::compute_parent_transform_offsets(vengi::Node& node, const glm:
 }
 
 namespace vengi {
+
 vengi::NodeType BinaryParser::parse_node_type(const std::string& type_str) {
     if (type_str == "Root") return NodeType::ROOT;
     if (type_str == "Model") return NodeType::MODEL;
@@ -335,7 +336,7 @@ bool BinaryParser::parse_animation(vengi::Animation& anim) {
     while (!eof()) {
         uint32_t fourCC = read_four_cc();
 
-        if (fourCC == 0x41444E45) {  // "ENDA"
+        if (fourCC == 0x41444E45) {         // "ENDA"
             break;
         } else if (fourCC == 0x4659454B) {  // "KEYF"
             Keyframe keyframe;

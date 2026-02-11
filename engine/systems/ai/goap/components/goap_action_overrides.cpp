@@ -6,7 +6,9 @@
 
 namespace tmt {
 
-GoapActionEditorData& GoapActionOverrides::get(const std::string& id) { return data[id]; }
+GoapActionEditorData& GoapActionOverrides::get(const std::string& id) {
+    return data[id];
+}
 
 const GoapActionEditorData* GoapActionOverrides::find(const std::string& id) const {
     auto it = data.find(id);

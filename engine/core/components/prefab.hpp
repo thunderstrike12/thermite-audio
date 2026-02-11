@@ -8,8 +8,8 @@ namespace tmt {
 using PrefabInstanceID = UUID;
 
 struct Prefab {
-    PrefabInstanceID instance_id {NULL_UUID};
-    tmt::Entity root_entity = entt::null; /* in Scene */
+    PrefabInstanceID instance_id { NULL_UUID };
+    tmt::Entity root_entity = entt::null;   /* in Scene */
 
     tmt::Entity source_entity = entt::null; /* in Prefab */
     IO::FileLocation source_location {};
@@ -18,7 +18,7 @@ struct Prefab {
     struct ChainEntry {
         IO::FileLocation source_location;
         tmt::Entity source_entity;
-        PrefabInstanceID instance_id {NULL_UUID};
+        PrefabInstanceID instance_id { NULL_UUID };
     };
 
     std::vector<ChainEntry> prefab_chain;
@@ -45,6 +45,7 @@ TMT_COMPONENT_SERIALIZE(tmt::Prefab, (source_location, source_entity, root_entit
 TMT_COMPONENT_INSPECT(tmt::Prefab, (source_location, source_entity, root_entity, instance_id, prefab_chain));
 
 namespace std {
+
 template <>
 struct hash<tmt::Prefab> {
     std::size_t operator()(const tmt::Prefab& prefab) const noexcept {
@@ -55,4 +56,5 @@ struct hash<tmt::Prefab> {
         return h1 ^ (h2 + 0x9e3779b9ull + (h1 << 6) + (h1 >> 2)) ^ (h3 + 0x9e3779b9ull + (h2 << 6) + (h2 >> 2)) ^ (h4 + 0x9e3779b9ull + (h3 << 6) + (h3 >> 2));
     }
 };
+
 }  // namespace std

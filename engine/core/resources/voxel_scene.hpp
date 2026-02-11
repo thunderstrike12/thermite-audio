@@ -10,7 +10,7 @@ namespace tmt {
 /* Voxel scene resource node. */
 struct VoxelSceneNode {
     /* 128 bit unique identifier. */
-    UUID uuid {NULL_UUID};
+    UUID uuid { NULL_UUID };
 
     /* Voxel acceleration structure. */
     std::unique_ptr<Svt64> tree {};
@@ -37,7 +37,7 @@ class VoxelScene : public tmt::FileResource {
     bool load() override;
     void unload() override;
 
-    inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS {".vengi", ".svh"};
+    inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS { ".vengi", ".svh" };
 
     /* Voxel scene hierarchy. */
     std::vector<VoxelSceneNode> root_nodes {};

@@ -12,6 +12,7 @@
 class ImGUI;
 
 namespace tmt {
+
 class ImGuiManager : public internal::OnSdlEvent, public OnEngineUpdate {
    public:
     ImGuiManager() = default;
@@ -31,4 +32,5 @@ class ImGuiManager : public internal::OnSdlEvent, public OnEngineUpdate {
     // Inherited via OnEngineUpdate
     void on_engine_update(const FrameData& time) override;
 };
+
 }  // namespace tmt

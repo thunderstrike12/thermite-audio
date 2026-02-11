@@ -21,7 +21,7 @@ void RenderView::init() {
     VRAMBank& bank = engine.renderer.vram_bank();
 
     /* Initialize the Render Target */
-    const TargetDesc target {static_cast<HWND>(engine.window.get_window_handle())};
+    const TargetDesc target { static_cast<HWND>(engine.window.get_window_handle()) };
     if (const Result r = bank.create_render_target(target); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to initialize render target.\nreason: {}", r.unwrap_err());
         return;
@@ -32,7 +32,7 @@ void RenderView::init() {
     /* Viewport Texture */
     viewport.texture = bank.create_texture(
                                "Viewport Texture", TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA8Unorm,
-                               {(uint32_t)engine.window.width, (uint32_t)engine.window.height, 0}, {1, 1}
+                               { (uint32_t)engine.window.width, (uint32_t)engine.window.height, 0 }, { 1, 1 }
     )
                            .expect("failed to initialize attachment texture");
 
@@ -43,7 +43,7 @@ void RenderView::init() {
     render_view_buffer = bank.create_buffer("Render View Buffer", BufferUsage::Constant | BufferUsage::TransferDst, sizeof(RenderView)).expect("failed to create render view buffer.");
 
     /* Create the visibility buffer */
-    const Size3D view_size {gpu_view.resolution.x, gpu_view.resolution.y};
+    const Size3D view_size { gpu_view.resolution.x, gpu_view.resolution.y };
     vbuffer.texture =
         bank.create_texture("Visibility Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG32Uint, view_size).expect("failed to create vbuffer texture.");
     vbuffer.image = bank.create_image("Visibility Buffer Image", vbuffer.texture).expect("failed to create vbuffer image.");
@@ -139,7 +139,7 @@ BindHandle RenderView::get_render_image() const {
 void RenderView::set_viewport_size(uint32_t width, uint32_t height) {
     if (width != gpu_view.resolution.x || height != gpu_view.resolution.y) {
         height = height <= 0 ? 1 : height;
-        gpu_view.resolution = {width, height};
+        gpu_view.resolution = { width, height };
         resize_textures();
 
 #ifdef THERMITE_EDITOR
@@ -150,7 +150,9 @@ void RenderView::set_viewport_size(uint32_t width, uint32_t height) {
 }
 
 /* Convert a pixel coordinate to a normalized device coordinate. */
-inline glm::vec2 pixel_to_ndc(glm::ivec2 pixel, glm::uvec2 resolution) { return ((glm::vec2(pixel) + 0.5f) / glm::vec2(resolution)) * 2.0f - 1.0f; }
+inline glm::vec2 pixel_to_ndc(glm::ivec2 pixel, glm::uvec2 resolution) {
+    return ((glm::vec2(pixel) + 0.5f) / glm::vec2(resolution)) * 2.0f - 1.0f;
+}
 
 Ray RenderView::pixel_ray(glm::ivec2 pixel) const {
     /* Convert the pixel coordinate to normalized device coordinate */
@@ -163,7 +165,7 @@ Ray RenderView::pixel_ray(glm::ivec2 pixel) const {
 }
 
 void RenderView::resize_textures() {
-    const Size3D view_size {gpu_view.resolution.x, gpu_view.resolution.y};
+    const Size3D view_size { gpu_view.resolution.x, gpu_view.resolution.y };
     VRAMBank& bank = engine.renderer.vram_bank();
 
     /* Resize the screen buffers */

@@ -10,13 +10,19 @@
 namespace tmt {
 
 // Count number of set bits
-inline uint32_t popcnt(uint64_t mask) { return (uint32_t)__popcnt64(mask); }
+inline uint32_t popcnt(uint64_t mask) {
+    return (uint32_t)__popcnt64(mask);
+}
 
 // Count number of set bits in variable range [0..width]
-inline uint32_t popcnt_var64(uint64_t mask, uint32_t width) { return (uint32_t)__popcnt64(mask & ((1ull << width) - 1)); }
+inline uint32_t popcnt_var64(uint64_t mask, uint32_t width) {
+    return (uint32_t)__popcnt64(mask & ((1ull << width) - 1));
+}
 
 /* Log with base. */
-inline uint32_t log_base(const uint32_t x, const uint32_t b) { return (uint32_t)ceil(log((double)x) / log((double)b)); }
+inline uint32_t log_base(const uint32_t x, const uint32_t b) {
+    return (uint32_t)ceil(log((double)x) / log((double)b));
+}
 
 /* Calculate the depth of a SVT64 based on its input voxel grid size. */
 inline uint32_t tree_depth(uint32_t width, uint32_t height, uint32_t depth) {
@@ -345,8 +351,8 @@ void Svt64::remove_voxel_dirty(const uint32_t x, const uint32_t y, const uint32_
 
 /* Convert absolute voxel coordinate to level local voxel coordinate. */
 inline uint32_t get_level_local_pos(const uint32_t x, const uint32_t y, const uint32_t z, const uint32_t level) {
-    const uint32_t level_2x = level << 1;           /* x2 */
-    const uint32_t local_x = x >> level_2x & 0b11u; /* % 4 */
+    const uint32_t level_2x = level << 1;             /* x2 */
+    const uint32_t local_x = x >> level_2x & 0b11u;   /* % 4 */
     const uint32_t local_y = y >> level_2x & 0b11u;
     const uint32_t local_z = z >> level_2x & 0b11u;
     return local_x | (local_z << 2) | (local_y << 4); /* x & y need to be flipped */

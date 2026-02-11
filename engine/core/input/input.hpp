@@ -10,10 +10,11 @@
 // heavily inspired by Godot's input system
 struct SDL_Gamepad;
 namespace tmt {
+
 struct FrameData;
 
 struct GamepadState {
-    SDL_Gamepad* handle {nullptr};
+    SDL_Gamepad* handle { nullptr };
     std::string name {};
     std::array<bool, static_cast<int32_t>(GamepadButton::COUNT)> buttons {};
     std::array<bool, static_cast<int32_t>(GamepadButton::COUNT)> prev_buttons {};
@@ -129,7 +130,7 @@ class Input {
     /// Returns the mouse cursor's position as a 2D vector.
     /// </summary>
     /// <returns>Mouse position vector.</returns>
-    glm::vec2 get_mouse_position() const { return glm::vec2 {mouse_x, mouse_y}; }
+    glm::vec2 get_mouse_position() const { return glm::vec2 { mouse_x, mouse_y }; }
 
     /// <summary>
     /// Returns horizontal scroll wheel delta for this frame.
@@ -319,4 +320,5 @@ class Input {
     std::vector<bool> prev_keys {};
     std::unordered_map<int32_t, GamepadState> gamepads {};
 };
+
 }  // namespace tmt

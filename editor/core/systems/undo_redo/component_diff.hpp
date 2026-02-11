@@ -11,7 +11,7 @@
 namespace tmt {
 
 template <typename... T>
-    requires(sizeof...(T) > 0)
+requires(sizeof...(T) > 0)
 class ComponentDiff : public IUndoRedo {
    public:
     ComponentDiff(const Entity entity) : entity(entity) {}

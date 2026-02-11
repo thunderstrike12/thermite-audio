@@ -12,6 +12,8 @@ void Rendering::on_editor_end() {}
 
 void Rendering::display() {}
 
-void Rendering::on_draw_lines() const { draw_lights_overlay(); }
+void Rendering::on_draw_lines() const {
+    draw_lights_overlay();
+}
 
 }  // namespace tmt

@@ -8,6 +8,7 @@
 #include "engine/tools/serializer/ecs.hpp"
 
 namespace tmt {
+
 void ScenesWindow::display() {
     const auto& scenes = engine.scenes.get_registered_scenes();
     const auto& active_scene = engine.scenes.get_active_scene();
@@ -39,8 +40,12 @@ void ScenesWindow::on_scene_modified() {
     dirty_scene = true;
 }
 
-void ScenesWindow::on_scene_serialized() { dirty_scene = false; }
+void ScenesWindow::on_scene_serialized() {
+    dirty_scene = false;
+}
 
-void ScenesWindow::on_post_load_scene() { dirty_scene = false; }
+void ScenesWindow::on_post_load_scene() {
+    dirty_scene = false;
+}
 
 }  // namespace tmt

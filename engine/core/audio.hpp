@@ -38,7 +38,7 @@ struct VoxelBody;
 
 class AudioParameter {
    public:
-    AudioParameter(const FMOD_STUDIO_PARAMETER_DESCRIPTION& description) : description {description} {}
+    AudioParameter(const FMOD_STUDIO_PARAMETER_DESCRIPTION& description) : description { description } {}
 
     // Get the name of the AudioParameter.
     [[nodiscard]] std::string get_name() const { return description.name; }
@@ -56,7 +56,7 @@ class AudioInstance {
     friend class AudioEvent;
 
    public:
-    AudioInstance(FMOD::Studio::EventInstance* instance) : instance {instance} {}
+    AudioInstance(FMOD::Studio::EventInstance* instance) : instance { instance } {}
 
     [[nodiscard]] bool is_valid() const;
 
@@ -70,7 +70,7 @@ class AudioInstance {
     void set_label_parameter(const AudioParameter& event_parameter, const std::string& value) const;
 
    protected:
-    FMOD::Studio::EventInstance* instance {nullptr};
+    FMOD::Studio::EventInstance* instance { nullptr };
 };
 
 class AudioInstance3D : public AudioInstance {
@@ -101,7 +101,7 @@ class AudioInstance3D : public AudioInstance {
 class AudioEvent {
    public:
     AudioEvent() = default;
-    AudioEvent(const ResourceRef<AudioBank>& source_bank, FMOD::Studio::EventDescription* description) : source_bank {source_bank}, description {description} {}
+    AudioEvent(const ResourceRef<AudioBank>& source_bank, FMOD::Studio::EventDescription* description) : source_bank { source_bank }, description { description } {}
 
     [[nodiscard]] bool is_valid() const;
     [[nodiscard]] bool is_3d() const;
@@ -121,13 +121,13 @@ class AudioEvent {
 
    private:
     ResourceRef<AudioBank> source_bank;
-    FMOD::Studio::EventDescription* description {nullptr};
+    FMOD::Studio::EventDescription* description { nullptr };
 };
 
 class VolumeControl {
    public:
     VolumeControl() = default;
-    VolumeControl(const ResourceRef<AudioBank>& source_bank, FMOD::Studio::VCA* vca) : source_bank {source_bank}, vca {vca} {}
+    VolumeControl(const ResourceRef<AudioBank>& source_bank, FMOD::Studio::VCA* vca) : source_bank { source_bank }, vca { vca } {}
 
     [[nodiscard]] bool is_valid() const;
     // Get the path/name of the VolumeControl (returns empty string when not in debug mode and not using the editor).
@@ -143,7 +143,7 @@ class VolumeControl {
 
    private:
     ResourceRef<AudioBank> source_bank;
-    FMOD::Studio::VCA* vca {nullptr};
+    FMOD::Studio::VCA* vca { nullptr };
 };
 
 class AudioListener;
@@ -158,9 +158,9 @@ class Audio : public OnGamePause, public OnGameResume, public OnGameEnd {
 
    public:
     struct DopplerSettings {
-        float doppler_scale {1.0f};
-        float distance_factor {1.0f};
-        float rolloff_scale {1.0f};
+        float doppler_scale { 1.0f };
+        float distance_factor { 1.0f };
+        float rolloff_scale { 1.0f };
     };
 
     Audio() = default;

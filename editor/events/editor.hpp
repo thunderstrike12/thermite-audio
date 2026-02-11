@@ -2,6 +2,7 @@
 #include "engine/core/frame_data.hpp"
 
 namespace tmt {
+
 class IEditorEvents {
    public:
     virtual ~IEditorEvents() = default;
@@ -13,4 +14,5 @@ class IEditorEvents {
     /* [Optional] */
     virtual void on_editor_fixed_update(const tmt::FrameData&) {};
 };
+
 }  // namespace tmt

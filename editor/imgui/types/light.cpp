@@ -8,7 +8,7 @@ void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Light& value, ImSettings
     auto tab_flags = [&](tmt::LightType t) { return (value.type == t) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None; };
 
     /* List of light type labels */
-    const char* LIGHT_TYPE_LABELS[] {"Sphere Light", "Sun Light", "Spot Light", "Tube Light"};
+    const char* LIGHT_TYPE_LABELS[] { "Sphere Light", "Sun Light", "Spot Light", "Tube Light" };
     const uint32_t selected = (uint32_t)magic_enum::enum_index<tmt::LightType>(value.type).value_or(0u);
 
     /* Light type selection */

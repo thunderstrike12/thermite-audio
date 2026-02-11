@@ -30,4 +30,5 @@ class CameraSystem : public ISystem {
         constexpr static float MAX_BASE_SPEED = 100.0f;
     };
 };
+
 }  // namespace tmt

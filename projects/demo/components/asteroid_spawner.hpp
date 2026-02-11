@@ -22,20 +22,20 @@ class AsteroidSpawner : public tmt::GameComponent<AsteroidSpawner> {
 
     std::vector<tmt::ResourceRef<tmt::VoxelVolume>> asteroid_bodies;
 
-    float min_radius = 50.0f;   // Inner circle radius (empty center)
-    float max_radius = 200.0f;  // Outer circle radius
-    int asteroid_count = 100;   // Total number of asteroids to spawn
+    float min_radius = 50.0f;            // Inner circle radius (empty center)
+    float max_radius = 200.0f;           // Outer circle radius
+    int asteroid_count = 100;            // Total number of asteroids to spawn
 
-    float min_height_offset = -10.0f;  // Minimum Y offset from ring plane
-    float max_height_offset = 10.0f;   // Maximum Y offset from ring plane
+    float min_height_offset = -10.0f;    // Minimum Y offset from ring plane
+    float max_height_offset = 10.0f;     // Maximum Y offset from ring plane
 
-    float min_scale_factor = 0.5f;  // Minimum scale multiplier
-    float max_scale_factor = 2.0f;  // Maximum scale multiplier
+    float min_scale_factor = 0.5f;       // Minimum scale multiplier
+    float max_scale_factor = 2.0f;       // Maximum scale multiplier
 
     bool enable_random_rotation = true;  // Toggle random rotation
 
-    bool use_3d_distribution = false;  // If true, distributes in sphere annulus instead of ring
-    float radial_bias = 0.0f;          // -1.0 (inner bias) to 1.0 (outer bias), 0.0 = uniform
+    bool use_3d_distribution = false;    // If true, distributes in sphere annulus instead of ring
+    float radial_bias = 0.0f;            // -1.0 (inner bias) to 1.0 (outer bias), 0.0 = uniform
 
    private:
     std::vector<tmt::Entity> spawned_asteroids;

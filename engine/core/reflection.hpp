@@ -23,6 +23,7 @@
 #define TMT_OBJECT_INSPECT(Type, Fields) IMGUI_REFLECT(Type, Fields)
 
 namespace tmt {
+
 template <typename T>
 struct Component {
     static constexpr const char* NAME = "Unknown";
@@ -30,15 +31,18 @@ struct Component {
     // Optional: helper function
     static constexpr const char* get_name() { return NAME; }
 };
+
 }  // namespace tmt
 
 #define TMT_COMPONENT_NAME(Type, Name)                           \
     namespace tmt {                                              \
+                                                                 \
     template <>                                                  \
     struct Component<Type> {                                     \
         static constexpr const char* NAME = Name;                \
         static constexpr const char* get_name() { return NAME; } \
     };                                                           \
+                                                                 \
     }
 
 /* Used to reflect components */

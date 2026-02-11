@@ -78,7 +78,7 @@ void DragonScene::on_start() {
         transform.set_world_position(glm::vec3(0.0f, 0.25f, -5.0f));
     }
 
-    tmt::ResourceRef<tmt::VoxelScene> voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "dragon128.vengi"});
+    tmt::ResourceRef<tmt::VoxelScene> voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "dragon128.vengi" });
     tmt::ResourceRef<tmt::VoxelVolume> voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
 
     { /* Voxel entity */
@@ -135,7 +135,7 @@ void TableScene::on_start() {
         transform.set_world_position(glm::vec3(0.0f, 0.25f, -5.0f));
     }
 
-    auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "table.vengi"});
+    auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "table.vengi" });
     auto voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
 
     generate_random_entities(voxel_volume);

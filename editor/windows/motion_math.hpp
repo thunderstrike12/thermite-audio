@@ -1,6 +1,7 @@
 #include "editor/core/window.hpp"
 
 namespace tmt {
+
 class MotionMathPreview : public IWindow {
    public:
     MotionMathPreview() = default;
@@ -25,4 +26,5 @@ class MotionMathPreview : public IWindow {
     float x_data[NUM_SAMPLES];
     float y_data[NUM_SAMPLES];
 };
+
 }  // namespace tmt

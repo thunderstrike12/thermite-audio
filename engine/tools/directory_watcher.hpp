@@ -25,7 +25,7 @@ using namespace magic_enum::bitwise_operators;
 class DirectoryWatcher {
     // Time to ignore incoming change notices, this is to avoid double notifying about changes (some programs e.g. vengi, when they save a file will write an empty file to disk before write
     // the new contents to the next frame).
-    static constexpr std::chrono::milliseconds DOUBLE_CHANGE_BUFFER_TIME {34};
+    static constexpr std::chrono::milliseconds DOUBLE_CHANGE_BUFFER_TIME { 34 };
     // Invalid time, used to clear the last_update_time after preemptively notifying about a changed file when avoiding double notifies.
     static constexpr std::chrono::time_point<std::chrono::system_clock> INVALID_TIME {};
 
@@ -63,10 +63,10 @@ class DirectoryWatcher {
 
    private:
     // Handle for the change event watcher from windows.h.
-    void* watching_handle {nullptr};
-    bool avoid_double_notify {false};
+    void* watching_handle { nullptr };
+    bool avoid_double_notify { false };
 
-    std::chrono::time_point<std::chrono::system_clock> last_update_time {INVALID_TIME};
+    std::chrono::time_point<std::chrono::system_clock> last_update_time { INVALID_TIME };
 };
 
 // A class to easily and efficiently watch a certain file for changes.

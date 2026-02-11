@@ -1,3 +1,4 @@
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
 BasedOnStyle: Google
 AlignAfterOpenBracket: BlockIndent
 SortIncludes: Never
@@ -8,3 +9,13 @@ PointerAlignment: Left
 ReferenceAlignment: Left
 DerivePointerAlignment: false
 ColumnLimit: 192
+
+Cpp11BracedListStyle: false # Adds a space between words and {}, like this: { foo }
+AlignTrailingComments: # Keep comments that are above eachother aligned
+  Kind: Always
+  OverEmptyLines: 2
+AllowShortFunctionsOnASingleLine: Inline # Makes normal function go to new lines while keeping inline functions in one line
+BreakConstructorInitializers: AfterColon # Puts constructor initializers on new lines
+IndentPPDirectives: BeforeHash # Indents preprocessor directives to the same level as the code
+IndentRequiresClause: false # Keeps requires clauses at the same indentation level as the function
+WrapNamespaceBodyWithEmptyLines: Always # Adds empty lines before and after namespace bodies

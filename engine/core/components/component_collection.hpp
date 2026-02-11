@@ -29,7 +29,7 @@ class ComponentCollection {
 
     /* Compile time */
     template <typename T>
-        requires std::is_base_of_v<IGameComponent, T>
+    requires std::is_base_of_v<IGameComponent, T>
     T& add_component(Entity entity) {
         const ComponentIndex type_id = typeid(T);
         GameComponentRegistry::is_registered_or_throw(type_id);
@@ -39,7 +39,7 @@ class ComponentCollection {
     }
 
     template <typename T>
-        requires std::is_base_of_v<IGameComponent, T>
+    requires std::is_base_of_v<IGameComponent, T>
     T& get_component() {
         const ComponentIndex type_id = typeid(T);
         GameComponentRegistry::is_registered_or_throw(type_id);
@@ -48,7 +48,7 @@ class ComponentCollection {
     }
 
     template <typename T>
-        requires std::is_base_of_v<IGameComponent, T>
+    requires std::is_base_of_v<IGameComponent, T>
     const T& get_component() const {
         const ComponentIndex type_id = typeid(T);
         GameComponentRegistry::is_registered_or_throw(type_id);
@@ -57,7 +57,7 @@ class ComponentCollection {
     }
 
     template <typename T>
-        requires std::is_base_of_v<IGameComponent, T>
+    requires std::is_base_of_v<IGameComponent, T>
     void remove_component() {
         const ComponentIndex type_id = typeid(T);
         GameComponentRegistry::is_registered_or_throw(type_id);
@@ -66,7 +66,7 @@ class ComponentCollection {
     }
 
     template <typename T>
-        requires std::is_base_of_v<IGameComponent, T>
+    requires std::is_base_of_v<IGameComponent, T>
     bool has_component() const {
         const ComponentIndex type_id = typeid(T);
         GameComponentRegistry::is_registered_or_throw(type_id);
@@ -93,12 +93,14 @@ class ComponentCollection {
     BEFRIEND_VISITABLE();
     std::unordered_map<ComponentIndex, std::unique_ptr<IGameComponent>> components;
 };
+
 }  // namespace tmt
 
 TMT_COMPONENT(tmt::ComponentCollection, "ComponentCollection", (components));
 
 /* Specialization for IGameComponent derived types */
 namespace tmt {
+
 template <typename T>
 struct EcsComponentTraits<T, std::enable_if_t<std::is_base_of_v<IGameComponent, T>>> {
     static T& add(Registry& registry, Entity entity) {
@@ -161,4 +163,5 @@ struct EcsComponentTraits<T, std::enable_if_t<std::is_base_of_v<IGameComponent, 
         return nullptr;
     }
 };
+
 }  // namespace tmt

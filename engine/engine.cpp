@@ -36,18 +36,18 @@ tmt::Engine tmt::engine;
 
 namespace tmt {
 
-Engine::Engine()
-    : window(*new Window()),
-      audio(*new Audio()),
-      input_map(*new InputMap()),
-      input(*new Input()),
-      ecs(*new Ecs()),
-      renderer(*new Renderer()),
-      resources(*new Resources()),
-      salvo(*new Salvo()),
-      scenes(*new Scenes()),
-      polyline(*new Polyline()),
-      component_registry(*new GameComponentRegistry()) {}
+Engine::Engine() :
+    window(*new Window()),
+    audio(*new Audio()),
+    input_map(*new InputMap()),
+    input(*new Input()),
+    ecs(*new Ecs()),
+    renderer(*new Renderer()),
+    resources(*new Resources()),
+    salvo(*new Salvo()),
+    scenes(*new Scenes()),
+    polyline(*new Polyline()),
+    component_registry(*new GameComponentRegistry()) {}
 
 Engine::~Engine() {
     /* Destruction should be in reverse order */
@@ -144,9 +144,9 @@ void Engine::run() {
 
             /* Fixed Update */
             if (should_update) {
-                fixed_update_game(FrameData {.delta_time = Config::FIXED_TIME_STEP});
+                fixed_update_game(FrameData { .delta_time = Config::FIXED_TIME_STEP });
             }
-            fixed_update_engine(FrameData {.delta_time = Config::FIXED_TIME_STEP});
+            fixed_update_engine(FrameData { .delta_time = Config::FIXED_TIME_STEP });
         }
 
         OnEndFrame::dispatch();
@@ -235,16 +235,22 @@ void Engine::end_game() {
     OnGameEnd::dispatch();
 }
 
-const FrameData& tmt::Engine::frame_data() const { return current_frame_data; }
+const FrameData& tmt::Engine::frame_data() const {
+    return current_frame_data;
+}
 
-bool tmt::Engine::get_is_running() const { return is_running; }
+bool tmt::Engine::get_is_running() const {
+    return is_running;
+}
 
-void tmt::Engine::set_is_running(bool value) { is_running = value; }
+void tmt::Engine::set_is_running(bool value) {
+    is_running = value;
+}
 
 }  // namespace tmt
 
 #if THERMITE_DEBUG
-#pragma message("THERMITE_DEBUG=1")
+    #pragma message("THERMITE_DEBUG=1")
 #else
-#pragma message("THERMITE_DEBUG=0")
+    #pragma message("THERMITE_DEBUG=0")
 #endif

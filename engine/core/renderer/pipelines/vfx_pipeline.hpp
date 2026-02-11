@@ -79,4 +79,5 @@ class VfxPipeline {
 
     Sampler linear_sampler {};
 };
+
 }  // namespace tmt

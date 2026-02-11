@@ -23,7 +23,7 @@ inline void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::ResourceRef
         // Get the current payload to check if its a FileLocation.
         const ImGuiPayload* payload = ImGui::GetDragDropPayload();
         if (payload != nullptr && payload->IsDataType("FileLocation")) {
-            const std::string_view json_string {static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize)};
+            const std::string_view json_string { static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize) };
             tmt::IO::FileLocation file_location;
             tmt::Serializer::deserialize(nlohmann::ordered_json::parse(json_string), file_location);
 

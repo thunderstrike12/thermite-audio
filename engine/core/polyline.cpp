@@ -144,7 +144,8 @@ void Polyline::draw_arrow(glm::vec3 origin, glm::vec3 dir, float length, float t
 
 void Polyline::draw_aabb(glm::vec3 min, glm::vec3 max, float time) {
     const glm::vec3 corners[8] = {
-        {min.x, min.y, min.z}, {max.x, min.y, min.z}, {max.x, max.y, min.z}, {min.x, max.y, min.z}, {min.x, min.y, max.z}, {max.x, min.y, max.z}, {max.x, max.y, max.z}, {min.x, max.y, max.z},
+        { min.x, min.y, min.z }, { max.x, min.y, min.z }, { max.x, max.y, min.z }, { min.x, max.y, min.z },
+        { min.x, min.y, max.z }, { max.x, min.y, max.z }, { max.x, max.y, max.z }, { min.x, max.y, max.z },
     };
 
     /* Bottom face */
@@ -218,7 +219,7 @@ void Polyline::draw_cone(glm::vec3 origin, glm::vec3 dir, float angle, float len
     const glm::vec4 clip_origin = engine.renderer.render_view.gpu_view.world_to_clip * glm::vec4(origin, 1.0f);
     const glm::vec2 screen_origin = glm::vec2(clip_origin) / clip_origin.w; /* Perspective divide */
     const glm::vec4 clip_end = engine.renderer.render_view.gpu_view.world_to_clip * glm::vec4(cone_end, 1.0f);
-    const glm::vec2 screen_end = glm::vec2(clip_end) / clip_end.w; /* Perspective divide */
+    const glm::vec2 screen_end = glm::vec2(clip_end) / clip_end.w;          /* Perspective divide */
 
     /* Handle the case where the camera is looking at the cone from the side */
     const glm::vec3 to_camera = glm::normalize(camera_pos - cone_end);
@@ -336,7 +337,7 @@ void Polyline::draw_bone(glm::vec3 origin, glm::quat rot, float length, float ti
     /* Get the four corner points of the bone */
     const glm::vec3 rot_a = rot * glm::vec3(1, 0, 0) * width;
     const glm::vec3 rot_b = rot * glm::vec3(0, 0, 1) * width;
-    const glm::vec3 points[4] = {mid + rot_a, mid + rot_b, mid - rot_a, mid - rot_b};
+    const glm::vec3 points[4] = { mid + rot_a, mid + rot_b, mid - rot_a, mid - rot_b };
     const glm::vec3 to_cam = glm::normalize(glm::vec3(engine.renderer.render_view.gpu_view.origin) - mid);
 
     /* Draw each of the bone edges (only if they would be visible if it was solid) */

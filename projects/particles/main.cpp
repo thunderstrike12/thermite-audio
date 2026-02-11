@@ -65,7 +65,7 @@ void ParticleScene::on_start() {
         transform.set_world_position(glm::vec3(0.0f, 0.25f, -120.0f));
     }
 
-    auto asteroid_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "test_asteroid_3.vengi"});
+    auto asteroid_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "test_asteroid_3.vengi" });
     auto asteroid_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(asteroid_file);
 
     auto entity = tmt::engine.ecs.create_entity();

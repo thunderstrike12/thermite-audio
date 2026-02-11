@@ -30,7 +30,7 @@ Hit VoxelObject::intersect(Ray ray, const float tmax) const {
     ray.origin = (entry_uvw * width_ratio) + 1.0f; /* [1.0, 2.0) */
 
     const Svt64Hit local_hit = volume->blas->trace(ray);
-    if (local_hit.pos.x >= 1e30f) return Hit(); /* miss */
+    if (local_hit.pos.x >= 1e30f) return Hit();    /* miss */
 
     /* Calculate world-space hit point and distance */
     const glm::vec3 hit_uvw = (local_hit.pos - 1.0f) / width_ratio;

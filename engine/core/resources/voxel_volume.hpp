@@ -16,7 +16,7 @@ class VoxelVolume : public tmt::RuntimeResource<VoxelScene> {
     VoxelVolume(const VoxelSceneNode& node);
 
     VoxelVolume(const std::shared_ptr<VoxelScene>& file_resource) : RuntimeResource<VoxelScene>(file_resource) {}
-    VoxelVolume(const std::shared_ptr<VoxelScene>& file_resource, const UUID& uuid) : RuntimeResource<VoxelScene>(file_resource), uuid {uuid} {}
+    VoxelVolume(const std::shared_ptr<VoxelScene>& file_resource, const UUID& uuid) : RuntimeResource<VoxelScene>(file_resource), uuid { uuid } {}
     ~VoxelVolume() { unload(); }
 
     bool load() override;
@@ -29,7 +29,7 @@ class VoxelVolume : public tmt::RuntimeResource<VoxelScene> {
     inline void set_dirty() { is_dirty = true; };
 
     /* 128 bit unique identifier. */
-    UUID uuid {NULL_UUID};
+    UUID uuid { NULL_UUID };
 
     /* Voxel acceleration structure. */
     std::unique_ptr<Svt64> blas {};

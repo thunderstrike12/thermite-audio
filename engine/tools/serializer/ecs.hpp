@@ -27,8 +27,10 @@ void tag_invoke(JsonReflect::deserialize_t, const JsonReflect::json& j, std::set
 
 /* forward declare */
 namespace tmt {
+
 struct SerializeState;
 struct DeserializeState;
+
 }  // namespace tmt
 
 /* Single entity with states */

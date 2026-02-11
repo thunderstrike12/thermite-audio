@@ -87,7 +87,7 @@ void AIScene::on_start() {
         {
             tmt::GoapGoal patrol;
             patrol.name = "PatrolArea";
-            patrol.desired_state = {{tmt::FactId("area_secure"), tmt::FactValue(true)}};
+            patrol.desired_state = { { tmt::FactId("area_secure"), tmt::FactValue(true) } };
             patrol.priority = 1;
             patrol.valid = true;
 
@@ -97,7 +97,7 @@ void AIScene::on_start() {
         {
             tmt::GoapGoal kill;
             kill.name = "KillPlayer";
-            kill.desired_state = {{tmt::FactId("player_alive"), tmt::FactValue(false)}};
+            kill.desired_state = { { tmt::FactId("player_alive"), tmt::FactValue(false) } };
             kill.priority = 10;
             kill.valid = true;
 
@@ -109,28 +109,26 @@ void AIScene::on_start() {
         tmt::GoapAgentType enemy1;
         enemy1.id = "Enemy 1";
 
-        enemy1.action_ids = {"PatrolArea", "ChasePlayer", "KillPlayer"};
+        enemy1.action_ids = { "PatrolArea", "ChasePlayer", "KillPlayer" };
 
-        enemy1.goal_ids = {"PatrolArea", "KillPlayer"};
+        enemy1.goal_ids = { "PatrolArea", "KillPlayer" };
 
         // NOTE: You really shouldn't convert a 64bit hash to 32bits!!!!
-        enemy1.default_world_state = {
-            {(uint32_t)std::hash<std::string>()("player_visible"), true},
-            {(uint32_t)std::hash<std::string>()("player_in_range"), false},
-            {(uint32_t)std::hash<std::string>()("player_alive"), true},
-            {(uint32_t)std::hash<std::string>()("area_secure"), false}
-        };
+        enemy1.default_world_state = { { (uint32_t)std::hash<std::string>()("player_visible"), true },
+                                       { (uint32_t)std::hash<std::string>()("player_in_range"), false },
+                                       { (uint32_t)std::hash<std::string>()("player_alive"), true },
+                                       { (uint32_t)std::hash<std::string>()("area_secure"), false } };
 
         type_reg.register_type(enemy1);
 
         tmt::GoapAgentType enemy2;
         enemy2.id = "Enemy 2";
 
-        enemy2.action_ids = {"PatrolArea"};
+        enemy2.action_ids = { "PatrolArea" };
 
-        enemy2.goal_ids = {"PatrolArea"};
+        enemy2.goal_ids = { "PatrolArea" };
 
-        enemy2.default_world_state = {{(uint32_t)std::hash<std::string>()("area_secure"), false}};
+        enemy2.default_world_state = { { (uint32_t)std::hash<std::string>()("area_secure"), false } };
 
         type_reg.register_type(enemy2);
     }
@@ -143,8 +141,8 @@ void AIScene::on_start() {
         tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 1", ai2);
 
         // Set unique positions
-        ecs.get_component<tmt::Transform>(ai1).set_world_position({0.f, 0.f, 0.f});
-        ecs.get_component<tmt::Transform>(ai2).set_world_position({5.f, 0.f, 0.f});
+        ecs.get_component<tmt::Transform>(ai1).set_world_position({ 0.f, 0.f, 0.f });
+        ecs.get_component<tmt::Transform>(ai2).set_world_position({ 5.f, 0.f, 0.f });
     }
 
     { /* Camera entity */
@@ -156,13 +154,13 @@ void AIScene::on_start() {
     }
 
     {  // voxel entity with navmesh
-        auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "test_asteroid_5.vengi"});
+        auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "test_asteroid_5.vengi" });
         auto voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
         volumes[0] = voxel_volume;
-        voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "test_asteroid_6.vengi"});
+        voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "test_asteroid_6.vengi" });
         voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
         volumes[1] = voxel_volume;
-        voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "test_asteroid_7.vengi"});
+        voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "test_asteroid_7.vengi" });
         voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
         volumes[2] = voxel_volume;
         voxel = tmt::engine.ecs.create_entity("Moving Voxel");

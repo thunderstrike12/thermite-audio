@@ -3,6 +3,7 @@
 #include "editor/core/window.hpp"
 
 namespace tmt {
+
 class EcsInspector : public IWindow {
    public:
     // Inherited via IWindow
@@ -12,4 +13,5 @@ class EcsInspector : public IWindow {
     void display() override;
     constexpr std::string get_title() const override { return "ECS inspector"; };
 };
+
 }  // namespace tmt

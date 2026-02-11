@@ -5,7 +5,9 @@
 
 namespace FMOD {
 namespace Studio {
+
 class Bank;
+
 }
 }  // namespace FMOD
 
@@ -19,7 +21,7 @@ class AudioBank : public FileResource {
     bool load() override;
     void unload() override;
 
-    inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS {".bank"};
+    inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS { ".bank" };
 
     // Get the path/name of the bank (returns empty string when not in debug mode and not using the editor).
     [[nodiscard]] std::string get_path() const;
@@ -29,8 +31,8 @@ class AudioBank : public FileResource {
    private:
     // TODO: Replace this with a proper method of handling resource dependencies.
     ResourceRef<AudioBank> master_bank_ref {};
-    FMOD::Studio::Bank* bank {nullptr};
-    FMOD::Studio::Bank* string_bank {nullptr};
+    FMOD::Studio::Bank* bank { nullptr };
+    FMOD::Studio::Bank* string_bank { nullptr };
 };
 
 }  // namespace tmt

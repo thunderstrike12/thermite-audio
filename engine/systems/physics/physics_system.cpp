@@ -299,7 +299,9 @@ void Physics::generate_constraint(int index, const PhysicsGroup& group) {
         solver.collisions[solver.contact_index.fetch_add(1)] = coll;
     }
 }
-void Physics::on_end() { Log::info("Physics on_end"); }
+void Physics::on_end() {
+    Log::info("Physics on_end");
+}
 
 void Physics::compare_trees(
     tmt::Svt64* tree_a, const glm::vec3& center_a, const glm::quat& rotation_a, float half_extent_a, tmt::Svt64* tree_b, const glm::vec3& center_b, const glm::quat& rotation_b,
@@ -319,7 +321,7 @@ void Physics::compare_trees(
     stack.reserve((tree_a->depth + tree_b->depth) * 64);
 
     // Add root pair
-    stack.push_back({0, 0, half_extent_a, half_extent_b, center_a, center_b});
+    stack.push_back({ 0, 0, half_extent_a, half_extent_b, center_a, center_b });
 
     while (!stack.empty()) {
         const StackEntry entry = stack.back();
@@ -489,7 +491,7 @@ void Physics::compare_trees(
                 const uint32_t child_index = node_a.abs_ptr() + child_offset;
 
                 // Add pair to stack
-                stack.push_back({child_index, entry.node_index_b, child_half_extent, entry.half_extent_b, child_center, entry.center_b});
+                stack.push_back({ child_index, entry.node_index_b, child_half_extent, entry.half_extent_b, child_center, entry.center_b });
             }
         } else {
             // Precompute overlap values
@@ -525,7 +527,7 @@ void Physics::compare_trees(
                 const uint32_t child_offset = (uint32_t)__popcnt64(node_b.child_mask & ((1ull << i) - 1u));
                 const uint32_t child_index = node_b.abs_ptr() + child_offset;
 
-                stack.push_back({entry.node_index_a, child_index, entry.half_extent_a, child_half_extent, entry.center_a, child_center});
+                stack.push_back({ entry.node_index_a, child_index, entry.half_extent_a, child_half_extent, entry.center_a, child_center });
             }
         }
     }
@@ -700,9 +702,13 @@ void Physics::initialize_voxel_body(VoxelBody& vb) {
     vb.center_of_mass = vb.position + (vb.rotation * vb.com_local_offset);
 }
 
-void Physics::add_force(VoxelBody& vb, const glm::vec3& force) { vb.stored_velocity += force; }
+void Physics::add_force(VoxelBody& vb, const glm::vec3& force) {
+    vb.stored_velocity += force;
+}
 
-void Physics::add_torque(VoxelBody& vb, const glm::vec3& torque) { vb.stored_torque += torque; }
+void Physics::add_torque(VoxelBody& vb, const glm::vec3& torque) {
+    vb.stored_torque += torque;
+}
 
 void Physics::add_force_at_position(VoxelBody& vb, const glm::vec3& force, const glm::vec3& p) {
     const glm::vec3 r = p - vb.position;

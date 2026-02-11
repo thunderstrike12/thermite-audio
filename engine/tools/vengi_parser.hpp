@@ -229,7 +229,7 @@ class BinaryParser {
 
     uint32_t read_four_cc() { return read_uint32(); }
 
-    glm::vec3 read_vec3f() { return glm::vec3 {read_float(), read_float(), read_float()}; }
+    glm::vec3 read_vec3f() { return glm::vec3 { read_float(), read_float(), read_float() }; }
 
     glm::mat4 read_matrix4x4() {
         glm::mat4 mat;

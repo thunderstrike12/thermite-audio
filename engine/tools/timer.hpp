@@ -39,4 +39,5 @@ class ScopedTimer {
         printf("[Timer] %s: %.6f seconds\n", name.c_str(), elapsed_time);
     }
 };
+
 };  // namespace tmt

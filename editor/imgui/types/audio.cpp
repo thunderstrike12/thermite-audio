@@ -17,7 +17,7 @@ void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::AudioEvent& value,
 
     const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AudioEvent");
     if (payload != nullptr) {
-        const std::string_view json_string {static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize)};
+        const std::string_view json_string { static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize) };
         tmt::Serializer::deserialize(nlohmann::ordered_json::parse(json_string), value);
     }
 
@@ -37,7 +37,7 @@ void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::VolumeControl& val
 
     const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("VolumeControl");
     if (payload != nullptr) {
-        const std::string_view json_string {static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize)};
+        const std::string_view json_string { static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize) };
         tmt::Serializer::deserialize(nlohmann::ordered_json::parse(json_string), value);
     }
 

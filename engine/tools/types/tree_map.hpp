@@ -23,7 +23,7 @@ class TreeMap {
 
     TreeMap(const MapType& map) : value_(std::nullopt), children(map) {}
 
-    TreeMap(const K& key, const V& val) : value_(std::nullopt), children {{key, TreeMap(val)}} {}
+    TreeMap(const K& key, const V& val) : value_(std::nullopt), children { { key, TreeMap(val) } } {}
 
     // ============= CHILD ACCESS =============
     TreeMap& operator[](const K& key) { return children[key]; }

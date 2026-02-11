@@ -6,6 +6,7 @@
 #include "engine/tools/serializer.hpp"
 
 namespace tmt {
+
 class Inspector : public IWindow {
     // Inherited via IWindow
     std::string get_title() const override { return ICON_MS_FRAME_INSPECT "  Inspector"; }
@@ -53,4 +54,5 @@ class Inspector : public IWindow {
     };
     ContextMenuResponse context_menu(const std::string& name, const bool open);
 };
+
 }  // namespace tmt

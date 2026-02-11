@@ -19,4 +19,5 @@ class ConstraintSolver {
     int velocity_iterations = 16;
     int position_iterations = 4;
 };
+
 }  // namespace tmt

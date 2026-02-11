@@ -49,7 +49,7 @@ void TestScene::on_start() {
 
 void TestScene::on_update(const tmt::FrameData& time) {
     const float n = time.elapsed_time;
-    const glm::vec3 position = glm::vec3 {glm::cos(n), 0.0f, glm::sin(n)} * 3.0f;
+    const glm::vec3 position = glm::vec3 { glm::cos(n), 0.0f, glm::sin(n) } * 3.0f;
 
     tmt::Transform& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
     transform.set_world_position(position);

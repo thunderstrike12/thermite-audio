@@ -17,7 +17,9 @@ UndoRedoManager& IUndoRedo::get_manager() {
     return *result;
 }
 
-void UndoRedoCollection::commit(const std::string& message) { send_to_manager(std::move(*this), message); }
+void UndoRedoCollection::commit(const std::string& message) {
+    send_to_manager(std::move(*this), message);
+}
 
 void UndoRedoCollection::undo() {
     for (auto& action : actions) {
@@ -31,10 +33,12 @@ void UndoRedoCollection::redo() {
     }
 }
 
-void UndoRedoCollection::inspect() { ImGui::Text("UndoRedoCollection with %zu actions", actions.size()); }
+void UndoRedoCollection::inspect() {
+    ImGui::Text("UndoRedoCollection with %zu actions", actions.size());
+}
 
 void UndoRedoManager::commit_action(const std::shared_ptr<IUndoRedo>& action, const std::string& message) {
-    CommitAction entry {message, action};
+    CommitAction entry { message, action };
     undo_stack.push_back(entry);
     redo_stack.clear();
 }
@@ -117,4 +121,5 @@ void UndoRedoManager::redo() {
     entry.action->redo();
     undo_stack.push_back(std::move(entry));
 }
+
 }  // namespace tmt

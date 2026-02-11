@@ -138,7 +138,7 @@ void Hierarchy::context_menu(const Entity hovered_entity) {
         ImGui::SameLine();
         ImGui::Text(".prefab");
         if (ImGui::Button("Create")) {
-            const IO::FileLocation temp_location = {IO::Location::PROJECT, prefab_name + ".prefab"};
+            const IO::FileLocation temp_location = { IO::Location::PROJECT, prefab_name + ".prefab" };
             if (IO::file_exists(temp_location) == false) {
                 const Entity root_entity = *EntityHelper::upper_parents(selected_entities).begin();
                 const bool has_prefab = engine.ecs.has_component<Prefab>(root_entity);
@@ -213,7 +213,9 @@ void Hierarchy::clear_selection() {
     previous_end_below = NULL_INDEX;
 }
 
-int Hierarchy::get_window_flags() const { return ImGuiWindowFlags_MenuBar; }
+int Hierarchy::get_window_flags() const {
+    return ImGuiWindowFlags_MenuBar;
+}
 
 void Hierarchy::on_editor_update(const FrameData&) {
     for (int i = 0; i < selected_entities.size(); ++i) {
@@ -236,7 +238,7 @@ void Hierarchy::file_drag_drop(const tmt::Entity parent) {
         // Get the current payload to check if its a FileLocation.
         const ImGuiPayload* payload = ImGui::GetDragDropPayload();
         if (payload != nullptr && payload->IsDataType("FileLocation")) {
-            const std::string_view json_string {static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize)};
+            const std::string_view json_string { static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize) };
             tmt::IO::FileLocation file_location;
             tmt::Serializer::deserialize(nlohmann::ordered_json::parse(json_string), file_location);
 
@@ -492,8 +494,12 @@ bool Hierarchy::drag_drop_target(const Entity dropped_entity) {
     }
     return false;
 }
-void Hierarchy::on_game_end() { clear_selection(); }
+void Hierarchy::on_game_end() {
+    clear_selection();
+}
 
-void Hierarchy::on_pre_unload_scene() { clear_selection(); }
+void Hierarchy::on_pre_unload_scene() {
+    clear_selection();
+}
 
 }  // namespace tmt

@@ -11,8 +11,8 @@
 void Player::start() {
     tmt::engine.input.lock_mouse(true);
     tmt::engine.input.set_mouse_relative_to_window(true);
-    glm::vec2 screen_size = {tmt::engine.window.width, tmt::engine.window.height};
-    tmt::engine.input.warp_mouse({screen_size.x / 2.0f, screen_size.y / 2.0f}, true);
+    glm::vec2 screen_size = { tmt::engine.window.width, tmt::engine.window.height };
+    tmt::engine.input.warp_mouse({ screen_size.x / 2.0f, screen_size.y / 2.0f }, true);
 }
 
 void Player::update(const tmt::FrameData& time) {
@@ -34,7 +34,7 @@ void Player::update(const tmt::FrameData& time) {
     transform.look_at(transform.get_world_position() + front, glm::vec3(0.0f, 1.0f, 0.0f));
 
     // Calculate desired movement direction
-    glm::vec3 input_dir = {0.0f, 0.0f, 0.0f};
+    glm::vec3 input_dir = { 0.0f, 0.0f, 0.0f };
     if (tmt::engine.input.is_keyboard_button_pressed(tmt::Key::W)) input_dir += transform.get_forward();
     if (tmt::engine.input.is_keyboard_button_pressed(tmt::Key::S)) input_dir -= transform.get_forward();
     if (tmt::engine.input.is_keyboard_button_pressed(tmt::Key::D)) input_dir += transform.get_right();

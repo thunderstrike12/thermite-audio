@@ -18,6 +18,6 @@ class Player : public tmt::GameComponent<Player> {
     float max_speed = 10.0f;
 
    private:
-    glm::vec3 velocity = {0.0f, 0.0f, 0.0f};
+    glm::vec3 velocity = { 0.0f, 0.0f, 0.0f };
 };
 TMT_OBJECT(Player, (camera_sensitivity, acceleration, drag, max_speed));

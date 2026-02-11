@@ -10,7 +10,9 @@
 constexpr float PHI = 1.618033988749895f;
 constexpr float GOLDEN_ANGLE = 2.39996322972865332f;  // 2π / φ (in radians)
 
-void AsteroidSpawner::start() { spawn_asteroids(); }
+void AsteroidSpawner::start() {
+    spawn_asteroids();
+}
 
 void AsteroidSpawner::update(const tmt::FrameData& time) {}
 
@@ -116,4 +118,6 @@ float AsteroidSpawner::random_float(float min, float max) {
     return min + random * (max - min);
 }
 
-glm::vec3 AsteroidSpawner::random_rotation() { return glm::vec3(random_float(0.0f, 360.0f), random_float(0.0f, 360.0f), random_float(0.0f, 360.0f)); }
+glm::vec3 AsteroidSpawner::random_rotation() {
+    return glm::vec3(random_float(0.0f, 360.0f), random_float(0.0f, 360.0f), random_float(0.0f, 360.0f));
+}

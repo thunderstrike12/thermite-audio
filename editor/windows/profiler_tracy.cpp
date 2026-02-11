@@ -12,21 +12,22 @@
 #include "engine/core/logger.hpp"
 
 namespace tmt {
+
 // only this file uses these
 namespace {
 
 ProfilerSettings settings;
 HANDLE capture_process = nullptr;
 
-constexpr SDL_DialogFileFilter k_exe_filters[] = {{"Executable", "exe"}, {"All files", "*"}};
+constexpr SDL_DialogFileFilter k_exe_filters[] = { { "Executable", "exe" }, { "All files", "*" } };
 
-constexpr SDL_DialogFileFilter k_output_filters[] = {{"Tracy trace", "tracy"}, {"All files", "*"}};
+constexpr SDL_DialogFileFilter k_output_filters[] = { { "Tracy trace", "tracy" }, { "All files", "*" } };
 
 enum class DialogType { PROFILER, CAPTURE, OUTPUT };
 DialogType dialog = DialogType::PROFILER;
 
 void launch_profiler() {
-    STARTUPINFOA si = {sizeof(si)};
+    STARTUPINFOA si = { sizeof(si) };
     PROCESS_INFORMATION pi = {};
 
     std::string cmd = settings.profiler_path;
@@ -46,7 +47,7 @@ void launch_profiler() {
 }
 
 void launch_capture() {
-    STARTUPINFOA si = {sizeof(si)};
+    STARTUPINFOA si = { sizeof(si) };
     PROCESS_INFORMATION pi = {};
 
     std::string cmd = settings.capture_path;
@@ -139,7 +140,9 @@ void Profiler::on_editor_start() {
     tmt::Serializer::deserialize(json::parse(text), settings);
 }
 
-void Profiler::on_editor_update(const tmt::FrameData& time) { (void)time; }
+void Profiler::on_editor_update(const tmt::FrameData& time) {
+    (void)time;
+}
 
 void Profiler::on_editor_end() {
     auto json = tmt::Serializer::serialize(settings);
@@ -202,4 +205,5 @@ void Profiler::display() {
         }
     }
 }
+
 }  // namespace tmt

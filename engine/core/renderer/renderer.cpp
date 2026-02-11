@@ -24,14 +24,14 @@
 
 namespace tmt {
 
-Renderer::Renderer()
-    : gpu(*new GPUAdapter()),
-      render_graph(*new RenderGraph()),
-      geometry_pipeline(*new GeometryPipeline()),
-      di_pipeline(*new DiPipeline()),
-      polyline_pipeline(*new PolylinePipeline()),
-      vfx_pipeline(*new VfxPipeline()),
-      ui_pipeline(*new UiPipeline()) {}
+Renderer::Renderer() :
+    gpu(*new GPUAdapter()),
+    render_graph(*new RenderGraph()),
+    geometry_pipeline(*new GeometryPipeline()),
+    di_pipeline(*new DiPipeline()),
+    polyline_pipeline(*new PolylinePipeline()),
+    vfx_pipeline(*new VfxPipeline()),
+    ui_pipeline(*new UiPipeline()) {}
 
 Renderer::~Renderer() {
     delete &polyline_pipeline;
@@ -81,7 +81,7 @@ void Renderer::init() {
     }
 
     /* Initialize the Render Graph */
-    IO::FileLocation shader_location {IO::Location::ENGINE, "shaders/bin"};
+    IO::FileLocation shader_location { IO::Location::ENGINE, "shaders/bin" };
     render_graph.set_shader_path(shader_location.get_relative_path().string().c_str());
     render_graph.set_staging_limit(32000000u /* 32mb */);
     render_graph.set_max_graphs_in_flight(2u); /* Double buffering */
@@ -100,7 +100,7 @@ void Renderer::init() {
     vfx_pipeline.init(gpu);
     ui_pipeline.init(gpu);
 
-    debug_transform.set_local_position({0.0f, 0.0f, -1.0f});
+    debug_transform.set_local_position({ 0.0f, 0.0f, -1.0f });
 }
 
 void Renderer::update() {

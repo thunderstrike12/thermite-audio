@@ -4,7 +4,9 @@
 #include <future>
 
 namespace std {
+
 class thread;
+
 }
 
 namespace tmt {
@@ -42,9 +44,9 @@ class Salvo {
 
     std::atomic_flag worker_threads_active;
     std::atomic_flag finished_working;
-    size_t total_task_count {0};
-    std::atomic<size_t> finished_thread_count {0};
-    std::atomic<size_t> next_task_index {0};
+    size_t total_task_count { 0 };
+    std::atomic<size_t> finished_thread_count { 0 };
+    std::atomic<size_t> next_task_index { 0 };
     std::function<void(size_t)> task_function;
 };
 

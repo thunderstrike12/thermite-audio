@@ -8,9 +8,13 @@
 
 namespace tmt {
 
-void Palette::before_begin() { ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0)); }
+void Palette::before_begin() {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+}
 
-void Palette::end_display() { ImGui::PopStyleVar(); }
+void Palette::end_display() {
+    ImGui::PopStyleVar();
+}
 
 void Palette::display() {
     const auto selected_entity = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().get_selected_entity();

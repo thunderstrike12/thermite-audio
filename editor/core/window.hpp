@@ -2,6 +2,7 @@
 #include "editor/events/editor.hpp"
 #include <string>
 namespace tmt {
+
 class IWindow : public IEditorEvents {
    public:
     virtual ~IWindow() = default;
@@ -27,4 +28,5 @@ class IWindow : public IEditorEvents {
     constexpr virtual bool is_closable() const { return true; }
     constexpr virtual bool default_open() const { return false; }
 };
+
 }  // namespace tmt

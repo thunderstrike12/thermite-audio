@@ -30,7 +30,7 @@ class SceneMode : public IEditorMode, public OnPreLoadScene {
     Transform cached_editor_transform;
 
     // Used as a flag for the on_pre_load_scene function call.
-    bool is_switching_to {false};
+    bool is_switching_to { false };
 };
 
 }  // namespace tmt

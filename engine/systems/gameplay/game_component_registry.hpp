@@ -16,7 +16,7 @@ class GameComponentRegistry {
     ~GameComponentRegistry() = default;
 
     template <typename T>
-        requires std::is_base_of_v<IGameComponent, T>
+    requires std::is_base_of_v<IGameComponent, T>
     void register_component() {
         ComponentInfo info {
             .name = std::string(T::name()),
@@ -55,4 +55,5 @@ class GameComponentRegistry {
     std::map<ComponentIndex, ComponentInfo> registered_components;
     std::map<std::string, ComponentIndex> name_to_index;
 };
+
 }  // namespace tmt

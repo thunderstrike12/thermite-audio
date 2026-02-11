@@ -2,7 +2,9 @@
 #include <glm/gtx/quaternion.hpp>
 #include <array>
 
-float tmt::VoxelBody::get_inv_mass() const { return type == STATIC ? 0 : inv_mass; }
+float tmt::VoxelBody::get_inv_mass() const {
+    return type == STATIC ? 0 : inv_mass;
+}
 
 glm::mat3 tmt::VoxelBody::get_inv_world_inertia() const {
     if (type == STATIC) return glm::mat3(0);
@@ -21,7 +23,7 @@ tmt::Aabb tmt::VoxelBody::aabb() const {
     }
 
     // Return AABB min and max
-    return {position - world_half_extends, position + world_half_extends};
+    return { position - world_half_extends, position + world_half_extends };
 }
 
 tmt::VoxelBody::Box tmt::VoxelBody::get_local_bounds() const {
@@ -65,23 +67,23 @@ tmt::VoxelBody::Axes tmt::VoxelBody::get_axes() const {
 
 std::array<tmt::VoxelBody::Edge, 12> tmt::VoxelBody::get_world_edges() const {
     auto box = get_world_bounds();
-    return std::array<tmt::VoxelBody::Edge, 12> {{
+    return std::array<tmt::VoxelBody::Edge, 12> { {
         // X axis edges
-        {box.vertex[0], box.vertex[1]},
-        {box.vertex[2], box.vertex[3]},
-        {box.vertex[4], box.vertex[5]},
-        {box.vertex[6], box.vertex[7]},
+        { box.vertex[0], box.vertex[1] },
+        { box.vertex[2], box.vertex[3] },
+        { box.vertex[4], box.vertex[5] },
+        { box.vertex[6], box.vertex[7] },
 
         // Y axis edges
-        {box.vertex[0], box.vertex[3]},
-        {box.vertex[1], box.vertex[2]},
-        {box.vertex[4], box.vertex[7]},
-        {box.vertex[5], box.vertex[6]},
+        { box.vertex[0], box.vertex[3] },
+        { box.vertex[1], box.vertex[2] },
+        { box.vertex[4], box.vertex[7] },
+        { box.vertex[5], box.vertex[6] },
 
         // Z axis edges
-        {box.vertex[0], box.vertex[4]},
-        {box.vertex[1], box.vertex[5]},
-        {box.vertex[2], box.vertex[6]},
-        {box.vertex[3], box.vertex[7]},
-    }};
+        { box.vertex[0], box.vertex[4] },
+        { box.vertex[1], box.vertex[5] },
+        { box.vertex[2], box.vertex[6] },
+        { box.vertex[3], box.vertex[7] },
+    } };
 }

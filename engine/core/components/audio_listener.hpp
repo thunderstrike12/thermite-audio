@@ -16,8 +16,8 @@ class AudioListener {
     BEFRIEND_VISITABLE()
     friend class Audio;
 
-    mutable float cached_weight {1.0f};
-    int listener_index {-1};  // Index used internally in FMOD, doesn't need to be serialized/reflected.
+    mutable float cached_weight { 1.0f };
+    int listener_index { -1 };  // Index used internally in FMOD, doesn't need to be serialized/reflected.
 };
 
 }  // namespace tmt

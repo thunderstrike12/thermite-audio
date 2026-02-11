@@ -15,4 +15,5 @@ class RigModelManager : public ISystem {
     void inspect(float);
     void on_end() override;
 };
+
 }  // namespace tmt

@@ -4,9 +4,13 @@
 
 namespace tmt {
 
-void RuntimeComponentDiff::before() { serialize_component(before_json); }
+void RuntimeComponentDiff::before() {
+    serialize_component(before_json);
+}
 
-void RuntimeComponentDiff::after() { serialize_component(after_json); }
+void RuntimeComponentDiff::after() {
+    serialize_component(after_json);
+}
 
 void RuntimeComponentDiff::commit(const std::string& component_name) {
     auto diff = nlohmann::json::diff(before_json, after_json);
@@ -14,9 +18,13 @@ void RuntimeComponentDiff::commit(const std::string& component_name) {
     send_to_manager(std::move(*this), "Modified: " + component_name);
 }
 
-void RuntimeComponentDiff::undo() { deserialize_component(before_json); }
+void RuntimeComponentDiff::undo() {
+    deserialize_component(before_json);
+}
 
-void RuntimeComponentDiff::redo() { deserialize_component(after_json); }
+void RuntimeComponentDiff::redo() {
+    deserialize_component(after_json);
+}
 
 void RuntimeComponentDiff::inspect() {}
 

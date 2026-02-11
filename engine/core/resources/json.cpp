@@ -2,6 +2,7 @@
 #include "engine/core/logger.hpp"
 
 namespace tmt {
+
 bool Json::load() {
     if (IO::file_exists(file_location) == false) {
         Log::error(Log::Scope::ENGINE, "[Json] File does not exisits: {}", file_location);
@@ -20,5 +21,8 @@ bool Json::load() {
     parsed_json = std::move(temp_json);
     return true;
 }
-void Json::unload() { parsed_json.clear(); }
+void Json::unload() {
+    parsed_json.clear();
+}
+
 }  // namespace tmt

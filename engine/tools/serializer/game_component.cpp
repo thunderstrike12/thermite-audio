@@ -31,7 +31,9 @@ void tag_invoke(JsonReflect::deserialize_lib_t, const JsonReflect::json& j, tmt:
 /* forward declare */
 struct SerializeState;
 namespace tmt {
+
 struct DeserializeState;
+
 }
 
 /* Explicit instantiations */

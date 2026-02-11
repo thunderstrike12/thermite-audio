@@ -44,7 +44,7 @@ void Game::on_start() {
         auto rig_ent = engine.ecs.create_entity();
         auto& rig_ent_rig_model_comp = engine.ecs.add_component<RigModel>(rig_ent);
 
-        IO::FileLocation location {IO::Location::PROJECT, "Victory_animation.fbx"};
+        IO::FileLocation location { IO::Location::PROJECT, "Victory_animation.fbx" };
         rig_ent_rig_model_comp.init(location, rig_ent);
         rig_ent_rig_model_comp.data->animation_files.push_back(location);
         rig_ent_rig_model_comp.data->reload();

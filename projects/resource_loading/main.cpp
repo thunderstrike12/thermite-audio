@@ -39,7 +39,7 @@ class TextFile : public tmt::FileResource {
     }
     void unload() override {}
 
-    inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS {".txt"};
+    inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS { ".txt" };
 
     std::string original_content;
 };
@@ -65,12 +65,12 @@ void Game::on_start() {
     tmt::Camera::set_active_camera(camera_entity);
 
     /* Load 2 voxel files to show different resource types being loaded */
-    tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "pivot.vengi"});
-    tmt::engine.resources.load_resource<tmt::VoxelScene>({tmt::IO::Location::PROJECT, "dragon128.vengi"});
+    tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "pivot.vengi" });
+    tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "dragon128.vengi" });
 
     {
         /* load file resource */
-        auto source = tmt::engine.resources.load_resource<TextFile>({tmt::IO::Location::PROJECT, "source.txt"});
+        auto source = tmt::engine.resources.load_resource<TextFile>({ tmt::IO::Location::PROJECT, "source.txt" });
         tmt::Log::info("{}", source->original_content);
 
         /* create runtime resource from file resource */
@@ -78,7 +78,7 @@ void Game::on_start() {
         tmt::Log::info("{}", modified->modified_content);
 
         /* create another runtime resource from the same file resource to test independence */
-        auto also_modified = tmt::engine.resources.copy_resource<RuntimeTextFile>({tmt::IO::Location::PROJECT, "source.txt"});
+        auto also_modified = tmt::engine.resources.copy_resource<RuntimeTextFile>({ tmt::IO::Location::PROJECT, "source.txt" });
         tmt::Log::info("{}", also_modified->modified_content);
 
         also_modified->modified_content += " - Further modified";

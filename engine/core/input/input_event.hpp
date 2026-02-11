@@ -3,6 +3,7 @@
 #include "engine/core/input/keys.hpp"
 
 namespace tmt {
+
 class Input;
 
 class InputEvent {
@@ -27,7 +28,7 @@ class InputEventKey : public InputEvent {
     void set_key(Key new_key) { key = new_key; }
 
    private:
-    Key key {Key::UNKNOWN};
+    Key key { Key::UNKNOWN };
 };
 
 class InputEventMouseMotion : public InputEvent {
@@ -118,4 +119,5 @@ class InputEventGamepadMotion : public InputEvent {
     bool negative = false;
     int32_t device_id = -1;
 };
+
 }  // namespace tmt

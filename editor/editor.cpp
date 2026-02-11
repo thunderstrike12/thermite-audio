@@ -1,8 +1,8 @@
 #if THERMITE_EDITOR
-#pragma message(" THERMITE_EDITOR=1 ")
+    #pragma message(" THERMITE_EDITOR=1 ")
 #else
-/* Shouldn't happen */
-#error THERMITE_EDITOR must be defined to 1 in editor builds
+    /* Shouldn't happen */
+    #error THERMITE_EDITOR must be defined to 1 in editor builds
 #endif
 
 #include "editor/editor.hpp"
@@ -58,9 +58,13 @@ namespace tmt {
 
 Editor::Editor() : imgui_manager(*new ImGuiManager()) {}
 
-Editor::~Editor() { delete &imgui_manager; }
+Editor::~Editor() {
+    delete &imgui_manager;
+}
 
-void Editor::init() { Log::info("Thermite Editor initialized."); }
+void Editor::init() {
+    Log::info("Thermite Editor initialized.");
+}
 
 void Editor::switch_mode(Mode new_mode, const std::any& meta_data) {
     // if (editor_mode == new_mode) return;
@@ -195,7 +199,7 @@ void Editor::main_menu_bar() {
 
         if (ImGui::BeginMenu("Renderer")) {
             /* List of display mode labels */
-            static const std::vector<std::string> DISPLAY_MODE_LABELS {"Default", "Steps (0..128)", "Visibility", "Depth (0..100)", "Normals", "Albedo", "Illuminance"};
+            static const std::vector<std::string> DISPLAY_MODE_LABELS { "Default", "Steps (0..128)", "Visibility", "Depth (0..100)", "Normals", "Albedo", "Illuminance" };
 
             static uint32_t display_mode_index = 0u;
             const std::string& display_mode = DISPLAY_MODE_LABELS[display_mode_index];
@@ -214,7 +218,7 @@ void Editor::main_menu_bar() {
             }
 
             /* List of shading rate labels */
-            static const std::vector<std::string> SHADING_RATE_LABELS {"Full-Rate", "Half-Rate (1:2)", "Quarter-Rate (1:4)"};
+            static const std::vector<std::string> SHADING_RATE_LABELS { "Full-Rate", "Half-Rate (1:2)", "Quarter-Rate (1:4)" };
 
             static uint32_t shading_rate_index = 0u;
             const std::string& shading_rate = SHADING_RATE_LABELS[shading_rate_index];

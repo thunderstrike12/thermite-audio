@@ -32,6 +32,7 @@ struct UIComponent {
     glm::vec2 aspect_ratio = glm::vec2(1.0f, 1.0f); /* 1:1 */
     Anchor anchor = Anchor::MIDDLE_CENTER;
 };
+
 }  // namespace tmt
 
 TMT_COMPONENT(tmt::UIComponent, "UIComponent", (size, pivot, block_raycasts, scale_with_parent_x, scale_with_parent_y, aspect_mode, aspect_ratio, anchor));

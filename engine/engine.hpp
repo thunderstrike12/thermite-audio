@@ -72,7 +72,7 @@ class Engine {
 
    private:
     FrameData current_frame_data {};
-    bool is_running {true};
+    bool is_running { true };
     std::unique_ptr<Application> app;
 
     /* Engine events */

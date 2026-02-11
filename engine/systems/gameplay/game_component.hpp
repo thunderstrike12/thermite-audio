@@ -4,9 +4,9 @@
 #include "engine/tools/serializer.hpp"
 #include "engine/tools/serializer/all.hpp"
 #if defined(THERMITE_EDITOR) && !defined(THERMITE_ENGINE)
-#include <ImReflect.hpp>
-#include "editor/imgui/types/all.hpp"
-#include "editor/imgui/components/all.hpp"
+    #include <ImReflect.hpp>
+    #include "editor/imgui/types/all.hpp"
+    #include "editor/imgui/components/all.hpp"
 #else
 class ImSettings;
 class ImResponse;
@@ -14,8 +14,10 @@ class ImResponse;
 
 /* Forward declare */
 namespace tmt {
+
 struct SerializeState;
 struct DeserializeState;
+
 }  // namespace tmt
 
 namespace tmt {
@@ -115,4 +117,5 @@ class GameComponent : public IGameComponent {
 #endif
     }
 };
+
 }  // namespace tmt

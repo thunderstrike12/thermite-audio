@@ -48,7 +48,7 @@ void AudioMixer::display() {
             const std::string bank_path = ICON_MS_INVENTORY_2 " " + bank->get_path();
 
             const bool bank_is_leaf = audio_events.empty() && volume_controls.empty();
-            const bool bank_node_open = ImGui::TreeNodeEx(bank_path.c_str(), default_flags | (bank_is_leaf ? leaf_flags : 0) | get_selection_flags(std::weak_ptr {bank.resource}));
+            const bool bank_node_open = ImGui::TreeNodeEx(bank_path.c_str(), default_flags | (bank_is_leaf ? leaf_flags : 0) | get_selection_flags(std::weak_ptr { bank.resource }));
             if (ImGui::IsItemClicked()) selection = bank.resource;
             if (bank_node_open) {
                 for (const AudioEvent& event : audio_events) {
@@ -88,7 +88,7 @@ void AudioMixer::display() {
             case 1: {  // AudioEvent selected
                 const auto& event = std::get<AudioEvent>(selection);
                 if (event.is_valid()) {
-                    static AudioInstance playing_instance {nullptr};
+                    static AudioInstance playing_instance { nullptr };
                     if (ImGui::Button(ICON_MS_PLAY_ARROW " play")) {
                         if (playing_instance.is_valid()) playing_instance.stop();
                         playing_instance = event.play();
@@ -167,7 +167,7 @@ void AudioMixer::display_menu_bar() {
         // Get the current payload to check if it's a FileLocation.
         const ImGuiPayload* payload = ImGui::GetDragDropPayload();
         if (payload != nullptr && payload->IsDataType("FileLocation")) {
-            const std::string_view json_string {static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize)};
+            const std::string_view json_string { static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize) };
             IO::FileLocation file_location;
             Serializer::deserialize(nlohmann::ordered_json::parse(json_string), file_location);
 
@@ -201,5 +201,8 @@ int AudioMixer::get_selection_flags(const Type& selection_compare) {
     return ImGuiTreeNodeFlags_Bullet;
 }
 
-void AudioMixer::invalidate_selection() { selection = AudioEvent {}; }
+void AudioMixer::invalidate_selection() {
+    selection = AudioEvent {};
+}
+
 }  // namespace tmt

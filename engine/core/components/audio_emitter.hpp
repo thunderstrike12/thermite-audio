@@ -10,7 +10,7 @@ class AudioEmitter : public OnSceneStart {
     friend class Audio;
 
    public:
-    bool play_on_start {false};
+    bool play_on_start { false };
     AudioEvent event;
 
     AudioInstance3D play(bool update_position = true, bool stop_other_instances = false);

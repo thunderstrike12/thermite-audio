@@ -8,6 +8,7 @@ struct ImFont;
 struct ImFontConfig;
 
 namespace tmt {
+
 class FontManager {
    public:
     FontManager() = default;
@@ -30,4 +31,5 @@ class FontManager {
 
     void reload_fonts();
 };
+
 }  // namespace tmt

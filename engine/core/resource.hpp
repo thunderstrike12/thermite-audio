@@ -55,7 +55,7 @@ class RuntimeResource : public Resource {
 
     virtual ~RuntimeResource() = default;
 
-    inline static const std::set<std::string_view>& SUPPORTED_FILE_EXTENSIONS {T::SUPPORTED_FILE_EXTENSIONS};  // NOLINT(readability-identifier-naming)
+    inline static const std::set<std::string_view>& SUPPORTED_FILE_EXTENSIONS { T::SUPPORTED_FILE_EXTENSIONS };  // NOLINT(readability-identifier-naming)
 
     const std::shared_ptr<T> file_resource;
 
@@ -82,6 +82,7 @@ class ResourceRef {
     bool operator==(const ResourceRef<T>& other) const { return file_location == other.file_location && resource == other.resource; }
     bool operator==(std::nullptr_t) const { return resource == nullptr; }
 };
+
 }  // namespace tmt
 
 TMT_OBJECT(tmt::FileResource, (file_location));

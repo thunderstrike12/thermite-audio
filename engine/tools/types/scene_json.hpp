@@ -5,6 +5,7 @@
 #include "engine/core/entity.hpp"
 
 namespace tmt {
+
 class SceneJson {
    private:
     json json_value;
@@ -39,4 +40,5 @@ class SceneJson {
     void add_entity_entry(json& container, const tmt::Entity entity_id, const json& value) const;
     const json& get_entity_entry(const json& container, const tmt::Entity entity_id) const;
 };
+
 }  // namespace tmt

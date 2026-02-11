@@ -47,11 +47,11 @@ class NodeHierarchy : public IWindow {
     void on_editor_update(const FrameData&) override {}
     void on_editor_end() override {}
 
-    uint32_t popup_id {0};
+    uint32_t popup_id { 0 };
 
     IO::FileLocation loaded_location {};
 
-    Entity selected_entity {entt::null};
+    Entity selected_entity { entt::null };
     std::set<Entity> root_entities;
 };
 
