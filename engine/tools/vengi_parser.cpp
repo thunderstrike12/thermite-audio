@@ -85,9 +85,7 @@ std::vector<char> VengiParser::zlib_decompress_vengi_file(std::vector<char>& com
 }
 
 void VengiParser::compute_parent_transform_offsets(vengi::Node& node, const glm::vec3& parent_offset) {
-    if (node.animations.empty()) return;
-
-    glm::mat4& local = node.animations[0].keyframes[0].local_matrix;
+    glm::mat4& local = node.transform;
     local[3][0] -= parent_offset.x;
     local[3][1] -= parent_offset.y;
     local[3][2] -= parent_offset.z;
@@ -105,8 +103,6 @@ void VengiParser::compute_parent_transform_offsets(vengi::Node& node, const glm:
         local[3][1] += local_offset.y;
         local[3][2] += local_offset.z;
     }
-
-    node.transform.set_world_matrix(local);
 
     for (auto& child : node.children) {
         compute_parent_transform_offsets(*child, offset);
@@ -172,7 +168,7 @@ bool BinaryParser::parse_node(vengi::Node& node) {
                 if (!parse_animation(anim)) return false;
 
                 // Set the local matrix of the local transform, but only for the first animation.
-                if (node.animations.empty()) node.transform.set_world_matrix(anim.keyframes[0].local_matrix);
+                if (node.animations.empty()) node.transform = anim.keyframes[0].local_matrix;
                 node.animations.push_back(anim);
                 break;
             }
@@ -187,7 +183,6 @@ bool BinaryParser::parse_node(vengi::Node& node) {
             default:
                 // Unknown chunk. this shouldn't happen if format is correct
                 throw std::runtime_error("Unknown chunk, panic.");
-                break;
         }
     }
 
@@ -364,6 +359,9 @@ bool BinaryParser::parse_animation(vengi::Animation& anim) {
             throw std::runtime_error("Unexpected chunk in animation!");
         }
     }
+
+    // If there is more than 1 keyframe we warn that animations are not fully supported
+    if (anim.keyframes.size() > 1) tmt::Log::error(tmt::Log::Scope::ENGINE, "Animations are not fully supported, object offset might be incorrect");
 
     return true;
 }

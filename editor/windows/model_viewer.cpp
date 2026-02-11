@@ -34,26 +34,28 @@ float intersect_aabb(const Ray& ray, const glm::vec3 box_min, const glm::vec3 bo
 
 // Draw the grid of a bounding box face.
 void draw_face_grid(const glm::vec3& start, const glm::vec3& right, const glm::vec3& up, const float length, const float height) {
-    glm::vec3 point_one = start;
-    glm::vec3 point_two = start + up * height;
-    const glm::vec3 right_vector = right / static_cast<float>(VOXELS_PER_UNIT);
+    glm::vec3 p1 = start;
+    glm::vec3 p2 = start + up * height;
+
+    const glm::vec3 right_vector = right * UNITS_PER_VOXEL;
     const size_t x_line_count = static_cast<size_t>(std::ceil(length * static_cast<float>(VOXELS_PER_UNIT))) - 1;
     for (size_t i = 0; i < x_line_count; i++) {
-        point_one += right_vector;
-        point_two += right_vector;
+        p1 += right_vector;
+        p2 += right_vector;
 
-        engine.polyline.draw_line(point_one, point_two);
+        engine.polyline.draw_line(p1, p2);
     }
 
-    point_one = start;
-    point_two = start + right * length;
-    const glm::vec3 up_vector = up / static_cast<float>(VOXELS_PER_UNIT);
+    p1 = start;
+    p2 = start + right * length;
+
+    const glm::vec3 up_vector = up * UNITS_PER_VOXEL;
     const size_t y_line_count = static_cast<size_t>(std::ceil(height * static_cast<float>(VOXELS_PER_UNIT))) - 1;
     for (size_t i = 0; i < y_line_count; i++) {
-        point_one += up_vector;
-        point_two += up_vector;
+        p1 += up_vector;
+        p2 += up_vector;
 
-        engine.polyline.draw_line(point_one, point_two);
+        engine.polyline.draw_line(p1, p2);
     }
 }
 
@@ -85,13 +87,42 @@ bool draw_face(const FaceData& info, const Transform& transform, const glm::vec3
     const glm::vec3 camera_position = engine.renderer.get_debug_transform().get_world_position();
     if (glm::dot(info.world_normal, camera_position - info.face_center) >= 0.0f) return false;
 
-    glm::vec3 box_half_extent = half_extent;
+    glm::vec3 box_half_extent = half_extent * transform.get_world_scale();
     box_half_extent[info.normal_index] = 0.0f;
 
+    // Set up the local points of the face.
+    glm::vec3 p0;
+    const int32_t i0 = info.normal_index;
+    const int32_t i1 = (i0 + 1) % 3;
+    const int32_t i2 = 3 - i0 - i1;
+    p0[i0] = half_extent[i0] * info.normal_sign;
+    p0[i1] = half_extent[i1];
+    p0[i2] = half_extent[i2];
+
+    glm::vec3 p1 = p0;
+    p1[i1] *= -1.0f;
+
+    glm::vec3 p2 = p1;
+    p2[i2] *= -1.0f;
+
+    glm::vec3 p3 = p2;
+    p3[i1] *= -1.0f;
+
+    // Convert the local points to world space.
+    const glm::mat4& world_matrix = transform.get_world_matrix();
+    p0 = world_matrix * glm::vec4 {p0, 1.0f};
+    p1 = world_matrix * glm::vec4 {p1, 1.0f};
+    p2 = world_matrix * glm::vec4 {p2, 1.0f};
+    p3 = world_matrix * glm::vec4 {p3, 1.0f};
+
+    // Draw the lines between the points to make the grid face.
     engine.polyline.use_line_width(2.0f, true);
     engine.polyline.use_color(glm::vec4 { 0.8f, 0.8f, 0.8f, 1.0f });
 
-    engine.polyline.draw_obb(info.face_center, box_half_extent, transform.get_world_rotation());
+    engine.polyline.draw_line(p0, p1);
+    engine.polyline.draw_line(p1, p2);
+    engine.polyline.draw_line(p2, p3);
+    engine.polyline.draw_line(p3, p0);
 
     return true;
 }
@@ -103,18 +134,23 @@ void draw_selected_face(const FaceData& info, const glm::vec3& half_extent, cons
     min = transform.get_world_matrix() * glm::vec4 { min, 1.0f };
 
     engine.polyline.use_line_width(4.0f, false);
-    engine.polyline.use_color(glm::vec4 { 0.8f, 0.8f, 0.8f, 0.4f });
+    engine.polyline.use_color(glm::vec4 {0.8f, 0.8f, 0.8f, 0.4f});
+
+    const glm::vec3 scaled_right = transform.get_right() * transform.get_world_scale();
+    const glm::vec3 scaled_up = transform.get_up() * transform.get_world_scale();
+    const glm::vec3 scaled_forward = transform.get_forward() * transform.get_world_scale();
+
     switch (info.normal_index) {
         case 0:
-            draw_face_grid(min, transform.get_forward(), transform.get_up(), half_extent[2] * 2.0f, half_extent[1] * 2.0f);
+            draw_face_grid(min, scaled_forward, scaled_up, half_extent[2] * 2.0f, half_extent[1] * 2.0f);
             break;
 
         case 1:
-            draw_face_grid(min, transform.get_right(), transform.get_forward(), half_extent[0] * 2.0f, half_extent[2] * 2.0f);
+            draw_face_grid(min, scaled_right, scaled_forward, half_extent[0] * 2.0f, half_extent[2] * 2.0f);
             break;
 
         case 2:
-            draw_face_grid(min, transform.get_right(), transform.get_up(), half_extent[0] * 2.0f, half_extent[1] * 2.0f);
+            draw_face_grid(min, scaled_right, scaled_up, half_extent[0] * 2.0f, half_extent[1] * 2.0f);
             break;
 
         default:
@@ -129,7 +165,9 @@ void draw_selection(const Hit& hit, const glm::vec3& half_extent, const Transfor
     const glm::vec3 local_voxel_pos = glm::vec3 { hit.coord } * UNITS_PER_VOXEL - half_extent + VOXEL_SIZE_HALF;
     const glm::vec3 world_voxel_pos = transform.get_world_matrix() * glm::vec4 { local_voxel_pos, 1.0f };
 
-    engine.polyline.draw_obb(world_voxel_pos, glm::vec3 { VOXEL_SIZE_HALF }, transform.get_world_rotation());
+    const glm::vec3 local_scale = transform.get_world_scale();
+
+    engine.polyline.draw_obb(world_voxel_pos, VOXEL_SIZE_HALF * local_scale, transform.get_world_rotation());
 }
 
 bool handle_selection(const Ray& mouse_ray, Hit& hit, const bool can_hit_face, const Entity entity, const Transform& transform, const ResourceRef<VoxelVolume>& resource) {
@@ -257,7 +295,8 @@ void ModelViewer::display() {
 
         editor.gizmo.manip(window_pos.x, window_pos.y, size.x, size.y, { &selected_entity, &selected_entity + 1 });
 
-        if (!ImGuizmo::IsOver() && engine.input.is_mouse_button_just_pressed(MouseButton::LEFT)) {
+        const bool can_select = (ImGui::IsWindowHovered() && !ImGuizmo::IsOver());
+        if (can_select && engine.input.is_mouse_button_just_pressed(MouseButton::LEFT)) {
             const Ray mouse_ray = engine.renderer.render_view.pixel_ray(mouse_position);
             const Hit hit = engine.renderer.trace_ray(mouse_ray);
 

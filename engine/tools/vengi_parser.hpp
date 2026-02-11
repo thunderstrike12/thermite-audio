@@ -129,7 +129,7 @@ struct Node {
     bool locked;
     RGBA color;
     glm::vec3 pivot;
-    tmt::Transform transform;  // local transform
+    glm::mat4 transform;  // local transform
 
     std::unordered_map<std::string, std::string> properties;
     std::unique_ptr<Palette> palette;

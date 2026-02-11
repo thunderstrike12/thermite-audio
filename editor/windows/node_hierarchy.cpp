@@ -262,7 +262,7 @@ void NodeHierarchy::build_scene(const std::span<VoxelSceneNode>& root_nodes, boo
     }
 }
 
-std::vector<char> NodeHierarchy::encode_voxel_scene() {
+std::vector<char> NodeHierarchy::encode_voxel_scene() const {
     const auto& entities = engine.ecs.get_registry().storage<Transform>();
     if (entities.empty()) return {};  // Return empty scene encoding.
 
@@ -274,8 +274,6 @@ std::vector<char> NodeHierarchy::encode_voxel_scene() {
         VoxelSceneNode& root_node = root_nodes.emplace_back();
         recurse_parse_scene(entity, transform, root_node);
     }
-
-    clear_hierarchy();
 
     // Encode those VoxelSceneNodes into the .svh format.
     return encode_svh(root_nodes);

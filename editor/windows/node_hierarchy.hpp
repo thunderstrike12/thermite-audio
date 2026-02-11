@@ -29,7 +29,7 @@ class NodeHierarchy : public IWindow {
 
     void build_scene(const std::span<VoxelSceneNode>& root_nodes, bool assign_new_uuids = false);
 
-    std::vector<char> encode_voxel_scene();
+    std::vector<char> encode_voxel_scene() const;
 
    private:
     void recurse_display_node(Entity entity, const Name& name, Transform& transform);
