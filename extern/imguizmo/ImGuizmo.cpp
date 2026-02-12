@@ -1024,6 +1024,12 @@ namespace IMGUIZMO_NAMESPACE
       return gContext.mbUsing || gContext.mbUsingBounds;
    }
 
+   void ResetOperation() 
+   {
+       gContext.mOperation = OPERATION::NONE; 
+   }
+
+
    bool IsOver()
    {
       return (Intersects(gContext.mOperation, TRANSLATE) && GetMoveType(gContext.mOperation, NULL) != MT_NONE) ||

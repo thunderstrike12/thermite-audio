@@ -66,13 +66,14 @@ void tmt::Viewport::display() {
     width = size.x;
     height = size.y;
 
-    const glm::vec2 image_pos = glm::vec2(ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y);
+    const ImVec2 image_pos = ImGui::GetCursorScreenPos();
 
     if (height <= 0.f) return;
 
     engine.renderer.render_view.set_viewport_size(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 
     ImGui::BeginChild("viewport_render", ImVec2(0, 0), 0, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove);
+
     ImGui::Image((ImTextureRef)engine.renderer.render_view.imgui_viewport, size);
     is_hovered = ImGui::IsItemHovered();
     auto imgui_mouse_pos = ImGui::GetMousePos();
@@ -114,7 +115,9 @@ void tmt::Viewport::display() {
     const bool gizmo_changed = editor.gizmo.manip(image_pos.x, image_pos.y, width, height, selected_entities, snap_value);
     if (gizmo_changed) OnSceneModified::dispatch();
 
-    toolbar(image_pos);
+    const bool toolbar_buttons_hovered = toolbar(image_pos);
+
+    selection_logic(imgui_mouse_pos, image_pos, toolbar_buttons_hovered);
 
     ImGui::EndChild();
 
@@ -123,7 +126,7 @@ void tmt::Viewport::display() {
     }
 }
 
-void tmt::Viewport::toolbar(const glm::vec2& image_pos) {
+bool tmt::Viewport::toolbar(const ImVec2& image_pos) {
     ImGuiStyle& style = ImGui::GetStyle();
 
     float btn_w = ImGui::CalcTextSize(ICON_MS_LANGUAGE).x + style.FramePadding.x * 2.0f;
@@ -134,11 +137,14 @@ void tmt::Viewport::toolbar(const glm::vec2& image_pos) {
     float pad = 4.0f;
     ImVec2 btn_pos = ImVec2(image_pos.x + width - total_w - pad, image_pos.y + pad);
 
+    bool any_button_hovered = false;
+
     ImGui::SetCursorScreenPos(btn_pos);
     const char* space_button_icon = editor.gizmo.space ? ICON_MS_LANGUAGE : ICON_MS_VIEW_IN_AR;
     if (ImGui::Button(space_button_icon, ImVec2(btn_w, btn_h))) {
         editor.gizmo.space = static_cast<uint8_t>(!editor.gizmo.space);
     }
+    any_button_hovered |= ImGui::IsItemHovered();
 
     ImGui::SameLine();
     const char* mode_button_icon = Gizmo::gizmo_op_icons[editor.gizmo.operation];
@@ -146,11 +152,115 @@ void tmt::Viewport::toolbar(const glm::vec2& image_pos) {
         ++editor.gizmo.operation;
         if (editor.gizmo.operation == Gizmo::GIZMO_OP_COUNT) editor.gizmo.operation = 0;
     }
+    any_button_hovered |= ImGui::IsItemHovered();
 
     ImGui::SameLine();
     const char* multi_button_icon = editor.gizmo.multiselect_mode ? ICON_MS_FILTER_NONE : ICON_MS_FILTER_1;
     if (ImGui::Button(multi_button_icon, ImVec2(btn_w, btn_h))) {
         editor.gizmo.multiselect_mode = static_cast<uint8_t>(!editor.gizmo.multiselect_mode);
+    }
+    any_button_hovered |= ImGui::IsItemHovered();
+
+    return any_button_hovered;
+}
+
+void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const ImVec2& image_pos, bool toolbar_buttons_hovered) {
+    if(!is_hovered) return;
+
+    auto& hierarchy = editor.windows[Editor::Mode::SCENE].get<Hierarchy>();
+    const std::vector<Entity>& selected_entities = hierarchy.get_selected_entities();
+    auto& imgui_io = ImGui::GetIO();
+
+    static ImVec2 first_click_pos;
+    static bool using_rect = false;
+
+    bool not_multiple_select_modifier = !imgui_io.KeyCtrl && !imgui_io.KeyShift;
+
+    if (imgui_io.MouseReleased[0]) using_rect = false;
+    if (imgui_io.MouseDown[0] && (!editor.gizmo.hovered() || using_rect)) {
+        if (imgui_io.MouseClicked[0]) {
+            first_click_pos = imgui_io.MousePos;
+        }
+        ImVec2 delta = imgui_io.MousePos - first_click_pos;
+
+        // if delta has moved by 5 pixels, start rectangle logic
+        if (abs(delta.x) + abs(delta.y) > 5) {
+            using_rect = true;
+
+            ImGui::GetWindowDrawList()->AddRectFilled(first_click_pos, imgui_io.MousePos, ImColor(1.f, 1.f, 1.f, 0.2f));
+            ImGui::GetWindowDrawList()->AddRect(first_click_pos, imgui_io.MousePos, ImColor(1.f, 1.f, 1.f, 0.6f));
+
+            glm::ivec2 a = {first_click_pos.x - image_pos.x, first_click_pos.y - image_pos.y};
+            glm::ivec2 b = {imgui_mouse_pos.x - image_pos.x, imgui_mouse_pos.y - image_pos.y};
+
+            int x0 = std::min(a.x, b.x);
+            int x1 = std::max(a.x, b.x);
+            int y0 = std::min(a.y, b.y);
+            int y1 = std::max(a.y, b.y);
+
+            static std::vector<Entity> tracking_rect_entities;
+            tracking_rect_entities.clear();
+            for (int x = x0; x < x1; x += 5) {
+                for (int y = y0; y < y1; y += 5) {
+                    const tmt::Ray selection_ray = tmt::engine.renderer.render_view.pixel_ray({x, y});
+                    const tmt::Hit hit = tmt::engine.renderer.trace_ray(selection_ray);
+
+                    if (!hit.miss()) {
+                        tracking_rect_entities.push_back(hit.entity);
+                        hierarchy.add_entity_to_selection(hit.entity);
+                    }
+                }
+            }
+
+            // cleanup when area shrinks
+            if (not_multiple_select_modifier) {
+                for (auto entity : selected_entities) {
+                    if (std::find(tracking_rect_entities.begin(), tracking_rect_entities.end(), entity) == tracking_rect_entities.end()) {
+                        hierarchy.remove_entity_from_selection(entity);
+                    }
+                }
+            }
+        }
+    }
+    if (imgui_io.MouseClicked[0] && !editor.gizmo.hovered() && !toolbar_buttons_hovered) {
+        const tmt::Ray selection_ray = tmt::engine.renderer.render_view.pixel_ray({mouse_pos.x, mouse_pos.y});
+        const tmt::Hit hit = tmt::engine.renderer.trace_ray(selection_ray);
+
+        if (not_multiple_select_modifier) hierarchy.clear_selection();
+
+        if (!hit.miss()) {
+
+            if(hierarchy.is_entity_selected(hit.entity) && !(not_multiple_select_modifier)) hierarchy.remove_entity_from_selection(hit.entity);
+            else 
+            {
+                hierarchy.add_entity_to_selection(hit.entity);
+                Entity first_entity = hierarchy.get_first_selected_entity();
+
+                // only care about opening the first selected
+                if (first_entity == hit.entity) {
+                    auto& transform = engine.ecs.get_component<Transform>(hit.entity);
+
+                    // we only want to open the tree if the selected entity has a parent
+                    if (transform.has_parent()) {
+                        Entity parent = transform.get_parent();
+                        force_open_recurse_upwards(parent);
+                    }
+                }
+            }
+            
+        }
+    }
+}
+
+void tmt::Viewport::force_open_recurse_upwards(Entity entity) {
+    auto& hierarchy = editor.windows[Editor::Mode::SCENE].get<Hierarchy>();
+
+    hierarchy.add_entity_to_forced_open(entity);
+
+    auto& transform = engine.ecs.get_component<Transform>(entity);
+    if (transform.has_parent()) {
+        Entity parent = transform.get_parent();
+        force_open_recurse_upwards(parent);
     }
 }
 

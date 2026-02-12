@@ -132,6 +132,9 @@ namespace IMGUIZMO_NAMESPACE
    // expose method to set imgui context
    IMGUI_API void SetImGuiContext(ImGuiContext* ctx);
 
+   // resets gizmo operation to NONE
+   IMGUI_API void ResetOperation();
+
    // return true if mouse cursor is over any gizmo control (axis, plan or screen component)
    IMGUI_API bool IsOver();
 
@@ -179,6 +182,7 @@ namespace IMGUIZMO_NAMESPACE
    // translation is applied in world space
    enum OPERATION
    {
+      NONE = 0,
       TRANSLATE_X      = (1u << 0),
       TRANSLATE_Y      = (1u << 1),
       TRANSLATE_Z      = (1u << 2),

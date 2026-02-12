@@ -16,9 +16,9 @@ namespace tmt {
 /* Represents a renderable view in the scene. (used on the GPU) */
 struct GpuView {
     /* World-space to clip-space transformation matrix. */
-    glm::mat4 world_to_clip {};
+    glm::mat4 world_to_clip = glm::mat4(1.f);
     /* Clip-space to world-space transformation matrix. */
-    glm::mat4 clip_to_world {};
+    glm::mat4 clip_to_world = glm::mat4(1.f);
     /* Origin of the view in world-space. */
     glm::vec4 origin {};
     /* Resolution of the view in pixels. */

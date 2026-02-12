@@ -60,13 +60,18 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
     };
 
     const std::vector<Entity>& get_selected_entities() const { return selected_entities; };
+    void add_entity_to_selection(const Entity& entity) { selected_entities.insert(entity); };
+    void remove_entity_from_selection(const Entity& entity) { selected_entities.erase(entity); }
+    void add_entity_to_forced_open(const Entity& entity) { force_open_entities.insert(entity); };
     bool is_entity_selected() const { return !selected_entities.empty(); }
     bool is_entity_selected(const Entity entity) const { return selected_entities.contains(entity); }
+    void clear_selection();
 
     void file_drag_drop(const tmt::Entity parent);
 
    private:
     tmt::InsertionOrderedSet<Entity> selected_entities;
+    tmt::InsertionOrderedSet<Entity> force_open_entities;
 
     static constexpr glm::uvec2 NULL_INDEX { std::numeric_limits<uint32_t>::max() };
 
@@ -116,8 +121,6 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
 
     void copy_selection();
     void paste_entities(const Entity hovered_entity);
-
-    void clear_selection();
 
     struct DragNDropPayload {
         bool multiple = false;
