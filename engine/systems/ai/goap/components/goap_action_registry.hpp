@@ -16,12 +16,7 @@ namespace tmt {
  */
 class GoapActionRegistry {
    public:
-    /*static GoapActionRegistry& instance() {
-        static GoapActionRegistry inst;
-        return inst;
-    }*/
-
-    // Register a new action.
+    // Register a new action. Prefix the ID with a, else it will conflict in ImGui with the goals!!
     void register_action(std::unique_ptr<GoapAction> action) { actions[action->get_id()] = std::move(action); }
 
     // Get an action by its ID.

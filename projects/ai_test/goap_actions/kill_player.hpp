@@ -17,7 +17,7 @@ class KillPlayer : public GoapAction {
         cost = 2.f;
     }
 
-    std::string get_id() const override { return "KillPlayer"; };
+    std::string get_id() const override { return "a_KillPlayer"; };
 
     float time_killing = 0.f;
     float kill_duration = 0.5f;  // seconds

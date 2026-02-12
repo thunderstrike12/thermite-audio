@@ -70,48 +70,48 @@ void AIScene::on_start() {
     }
 
     auto& ecs = tmt::engine.ecs;
+    auto& goap = ecs.systems.get<tmt::Goap>();
+
+    auto& action_reg = goap.actions();
+    auto& goal_reg = goap.goals();
+    auto& type_reg = goap.agent_types();
+
+    // --- Register Actions ---
+    action_reg.register_action(std::make_unique<tmt::PatrolArea>());
+    action_reg.register_action(std::make_unique<tmt::ChasePlayer>());
+    action_reg.register_action(std::make_unique<tmt::KillPlayer>());
+
+    // --- Register Goals ---
+    {
+        tmt::GoapGoal patrol;
+        patrol.name = "g_PatrolArea";
+        patrol.desired_state = { { tmt::FactId("area_secure"), tmt::FactValue(true) } };
+        patrol.priority = 1;
+        patrol.valid = true;
+
+        goal_reg.register_goal("g_PatrolArea", patrol);
+    }
 
     {
-        auto& goap = ecs.systems.get<tmt::Goap>();
+        tmt::GoapGoal kill;
+        kill.name = "g_KillPlayer";
+        kill.desired_state = { { tmt::FactId("player_alive"), tmt::FactValue(false) } };
+        kill.priority = 10;
+        kill.valid = true;
 
-        auto& action_reg = goap.actions();
-        auto& goal_reg = goap.goals();
-        auto& type_reg = goap.agent_types();
+        goal_reg.register_goal("g_KillPlayer", kill);
+    }
 
-        // --- Register Actions ---
-        action_reg.register_action(std::make_unique<tmt::PatrolArea>());
-        action_reg.register_action(std::make_unique<tmt::ChasePlayer>());
-        action_reg.register_action(std::make_unique<tmt::KillPlayer>());
-
-        // --- Register Goals ---
-        {
-            tmt::GoapGoal patrol;
-            patrol.name = "PatrolArea";
-            patrol.desired_state = { { tmt::FactId("area_secure"), tmt::FactValue(true) } };
-            patrol.priority = 1;
-            patrol.valid = true;
-
-            goal_reg.register_goal("PatrolArea", patrol);
-        }
-
-        {
-            tmt::GoapGoal kill;
-            kill.name = "KillPlayer";
-            kill.desired_state = { { tmt::FactId("player_alive"), tmt::FactValue(false) } };
-            kill.priority = 10;
-            kill.valid = true;
-
-            goal_reg.register_goal("KillPlayer", kill);
-        }
-
+#if 0
+    { // --- Old example of angent type creation ---
         // --- Register Agent Types ---
 
         tmt::GoapAgentType enemy1;
         enemy1.id = "Enemy 1";
 
-        enemy1.action_ids = { "PatrolArea", "ChasePlayer", "KillPlayer" };
+        enemy1.action_ids = {"a_PatrolArea", "a_ChasePlayer", "a_KillPlayer"};
 
-        enemy1.goal_ids = { "PatrolArea", "KillPlayer" };
+        enemy1.goal_ids = {"g_PatrolArea", "g_KillPlayer"};
 
         // NOTE: You really shouldn't convert a 64bit hash to 32bits!!!!
         enemy1.default_world_state = { { (uint32_t)std::hash<std::string>()("player_visible"), true },
@@ -124,26 +124,47 @@ void AIScene::on_start() {
         tmt::GoapAgentType enemy2;
         enemy2.id = "Enemy 2";
 
-        enemy2.action_ids = { "PatrolArea" };
+        enemy2.action_ids = {"a_PatrolArea"};
 
-        enemy2.goal_ids = { "PatrolArea" };
+        enemy2.goal_ids = {"g_PatrolArea"};
 
         enemy2.default_world_state = { { (uint32_t)std::hash<std::string>()("area_secure"), false } };
 
         type_reg.register_type(enemy2);
-    }
 
-    {
         // Spawn agents from type registry via factory
         tmt::Entity ai1 = tmt::engine.ecs.create_entity("AI Agent 1");
         tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 1", ai1);
         tmt::Entity ai2 = tmt::engine.ecs.create_entity("AI Agent 2");
-        tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 1", ai2);
+        tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 2", ai2);
 
         // Set unique positions
         ecs.get_component<tmt::Transform>(ai1).set_world_position({ 0.f, 0.f, 0.f });
         ecs.get_component<tmt::Transform>(ai2).set_world_position({ 5.f, 0.f, 0.f });
     }
+#else
+    {  // --- Spawning agent entities ---
+        auto& type_reg = goap.agent_types();
+
+        // Spawn Enemy 1 if it exists
+        if (type_reg.get("Enemy 1")) {
+            tmt::Entity ai1 = tmt::engine.ecs.create_entity("AI Agent 1");
+            tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 1", ai1);
+            ecs.get_component<tmt::Transform>(ai1).set_world_position({ 0.f, 0.f, 0.f });
+        } else {
+            tmt::Log::warn("Agent type 'Enemy 1' not found. Skipping spawn.");
+        }
+
+        // Spawn Enemy 2 if it exists
+        if (type_reg.get("Enemy 2")) {
+            tmt::Entity ai2 = tmt::engine.ecs.create_entity("AI Agent 2");
+            tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 2", ai2);
+            ecs.get_component<tmt::Transform>(ai2).set_world_position({ 5.f, 0.f, 0.f });
+        } else {
+            tmt::Log::warn("Agent type 'Enemy 2' not found. Skipping spawn.");
+        }
+    }
+#endif
 
     { /* Camera entity */
         tmt::Entity entity = tmt::engine.ecs.create_entity("Camera");

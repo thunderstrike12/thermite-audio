@@ -47,8 +47,8 @@ class Demo : public tmt::Application {
         dragon.action_ids = { "ChasePlayer", "Wander" };
 
         dragon.default_world_state = {
-            { (uint32_t)std::hash<std::string>()("player_in_range"), false },
-            { (uint32_t)std::hash<std::string>()("in_attack_range"), false },
+            { "player_in_range", tmt::FactValue(false) },
+            { "in_attack_range", tmt::FactValue(false) },
         };
 
         {

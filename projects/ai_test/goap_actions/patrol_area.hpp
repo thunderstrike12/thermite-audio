@@ -17,7 +17,7 @@ class PatrolArea : public GoapAction {
         cost = 1.f;
     }
 
-    std::string get_id() const override { return "PatrolArea"; };
+    std::string get_id() const override { return "a_PatrolArea"; };
 
     void on_start(Entity /*agent*/) override { timer = 0.f; }
 

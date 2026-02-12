@@ -13,7 +13,7 @@ class ChasePlayer : public GoapAction {
         effects["player_in_range"] = true;
         cost = 4.f;
     }
-    std::string get_id() const override { return "ChasePlayer"; };
+    std::string get_id() const override { return "a_ChasePlayer"; };
 
     float time_chasing = 0.f;
     float chase_duration = 1.f;  // seconds

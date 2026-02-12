@@ -19,11 +19,7 @@ namespace tmt {
  */
 class GoapGoalRegistry {
    public:
-    /*static GoapGoalRegistry& instance() {
-        static GoapGoalRegistry inst;
-        return inst;
-    }*/
-
+    // Register a new goal. Prefix the ID with g, else it will conflict in ImGui with the goals !!
     void register_goal(const std::string& id, const GoapGoal& goal) { goals[id] = goal; }
 
     const GoapGoal* get(const std::string& id) const {

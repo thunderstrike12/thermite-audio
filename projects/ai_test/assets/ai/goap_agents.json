@@ -1,0 +1,42 @@
+{
+    "types": {
+        "Enemy 1": {
+            "id": "Enemy 1",
+            "action_ids": [
+                "a_PatrolArea",
+                "a_ChasePlayer",
+                "a_KillPlayer"
+            ],
+            "goal_ids": [
+                "g_PatrolArea",
+                "g_KillPlayer"
+            ],
+            "default_world_state": {
+                "player_visible": {
+                    "value_type": "BOOL_TYPE",
+                    "bool_val": true,
+                    "int_val": -858993663,
+                    "float_val": -107372552.0
+                },
+                "player_in_range": {
+                    "value_type": "BOOL_TYPE",
+                    "bool_val": false,
+                    "int_val": -858993664,
+                    "float_val": -107372544.0
+                },
+                "player_alive": {
+                    "value_type": "BOOL_TYPE",
+                    "bool_val": true,
+                    "int_val": -858993663,
+                    "float_val": -107372552.0
+                },
+                "area_secure": {
+                    "value_type": "BOOL_TYPE",
+                    "bool_val": false,
+                    "int_val": -858993664,
+                    "float_val": -107372544.0
+                }
+            }
+        }
+    }
+}

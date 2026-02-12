@@ -2,8 +2,11 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <fstream>
 
 #include "world_state.hpp"
+
+#include "engine/core/reflection.hpp"
 
 namespace tmt {
 
@@ -29,7 +32,8 @@ struct GoapAgentType {
     std::vector<std::string> goal_ids;
 
     // Default initial world state for agents of this type
-    std::unordered_map<uint32_t, FactValue> default_world_state;
+    // Change from uint32_t to string here for editor and serilisation
+    std::unordered_map<std::string, FactValue> default_world_state;
 };
 
 /**
@@ -49,12 +53,6 @@ struct GoapAgentType {
  */
 class GoapAgentTypeRegistry {
    public:
-    // Get the singleton instance of the registry.
-    /*static GoapAgentTypeRegistry& instance() {
-        static GoapAgentTypeRegistry inst;
-        return inst;
-    }*/
-
     // Registers a new agent type
     void register_type(const GoapAgentType& type) { types[type.id] = type; }
 
@@ -67,9 +65,19 @@ class GoapAgentTypeRegistry {
     // Get all registered agent types
     const auto& get_all() const { return types; }
 
-   private:
+    // Remove an agent type by ID
+    void remove_type(const std::string& id) { types.erase(id); }
+
     // Internal storage mapping type ID -> GoapAgentType
     std::unordered_map<std::string, GoapAgentType> types;
+
+    void load();
+    void save() const;
+
+   private:
 };
 
 }  // namespace tmt
+
+TMT_OBJECT(tmt::GoapAgentType, (id, action_ids, goal_ids, default_world_state));
+TMT_OBJECT(tmt::GoapAgentTypeRegistry, (types));
