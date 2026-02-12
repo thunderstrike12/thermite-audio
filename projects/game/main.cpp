@@ -18,6 +18,7 @@
 // Game Components
 #include "components/player.hpp"
 #include "components/wallet.hpp"
+#include "components/animation_player.hpp"
 
 class Game : public tmt::Application {
    public:
@@ -72,6 +73,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     /* Register Components */
     tmt::engine.component_registry.register_component<Player>();
     tmt::engine.component_registry.register_component<Wallet>();
+    tmt::engine.component_registry.register_component<AnimationPlayer>();
 
     /* Register Game Components */
     tmt::engine.component_registry.register_component<EntityRef>();
