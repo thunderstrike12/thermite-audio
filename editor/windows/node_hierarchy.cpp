@@ -155,9 +155,10 @@ void NodeHierarchy::save_svh_as() {
     save_file_dialog(
         [this](const IO::FileLocation& location) {
             loaded_location = location;
+            if (loaded_location.relative_path.extension() != ".svh") loaded_location.relative_path += ".svh"; // Make sure the saved file has the correct extension.
 
             const std::vector<char> scene_data = encode_voxel_scene();
-            IO::write_file(location, scene_data.data(), scene_data.size());
+            IO::write_file(loaded_location, scene_data.data(), scene_data.size());
         },
         { { "Thermite Voxel File", "svh" } }
     );
@@ -184,8 +185,11 @@ void NodeHierarchy::export_file(const std::string& file_description, const std::
             const entt::basic_group renderer_group = engine.ecs.get_registry().group<VoxelRenderer>(entt::get<Transform>);
             if (renderer_group.empty()) return;
 
-            const std::filesystem::path obj_path = location.get_relative_path();
-            const std::filesystem::path mtl_path = location.get_relative_path().replace_extension(".mtl");
+            // Make sure all the paths have the correct extension.
+            IO::FileLocation obj_location = location;
+            if (obj_location.relative_path.extension() != ".obj") obj_location.relative_path += ".obj";
+            const std::filesystem::path obj_path = obj_location.get_relative_path();
+            const std::filesystem::path mtl_path = obj_location.get_relative_path().replace_extension(".mtl");
 
             std::ofstream obj_file { obj_path, std::ios::trunc };
 
@@ -211,7 +215,7 @@ void NodeHierarchy::export_file(const std::string& file_description, const std::
 
                 if (obj_file.is_open()) {
                     // Start new names object in the wavefront object file.
-                    obj_file << std::format("o {}", name) << '\n';
+                    obj_file << std::format("g {}", name) << '\n';
 
                     // Write all visuals to the file.
                     for (uint32_t i = 0; i < mesh->vertex_count; i++) {

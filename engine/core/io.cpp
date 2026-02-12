@@ -234,14 +234,17 @@ TimeStamp IO::get_file_last_modified_time(const FileLocation& file_location) {
 }
 
 IO::FileLocation IO::path_to_file_location(const std::filesystem::path& path) {
+    // Try to find an IO::FileLocation for the given path, will return a correct location if the path is relative to any asset directory.
     size_t location_index = 0;
     for (const std::filesystem::path& sub_location : sub_locations) {
         if (directory_contains_path(sub_location, path)) return { static_cast<Location>(location_index), relative(path, absolute(sub_location)) };
         ++location_index;
     }
 
-    Log::error("Failed to make FileLocation from path: couldn't create relative path.");
-    return {};
+    // As a fallback for file paths that aren't relative to any asset directory, we make it relative to the project assets using a lot of ../../../ paths.
+    FileLocation fallback_location { Location::PROJECT, "" };
+    fallback_location.relative_path = std::filesystem::relative(path, fallback_location.get_absolute_path());
+    return fallback_location;
 }
 
 }  // namespace tmt
