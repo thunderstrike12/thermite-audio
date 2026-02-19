@@ -8,7 +8,7 @@
 
 #define CONDITION(comparison) [](const Variant& parameter, const Variant& value) -> bool { return parameter comparison value; }
 
-using namespace tmt;
+namespace tmt {
 
 std::string tmt::RigModelManager::get_name() {
     return "animation system";
@@ -97,3 +97,5 @@ void RigModelManager::inspect(float) {
         }
     }
 }
+
+}  // namespace tmt

@@ -122,26 +122,6 @@ void Goap::update_goal(Entity entity, GoapAgent& agent, WorldState& ws) {
     }
 }
 
-// ------------------------------------------------------
-// A* GOAP Planner
-// ------------------------------------------------------
-/**
- * Internal search node used for A*.
- *
- * A node represents choosing 1 action in the action graph.
- * Links backwards to parent to build the full plan.
- */
-struct Node {
-    GoapAction* action;
-    float cost_so_far;
-    float heuristic;
-    Node* parent;
-
-    Node(GoapAction* a, float cost, float h, Node* p) : action(a), cost_so_far(cost), heuristic(h), parent(p) {}
-
-    float total_cost() const { return cost_so_far + heuristic; }
-};
-
 /**
  * Builds the runtime-effective version of a GOAP action.
  *
@@ -192,6 +172,26 @@ EffectiveGoapAction build_effective_action(const GoapAction& base, const GoapAct
  *   - If goal satisfied -> reconstruct plan
  */
 void Goap::update_plan(Entity entity, GoapAgent& agent, WorldState& ws) {
+    // This has to be inside to allow for Unity Builds
+    // ------------------------------------------------------
+    // A* GOAP Planner
+    // ------------------------------------------------------
+    /**
+     * Internal search node used for A*.
+     *
+     * A node represents choosing 1 action in the action graph.
+     * Links backwards to parent to build the full plan.
+     */
+    struct Node {
+        GoapAction* action;
+        float cost_so_far;
+        float heuristic;
+        Node* parent;
+
+        Node(GoapAction* a, float cost, float h, Node* p) : action(a), cost_so_far(cost), heuristic(h), parent(p) {}
+
+        float total_cost() const { return cost_so_far + heuristic; }
+    };
     // Stop any running action before replanning
     if (agent.current_action) {
         agent.current_action->on_interrupt(entity);

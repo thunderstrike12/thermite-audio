@@ -2,7 +2,7 @@
 
 #include "ufbx.h"
 
-using namespace tmt;
+namespace tmt {
 
 tmt::RigData::RigData(const IO::FileLocation& directory) : FileResource(directory) {}
 
@@ -189,3 +189,5 @@ void RigData::init_bone_fbx(const ufbx_node* node, const std::map<const ufbx_nod
     bone.index = static_cast<int>(bones.size());
     bones.push_back(bone);
 }
+
+}  // namespace tmt

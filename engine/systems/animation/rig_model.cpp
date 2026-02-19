@@ -6,7 +6,7 @@
 #include "engine/core/ecs.hpp"
 #include "engine/core/resources.hpp"
 
-using namespace tmt;
+namespace tmt {
 
 void RigModel::init_bones(const Bone& b, Entity p) {
     Log::info("init bones got called!");
@@ -192,3 +192,5 @@ void RigModel::animate_scale(Transform& t, Bone& b) {
         t.set_local_scale(new_scale);
     }
 }
+
+}  // namespace tmt

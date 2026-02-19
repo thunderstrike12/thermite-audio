@@ -4,7 +4,7 @@
 #include "engine/core/polyline.hpp"
 #include "engine/core/logger.hpp"
 
-using namespace tmt;
+namespace tmt {
 
 void Volume::traverse(tmt::ResourceRef<tmt::VoxelVolume> voxel_volume, int lod_level) {
     traversed = true;
@@ -332,3 +332,5 @@ void tmt::NavMesh::inspect() {
         tmt::engine.polyline.draw_line((*nodes)[path[i]].world_pos, (*nodes)[path[i + 1]].world_pos);
     }
 }
+
+}  // namespace tmt

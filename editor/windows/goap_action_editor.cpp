@@ -11,8 +11,6 @@
 #include <vector>
 
 #include <extern/imgui-node-editor/imgui_node_editor.h>
-namespace ignode = ax::NodeEditor;
-static ignode::EditorContext* g_Context = nullptr;  // internal state container for imgui-node-editor.
 
 namespace tmt {
 

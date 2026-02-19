@@ -16,7 +16,7 @@
 #include "engine/events/input.hpp"
 #include "keys.hpp"
 
-using namespace tmt;
+namespace tmt {
 
 bool Input::can_use_input_mouse() const {
     return !can_capture_mouse;
@@ -446,3 +446,5 @@ const char* Input::get_gamepad_button_name(GamepadButton button, int32_t device_
 const char* Input::get_gamepad_axis_name(GamepadAxis axis) const {
     return magic_enum::enum_name(axis).data();
 }
+
+}  // namespace tmt

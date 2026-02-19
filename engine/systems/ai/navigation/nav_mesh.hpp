@@ -1,3 +1,5 @@
+#pragma once
+
 #include "engine/core/ecs.hpp"
 
 #include "engine/core/resources.hpp"

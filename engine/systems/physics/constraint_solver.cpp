@@ -3,7 +3,7 @@
 #include "engine.hpp"
 #include <glm/gtx/norm.hpp>
 
-using namespace tmt;
+namespace tmt {
 
 void ConstraintSolver::solve_velocities(const float) {
     const size_t collision_count = contact_index;
@@ -144,3 +144,5 @@ void ConstraintSolver::solve_positions(const float) {
 
     contact_index = 0;
 }
+
+}  // namespace tmt

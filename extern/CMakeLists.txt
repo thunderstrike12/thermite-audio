@@ -53,6 +53,7 @@ if (THERMITE_EDITOR_BUILD)
     set(GRAPHITE_IMGUI_DIR "${CMAKE_SOURCE_DIR}/extern/imgui/")
 endif()
 add_subdirectory(graphite)
+set_target_properties(graphite PROPERTIES UNITY_BUILD OFF)
 
 # visit_struct - struct reflection
 # https://github.com/cbeck88/visit_struct
@@ -201,6 +202,8 @@ set(ZLIB_BUILD_TESTING OFF CACHE BOOL "" FORCE)
 set(ZLIB_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 set(ZLIB_BUILD_STATIC ON CACHE BOOL "" FORCE)
 add_subdirectory(zlib)
+
+set_target_properties(zlibstatic PROPERTIES UNITY_BUILD OFF)
 
 # fmod - audio engine
 set(FMOD_POSTFIX "$<$<CONFIG:Debug>:L>")

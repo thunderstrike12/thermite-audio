@@ -23,7 +23,7 @@ target_include_directories(thermite-editor
 )
 
 # Add project compile definitions
-target_compile_definitions(thermite-editor PRIVATE "IMGUI_DEFINE_MATH_OPERATORS")
+target_compile_definitions(thermite-editor PRIVATE "IMGUI_DEFINE_MATH_OPERATORS" NOMINMAX)
 
 # Add the precompiled header
 target_precompile_headers(thermite-editor PRIVATE "shared/pch.hpp")

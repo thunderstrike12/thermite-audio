@@ -1,6 +1,7 @@
 #include "input_map.hpp"
 
-using namespace tmt;
+namespace tmt {
+
 void InputMap::setup_default_actions() {
     add_action(action::CONFIRM);
     add_action_keys(action::CONFIRM, Key::SPACE, Key::RETURN);
@@ -116,3 +117,5 @@ void InputMap::set_action_sensitivity(const std::string& name, float sensitivity
     auto* action = get_action(name);
     action->sensitivity = sensitivity;
 }
+
+}  // namespace tmt

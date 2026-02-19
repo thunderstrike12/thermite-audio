@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      
 
 jobs:
   build:
@@ -35,8 +36,12 @@ jobs:
       - name: Configure with preset
         shell: pwsh
         run: |
-          cmake --preset ${{ matrix.preset }} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
-      
+          cmake --preset ${{ matrix.preset }} `
+            -DCMAKE_UNITY_BUILD=ON `
+            -DCMAKE_C_COMPILER_LAUNCHER=sccache `
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache `
+            -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+
       - name: Build with preset
         shell: pwsh
         run: |
@@ -119,9 +124,8 @@ jobs:
       - name: Configure with tests enabled
         shell: pwsh
         run: |
-          cmake --preset ${{ matrix.preset }} -DTHERMITE_BUILD_TESTS=ON -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
-      
-      
+          cmake --preset ${{ matrix.preset }} -DCMAKE_UNITY_BUILD=ON -DTHERMITE_BUILD_TESTS=ON -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+            
       - name: Build with tests
         shell: pwsh
         run: |

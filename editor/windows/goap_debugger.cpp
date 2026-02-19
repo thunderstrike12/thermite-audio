@@ -15,22 +15,22 @@
 
 #include <extern/imgui-node-editor/imgui_node_editor.h>
 namespace ignode = ax::NodeEditor;
-static ignode::EditorContext* g_Context = nullptr;  // internal state container for imgui-node-editor.
+static ignode::EditorContext* g_ContextDebugger = nullptr;  // internal state container for imgui-node-editor.
 
 namespace tmt {
 
 void GoapDebugger::on_editor_start() {
-    if (!g_Context) {
+    if (!g_ContextDebugger) {
         ignode::Config config;
         config.SettingsFile = "goap_graph.json";
-        g_Context = ignode::CreateEditor(&config);
+        g_ContextDebugger = ignode::CreateEditor(&config);
     }
 }
 
 void GoapDebugger::on_editor_end() {
-    if (g_Context) {
-        ignode::DestroyEditor(g_Context);
-        g_Context = nullptr;
+    if (g_ContextDebugger) {
+        ignode::DestroyEditor(g_ContextDebugger);
+        g_ContextDebugger = nullptr;
     }
 }
 
@@ -269,7 +269,7 @@ struct PlanNode {
  *   - Available goals with priority and relevance
  */
 void GoapDebugger::draw_goap_graph(GoapAgent& agent, WorldState& ws) {
-    ignode::SetCurrentEditor(g_Context);
+    ignode::SetCurrentEditor(g_ContextDebugger);
     ignode::Begin("GOAP Graph");
 
     int nodeId = 1000;

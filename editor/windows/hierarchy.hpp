@@ -1,6 +1,7 @@
 #pragma once
 #include <entt/entt.hpp>
 #include <set>
+#include <limits>
 
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
