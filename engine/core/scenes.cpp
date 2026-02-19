@@ -88,7 +88,11 @@ void Scenes::serialize_active_scene() {
     const SceneInfo& info = registered_scenes.at(active_scene_type);
 
     json serialized = Serializer::serialize(engine.ecs);
-    IO::write_text_file(info.file_location, serialized.dump(4), true);
+    const bool result = IO::write_text_file(info.file_location, serialized.dump(4), true);
+    if (result == false) {
+        Log::error(Log::Scope::ENGINE, "[Scenes] serialize_active_scene: Failed to write scene JSON to file");
+        return;
+    }
 
     if (active_scene_json == nullptr) {
         active_scene_json = engine.resources.load_resource<Json>(info.file_location);
