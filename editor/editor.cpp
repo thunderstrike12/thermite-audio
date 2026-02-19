@@ -123,6 +123,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     windows[Mode::PREFAB].add<AssetBrowser>();
     windows[Mode::PREFAB].add<Console>();
     windows[Mode::PREFAB].add<ScenesWindow>();
+    windows[Mode::PREFAB].add<UndoRedoManager>();
 
     for (auto& [mode, collection] : windows) {
         for (const auto& window : collection) {
