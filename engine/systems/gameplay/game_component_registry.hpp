@@ -41,6 +41,10 @@ class GameComponentRegistry {
         return name_to_index.at(name);
     }
 
+    bool is_component_registered(const std::string& name) const { return name_to_index.contains(name); }
+
+    bool is_component_registered(const ComponentIndex& type_id) const { return registered_components.contains(type_id); }
+
     ComponentInfo& get_component_info(const std::string& name) {
         ComponentIndex type_id = get_component_index(name);
         return get_component_info(type_id);
