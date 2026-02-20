@@ -1,4 +1,7 @@
 #include "player.hpp"
+
+#include "events.hpp"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,7 +15,8 @@
 // TODO before we have a serializer for input, you can add all the needed keybindings here.
 //  TODO we still have to add the gamepad inputs here
 
-using namespace game;
+namespace game {
+
 void setup_inputs(tmt::InputMap& input_map) {
     // movement
     input_map.add_action(action::MOVE_FORWARD);
@@ -57,9 +61,11 @@ void Player::start() {
 }
 
 void Player::update(const tmt::FrameData& time) {
+    // triggers the event for shooting
+    trigger_shoot();
+    auto& input = tmt::engine.input;
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
     auto& camera = tmt::engine.ecs.get_component<tmt::Camera>(entity);
-    auto& input = tmt::engine.input;
     const float dx = input.get_mouse_delta_x();
     const float dy = input.get_mouse_delta_y();
 
@@ -125,3 +131,12 @@ void Player::update(const tmt::FrameData& time) {
 void Player::end() {
     // Cleanup code for the player component
 }
+void Player::trigger_shoot() {
+    auto& input = tmt::engine.input;
+    // trigger signal
+    if (input.is_action_pressed(action::SHOOT)) {
+        tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { entity });
+    }
+}
+
+}  // namespace game

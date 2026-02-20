@@ -1,6 +1,8 @@
 #pragma once
 #include "engine/systems/gameplay/game_component.hpp"
 
+namespace game {
+
 class Player : public tmt::GameComponent<Player> {
    public:
     using GameComponent::GameComponent;
@@ -10,6 +12,8 @@ class Player : public tmt::GameComponent<Player> {
     void start() override;
     void update(const tmt::FrameData& time) override;
     void end() override;
+
+    void trigger_shoot();
 
     float camera_sensitivity = 0.1f;
 
@@ -27,4 +31,6 @@ class Player : public tmt::GameComponent<Player> {
    private:
     glm::vec3 velocity = { 0.0f, 0.0f, 0.0f };
 };
-TMT_OBJECT(Player, (camera_sensitivity, acceleration, drag, max_speed, health, battery, max_health, max_battery));
+
+}  // namespace game
+TMT_OBJECT(game::Player, (camera_sensitivity, acceleration, drag, max_speed, health, battery, max_health, max_battery));

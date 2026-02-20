@@ -22,6 +22,7 @@
 namespace tmt {
 
 using Registry = entt::registry;
+using Dispatcher = entt::dispatcher;
 
 struct Delete {};
 
@@ -48,6 +49,10 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
     /* Entities / Components */
     Registry& get_registry() { return registry; }
     const Registry& get_registry() const { return registry; }
+
+    // TODO this does not handle queued events for now
+    Dispatcher& get_dispatcher() { return dispatcher; }
+    const Dispatcher& get_dispatcher() const { return dispatcher; }
 
     /* Enforce Name component */
     Entity create_entity(const std::string& name = "", const Entity hint = entt::null) {
@@ -194,6 +199,7 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
 
    private:
     Registry registry;
+    Dispatcher dispatcher;
 
     void on_game_start() override;
 
