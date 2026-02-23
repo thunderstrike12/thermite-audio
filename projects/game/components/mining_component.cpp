@@ -30,7 +30,7 @@ void MiningComponent::mine(glm::vec3 origin, glm::vec3 dir) {
         tmt::Log::error("Mining component has no valid stencil!");
         return;
     }
-    // Create a ray 
+    // Create a ray
     const tmt::Ray ray_cast = tmt::Ray(origin, dir);
     const tmt::Hit hit = tmt::engine.renderer.trace_ray(ray_cast);
 

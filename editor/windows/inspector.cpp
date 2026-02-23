@@ -53,8 +53,13 @@ void Inspector::display_entity_info(const MenuContext& menu_context) {
     if (menu_context.primary_entity == entt::null) {
         return;
     }
-    const tmt::Entity& entity = menu_context.primary_entity;
-    ImGui::Text("Entity: %s", tmt::EntityHelper::to_string(entity).c_str());
+    auto entity_str = tmt::EntityHelper::to_string(menu_context.primary_entity);
+    if (ImGui::Selectable(("Entity: " + entity_str).c_str())) {
+        ImGui::SetClipboardText(entity_str.c_str());
+    }
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("Click to copy Entity ID");
+    }
 }
 
 void Inspector::display_compile_time_components(const tmt::Inspector::MenuContext& menu_context) {

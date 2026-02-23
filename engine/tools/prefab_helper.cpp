@@ -110,7 +110,7 @@ Entity PrefabHelper::instantiate_prefab(const tmt::json& parsed_json, const IO::
     const Entity root_entity = *EntityHelper::upper_parents(new_entities).begin();
     auto& root_transform = engine.ecs.get_component<Transform>(root_entity);
     root_transform.set_parent(parent);
-    return parent == entt::null ? root_entity : parent;
+    return root_entity;
 }
 
 }  // namespace tmt

@@ -17,6 +17,7 @@ class Weapon : public tmt::GameComponent<Weapon> {
     float fire_rate = 5.f;
 
     tmt::Entity shooting_entity;
+    tmt::Entity spawn_location_entity = entt::null;
 
    private:
     void on_shoot(const ShootEvent& e);
@@ -24,4 +25,4 @@ class Weapon : public tmt::GameComponent<Weapon> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::Weapon, (fire_rate, shooting_entity));
+TMT_OBJECT(game::Weapon, (fire_rate, shooting_entity, spawn_location_entity));

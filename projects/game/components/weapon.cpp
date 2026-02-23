@@ -18,8 +18,10 @@ void game::Weapon::on_shoot(const ShootEvent& e) {
         return;
     }
     last_shot_time = elapsed_game_time;
-
-    const auto& tf = tmt::engine.ecs.get_component<tmt::Transform>(entity);
-    tmt::Log::info("{} entity shot from {} to {}", shooting_entity, tf.get_world_position(), tf.get_forward());
+    if (spawn_location_entity == entt::null) {
+        spawn_location_entity = entity;
+    }
+    const auto& tf = tmt::engine.ecs.get_component<tmt::Transform>(spawn_location_entity);
+    // tmt::Log::info("{} entity shot from {} to {}", shooting_entity, tf.get_world_position(), tf.get_forward());
     tmt::engine.ecs.get_dispatcher().trigger(WeaponFiredEvent { .weapon_entity = entity, .origin = tf.get_world_position(), .up = tf.get_up(), .direction = tf.get_forward() });
 }

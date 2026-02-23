@@ -8,10 +8,14 @@ struct ShootEvent {
     tmt::Entity shooting_entity;
 };
 struct WeaponFiredEvent {
-    entt::entity weapon_entity;
+    tmt::Entity weapon_entity;
     glm::vec3 origin;
     glm::vec3 up;
     glm::vec3 direction;
+};
+struct ProjectileHit {
+    tmt::Entity projectile_entity;
+    tmt::Entity hit_entity;
 };
 
 }  // namespace game
