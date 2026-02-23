@@ -74,6 +74,8 @@ class Renderer {
     Transform& get_debug_transform() { return debug_transform; }
     Camera& get_debug_camera() { return debug_camera; }
 
+    glm::uvec2 viewport_size() const { return render_view.gpu_view.resolution; }
+
 #ifdef THERMITE_EDITOR
     void set_imgui(ImGUI* imgui);
 #endif

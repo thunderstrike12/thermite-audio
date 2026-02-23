@@ -3,6 +3,8 @@
 #include "engine/systems/gameplay/game_component.hpp"
 #include "engine/core/io.hpp"
 
+namespace game {
+
 class AnimationPlayer : public tmt::GameComponent<AnimationPlayer> {
    public:
     using GameComponent::GameComponent;
@@ -18,4 +20,6 @@ class AnimationPlayer : public tmt::GameComponent<AnimationPlayer> {
     std::string animation_name = "";
 };
 
-TMT_OBJECT(AnimationPlayer, (rig_location, animation_location, animation_name));
+
+}  // namespace game
+TMT_OBJECT(game::AnimationPlayer, (rig_location, animation_location, animation_name));

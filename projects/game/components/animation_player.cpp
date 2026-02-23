@@ -5,6 +5,7 @@
 #include "engine/core/ecs.hpp"
 #include "engine/systems/animation/rig_model.hpp"
 
+using namespace game;
 void AnimationPlayer::start() {
     auto& rigmodel = tmt::engine.ecs.add_component<tmt::RigModel>(entity);
     rigmodel.init(rig_location, entity);
