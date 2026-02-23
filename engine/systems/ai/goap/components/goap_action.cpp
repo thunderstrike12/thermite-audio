@@ -4,71 +4,53 @@
 namespace tmt {
 
 /**
- * Checks whether all of this action's preconditions are satisfied by the given WorldState.
+ * Checks whether all preconditions of this action are satisfied by the given WorldState.
  *
  * For each precondition:
  *   - Convert the string key into a FactId
- *   - Check if the fact exists in the world state
- *   - Check that the fact is a BOOL fact
- *   - Check that it matches the expected boolean value
+ *   - Look up the fact in the WorldState
+ *   - Compare the stored boolean value with the expected value
  *
- * If any precondition is missing, mismatched, or wrong type,
- * the action cannot be used by the planner.
+ * Returns:
+ *   - true if all preconditions exist in the world state and match
+ *   - false if any precondition is missing or does not match
  *
- * Return true if all preconditions matched.
- * Return false if at least one precondition failed.
+ * Notes:
+ *   - Only boolean facts are supported.
+ *   - WorldState and preconditions are keyed by hashed FactId for efficiency.
+ *   - If any precondition is missing, mismatched, or wrong type,
+ *   the action cannot be used by the planner.
  */
 bool GoapAction::check_preconditions(const WorldState& ws) const {
     for (const auto& [key, want] : preconditions) {
-        // Convert string key into hashed FactId
         FactId fid(key);
 
-        // Look up fact in the world state
-        const FactValue* fv = ws.try_get(fid);
-        if (!fv) {
-            // Fact is missing -> precondition fails
+        const bool* have = ws.try_get(fid);
+        if (!have) {
+            // Fact missing
             return false;
         }
 
-        // Preconditions currently only support boolean facts.
-        if (fv->value_type != FactValue::Type::BOOL_TYPE) {
-            // Wrong type -> treat as not satisfied
-            return false;
-        }
-
-        // Compare world value with expected value
-        if (fv->bool_val != want) {
-            // Wrong value -> precondition not met
+        if (*have != want) {
+            // Wrong value
             return false;
         }
     }
-
     return true;
 }
 
 /**
- * Utility function to print all facts in a WorldState.
+ * Utility function for debugging: prints all facts in a WorldState.
  *
- * This is used only for debugging so you can inspect how actions
- * modify the agent's perceived world after each step.
- * You can't see actual names, just the "number" but it is useful for debugging.
+ * Shows each FactId and its boolean value.
+ * Useful for inspecting the agent's perceived world at runtime.
+ *
+ * Only for logging/debugging purposes; does not modify the world state.
  */
 void print_world_state(const WorldState& ws) {
     Log::info("WorldState:");
     for (const auto& [id, val] : ws.facts) {
-        std::string val_str;
-        switch (val.value_type) {
-            case FactValue::Type::BOOL_TYPE:
-                val_str = val.bool_val ? "true" : "false";
-                break;
-            case FactValue::Type::INT_TYPE:
-                val_str = std::to_string(val.int_val);
-                break;
-            case FactValue::Type::FLOAT_TYPE:
-                val_str = std::to_string(val.float_val);
-                break;
-        }
-        Log::info("  FactID {} = {}", id, val_str);
+        Log::info("  FactID {} = {}", id, val ? "true" : "false");
     }
 }
 
@@ -81,20 +63,24 @@ void print_world_state(const WorldState& ws) {
  * This updates or inserts facts in the world state.
  * The updated world state can be printed for debugging.
  */
+/**
+ * Applies this action's effects to a given WorldState.
+ *
+ * - Convert the action's effect map (string -> bool) into a vector of FactPairs
+ * - Call WorldState::apply to update or insert each fact
+ *
+ * Notes:
+ *   - WorldState is updated immediately and can be inspected with print_world_state.
+ */
 void GoapAction::apply_effects(WorldState& ws) const {
     std::vector<FactPair> effects_vec;
     effects_vec.reserve(effects.size());
 
     for (const auto& [key, val] : effects) {
-        FactPair fp;
-        fp.id = FactId(key);
-        fp.value = FactValue(val);
-        effects_vec.push_back(fp);
+        effects_vec.push_back({ FactId(key), val });
     }
 
-    // Apply changes to the provided world state
     ws.apply(effects_vec);
-    // print_world_state(ws);
 }
 
 }  // namespace tmt

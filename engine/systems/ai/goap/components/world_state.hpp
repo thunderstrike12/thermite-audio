@@ -9,14 +9,17 @@ namespace tmt {
 /**
  * Class FactRegistry
  *
+ * Central registry that maps hashed fact IDs to readable names.
+ *
+ * Purpose:
  *   - Allows editor and debug systems (ImGui, logging, inspectors)
  *     to display fact names instead of numeric hashes.
  *   - Keeps the runtime GOAP planner fast by still using hashed IDs.
  *   - WorldState and planner logic never depend on strings.
  *
  * Note:
- *   Hash collisions are possible but very unlikely
- *   for short, well-defined gameplay fact names.
+ *   - Hash collisions are theoretically possible but unlikely
+ *     when using short gameplay fact names.
  */
 class FactRegistry {
    public:
@@ -56,9 +59,13 @@ class FactRegistry {
  * Struct FactId
  * Represents a unique identifier for a world-state fact.
  *
- * Internally stores a hashed string ID for fast comparisons.
- * When constructed from a string, the name is automatically
- * registered with the FactRegistry for debug and editor use.
+ * When constructed from a string:
+ *   - The string is hashed.
+ *   - The name is automatically registered with FactRegistry
+ *     for editor/debug visibility.
+ *
+ * FactId is used everywhere in GOAP logic instead of strings
+ * to ensure fast comparisons and minimal memory usage.
  */
 struct FactId {
     uint32_t id;
@@ -71,41 +78,16 @@ struct FactId {
 };
 
 /**
- * Struct FactValue
- * Represents the stored type and data for a world state fact.
- *
- * Supports:
- *   - bool
- *   - int
- *   - float
- *
- * Currently only bool types are supported by GoapAction::check_preconditions.
- * Could be extended to support more complex types.
- */
-struct FactValue {
-    enum class Type { BOOL_TYPE, INT_TYPE, FLOAT_TYPE } value_type;
-
-    union {
-        bool bool_val;
-        int int_val;
-        float float_val;
-    };
-
-    FactValue() : value_type(Type::BOOL_TYPE), bool_val(false) {}
-    FactValue(bool b) : value_type(Type::BOOL_TYPE), bool_val(b) {}
-    FactValue(int i) : value_type(Type::INT_TYPE), int_val(i) {}
-    FactValue(float f) : value_type(Type::FLOAT_TYPE), float_val(f) {}
-};
-
-/**
  * Struct FactPair
  * A single fact assignment (ID + value).
  *
  * Used for preconditions, effects and world state application.
+ * Example:
+ *   { FactId("HasWeapon"), true }
  */
 struct FactPair {
     FactId id;
-    FactValue value;
+    bool value;
 };
 
 /**
@@ -119,11 +101,13 @@ struct FactPair {
  *   - dynamic reaction and interrupts.
  */
 struct WorldState {
-    std::unordered_map<uint32_t, FactValue> facts;
+    std::unordered_map<uint32_t, bool> facts;
 
     /**
-     * Applies a collection of effects to the world state.
-     * Param: effects, a List of facts to modify.
+     * Applies a list of fact assignments (effects) to the world state.
+     *
+     * If a fact does not exist yet, it will be created.
+     * Existing facts are overwritten.
      */
     void apply(const std::vector<FactPair>& effects) {
         for (const auto& e : effects) {
@@ -132,34 +116,38 @@ struct WorldState {
     }
 
     /**
-     * Checks whether the world state satisfies a given set of conditions.
-     * Returns true if all conditions are satisfied.
-     * Param: conditions, A list of required facts.
+     * Checks whether all provided conditions are satisfied.
+     *
+     * Returns true only if:
+     *   - Every condition exists in the world state
+     *   - Every stored value matches the requested value
      */
     bool satisfies(const std::vector<FactPair>& conditions) const {
         for (const auto& cond : conditions) {
             auto it = facts.find(cond.id.id);
             if (it == facts.end()) return false;
-
-            const auto& val = it->second;
-
-            if (val.value_type == FactValue::Type::BOOL_TYPE && val.bool_val != cond.value.bool_val) return false;
+            if (it->second != cond.value) return false;
         }
         return true;
     }
 
     /**
-     * Retrieves a fact value if it exists.
-     * Returns pointer to FactValue or nullptr.
+     * Attempts to retrieve a fact value.
+     *
+     * Returns:
+     *   - Pointer to bool if the fact exists
+     *   - nullptr if the fact is not present
+     *
+     * This does not create the fact.
      */
-    const FactValue* try_get(const FactId& id) const {
+    const bool* try_get(const FactId& id) const {
         auto it = facts.find(id.id);
-        if (it != facts.end()) return &it->second;
-        return nullptr;
+        return it != facts.end() ? &it->second : nullptr;
     }
 };
 
 }  // namespace tmt
 
-// TMT_OBJECT(tmt::FactValue, (value_type));
-TMT_OBJECT(tmt::FactValue, (value_type, bool_val, int_val, float_val));
+TMT_OBJECT(tmt::FactId, (id));
+TMT_OBJECT(tmt::FactPair, (id, value));
+TMT_COMPONENT(tmt::WorldState, "WorldState", (facts));

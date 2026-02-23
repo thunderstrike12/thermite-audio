@@ -12,30 +12,10 @@
                 "g_KillPlayer"
             ],
             "default_world_state": {
-                "player_visible": {
-                    "value_type": "BOOL_TYPE",
-                    "bool_val": true,
-                    "int_val": -858993663,
-                    "float_val": -107372552.0
-                },
-                "player_in_range": {
-                    "value_type": "BOOL_TYPE",
-                    "bool_val": false,
-                    "int_val": -858993664,
-                    "float_val": -107372544.0
-                },
-                "player_alive": {
-                    "value_type": "BOOL_TYPE",
-                    "bool_val": true,
-                    "int_val": -858993663,
-                    "float_val": -107372552.0
-                },
-                "area_secure": {
-                    "value_type": "BOOL_TYPE",
-                    "bool_val": false,
-                    "int_val": -858993664,
-                    "float_val": -107372544.0
-                }
+                "player_visible": true,
+                "player_in_range": false,
+                "player_alive": true,
+                "area_secure": false
             }
         }
     }

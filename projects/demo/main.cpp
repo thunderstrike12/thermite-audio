@@ -47,14 +47,14 @@ class Demo : public tmt::Application {
         dragon.action_ids = { "ChasePlayer", "Wander" };
 
         dragon.default_world_state = {
-            { "player_in_range", tmt::FactValue(false) },
-            { "in_attack_range", tmt::FactValue(false) },
+            { "player_in_range", false },
+            { "in_attack_range", false },
         };
 
         {
             tmt::GoapGoal chase;
             chase.name = "ChasePlayer";
-            chase.desired_state = { { tmt::FactId("in_attack_range"), tmt::FactValue(true) } };
+            chase.desired_state = { { tmt::FactId("in_attack_range"), true } };
             chase.priority = 10;
             chase.valid = true;
 
@@ -64,7 +64,7 @@ class Demo : public tmt::Application {
         {
             tmt::GoapGoal wander;
             wander.name = "Wander";
-            wander.desired_state = { { tmt::FactId("player_in_range"), tmt::FactValue(true) } };
+            wander.desired_state = { { tmt::FactId("player_in_range"), true } };
             wander.priority = 1;
             wander.valid = true;
 

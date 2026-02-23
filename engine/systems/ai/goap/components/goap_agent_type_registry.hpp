@@ -33,7 +33,8 @@ struct GoapAgentType {
 
     // Default initial world state for agents of this type
     // Change from uint32_t to string here for editor and serilisation
-    std::unordered_map<std::string, FactValue> default_world_state;
+    // std::unordered_map<std::string, FactValue> default_world_state;
+    std::unordered_map<std::string, bool> default_world_state;
 };
 
 /**
@@ -79,5 +80,5 @@ class GoapAgentTypeRegistry {
 
 }  // namespace tmt
 
-TMT_OBJECT(tmt::GoapAgentType, (id, action_ids, goal_ids, default_world_state));
+TMT_COMPONENT(tmt::GoapAgentType, "GoapAgentType", (id, action_ids, goal_ids, default_world_state));
 TMT_OBJECT(tmt::GoapAgentTypeRegistry, (types));

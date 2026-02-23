@@ -36,3 +36,5 @@ struct GoapGoal {
 };
 
 }  // namespace tmt
+
+TMT_COMPONENT(tmt::GoapGoal, "GoapGoal", (name, desired_state, priority, valid));

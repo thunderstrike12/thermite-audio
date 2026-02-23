@@ -58,16 +58,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.ecs.systems.add<tmt::CameraSystem>();
     tmt::engine.scenes.register_scene<AIScene>();
 
-    return std::make_unique<Game>(specs);
-}
-
-void AIScene::on_start() {
-    { /* Camera entity */
-        tmt::Entity entity = tmt::engine.ecs.create_entity();
-        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
-        auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
-        transform.set_world_position(glm::vec3(0.0f, 0.0f, -2.0f));
-    }
+    tmt::engine.ecs.systems.add<tmt::Goap>();
 
     auto& ecs = tmt::engine.ecs;
     auto& goap = ecs.systems.get<tmt::Goap>();
@@ -85,7 +76,7 @@ void AIScene::on_start() {
     {
         tmt::GoapGoal patrol;
         patrol.name = "g_PatrolArea";
-        patrol.desired_state = { { tmt::FactId("area_secure"), tmt::FactValue(true) } };
+        patrol.desired_state = { { tmt::FactId("area_secure"), true } };
         patrol.priority = 1;
         patrol.valid = true;
 
@@ -95,11 +86,22 @@ void AIScene::on_start() {
     {
         tmt::GoapGoal kill;
         kill.name = "g_KillPlayer";
-        kill.desired_state = { { tmt::FactId("player_alive"), tmt::FactValue(false) } };
+        kill.desired_state = { { tmt::FactId("player_alive"), false } };
         kill.priority = 10;
         kill.valid = true;
 
         goal_reg.register_goal("g_KillPlayer", kill);
+    }
+
+    return std::make_unique<Game>(specs);
+}
+
+void AIScene::on_start() {
+    { /* Camera entity */
+        tmt::Entity entity = tmt::engine.ecs.create_entity();
+        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+        auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);
+        transform.set_world_position(glm::vec3(0.0f, 0.0f, -2.0f));
     }
 
 #if 0
@@ -143,27 +145,6 @@ void AIScene::on_start() {
         ecs.get_component<tmt::Transform>(ai2).set_world_position({ 5.f, 0.f, 0.f });
     }
 #else
-    {  // --- Spawning agent entities ---
-        auto& type_reg = goap.agent_types();
-
-        // Spawn Enemy 1 if it exists
-        if (type_reg.get("Enemy 1")) {
-            tmt::Entity ai1 = tmt::engine.ecs.create_entity("AI Agent 1");
-            tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 1", ai1);
-            ecs.get_component<tmt::Transform>(ai1).set_world_position({ 0.f, 0.f, 0.f });
-        } else {
-            tmt::Log::warn("Agent type 'Enemy 1' not found. Skipping spawn.");
-        }
-
-        // Spawn Enemy 2 if it exists
-        if (type_reg.get("Enemy 2")) {
-            tmt::Entity ai2 = tmt::engine.ecs.create_entity("AI Agent 2");
-            tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 2", ai2);
-            ecs.get_component<tmt::Transform>(ai2).set_world_position({ 5.f, 0.f, 0.f });
-        } else {
-            tmt::Log::warn("Agent type 'Enemy 2' not found. Skipping spawn.");
-        }
-    }
 #endif
 
     { /* Camera entity */
