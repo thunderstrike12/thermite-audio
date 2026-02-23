@@ -16,7 +16,7 @@ class Palette : public IWindow {
     constexpr bool default_open() const override { return true; }
 
     [[nodiscard]] MaterialIndex get_selected_material_index() const { return selected_material_index; }
-    void set_selected_material_index(const MaterialIndex material_index) { selected_material_index = material_index; }
+    void set_selected_material_index(const MaterialIndex material_index);
 
     void before_begin() override;
     void end_display() override;
@@ -33,7 +33,7 @@ class Palette : public IWindow {
     MaterialIndex selected_material_index { 0 };
 
     struct Config {
-        constexpr static inline glm::ivec2 GRID_SIZE { 8, 32 };
+        constexpr static inline glm::uvec2 GRID_SIZE { 8, 32 };
         constexpr static inline ImVec2 OUTSET { 2.0f, 2.0f };
     };
 };

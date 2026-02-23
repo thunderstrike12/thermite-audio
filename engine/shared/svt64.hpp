@@ -88,9 +88,9 @@ class Svt64 {
     /* @returns True if the given voxel coordinate is empty. */
     bool is_empty(const uint32_t x, const uint32_t y, const uint32_t z);
 
-    /* @returns A pointer to the material of a voxel at the given coordinate. (nullptr if the voxel is emtpy) */
+    /* @returns A pointer to the material of a voxel at the given coordinate. (nullptr if the voxel is empty) */
     Material* get_voxel(const uint32_t x, const uint32_t y, const uint32_t z);
-    /* @returns A pointer to the physics data of a voxel at the given coordinate. (nullptr if the voxel is emtpy) */
+    /* @returns A pointer to the physics data of a voxel at the given coordinate. (nullptr if the voxel is empty) */
     PhysicsVoxel* get_physics_voxel(const uint32_t x, const uint32_t y, const uint32_t z);
     /* Set a voxel inside the tree. */
     void set_voxel(const uint32_t x, const uint32_t y, const uint32_t z, const MaterialIndex material);

@@ -52,10 +52,7 @@ void UndoRedoManager::display() {
         redo();
     }
     ImGui::SameLine();
-    if (ImGui::Button("Clear")) {
-        undo_stack.clear();
-        redo_stack.clear();
-    }
+    if (ImGui::Button("Clear")) clear();
 
     ImGui::BeginChild("UndoRedoManager_UndoStack", ImVec2(0, 200), true);
     ImGui::Text("Undo Stack:");
@@ -76,7 +73,7 @@ void UndoRedoManager::display() {
 
 void UndoRedoManager::on_editor_start() {}
 
-void UndoRedoManager::on_editor_update(const FrameData& time) {
+void UndoRedoManager::on_editor_update(const FrameData&) {
     if (engine.game_controller.is_running()) return;
 
     const bool ctrl_down = engine.input.is_keyboard_button_pressed(Key::LEFT_CTRL);

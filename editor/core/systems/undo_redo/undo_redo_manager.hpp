@@ -1,4 +1,6 @@
 #pragma once
+#include <engine/events/engine.hpp>
+
 #include "editor/core/window.hpp"
 
 namespace tmt {
@@ -14,15 +16,14 @@ class IUndoRedo {
 
     virtual void inspect() = 0;
 
-   protected:
     template <typename Derived>
-    void send_to_manager(Derived&& action, const std::string& message) {
+    static void send_to_manager(Derived&& action, const std::string& message) {
         auto shared_action = std::make_shared<std::decay_t<Derived>>(std::forward<Derived>(action));
         get_manager().commit_action(shared_action, message);
-    };
+    }
 
    private:
-    UndoRedoManager& get_manager();
+    static UndoRedoManager& get_manager();
 };
 
 class UndoRedoCollection : public IUndoRedo {
@@ -48,16 +49,24 @@ class UndoRedoCollection : public IUndoRedo {
     std::vector<std::shared_ptr<IUndoRedo>> actions;
 };
 
-class UndoRedoManager : public IWindow {
+class UndoRedoManager : public IWindow, public OnEngineEnd {
    public:
     UndoRedoManager() = default;
     ~UndoRedoManager() override = default;
 
     void commit_action(const std::shared_ptr<IUndoRedo>& action, const std::string& message);
 
+    void clear() {
+        undo_stack.clear();
+        redo_stack.clear();
+    }
+
    protected:
     // Inherited via IWindow
     std::string get_title() const override { return "Undo Redo Manager"; }
+
+    // Inherited via OnEngineEnd
+    void on_engine_end() override { clear(); }
 
     void display() override;
 

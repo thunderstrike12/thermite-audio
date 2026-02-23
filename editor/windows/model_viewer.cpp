@@ -3,6 +3,7 @@
 #include "editor.hpp"
 #include "ImGuizmo.h"
 #include "viewport.hpp"
+#include "core/systems/undo_redo/voxel_edit_diff.hpp"
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
 #include "engine/core/polyline.hpp"
@@ -110,10 +111,10 @@ bool draw_face(const FaceData& info, const Transform& transform, const glm::vec3
 
     // Convert the local points to world space.
     const glm::mat4& world_matrix = transform.get_world_matrix();
-    p0 = world_matrix * glm::vec4 {p0, 1.0f};
-    p1 = world_matrix * glm::vec4 {p1, 1.0f};
-    p2 = world_matrix * glm::vec4 {p2, 1.0f};
-    p3 = world_matrix * glm::vec4 {p3, 1.0f};
+    p0 = world_matrix * glm::vec4 { p0, 1.0f };
+    p1 = world_matrix * glm::vec4 { p1, 1.0f };
+    p2 = world_matrix * glm::vec4 { p2, 1.0f };
+    p3 = world_matrix * glm::vec4 { p3, 1.0f };
 
     // Draw the lines between the points to make the grid face.
     engine.polyline.use_line_width(2.0f, true);
@@ -134,7 +135,7 @@ void draw_selected_face(const FaceData& info, const glm::vec3& half_extent, cons
     min = transform.get_world_matrix() * glm::vec4 { min, 1.0f };
 
     engine.polyline.use_line_width(4.0f, false);
-    engine.polyline.use_color(glm::vec4 {0.8f, 0.8f, 0.8f, 0.4f});
+    engine.polyline.use_color(glm::vec4 { 0.8f, 0.8f, 0.8f, 0.4f });
 
     const glm::vec3 scaled_right = transform.get_right() * transform.get_world_scale();
     const glm::vec3 scaled_up = transform.get_up() * transform.get_world_scale();
@@ -158,9 +159,9 @@ void draw_selected_face(const FaceData& info, const glm::vec3& half_extent, cons
     }
 }
 
-void draw_selection(const Hit& hit, const glm::vec3& half_extent, const Transform& transform) {
-    engine.polyline.use_line_width(2.0f);
-    engine.polyline.use_color(glm::vec4 { 1.0f, 0.5f, 0.5f, 1.0f });
+void draw_selection(const Hit& hit, const glm::vec3& half_extent, const Transform& transform, const glm::vec3& color) {
+    engine.polyline.use_line_width(3.0f);
+    engine.polyline.use_color(color);
 
     const glm::vec3 local_voxel_pos = glm::vec3 { hit.coord } * UNITS_PER_VOXEL - half_extent + VOXEL_SIZE_HALF;
     const glm::vec3 world_voxel_pos = transform.get_world_matrix() * glm::vec4 { local_voxel_pos, 1.0f };
@@ -170,39 +171,49 @@ void draw_selection(const Hit& hit, const glm::vec3& half_extent, const Transfor
     engine.polyline.draw_obb(world_voxel_pos, VOXEL_SIZE_HALF * local_scale, transform.get_world_rotation());
 }
 
-bool handle_selection(const Ray& mouse_ray, Hit& hit, const bool can_hit_face, const Entity entity, const Transform& transform, const ResourceRef<VoxelVolume>& resource) {
-    const glm::vec3 half_extent = glm::vec3 { resource->size } * VOXEL_SIZE_HALF;
-    const glm::mat4 world_to_local_matrix = glm::inverse(transform.get_world_matrix());
+std::vector<FaceData> draw_valid_faces(const Transform& transform, const glm::vec3& half_extent) {
+    std::vector<FaceData> valid_faces;
 
-    Ray local_ray {};
-    float far = 0.0f;
-    bool is_valid_hit = false;
-    if (can_hit_face) {
-        // If we can hit a face, that means we want to work on top of the voxel the mouse is pointing at, we get the voxel coord by adjusting it here.
-        const glm::vec3 local_normal = world_to_local_matrix * glm::vec4 { hit.normal, 0.0f };
-        const glm::uvec3 voxel_grid_normal { glm::round(local_normal) };
-        hit.coord += voxel_grid_normal;
-
-        if (glm::any(glm::greaterThanEqual(hit.coord, resource->size))) hit.entity = entt::null;
-
-        // Create a local version of the ray to simplify the aabb test later.
-        local_ray = Ray {
-            world_to_local_matrix * glm::vec4 { mouse_ray.origin, 1.0f },
-            world_to_local_matrix * glm::vec4 { mouse_ray.dir, 0.0f },
-        };
-
-        // Do an aabb test with the bounding box of the voxel object, this tells use if the user is pointing at a face of the grid, and thus we should draw the grid.
-        far = intersect_aabb(local_ray, -half_extent, half_extent);
-        is_valid_hit = (far > 0.0f && hit.distance >= far);
-    }
-
-    // Loop over all the grid's outer faces and draw them.
     for (int32_t i = 0; i < 6; i++) {
         FaceData face = calculate_face_info(i, transform, half_extent);
-        if (!draw_face(face, transform, half_extent) || !is_valid_hit) continue;  // Exit if we didn't draw the face (the face can't be viewed and thus can't be selected).
 
+        if (draw_face(face, transform, half_extent)) valid_faces.push_back(face);  // Don't add the face to the vector if `draw_face` returned false aka we can't see it.
+    }
+
+    return valid_faces;
+}
+
+bool handle_selection(
+    const std::vector<FaceData>& valid_faces, const Brush::State brush_state, const Ray& ray, Hit& hit, const Entity entity, const Transform& transform, const glm::vec3& half_extent
+) {
+    const glm::mat4 world_to_local_matrix = glm::inverse(transform.get_world_matrix());
+
+    // Create a local version of the ray to simplify the aabb test later.
+    const Ray local_ray {
+        world_to_local_matrix * glm::vec4 { ray.origin, 1.0f },
+        world_to_local_matrix * glm::vec4 { ray.dir, 0.0f },
+    };
+
+    // Do an aabb test with the bounding box of the voxel object, this tells use if the user is pointing at a face of the grid, and thus we should draw the grid.
+    const float far = intersect_aabb(local_ray, -half_extent, half_extent);
+    const bool is_face_hit = (far > 0.0f && hit.distance >= far);
+
+    if (!is_face_hit) {
+        if (brush_state.tool != Brush::Tool::COLOR_PICKER && brush_state.mode == Brush::Mode::ATTACH) {
+            // If we can hit a face, that means we want to work on top of the voxel the mouse is pointing at, we get the voxel coord by adjusting it here.
+            const glm::vec3 local_normal = world_to_local_matrix * glm::vec4 { hit.normal, 0.0f };
+            const glm::uvec3 voxel_grid_normal { glm::round(local_normal) };
+            hit.coord += voxel_grid_normal;
+        }
+
+        // If we know we didn't hit a face, we can early return by checking if the hit was on this entity.
+        return hit.entity == entity;
+    }
+
+    // Loop over all the valid grid faces to see which one was hit.
+    const glm::vec3 local_hit_position = local_ray.origin + local_ray.dir * far;
+    for (const FaceData& face : valid_faces) {
         // Check if the displayed face was the face that was hit, then update the "hit" variable's members with the new info.
-        const glm::vec3 local_hit_position = local_ray.origin + local_ray.dir * far;
         const float extent_axis = half_extent[face.normal_index] * face.normal_sign;
 
         constexpr float SMALL_FLOAT = std::numeric_limits<float>::epsilon() * 100.0f;
@@ -214,59 +225,164 @@ bool handle_selection(const Ray& mouse_ray, Hit& hit, const bool can_hit_face, c
         hit.entity = entity;
         hit.distance = far;
 
-        const glm::vec3 position = (mouse_ray.origin + mouse_ray.dir * hit.distance) - (face.world_normal * VOXEL_SIZE_HALF);
-        const glm::vec3 local_position = glm::inverse(transform.get_world_matrix()) * glm::vec4 { position, 1.0f };
+        const glm::vec3 world_hit_position = (ray.origin + ray.dir * hit.distance) - (face.world_normal * VOXEL_SIZE_HALF);
+        const glm::vec3 local_position = world_to_local_matrix * glm::vec4 { world_hit_position, 1.0f };
 
         hit.coord = (local_position + half_extent) * static_cast<float>(VOXELS_PER_UNIT);
 
         draw_selected_face(face, half_extent, transform);
     }
 
-    if (hit.entity != entity) return false;
+    const bool can_interact_with_face = (brush_state.tool != Brush::Tool::COLOR_PICKER && (brush_state.mode == Brush::Mode::ATTACH || brush_state.tool == Brush::Tool::BOX));
+    return hit.entity == entity && can_interact_with_face;
+}
 
-    draw_selection(hit, half_extent, transform);
+void set_voxel(const std::unique_ptr<Svt64>& svt, const glm::uvec3& coord, VoxelEditDiff& diff, const MaterialIndex material_index) {
+    const Material* voxel_material = svt->get_voxel(coord.x, coord.y, coord.z);
+    const MaterialIndex voxel_material_index = svt->palette.material_to_index(voxel_material);
+    const bool is_voxel_empty = (voxel_material == nullptr);
 
-    return true;
+    if (!is_voxel_empty && voxel_material_index == material_index) return;
+
+    svt->set_voxel(coord.x, coord.y, coord.z, material_index);
+
+    diff.add_change(coord, (is_voxel_empty ? nullptr : &voxel_material_index), &material_index);
+}
+
+void remove_voxel(const std::unique_ptr<Svt64>& svt, const glm::uvec3& coord, VoxelEditDiff& diff) {
+    const Material* voxel_material = svt->get_voxel(coord.x, coord.y, coord.z);
+    const MaterialIndex voxel_material_index = svt->palette.material_to_index(voxel_material);
+    const bool is_voxel_empty = (voxel_material == nullptr);
+
+    if (is_voxel_empty) return;
+
+    svt->remove_voxel(coord.x, coord.y, coord.z);
+
+    diff.add_change(coord, (is_voxel_empty ? nullptr : &voxel_material_index));
+}
+
+void paint_voxel(const std::unique_ptr<Svt64>& svt, const glm::uvec3& coord, VoxelEditDiff& diff, const MaterialIndex material_index) {
+    const Material* voxel_material = svt->get_voxel(coord.x, coord.y, coord.z);
+    const bool is_voxel_empty = (voxel_material == nullptr);
+    if (is_voxel_empty) return;
+
+    const MaterialIndex voxel_material_index = svt->palette.material_to_index(voxel_material);
+    if (voxel_material_index == material_index) return;
+
+    svt->set_voxel(coord.x, coord.y, coord.z, material_index);
+
+    diff.add_change(coord, &voxel_material_index, &material_index);
+}
+
+// Iterate the selected volume of voxels to: attach, remove or paint any of the voxels in that volume (handles undo/redo as well).
+void modify_voxel_volume(const ResourceRef<VoxelVolume>& model, const Brush::Mode brush_mode, const glm::uvec3& min, const glm::uvec3& max, const MaterialIndex material_index) {
+    VoxelEditDiff diff { model->uuid };
+
+    for (uint32_t x = min.x; x <= max.x; x++) {
+        for (uint32_t y = min.y; y <= max.y; y++) {
+            for (uint32_t z = min.z; z <= max.z; z++) {
+                const glm::uvec3 coord { x, y, z };
+
+                switch (brush_mode) {
+                    case Brush::Mode::ATTACH:
+                        set_voxel(model->blas, coord, diff, material_index);
+                        break;
+
+                    case Brush::Mode::REMOVE:
+                        remove_voxel(model->blas, coord, diff);
+                        break;
+
+                    case Brush::Mode::PAINT:
+                        paint_voxel(model->blas, coord, diff, material_index);
+                        break;
+                }
+            }
+        }
+    }
+
+    model->set_dirty();
+
+    switch (brush_mode) {
+        case Brush::Mode::ATTACH:
+            diff.commit("Attach Voxel(s)");
+            break;
+
+        case Brush::Mode::REMOVE:
+            diff.commit("Remove Voxel(s)");
+            break;
+
+        case Brush::Mode::PAINT:
+            diff.commit("Paint Voxel(s)");
+            break;
+    }
 }
 
 // Update the voxels based on the current selected brush.
-void modify_voxels(const Brush::Mode brush_mode, const ResourceRef<VoxelVolume>& model, const Hit& hit) {
-    switch (brush_mode) {
-        case Brush::Mode::PAINT: {
-            if (!engine.input.is_mouse_button_pressed(MouseButton::LEFT)) break;
-
-            const MaterialIndex material_index = editor.windows[Editor::Mode::VOXEL].get<Palette>().get_selected_material_index();
-            model->blas->set_voxel(hit.coord.x, hit.coord.y, hit.coord.z, material_index);
-
-            model->set_dirty();
-            break;
-        }
-
-        case Brush::Mode::COLOR_PICKER: {
+void handle_brush(const Brush::State brush_state, const ResourceRef<VoxelVolume>& model, const Hit& hit, const MaterialIndex material_index) {
+    switch (brush_state.tool) {
+        case Brush::Tool::COLOR_PICKER: {
             if (!engine.input.is_mouse_button_pressed(MouseButton::LEFT)) break;
 
             const Material* picked_material = model->blas->get_voxel(hit.coord.x, hit.coord.y, hit.coord.z);
             if (picked_material == nullptr) break;
 
-            editor.windows[Editor::Mode::VOXEL].get<Palette>().set_selected_material_index(static_cast<MaterialIndex>(picked_material - model->blas->palette.entries));
+            Palette& palette = editor.windows[Editor::Mode::VOXEL].get<Palette>();
+            palette.set_selected_material_index(model->blas->palette.material_to_index(picked_material));
             break;
         }
 
-        case Brush::Mode::ADD: {
+        case Brush::Tool::SINGLE: {
             if (!engine.input.is_mouse_button_just_pressed(MouseButton::LEFT)) break;
 
-            const MaterialIndex material_index = editor.windows[Editor::Mode::VOXEL].get<Palette>().get_selected_material_index();
+            VoxelEditDiff diff { model->uuid };
+            switch (brush_state.mode) {
+                case Brush::Mode::ATTACH:
+                    set_voxel(model->blas, hit.coord, diff, material_index);
+                    diff.commit("Attach Voxel(s)");
+                    break;
 
-            model->blas->set_voxel(hit.coord.x, hit.coord.y, hit.coord.z, material_index);
+                case Brush::Mode::REMOVE:
+                    remove_voxel(model->blas, hit.coord, diff);
+                    diff.commit("Remove Voxel(s)");
+                    break;
+
+                case Brush::Mode::PAINT:
+                    paint_voxel(model->blas, hit.coord, diff, material_index);
+                    diff.commit("Paint Voxel(s)");
+                    break;
+            }
             model->set_dirty();
+
             break;
         }
 
-        case Brush::Mode::REMOVE: {
-            if (!engine.input.is_mouse_button_just_pressed(MouseButton::LEFT)) break;
+        case Brush::Tool::BOX: {
+            if (!engine.input.is_mouse_button_pressed(MouseButton::LEFT) && !engine.input.is_mouse_button_just_released(MouseButton::LEFT)) break;
 
-            model->blas->remove_voxel(hit.coord.x, hit.coord.y, hit.coord.z);
-            model->set_dirty();
+            static glm::uvec3 start_coord { std::numeric_limits<uint32_t>::max() };
+            if (engine.input.is_mouse_button_just_pressed(MouseButton::LEFT)) start_coord = hit.coord;
+
+            const glm::uvec3& end_coord = hit.coord;
+
+            // Calculate the middle point of the selected volume of voxels.
+            const glm::vec3 selection_middle = glm::vec3 { start_coord + end_coord + 1u } * VOXEL_SIZE_HALF;
+
+            // Calculate the half extent of the selected volume of voxels (requires min and max to correctly account for the start and end voxels).
+            const glm::uvec3 min = glm::min(start_coord, end_coord);
+            const glm::uvec3 max = glm::max(start_coord, end_coord);
+            const glm::vec3 select_half_extent = (glm::vec3 { min } - glm::vec3 { max } - 1.0f) * VOXEL_SIZE_HALF;
+
+            const Transform& transform = engine.ecs.get_component<Transform>(hit.entity);
+            const glm::vec3 half_extent = glm::vec3 { model->size } * VOXEL_SIZE_HALF;
+            const glm::vec3 world_position = transform.get_world_matrix() * glm::vec4 { selection_middle - half_extent, 1.0f };
+
+            engine.polyline.draw_obb(world_position, select_half_extent, transform.get_world_rotation());
+
+            // Releasing the mouse button to modify the area.
+            if (!engine.input.is_mouse_button_just_released(MouseButton::LEFT)) break;
+
+            modify_voxel_volume(model, brush_state.mode, min, max, material_index);
+
             break;
         }
 
@@ -289,8 +405,9 @@ void ModelViewer::display() {
     engine.renderer.render_view.set_viewport_size(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
     ImGui::Image(engine.renderer.render_view.imgui_viewport, size);
 
-    const Brush::Mode brush_mode = editor.windows[Editor::Mode::VOXEL].get<Brush>().get_active_mode();
-    if (brush_mode == Brush::Mode::MULTI_TOOL) {
+    const Brush::State brush_state = editor.windows[Editor::Mode::VOXEL].get<Brush>().get_brush_state();
+    const bool is_tool_gizmo = brush_state.tool == Brush::Tool::GIZMO;
+    if (is_tool_gizmo) {
         const Entity selected_entity = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().get_selected_entity();
 
         editor.gizmo.manip(window_pos.x, window_pos.y, size.x, size.y, { &selected_entity, &selected_entity + 1 });
@@ -320,16 +437,26 @@ void ModelViewer::display() {
     // Get the necessary values for handling selection (entity transform, voxel resource, ray cast for selection, etc).
     const Transform& transform = engine.ecs.get_component<Transform>(selected_entity);
     const ResourceRef<VoxelVolume>& resource = engine.ecs.get_component<VoxelRenderer>(selected_entity).resource;
+    const glm::vec3 half_extent = glm::vec3 { resource->size } * VOXEL_SIZE_HALF;
 
     const Ray mouse_ray = engine.renderer.render_view.pixel_ray(mouse_position);
     Hit hit = engine.renderer.trace_ray(mouse_ray);
 
-    const bool can_hit_face = (brush_mode == Brush::Mode::ADD);
+    if (glm::any(glm::greaterThanEqual(hit.coord, resource->size))) hit.entity = entt::null;
 
-    // Handle drawing the selection and calculating the selected voxel position.
-    if (!handle_selection(mouse_ray, hit, can_hit_face, selected_entity, transform, resource)) return;  // Return early if no valid voxel was selected.
+    const std::vector<FaceData> valid_faces = draw_valid_faces(transform, half_extent);
 
-    modify_voxels(brush_mode, resource, hit);
+    // Don't calculate voxel hits when the cursor isn't over the window or using gizmo.
+    if (!ImGui::IsWindowHovered() || is_tool_gizmo) return;
+
+    // Return early if no valid voxel was selected.
+    if (!handle_selection(valid_faces, brush_state, mouse_ray, hit, selected_entity, transform, half_extent)) return;
+
+    const MaterialIndex material_index = editor.windows[Editor::Mode::VOXEL].get<Palette>().get_selected_material_index();
+    const Material& material = resource->blas->palette.entries[material_index];
+    draw_selection(hit, half_extent, transform, glm::vec3 { material.albedo_r, material.albedo_g, material.albedo_b });
+
+    handle_brush(brush_state, resource, hit, material_index);
 }
 
 void ModelViewer::on_editor_update(const FrameData& time) {

@@ -2,8 +2,7 @@
 #include <ImReflect.hpp>
 #include "engine/tools/uuid.hpp"
 
-inline void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::UUID& value, ImSettings& settings, ImResponse& response) {
-    auto& type_settings = settings.get<tmt::UUID>();
+inline void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::UUID& value, ImSettings&, ImResponse& response) {
     auto& type_response = response.get<tmt::UUID>();
 
     std::string uuid_str = value.str();

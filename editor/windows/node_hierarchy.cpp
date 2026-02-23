@@ -9,6 +9,7 @@
 #include "engine/tools/svh_format.hpp"
 #include "engine/shared/colorspace.hpp"
 #include "engine/shared/const.hpp"
+#include "engine/tools/serializer/all.hpp"
 
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -19,6 +20,12 @@
 #include <ogt_voxel_meshify.h>
 
 #include <fstream>
+
+#include "editor.hpp"
+#include "core/systems/undo_redo/type_diff.hpp"
+#include "editor/core/systems/undo_redo/component_diff.hpp"
+#include "editor/core/systems/undo_redo/undo_redo_manager.hpp"
+#include "editor/core/systems/undo_redo/voxel_edit_diff.hpp"
 
 namespace tmt {
 
@@ -61,10 +68,6 @@ struct NodeCreationData {
 };
 std::unique_ptr<NodeCreationData> node_creation_info;
 
-struct VoxelEditUUID {
-    UUID uuid { NULL_UUID };
-};
-
 Entity recurse_build_scene(const VoxelSceneNode& node, bool assign_new_uuids, const Entity parent_entity = entt::null, const glm::mat4& parent_matrix = glm::identity<glm::mat4>()) {
     const Entity entity = engine.ecs.create_entity(node.name);
 
@@ -72,7 +75,7 @@ Entity recurse_build_scene(const VoxelSceneNode& node, bool assign_new_uuids, co
     transform.set_world_matrix(parent_matrix * node.transform);
     transform.set_parent(parent_entity);
 
-    VoxelEditUUID& uuid_component = engine.ecs.add_component<VoxelEditUUID>(entity);
+    NodeHierarchy::NodeUUID& uuid_component = engine.ecs.add_component<NodeHierarchy::NodeUUID>(entity);
     uuid_component.uuid = (assign_new_uuids ? UUIDGenerator::generate() : node.uuid);
 
     if (node.tree) {
@@ -99,7 +102,7 @@ void recurse_parse_scene(Entity entity, const Transform& transform, VoxelSceneNo
     const glm::mat4 scale = glm::scale(glm::identity<glm::mat4>(), transform.get_local_scale());
     node.transform = translation * rotation * scale;
 
-    node.uuid = engine.ecs.get_component<VoxelEditUUID>(entity).uuid;
+    node.uuid = engine.ecs.get_component<NodeHierarchy::NodeUUID>(entity).uuid;
 
     const VoxelRenderer* renderer = engine.ecs.try_get_component<VoxelRenderer>(entity);
     if (renderer != nullptr) {
@@ -155,7 +158,7 @@ void NodeHierarchy::save_svh_as() {
     save_file_dialog(
         [this](const IO::FileLocation& location) {
             loaded_location = location;
-            if (loaded_location.relative_path.extension() != ".svh") loaded_location.relative_path += ".svh"; // Make sure the saved file has the correct extension.
+            if (loaded_location.relative_path.extension() != ".svh") loaded_location.relative_path += ".svh";  // Make sure the saved file has the correct extension.
 
             const std::vector<char> scene_data = encode_voxel_scene();
             IO::write_file(loaded_location, scene_data.data(), scene_data.size());
@@ -199,7 +202,7 @@ void NodeHierarchy::export_file(const std::string& file_description, const std::
             uint32_t indices_offset = 0;
             for (const auto&& [entity, renderer, transform] : renderer_group.each()) {
                 const std::string& name = engine.ecs.get_component<Name>(entity).name;
-                const std::string& uuid_string = engine.ecs.get_component<VoxelEditUUID>(entity).uuid.str();
+                const std::string& uuid_string = engine.ecs.get_component<NodeUUID>(entity).uuid.str();
 
                 const ResourceRef<VoxelVolume>& resource = renderer.resource;
                 const std::unique_ptr<Svt64>& tree = resource->blas;
@@ -298,14 +301,13 @@ void NodeHierarchy::recurse_display_node(const Entity entity, const Name& name, 
     const bool tree_open = ImGui::TreeNodeEx(name.name.c_str(), flags);
     node_context_menu(entity);
     drag_node(entity, name.name);
-    drop_node(entity);
+    drop_node(entity, transform);
 
     const bool popup_clicked_open = (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup));
     // Both left mouse button selects and opening the popup also selects, this makes it clear what node entity you have opened the popup for.
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left) || popup_clicked_open) selected_entity = entity;
     if (tree_open) {
         for (const Entity child : children) {
-            assert(engine.ecs.valid(child));
             auto&& [child_name, child_transform] = engine.ecs.get_component<Name, Transform>(child);
             recurse_display_node(child, child_name, child_transform);
         }
@@ -320,6 +322,9 @@ void NodeHierarchy::clear_hierarchy() {
     selected_entity = entt::null;
     root_entities.clear();
     engine.ecs.clear();
+
+    // Clear the undo/redo stack so the user doesn't try to undo changes to an old file in the newly loaded one.
+    editor.windows[Editor::Mode::VOXEL].get<UndoRedoManager>().clear();
 }
 
 void NodeHierarchy::drop_hierarchy() {
@@ -329,15 +334,40 @@ void NodeHierarchy::drop_hierarchy() {
     const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("VoxelNode");
     if (payload != nullptr) {
         const Entity dropped_entity = *static_cast<Entity*>(payload->Data);
+        Transform& transform = engine.ecs.get_component<Transform>(dropped_entity);
 
-        engine.ecs.get_component<Transform>(dropped_entity).clear_parent();
-        root_entities.emplace(dropped_entity);
+        if (transform.has_parent()) {
+            // Diffs for parent child relationship undo/redo.
+            ComponentDiff<Transform> parent_diff { transform.get_parent() };
+            ComponentDiff<Transform> dropped_diff { dropped_entity };
+
+            parent_diff.before();
+            dropped_diff.before();
+
+            transform.clear_parent();
+
+            parent_diff.after();
+            dropped_diff.after();
+
+            UndoRedoCollection diff_collection;
+            diff_collection.add_action(std::move(parent_diff));
+            diff_collection.add_action(std::move(dropped_diff));
+
+            TypeDiff root_diff { &root_entities };
+
+            root_diff.before();
+            root_entities.emplace(dropped_entity);
+            root_diff.after();
+
+            diff_collection.add_action(std::move(root_diff));
+            diff_collection.commit("Modified Hierarchy");
+        }
     }
 
     ImGui::EndDragDropTarget();
 }
 
-void NodeHierarchy::drop_node(const Entity entity) {
+void NodeHierarchy::drop_node(const Entity entity, Transform& transform) {
     if (!ImGui::BeginDragDropTarget()) return;
 
     const ImGuiPayload* payload = ImGui::GetDragDropPayload();
@@ -345,11 +375,39 @@ void NodeHierarchy::drop_node(const Entity entity) {
         const Entity dropped_entity = *static_cast<Entity*>(payload->Data);
 
         if (entity != dropped_entity && ImGui::AcceptDragDropPayload("VoxelNode")) {
-            // We have to get the entity's transform again here, otherwise entt can't find the entity that has the transform, I have no idea why.
-            Transform& transform = engine.ecs.get_component<Transform>(entity);
+            const size_t child_count = transform.get_children().size();
+
+            // Diffs for parent child relationship undo/redo.
+            ComponentDiff<Transform> parent_diff { entity };
+            ComponentDiff<Transform> child_diff { dropped_entity };
+
+            parent_diff.before();
+            child_diff.before();
+
             transform.add_child(dropped_entity);
 
-            if (root_entities.contains(dropped_entity)) root_entities.erase(dropped_entity);
+            // Only handle the rest of the diff process if the transform actually got a new child (might not get a new child when trying to parent to child of self).
+            if (child_count != transform.get_children().size()) {
+                parent_diff.after();
+                child_diff.after();
+
+                UndoRedoCollection diff_collection;
+                diff_collection.add_action(std::move(parent_diff));
+                diff_collection.add_action(std::move(child_diff));
+
+                if (root_entities.contains(dropped_entity)) {
+                    // Diff to add entity back in root entities set.
+                    TypeDiff root_diff { &root_entities };
+
+                    root_diff.before();
+                    root_entities.erase(dropped_entity);
+                    root_diff.after();
+
+                    diff_collection.add_action(std::move(root_diff));
+                }
+
+                diff_collection.commit("Modified Hierarchy");
+            }
         }
     }
 
@@ -390,9 +448,12 @@ void NodeHierarchy::popup_create_node() {
         }
 
         if (uuid == NULL_UUID) uuid = UUIDGenerator::generate();
-        engine.ecs.add_component<VoxelEditUUID>(new_node_entity).uuid = uuid;
+        engine.ecs.add_component<NodeUUID>(new_node_entity).uuid = uuid;
 
         ImGui::CloseCurrentPopup();
+        VoxelNodeDiff diff { new_node_entity, true };
+        VoxelNodeDiff::send_to_manager(std::move(diff), "Added Voxel Node");
+
         node_creation_info.reset();
     }
     if (ImGui::Button("Cancel")) {
@@ -412,7 +473,11 @@ void NodeHierarchy::node_context_menu(const Entity node_entity) const {
         node_creation_info->parent = node_entity;
         ImGui::OpenPopupEx(popup_id);
     }
-    if (ImGui::MenuItem(ICON_MS_REMOVE " Delete node")) engine.ecs.destroy_entity(node_entity);
+    if (ImGui::MenuItem(ICON_MS_REMOVE " Delete node")) {
+        VoxelNodeDiff diff { node_entity, false };
+        engine.ecs.destroy_entity(node_entity);
+        VoxelNodeDiff::send_to_manager(std::move(diff), "Deleted Voxel Node");
+    }
 
     ImGui::EndPopup();
 }
@@ -422,7 +487,6 @@ void NodeHierarchy::display() {
 
     popup_create_node();
 
-    std::vector<Entity> test;
     for (const Entity entity : root_entities) {
         auto&& [transform, name] = engine.ecs.get_component<Transform, Name>(entity);
 
@@ -433,7 +497,7 @@ void NodeHierarchy::display() {
 
     constexpr ImGuiPopupFlags flags = ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonRight;
     if (ImGui::BeginPopupContextWindow(nullptr, flags)) {
-        if (ImGui::MenuItem("Add node")) {
+        if (ImGui::MenuItem(ICON_MS_ADD " Add node")) {
             node_creation_info = std::make_unique<NodeCreationData>();
             ImGui::OpenPopupEx(popup_id);
         }

@@ -14,6 +14,10 @@ class VoxelVolume;
 
 class NodeHierarchy : public IWindow {
    public:
+    struct NodeUUID {
+        UUID uuid { NULL_UUID };
+    };
+
     constexpr std::string get_title() const override { return ICON_MS_FLOWCHART " Node hierarchy"; }
     constexpr bool default_open() const override { return true; }
 
@@ -32,11 +36,13 @@ class NodeHierarchy : public IWindow {
     std::vector<char> encode_voxel_scene() const;
 
    private:
+    friend class VoxelNodeDiff;
+
     void recurse_display_node(Entity entity, const Name& name, Transform& transform);
     void clear_hierarchy();
 
     void drop_hierarchy();
-    void drop_node(Entity entity);
+    void drop_node(Entity entity, Transform& transform);
 
     void popup_create_node();
     void node_context_menu(Entity node_entity) const;
