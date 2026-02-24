@@ -165,7 +165,7 @@ bool tmt::Viewport::toolbar(const ImVec2& image_pos) {
 }
 
 void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const ImVec2& image_pos, bool toolbar_buttons_hovered) {
-    if(!is_hovered) return;
+    if(!is_hovered || engine.game_controller.is_running()) return;
 
     auto& hierarchy = editor.windows[Editor::Mode::SCENE].get<Hierarchy>();
     const std::vector<Entity>& selected_entities = hierarchy.get_selected_entities();
