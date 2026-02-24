@@ -85,6 +85,7 @@ struct DeserializeState {
     tmt::IO::FileLocation current_prefab_location;
 
     std::unordered_map<tmt::PrefabInstanceID, tmt::PrefabInstanceID> instance_id_mapping { { tmt::NULL_UUID, tmt::NULL_UUID } };
+    std::unordered_map<tmt::PrefabInstanceID, tmt::Entity>* global_instance_map = nullptr;
 
     /* Prefab sequence to entity mapping */
     using EntityMap = tmt::TreeMap<tmt::PrefabInstanceID, std::unordered_map<tmt::Entity, tmt::Entity>>;
@@ -306,7 +307,7 @@ void serialize_component(tmt::SerializeState& state) {
             const bool referenced = state.is_being_referenced(entity);
             const bool is_root = component.root_entity == entity;
             const bool empty_chain = component.prefab_chain.empty();
-            if ((!changed && !is_root && !referenced) || (is_root && !empty_chain)) {
+            if (!changed && (!is_root || !empty_chain) && !referenced) {
                 continue;
             }
         } else {
@@ -546,17 +547,25 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
 
             /* Check if prefab instance already exists in scene, if yes, generate new instance id */
             if (existing_prefab_instances.contains(prefab_comp_original)) {
+                // Check global map first — was this instance already created at ANY level?
+                if (state.global_instance_map && state.global_instance_map->contains(prefab_comp_original.instance_id)) {
+                    tmt::Entity already_created = state.global_instance_map->at(prefab_comp_original.instance_id);
+                    // Wire it into current mapping scope so recursive deserialization uses it
+                    auto& branch = state.current_entity_mapping->get(prefab_comp_original.instance_id);
+                    branch.set_value({ { prefab_comp_original.source_entity, already_created }, { entt::null, entt::null } });
+                    continue;  // Don't re-instantiate
+                }
+                // Truly a fresh duplicate — generate new ID
                 tmt::PrefabInstanceID new_instance_id = tmt::UUIDGenerator::generate();
-
-                // tmt::Log::info(
-                //     tmt::Log::Scope::ENGINE, "[Serialization] Prefab instance already exists in scene, generating new instance ID. Old: {}, New: {}, Source location: {}, Root entity: {}",
-                //     prefab_comp_original.instance_id, new_instance_id, prefab_comp_original.source_location, prefab_comp_original.root_entity
-                //);
 
                 state.instance_id_mapping[prefab_comp_original.instance_id] = new_instance_id;
                 prefab_comp.instance_id = new_instance_id;
             } else {
                 existing_prefab_instances.insert(prefab_comp_original);
+                // Register in global map so recursive calls can find it
+                if (state.global_instance_map) {
+                    (*state.global_instance_map)[prefab_comp_original.instance_id] = new_entity;
+                }
             }
 
             const tmt::PrefabInstanceID& instance_id = prefab_comp.instance_id;
@@ -581,19 +590,40 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
             TMT_ZONE_SCOPED_N("Ecs::deserialize_scene::deserialize_prefab_instances")
             for (const auto& [prefab_instance_id, prefab_info] : prefab_instance_ids) {
                 auto original_prefab_json = tmt::engine.resources.load_resource<tmt::Json>(prefab_info.source_location);
+                tmt::SceneJson prefab_scene_json(original_prefab_json->get_parsed_json());
 
-                tmt::DeserializeState prefab_state { state.ecs, tmt::SceneJson(original_prefab_json->get_parsed_json()) };
+                tmt::DeserializeState prefab_state { state.ecs, prefab_scene_json };
 
                 prefab_state.current_entity_mapping = &state.current_entity_mapping->get(prefab_instance_id);
                 prefab_state.current_prefab_instance_id = prefab_instance_id;
                 prefab_state.current_root_entity = prefab_info.root_entity;
                 prefab_state.current_prefab_location = prefab_info.source_location;
+                prefab_state.global_instance_map = state.global_instance_map;
 
-                /* Deserialize prefab */
+                // PRE-POPULATE: scan nested prefabs in this prefab's JSON
+                // so create_entities skips already-existing instances
+                if (state.global_instance_map && prefab_scene_json.has_components("Prefab")) {
+                    const auto& prefab_entries = prefab_scene_json.components("Prefab");
+                    for (const auto& [json_key, json_value] : prefab_entries.items()) {
+                        tmt::Prefab nested_prefab {};
+                        tmt::Serializer::deserialize<tmt::Prefab>(json_value, nested_prefab);
+
+                        if (state.global_instance_map->contains(nested_prefab.instance_id)) {
+                            tmt::Entity real_entity = state.global_instance_map->at(nested_prefab.instance_id);
+                            tmt::Entity source_id = tmt::EntityHelper::from_string(json_key);
+
+                            if (prefab_state.current_entity_mapping->has_value() == false) {
+                                prefab_state.current_entity_mapping->set_value({ { entt::null, entt::null } });
+                            }
+                            // Entity already exists globally - map source to real entity
+                            // create_entities will see it's already mapped and skip
+                            prefab_state.current_entity_mapping->value().insert({ source_id, real_entity });
+                        }
+                    }
+                }
+
                 std::set<tmt::Entity> prefab_entities;
                 deserialize_scene(prefab_entities, prefab_state);
-
-                /* Merge new entities */
                 new_entities.insert(prefab_entities.begin(), prefab_entities.end());
             }
         }
@@ -624,6 +654,18 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
         }
 
         for (const auto new_entity : new_entities) {
+            // Skip entities that were pre-mapped from the scene level
+            if (state.global_instance_map) {
+                bool is_scene_level = false;
+                for (const auto& [id, scene_entity] : *state.global_instance_map) {
+                    if (scene_entity == new_entity) {
+                        is_scene_level = true;
+                        break;
+                    }
+                }
+                if (is_scene_level) continue;  // Don't attach chain to scene-owned entities
+            }
+
             const bool alread_has_prefab = state.ecs.has_component<tmt::Prefab>(new_entity);
             if (alread_has_prefab) {
                 /* attach to chain */
@@ -660,7 +702,10 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
 
 void tag_invoke(JsonReflect::deserialize_t, const tmt::json& j, std::set<tmt::Entity>& new_entities, tmt::Ecs& ecs, const std::optional<tmt::Prefab> prefab_data) {
     tmt::DeserializeState state { ecs, tmt::SceneJson(j) };
+    std::unordered_map<tmt::PrefabInstanceID, tmt::Entity> global_instance_map;
     state.current_entity_mapping = &state.entity_mapping[tmt::NULL_UUID];
+    state.global_instance_map = &global_instance_map;
+
     if (prefab_data.has_value()) {
         state.current_prefab_instance_id = prefab_data->instance_id;
         state.current_root_entity = prefab_data->root_entity;

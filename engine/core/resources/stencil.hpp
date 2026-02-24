@@ -23,11 +23,8 @@ class Stencil : public tmt::RuntimeResource<VoxelScene> {
         return data[idx];
     }
 
-    int dummy;
-
    private:
     void copy_recursive(const uint32_t node_id, const glm::ivec3 node_pos, const uint32_t node_scale, const Svt64* tree);
 };
 
 }  // namespace tmt
-TMT_OBJECT(tmt::Stencil, (dummy));
