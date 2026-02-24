@@ -45,15 +45,18 @@ class NodeHierarchy : public IWindow {
     void drop_node(Entity entity, Transform& transform);
 
     void popup_create_node();
+    void popup_resize_node();
     void node_context_menu(Entity node_entity) const;
 
     void display() override;
 
     void on_editor_start() override {}
-    void on_editor_update(const FrameData&) override {}
+    void on_editor_update(const FrameData&) override;
     void on_editor_end() override {}
-
-    uint32_t popup_id { 0 };
+    
+    // Popup ids, will be set when the popups are first created, allows us to open them from anywhere in imgui (hacky workaround).
+    uint32_t creation_popup_id { 0 };
+    uint32_t resize_popup_id { 0 };
 
     IO::FileLocation loaded_location {};
 

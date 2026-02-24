@@ -1,6 +1,7 @@
 #pragma once
 
 #include <engine/core/ecs.hpp>
+#include <engine/shared/const.hpp>
 #include <engine/core/renderer/material.hpp>
 #include <engine/core/resources/voxel_volume.hpp>
 
@@ -62,6 +63,25 @@ class VoxelNodeDiff : public IUndoRedo {
 
     json entity_json;
     std::vector<NodeData> node_data;
+};
+
+class GridResizeDiff : public IUndoRedo {
+   public:
+    // Before or after may be invalid resources, this implies the state before had no grid at all.
+    GridResizeDiff(Entity node_entity, const glm::vec3& offset, const ResourceRef<VoxelVolume>& before, const ResourceRef<VoxelVolume>& after) :
+        node_entity { node_entity }, offset { offset }, before_resource { before }, after_resource { after } {}
+
+    // Inherited via IUndoRedo
+    void undo() override;
+    void redo() override;
+    void inspect() override {}
+
+   private:
+    Entity node_entity;
+    glm::vec3 offset {};
+
+    ResourceRef<VoxelVolume> before_resource {};
+    ResourceRef<VoxelVolume> after_resource {};
 };
 
 }  // namespace tmt

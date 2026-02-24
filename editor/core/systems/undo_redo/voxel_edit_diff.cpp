@@ -152,4 +152,36 @@ void VoxelNodeDiff::recurse_parse_node_data(Entity entity) {
     }
 }
 
+void GridResizeDiff::undo() {
+    if (before_resource == nullptr) {
+        engine.ecs.remove_component<VoxelRenderer>(node_entity);
+    } else {
+        engine.ecs.add_or_get_component<VoxelRenderer>(node_entity).resource = before_resource;
+    }
+
+    Transform& transform = engine.ecs.get_component<Transform>(node_entity);
+    transform.set_local_position(transform.get_local_position() - offset);
+
+    for (const Entity child : transform.get_children()) {
+        Transform& child_transform = engine.ecs.get_component<Transform>(child);
+        child_transform.set_local_position(child_transform.get_local_position() + offset);
+    }
+}
+
+void GridResizeDiff::redo() {
+    if (after_resource == nullptr) {
+        engine.ecs.remove_component<VoxelRenderer>(node_entity);
+    } else {
+        engine.ecs.add_or_get_component<VoxelRenderer>(node_entity).resource = after_resource;
+    }
+
+    Transform& transform = engine.ecs.get_component<Transform>(node_entity);
+    transform.set_local_position(transform.get_local_position() + offset);
+
+    for (const Entity child : transform.get_children()) {
+        Transform& child_transform = engine.ecs.get_component<Transform>(child);
+        child_transform.set_local_position(child_transform.get_local_position() - offset);
+    }
+}
+
 }  // namespace tmt
