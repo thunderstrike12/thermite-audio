@@ -70,6 +70,12 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
 
     void file_drag_drop(const tmt::Entity parent);
 
+    /* Payload structure for entity drag and drop - public so other code can accept entity drops */
+    struct DragNDropPayload {
+        bool multiple = false;
+        Entity entity = entt::null;
+    };
+
    private:
     tmt::InsertionOrderedSet<Entity> selected_entities;
     tmt::InsertionOrderedSet<Entity> force_open_entities;
@@ -122,11 +128,6 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
 
     void copy_selection();
     void paste_entities(const Entity hovered_entity);
-
-    struct DragNDropPayload {
-        bool multiple = false;
-        Entity entity = entt::null;
-    };
 
     bool drag_drop_source(const Entity dragged_entity) const;
     bool drag_drop_target(const Entity dropped_entity);
