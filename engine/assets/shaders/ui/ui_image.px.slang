@@ -3,6 +3,8 @@ import ui;
 
 [[vk::binding(1, 0)]]
 StructuredBuffer<ImageInstance> images;
+[[vk::binding(2, 0)]]
+SamplerState image_sampler;
 
 [shader("pixel")]
 float4 main(VertexOutput input) : SV_Target {
@@ -13,8 +15,8 @@ float4 main(VertexOutput input) : SV_Target {
     const uint32_t image_index = instance.image_index();
     if (image_index == 0x00u) return instance.color();
 
-    const Sampler2D<float4> sampler = bindless::texture_sampled<Sampler2D<float4>>(image_index);
+    const Texture2D<float4> sampler = bindless::texture_sampled<Texture2D<float4>>(image_index);
 
     /* Sampler the texture */
-    return sampler.SampleLevel(input.uvs, 0) * instance.color();
+    return sampler.SampleLevel(image_sampler, input.uvs, 0) * instance.color();
 }

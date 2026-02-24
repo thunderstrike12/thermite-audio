@@ -2,7 +2,6 @@ import view;
 import ui;
 
 ConstantBuffer<RenderView> gpu_view;
-
 StructuredBuffer<ImageInstance> images;
 
 /* Rotate the point 'p' on the Z axis. */

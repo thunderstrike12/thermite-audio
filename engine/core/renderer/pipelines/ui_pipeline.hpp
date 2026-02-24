@@ -32,6 +32,7 @@ class UiPipeline {
    private:
     Buffer images_buffer {};
     Buffer image_vertex_buffer {};
+    Sampler image_sampler {};
 
     uint32_t image_count = 0;
 

@@ -61,6 +61,9 @@ void UiPipeline::init(GPUAdapter& gpu) {
     image_vertex_buffer =
         bank.create_buffer("[UI] Image Vertex Buffer", BufferUsage::Vertex | BufferUsage::TransferDst, 6u, sizeof(ImageVertex)).expect("failed to initialise the image vertex buffer.");
     bank.upload_buffer(image_vertex_buffer, quad_vertices, 0u, sizeof(quad_vertices));
+
+    /* Create UI image sampler */
+    image_sampler = bank.create_sampler("[UI] Image Sampler").expect("failed to create ui image sampler.");
 }
 
 /* Decompose a transform world matrix into the attribute we need for image instances. */
@@ -131,16 +134,17 @@ void UiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view) {
     /* UI overlay rendering */
     /* clang-format off */
     RasterNode& image_pass = render_graph.add_raster_pass("ui images", "ui/ui_image.vx", "ui/ui_image.px")
-                                /* Vertex stage */
-                                .topology(Topology::TriangleList)
-                                .attribute(AttrFormat::XYZ32_SFloat) /* Position */
-                                .attribute(AttrFormat::XY32_SFloat)  /* UV */
-                                .read(render_view.render_view_buffer, ShaderStages::Vertex)
-                                /* Pixel stage */
-                                .read(images_buffer, ShaderStages::Vertex | ShaderStages::Pixel)
-                                .alpha_blending(true)
-                                .attach(render_image)
-                                .raster_extent(render_res.x, render_res.y);
+        /* Vertex stage */
+        .topology(Topology::TriangleList)
+        .attribute(AttrFormat::XYZ32_SFloat) /* Position */
+        .attribute(AttrFormat::XY32_SFloat)  /* UV */
+        .read(render_view.render_view_buffer, ShaderStages::Vertex)
+        /* Pixel stage */
+        .read(images_buffer, ShaderStages::Vertex | ShaderStages::Pixel)
+        .read(image_sampler, ShaderStages::Pixel)
+        .alpha_blending(true)
+        .attach(render_image)
+        .raster_extent(render_res.x, render_res.y);
     /* clang-format on */
 
     /* Draw all images with 1 draw call, using instancing & bindless textures. */
@@ -152,6 +156,7 @@ void UiPipeline::deinit(GPUAdapter& gpu) {
 
     bank.destroy(images_buffer);
     bank.destroy(image_vertex_buffer);
+    bank.destroy(image_sampler);
 }
 
 }  // namespace tmt
