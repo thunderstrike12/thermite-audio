@@ -112,7 +112,7 @@ void Player::update(const tmt::FrameData& time) {
     if (breaking) {
         float current_speed = glm::length(velocity);
         if (current_speed > 0.0f) {
-            float break_force = acceleration * 2.0f * time.delta_time;
+            float break_force = deceleration * time.delta_time;
             float new_speed = glm::max(0.0f, current_speed - break_force);
             velocity = glm::normalize(velocity) * new_speed;
         }
