@@ -4,10 +4,6 @@
         0,
         1
     ],
-    "UUID": {
-        "0": "bccbcc97-5733-43e4-b966-ff07cb507b76",
-        "1": "1aff0a7f-20df-475f-ab75-6e4502175707"
-    },
     "Name": {
         "0": {
             "name": "Parent"
@@ -59,6 +55,9 @@
             "parent": 0,
             "children": []
         }
+    },
+    "Disable": {
+        "1": {}
     },
     "UIComponent": {
         "0": {

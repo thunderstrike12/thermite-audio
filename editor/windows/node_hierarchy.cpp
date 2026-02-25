@@ -221,7 +221,7 @@ void NodeHierarchy::import_file(const std::string& file_description, const std::
 void NodeHierarchy::export_file(const std::string& file_description, const std::string& file_extension) const {
     save_file_dialog(
         [this](const IO::FileLocation& location) {
-            const entt::basic_group renderer_group = engine.ecs.get_registry().group<VoxelRenderer>(entt::get<Transform>);
+            const entt::basic_group renderer_group = engine.ecs.group<VoxelRenderer>(entt::get<Transform>);
             if (renderer_group.empty()) return;
 
             // Make sure all the paths have the correct extension.

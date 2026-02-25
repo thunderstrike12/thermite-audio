@@ -135,7 +135,7 @@ void tag_invoke(JsonReflect::deserialize_t, const JsonReflect::json& j, tmt::Ent
 /* ECS */
 tmt::json tag_invoke(JsonReflect::serialize_t, const tmt::Ecs& ecs) {
     std::set<tmt::Entity> entities;
-    for (const auto entity : ecs.get_registry().view<entt::entity>()) {
+    for (const auto entity : ecs.view<entt::entity>()) {
         entities.insert(entity);
     }
     tmt::json result = tmt::Serializer::serialize(entities, ecs);
@@ -290,7 +290,7 @@ std::optional<tmt::json> get_source_component_json(const tmt::Entity entity, con
 template <typename ComponentType>
 void serialize_component(tmt::SerializeState& state) {
     /* If no component instance exists, continue */
-    if (state.ecs.get_registry().view<ComponentType>().size() <= 0) return;
+    if (state.ecs.view<ComponentType>().size() <= 0) return;
 
     constexpr auto COMPONENT_NAME = tmt::Component<ComponentType>::get_name();
     TMT_ZONE_SCOPED_N(COMPONENT_NAME);
@@ -524,7 +524,7 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
         TMT_ZONE_SCOPED_N("Ecs::deserialize_scene::prepare_prefabs")
         /* Gather all already existing prefabs in scene */
         std::unordered_set<tmt::Prefab> existing_prefab_instances;
-        auto view = state.ecs.get_registry().view<tmt::Prefab>();
+        auto view = state.ecs.view<tmt::Prefab>();
         for (const auto&& [entity, prefab_comp] : view.each()) {
             existing_prefab_instances.insert(prefab_comp);
         }
@@ -712,4 +712,12 @@ void tag_invoke(JsonReflect::deserialize_t, const tmt::json& j, std::set<tmt::En
     }
     deserialize_scene(new_entities, state);
     // state.entity_mapping.print();
+
+    for (const auto new_entity : new_entities) {
+        const bool has_disabled = ecs.has_component<tmt::DisableFlag>(new_entity);
+        if (has_disabled == false) continue;
+
+        /* If entity is disabled, disable it */
+        ecs.disable(new_entity, true);
+    }
 }

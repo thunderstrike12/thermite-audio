@@ -40,7 +40,7 @@ void DebugLines::on_editor_update(const tmt::FrameData&) {
         }
     }
 
-    auto view = engine.ecs.get_registry().view<const ComponentCollection>();
+    auto view = engine.ecs.view<const ComponentCollection>();
     for (auto [entity, collection] : view.each()) {
         for (const auto& [type_id, component] : collection.get_all_components()) {
             component->draw_debug_lines();

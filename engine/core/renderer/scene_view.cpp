@@ -84,7 +84,7 @@ inline std::vector<T> reserved(const size_t count) {
 
 void SceneView::update_voxel_objects(RenderGraph& render_graph) {
     /* Capture all voxel renderers in the scene */
-    const entt::basic_group group = engine.ecs.get_registry().group<VoxelRenderer>(entt::get<Transform>);
+    const entt::basic_group group = engine.ecs.group<VoxelRenderer>(entt::get<Transform>);
 
     /* Allocate space for all voxel objects */
     const size_t count = std::min(group.size(), (size_t)MAX_VOXEL_OBJECTS);
@@ -139,7 +139,7 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
 
 void SceneView::update_lights(RenderGraph& render_graph, const RenderView&) {
     /* Capture all lights in the scene */
-    const entt::basic_group group = engine.ecs.get_registry().group<const Light>(entt::get<Transform>);
+    const entt::basic_group group = engine.ecs.group<const Light>(entt::get<Transform>);
 
     /* Allocate space for all lights */
     const size_t count = std::min(group.size(), (size_t)MAX_LIGHTS);

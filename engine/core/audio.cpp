@@ -444,7 +444,7 @@ Audio::DopplerSettings Audio::get_3d_settings() const {
 
 void Audio::update_listeners() const {
     // Loop over the all listeners to update their positions/velocities.
-    const entt::basic_group listener_group = engine.ecs.get_registry().group<AudioListener>(entt::get<Transform>);
+    const entt::basic_group listener_group = engine.ecs.group<AudioListener>(entt::get<Transform>);
     for (const auto&& [entity, audio_listener, transform] : listener_group.each()) {
         const VoxelBody* voxel_body = engine.ecs.try_get_component<VoxelBody>(entity);
 
@@ -465,7 +465,7 @@ void Audio::update_listeners() const {
 
 void Audio::update_emitters() {
     // Loop over the all emitters to update their positions/velocities.
-    const entt::basic_group emitter_group = engine.ecs.get_registry().group<AudioEmitter>(entt::get<Transform>);
+    const entt::basic_group emitter_group = engine.ecs.group<AudioEmitter>(entt::get<Transform>);
     for (const auto&& [entity, audio_emitter, transform] : emitter_group.each()) {
         audio_emitter.cleanup_playing_instances();
 
@@ -506,7 +506,7 @@ void Audio::remove_listener() const {
     if (TryLogError(result, "Failed to get listener count")) return;
 
     int new_listener_index = 0;
-    const entt::basic_group listener_group = engine.ecs.get_registry().group<AudioListener>(entt::get<Transform>);
+    const entt::basic_group listener_group = engine.ecs.group<AudioListener>(entt::get<Transform>);
     for (const auto&& [entity, audio_listener, transform] : listener_group.each()) {
         const float cached_weight = audio_listener.get_weight();
 

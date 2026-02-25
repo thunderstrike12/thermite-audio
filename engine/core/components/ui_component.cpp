@@ -66,8 +66,8 @@ glm::vec2 AnchorHelper::calculate_anchor_offset_in_rect(const glm::vec2 size, co
 }
 
 glm::vec2 AnchorHelper::calculate_anchor_offset(const Entity entity) {
-    auto* transform = engine.ecs.get_registry().try_get<Transform>(entity);
-    auto* ui = engine.ecs.get_registry().try_get<UIComponent>(entity);
+    auto* transform = engine.ecs.try_get_component<Transform>(entity);
+    auto* ui = engine.ecs.try_get_component<UIComponent>(entity);
     if (!transform || !ui) return glm::vec2(0.0f);
 
     if (!transform->has_parent()) {
@@ -76,8 +76,8 @@ glm::vec2 AnchorHelper::calculate_anchor_offset(const Entity entity) {
     }
 
     auto parent_entity = transform->get_parent();
-    auto* parent_ui = engine.ecs.get_registry().try_get<UIComponent>(parent_entity);
-    auto* parent_transform = engine.ecs.get_registry().try_get<Transform>(parent_entity);
+    auto* parent_ui = engine.ecs.try_get_component<UIComponent>(parent_entity);
+    auto* parent_transform = engine.ecs.try_get_component<Transform>(parent_entity);
     if (!parent_ui || !parent_transform) {
         glm::vec2 offset = calculate_anchor_offset_in_rect(engine.renderer.render_view.gpu_view.resolution, ui->anchor);
         return offset;
@@ -96,10 +96,10 @@ glm::vec2 AnchorHelper::calculate_anchor_offset(const Entity entity) {
 bool AnchorHelper::is_inside(const Entity entity, const glm::vec2& viewport_point) {
     if (entity == entt::null) return false;
 
-    const auto* ui_component = engine.ecs.get_registry().try_get<UIComponent>(entity);
+    const auto* ui_component = engine.ecs.try_get_component<UIComponent>(entity);
     if (!ui_component) return false;
 
-    auto* transform = engine.ecs.get_registry().try_get<Transform>(entity);
+    auto* transform = engine.ecs.try_get_component<Transform>(entity);
     if (!transform) return false;
 
     // get ui elements

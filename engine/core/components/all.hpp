@@ -32,6 +32,7 @@ using SerializeComponents = ComponentRegistry<
 	Prefab,
 	Name, 
 	Transform, 
+	DisableFlag,
 	VoxelRenderer, 
 	Camera,
 	VoxelBody,

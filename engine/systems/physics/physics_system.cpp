@@ -18,7 +18,7 @@ namespace tmt {
 
 void Physics::on_start() {
     Log::info("Physics on_start");
-    for (const auto& [entity, vb, transform] : engine.ecs.get_registry().view<VoxelBody, Transform>().each()) {
+    for (const auto& [entity, vb, transform] : engine.ecs.view<VoxelBody, Transform>().each()) {
         vb.position = transform.get_world_position();
         vb.rotation = transform.get_world_rotation();
 
@@ -104,7 +104,7 @@ void draw_solids(
 
 void Physics::on_update(const FrameData&) {
     engine.polyline.use_line_width(0.25f);
-    for (const auto& [entity, vb, transform] : engine.ecs.get_registry().view<VoxelBody, Transform>().each()) {
+    for (const auto& [entity, vb, transform] : engine.ecs.view<VoxelBody, Transform>().each()) {
         // auto* tree_a = vb.resource->blas.get();
         // const float half_extent_a = powf(4.0f, (float)tree_a->depth) * 0.5f * UNITS_PER_VOXEL;
         // const glm::vec3 extents_diff_a = half_extent_a - ((glm::vec3)vb.resource->size * 0.5f * UNITS_PER_VOXEL);
@@ -156,7 +156,7 @@ void Physics::on_fixed_update(const FrameData&) {
     TMT_ZONE_SCOPED_N("Physics")
 
     // Update Forces
-    for (const auto& [entity, vb, transform] : engine.ecs.get_registry().view<VoxelBody, Transform>().each()) {
+    for (const auto& [entity, vb, transform] : engine.ecs.view<VoxelBody, Transform>().each()) {
         // if (!transform.is_enabled()) continue;
 
         // Add stored forces
@@ -197,7 +197,7 @@ void Physics::on_fixed_update(const FrameData&) {
     engine.salvo.activate_workers();
 
     // Build physics BVH
-    const entt::basic_group group = engine.ecs.get_registry().group<VoxelBody>(entt::get<Transform>);
+    const entt::basic_group group = engine.ecs.group<VoxelBody>(entt::get<Transform>);
     std::vector<VoxelObject> objects {};
     objects.reserve(group.size());
     {
@@ -250,7 +250,7 @@ void Physics::on_fixed_update(const FrameData&) {
 
 void Physics::generate_constraints() {
     // solver.collisions.resize(MAX_CONTACTS);
-    const PhysicsGroup group = engine.ecs.get_registry().group<VoxelBody>(entt::get<Transform>);
+    const PhysicsGroup group = engine.ecs.group<VoxelBody>(entt::get<Transform>);
     engine.salvo.parallel_for(group.size(), [this, &group](size_t i) { generate_constraint((int)i, group); });
 }
 
@@ -609,7 +609,7 @@ bool Physics::is_separated(const glm::vec3& axis, const VoxelBody::Box& box_a, c
 }
 
 void Physics::apply_velocities() const {
-    for (const auto& [entity, vb, transform] : engine.ecs.get_registry().view<VoxelBody, Transform>().each()) {
+    for (const auto& [entity, vb, transform] : engine.ecs.view<VoxelBody, Transform>().each()) {
         if (vb.type == VoxelBody::STATIC) continue;
 
         vb.position += vb.velocity * Engine::Config::FIXED_TIME_STEP;

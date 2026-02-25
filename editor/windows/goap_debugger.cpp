@@ -51,7 +51,7 @@ void GoapDebugger::display() {
 
     // Gather all agents
     std::vector<Entity> agents;
-    for (auto [e, agent] : ecs.view<GoapAgent>().each()) {
+    for (auto [e, agent] : engine.ecs.view<GoapAgent>().each()) {
         agents.push_back(e);
     }
 

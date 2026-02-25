@@ -117,7 +117,7 @@ void DragonScene::on_update(const tmt::FrameData& time) {
     }
 
     unsigned int i = 0;
-    for (auto [entity, transform, renderer] : tmt::engine.ecs.get_registry().view<tmt::Transform, tmt::VoxelRenderer>().each()) {
+    for (auto [entity, transform, renderer] : tmt::engine.ecs.view<tmt::Transform, tmt::VoxelRenderer>().each()) {
         transform.set_world_scale(glm::vec3(mm_scalars[i]));
         // transform.set_world_rotation(mm_quats[i]);
         ++i;

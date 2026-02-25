@@ -8,8 +8,8 @@
     #include "editor/imgui/types/all.hpp"
     #include "editor/imgui/components/all.hpp"
 #else
-class ImSettings;
-class ImResponse;
+//class ImSettings;
+//class ImResponse;
 #endif
 
 /* Forward declare */

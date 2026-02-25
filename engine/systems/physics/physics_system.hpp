@@ -10,7 +10,7 @@
 
 namespace tmt {
 
-using PhysicsGroup = decltype(std::declval<entt::registry>().group<VoxelBody>(entt::get<Transform>));
+using PhysicsGroup = decltype(std::declval<Ecs>().group<VoxelBody>(entt::get<Transform>));
 
 class Physics : public ISystem {
    public:

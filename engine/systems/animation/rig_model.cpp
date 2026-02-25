@@ -82,7 +82,7 @@ void RigModel::recurse(const tmt::VoxelSceneNode& node, tmt::Entity parent_entit
             auto& voxel_name = engine.ecs.get_component<Name>(voxel_entity);
             auto& voxel_transf = engine.ecs.get_component<Transform>(voxel_entity);
 
-            BoneComp& bone_comp_id = engine.ecs.get_registry().get<BoneComp>(bone_entities[j]);
+            BoneComp& bone_comp_id = engine.ecs.get_component<BoneComp>(bone_entities[j]);
             Bone& b = data->bones[bone_comp_id.id];
 
             pivot_entities.push_back(engine.ecs.create_entity());

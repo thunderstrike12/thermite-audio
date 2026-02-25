@@ -8,7 +8,7 @@ namespace tmt {
 
 Entity Camera::get_active_camera() {
     /* Capture all cameras in the scene */
-    const entt::basic_group group = engine.ecs.get_registry().group<const Camera>(entt::get<Transform>);
+    const entt::basic_group group = engine.ecs.group<const Camera>(entt::get<Transform>);
 
     for (auto&& [entity, camera, transform] : group.each()) {
         if (camera.active == true) {
@@ -21,7 +21,7 @@ Entity Camera::get_active_camera() {
 
 void Camera::set_active_camera(Entity camera_entity) {
     /* Capture all cameras in the scene */
-    const entt::basic_group group = engine.ecs.get_registry().group<Camera>(entt::get<Transform>);
+    const entt::basic_group group = engine.ecs.group<Camera>(entt::get<Transform>);
 
     for (auto&& [entity, camera, transform] : group.each()) {
         if (entity == camera_entity) {

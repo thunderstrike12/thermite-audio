@@ -20,9 +20,8 @@ namespace {
 // TODO this might be useful in ECS?
 template <typename... Components>
 Entity find_entity(const std::string& name) {
-    auto& registry = engine.ecs.get_registry();
-    for (auto entity : registry.view<Name, Components...>()) {
-        if (registry.get<Name>(entity).name == name) {
+    for (auto entity : engine.ecs.view<Name, Components...>()) {
+        if (engine.ecs.get_component<Name>(entity).name == name) {
             return entity;
         }
     }
@@ -68,9 +67,8 @@ void Console::register_commands() {
     );
 
     register_command("list", "List all entities: list", []() {
-        auto& registry = engine.ecs.get_registry();
-        for (auto entity : registry.view<Name>()) {
-            Log::info("[{}] {}", static_cast<uint32_t>(entity), registry.get<Name>(entity).name);
+        for (auto entity : engine.ecs.view<Name>()) {
+            Log::info("[{}] {}", static_cast<uint32_t>(entity), engine.ecs.get_component<Name>(entity).name);
         }
     });
 

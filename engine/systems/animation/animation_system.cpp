@@ -16,7 +16,7 @@ std::string tmt::RigModelManager::get_name() {
 }
 
 void tmt::RigModelManager::on_game_start() {
-    for (const auto& [entity, rig] : engine.ecs.get_registry().view<RigModel>().each()) {
+    for (const auto& [entity, rig] : engine.ecs.view<RigModel>().each()) {
         auto& rigmodel = tmt::engine.ecs.get_component<tmt::RigModel>(entity);
         rigmodel.init(rigmodel.data.file_location, entity);
     }
@@ -26,7 +26,7 @@ void tmt::RigModelManager::on_start() {}
 
 void RigModelManager::on_update(const FrameData& time) {
     inspect(time.delta_time);
-    for (const auto& [entity, rig] : engine.ecs.get_registry().view<RigModel>().each()) {
+    for (const auto& [entity, rig] : engine.ecs.view<RigModel>().each()) {
         auto path = rig.vox_path.relative_path;
         if (!rig.vox_is_loaded && !path.empty()) {
             rig.attach_voxel_objects();
@@ -97,7 +97,7 @@ void RigModelManager::inspect(float) {
     int lines_drawn = 0;
     engine.polyline.use_color(1.0f, 0.3f, 0.3f);
     engine.polyline.use_line_width(0.25f);
-    for (const auto& [entity, transform, rig] : engine.ecs.get_registry().view<Transform, RigModel>().each()) {
+    for (const auto& [entity, transform, rig] : engine.ecs.view<Transform, RigModel>().each()) {
         for (const Entity bone_entity : rig.bone_entities) {
             auto& bone_transform = engine.ecs.get_component<Transform>(bone_entity);
             // auto& bone_name = engine.ecs.get_component<Name>(bone_entity);

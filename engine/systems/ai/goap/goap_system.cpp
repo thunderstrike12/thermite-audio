@@ -21,7 +21,7 @@ void Goap::on_start() {
     auto& registry = engine.ecs.get_registry();
 
     // Build runtime agents from serialized scene data
-    for (auto entity : registry.view<GoapAgentTypeRef>()) {
+    for (auto entity : engine.ecs.view<GoapAgentTypeRef>()) {
         auto& type_ref = registry.get<GoapAgentTypeRef>(entity);
 
         // Avoid double building if already exists
@@ -44,9 +44,7 @@ void Goap::on_start() {
  *    3. Execute action(s)
  */
 void Goap::on_update(const FrameData& time) {
-    auto& registry = engine.ecs.get_registry();
-
-    for (auto [entity, agent, world] : registry.view<GoapAgent, WorldState>().each()) {
+    for (auto [entity, agent, world] : engine.ecs.view<GoapAgent, WorldState>().each()) {
         process_agent(entity, world, time.delta_time);
 
         if (agent.current_action && agent.current_action->is_running && agent.current_action->wants_fixed_update == false) {
@@ -56,9 +54,7 @@ void Goap::on_update(const FrameData& time) {
 }
 
 void Goap::on_fixed_update(const FrameData& time) {
-    auto& registry = engine.ecs.get_registry();
-
-    for (auto [entity, agent] : registry.view<GoapAgent>().each()) {
+    for (auto [entity, agent] : engine.ecs.view<GoapAgent>().each()) {
         if (agent.current_action && agent.current_action->is_running && agent.current_action->wants_fixed_update == true) {
             agent.current_action->on_fixed_tick(entity, time.delta_time);
         }

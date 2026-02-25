@@ -91,7 +91,7 @@ void UiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view) {
     std::vector<GpuImage> images {};
 
     { /* Collect all the images in the scene (Game ECS) */
-        const entt::basic_view view = engine.ecs.get_registry().view<ImageRenderer, UIComponent, Transform>();
+        const entt::basic_view view = engine.ecs.view<ImageRenderer, UIComponent, Transform>();
 
         // sort by z order
         std::vector<entt::entity> sorted_entities(view.begin(), view.end());

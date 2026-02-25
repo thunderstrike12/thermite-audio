@@ -44,7 +44,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
 
 void TestScene::on_start() {
     // Just get the first entity with the AudioEmitter component, there is only 1 in the saved scene.
-    entity = tmt::engine.ecs.get_registry().view<tmt::AudioEmitter>().front();
+    entity = tmt::engine.ecs.view<tmt::AudioEmitter>().front();
 }
 
 void TestScene::on_update(const tmt::FrameData& time) {

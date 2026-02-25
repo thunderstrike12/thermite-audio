@@ -17,7 +17,7 @@ void game::OreCollector::on_collision_trigger(const TriggerCollisionEvent& trigg
     if (trigger.trigger != entity) {
         return;
     }
-    if (!tmt::engine.ecs.get_registry().valid(trigger.other_object)) {
+    if (!tmt::engine.ecs.valid(trigger.other_object)) {
         return;
     }
     tmt::engine.ecs.destroy_entity(trigger.other_object);

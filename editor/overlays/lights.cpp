@@ -152,7 +152,7 @@ inline void tube_light_overlay(Transform& transform, TubeLight light, bool selec
 /* Draw the overlay for light components. */
 void draw_lights_overlay() {
     /* Capture all lights in the scene */
-    const entt::basic_group group = engine.ecs.get_registry().group<const Light>(entt::get<Transform>);
+    const entt::basic_group group = engine.ecs.group<const Light>(entt::get<Transform>);
 
     /* Get the camera position is world-space */
     const glm::vec3 camera_pos = engine.renderer.render_view.gpu_view.origin;

@@ -10,7 +10,7 @@ namespace tmt {
 
 template <typename Func>
 void for_each_component(Func&& func) {
-    const auto group = engine.ecs.get_registry().group<ComponentCollection>();
+    const auto group = engine.ecs.group<ComponentCollection>();
     if (group.empty()) return;
 
     const auto& components = engine.component_registry.get_registered_components();

@@ -15,7 +15,7 @@ namespace {
 
 //// Get the resource with the UUID that we saved (storing the uuid prevents unnecessary storing of model resources).
 // Entity get_node_from_uuid(const UUID& uuid) {
-//     const entt::basic_group group = engine.ecs.get_registry().group<NodeHierarchy::NodeUUID>();
+//     const entt::basic_group group = engine.ecs.group<NodeHierarchy::NodeUUID>();
 //
 //     for (const auto&& [entity, node_uuid] : group.each()) {
 //         if (node_uuid.uuid == uuid) return entity;
@@ -26,7 +26,7 @@ namespace {
 
 // Get the resource with the UUID that we saved (storing the uuid prevents unnecessary storing of model resources).
 ResourceRef<VoxelVolume> get_node_model(const UUID& uuid) {
-    const entt::basic_group group = engine.ecs.get_registry().group<VoxelRenderer>(entt::get<Transform>);
+    const entt::basic_group group = engine.ecs.group<VoxelRenderer>(entt::get<Transform>);
 
     for (const auto&& [entity, renderer, transform] : group.each()) {
         if (renderer.resource->uuid == uuid) return renderer.resource;

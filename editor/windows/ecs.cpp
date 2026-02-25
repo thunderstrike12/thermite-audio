@@ -7,8 +7,7 @@
 
 void tmt::EcsInspector::display() {
     ImGui::BeginChild("ECS Inspector Child", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
-    const auto& registry = tmt::engine.ecs.get_registry();
-    const size_t entity_count = registry.view<entt::entity>().size();
+    const size_t entity_count = tmt::engine.ecs.get_registry().view<entt::entity>().size();
     ImGui::Text("Entities: %zu", entity_count);
     ImGui::Separator();
     ImGui::Text("Systems:");

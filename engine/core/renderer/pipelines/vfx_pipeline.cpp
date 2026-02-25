@@ -129,7 +129,7 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
     std::vector<GpuParticleEffect> effects {};
 
     /* clang-format off */
-    const entt::basic_group group = engine.ecs.get_registry().group<ParticleEmitter>(entt::get<Transform>);
+    const entt::basic_group group = engine.ecs.group<ParticleEmitter>(entt::get<Transform>);
     for (auto&& [entity, emitter, transform] : group.each()) {
         /* Skip inactive emitters */
         if (!emitter.active) continue;

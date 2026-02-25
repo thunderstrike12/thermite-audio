@@ -12,8 +12,8 @@ void ConstraintSolver::solve_velocities(const float) {
         for (size_t j = 0; j < collision_count; j++) {
             auto& collision = collisions[j];
             // Get the rigid bodies involved in the constraint
-            auto& body_a = engine.ecs.get_registry().get<VoxelBody>(collision.entity_a);
-            auto& body_b = engine.ecs.get_registry().get<VoxelBody>(collision.entity_b);
+            auto& body_a = engine.ecs.get_component<VoxelBody>(collision.entity_a);
+            auto& body_b = engine.ecs.get_component<VoxelBody>(collision.entity_b);
 
             const float inv_mass_a = body_a.get_inv_mass();
             const float inv_mass_b = body_b.get_inv_mass();
@@ -101,8 +101,8 @@ void ConstraintSolver::solve_positions(const float) {
         for (size_t j = 0; j < collision_count; j++) {
             auto& collision = collisions[j];
             // Get the rigid bodies involved in the constraint
-            auto& body_a = engine.ecs.get_registry().get<VoxelBody>(collision.entity_a);
-            auto& body_b = engine.ecs.get_registry().get<VoxelBody>(collision.entity_b);
+            auto& body_a = engine.ecs.get_component<VoxelBody>(collision.entity_a);
+            auto& body_b = engine.ecs.get_component<VoxelBody>(collision.entity_b);
 
             for (auto& contact : collision.contacts) {
                 const float steering_constant = 0.005f;

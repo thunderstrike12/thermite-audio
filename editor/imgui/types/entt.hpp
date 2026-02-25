@@ -124,7 +124,7 @@ inline void entity_selector_popup(const char* popup_id, entt::entity& value, typ
     ImGui::Separator();
 
     /* Entity list */
-    auto view = tmt::engine.ecs.get_registry().view<tmt::Transform, tmt::Name>();
+    auto view = tmt::engine.ecs.view<tmt::Transform, tmt::Name>();
 
     ImGui::BeginChild("EntityList", ImVec2(250, 300), true);
     for (auto [entity, transform, name] : view.each()) {

@@ -142,7 +142,7 @@ class MotionMathSystem : public ISystem {
         for (auto it = motions.begin(); it != motions.end();) {
             auto& motion = *it;
 
-            if (!motion.value || motion.safeguard && !tmt::engine.ecs.get_registry().valid(*motion.safeguard)) {
+            if (!motion.value || motion.safeguard && !tmt::engine.ecs.valid(*motion.safeguard)) {
                 it = motions.erase(it);
                 continue;
             }
