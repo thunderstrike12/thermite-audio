@@ -5,6 +5,7 @@
 #include <engine/tools/serializer/all.hpp>
 
 #include "editor.hpp"
+#include "editor/imgui/extra.hpp"
 #include "editor/imgui/types/all.hpp"
 #include "editor/windows/node_hierarchy.hpp"
 #include "editor/core/systems/undo_redo/component_diff.hpp"
@@ -16,29 +17,36 @@ namespace tmt {
 
 namespace {
 
-const std::vector<std::pair<Brush::Tool, const char*>> TOOL_ICONS {
-    { Brush::Tool::GIZMO, ICON_MS_OPEN_WITH },
-    { Brush::Tool::COLOR_PICKER, ICON_MS_COLORIZE },
-    { Brush::Tool::SINGLE, ICON_MS_DEPLOYED_CODE },
-    { Brush::Tool::BOX, ICON_MS_GRID_ON },
+struct ButtonInfo {
+    const char* icon;
+    std::string_view title;
+    std::string_view desc;
 };
 
-const std::vector<std::pair<Brush::Mode, const char*>> MODE_ICONS {
-    { Brush::Mode::ATTACH, ICON_MS_ADD },
-    { Brush::Mode::REMOVE, ICON_MS_REMOVE },
-    { Brush::Mode::PAINT, ICON_MS_BRUSH },
+const std::vector<std::pair<Brush::Tool, ButtonInfo>> TOOL_INFOS {
+    { Brush::Tool::GIZMO, { ICON_MS_OPEN_WITH, "Selection Gizmo", "Select, translate, rotate, and scale objects." } },
+    { Brush::Tool::COLOR_PICKER, { ICON_MS_COLORIZE, "Eye Dropper", "Select the palette entry of a voxel." } },
+    { Brush::Tool::SINGLE, { ICON_MS_DEPLOYED_CODE, "Modify Single Voxel", "Add, remove, or paint individual voxels." } },
+    { Brush::Tool::BOX, { ICON_MS_GRID_ON, "Modify Voxel Box", "Add, remove, or paint a 3D area (box) of voxels." } },
+};
+
+const std::vector<std::pair<Brush::Mode, ButtonInfo>> MODE_INFOS {
+    { Brush::Mode::ATTACH, { ICON_MS_ADD, "Add", "Add (or replace) voxels." } },
+    { Brush::Mode::REMOVE, { ICON_MS_REMOVE, "Remove", "Remove voxels." } },
+    { Brush::Mode::PAINT, { ICON_MS_BRUSH, "Paint", "Set palette entry of voxels." } },
 };
 
 }  // namespace
 
 void Brush::display() {
-    for (const auto [tool, icon] : TOOL_ICONS) {
+    for (const auto [tool, info] : TOOL_INFOS) {
         // Keep everything on the same line (skip ImGui::SameLine on the first element).
-        if (tool != TOOL_ICONS.begin()->first) ImGui::SameLine();
+        if (tool != TOOL_INFOS.begin()->first) ImGui::SameLine();
 
         ImGui::BeginDisabled(state.tool == tool);
 
-        if (ImGui::Button(icon)) state.tool = tool;
+        if (ImGui::Button(info.icon)) state.tool = tool;
+        tooltip(info.title.data(), info.desc.data());
 
         ImGui::EndDisabled();
     }
@@ -100,15 +108,16 @@ void Brush::display() {
             const float width = ImGui::GetContentRegionAvail().x;
             const float button_width = (width - ImGui::GetStyle().FramePadding.x * 2.0f) / 3.0f;
 
-            for (const auto [mode, icon] : MODE_ICONS) {
+            for (const auto [mode, info] : MODE_INFOS) {
                 // Keep everything on the same line (skip ImGui::SameLine on the first element).
-                if (mode != MODE_ICONS.begin()->first) {
+                if (mode != MODE_INFOS.begin()->first) {
                     ImGui::SameLine();
                     ImGui::SetCursorPosX(ImGui::GetItemRectMax().x);
                 }
 
                 ImGui::BeginDisabled(state.mode == mode);
-                if (ImGui::Button(icon, ImVec2 { button_width, 0.0f })) state.mode = mode;
+                if (ImGui::Button(info.icon, ImVec2 { button_width, 0.0f })) state.mode = mode;
+                tooltip(info.title.data(), info.desc.data());
                 ImGui::EndDisabled();
             }
 
