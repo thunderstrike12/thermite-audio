@@ -44,6 +44,9 @@ void setup_inputs(tmt::InputMap& input_map) {
     input_map.add_action(action::SHOOT);
     input_map.add_action_mouse(action::SHOOT, tmt::MouseButton::LEFT);
 
+    input_map.add_action(action::SECONDARY_TOOL_USE);
+    input_map.add_action_mouse(action::SECONDARY_TOOL_USE, tmt::MouseButton::RIGHT);
+
     input_map.add_action(action::SWITCH_WEAPON_1);
     input_map.add_key_to_action(action::SWITCH_WEAPON_1, tmt::Key::NUM_1);
     input_map.add_action(action::SWITCH_WEAPON_2);

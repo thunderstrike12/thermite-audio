@@ -11,6 +11,7 @@ constexpr auto MOVE_UP = "move_up";
 constexpr auto MOVE_DOWN = "move_down";
 constexpr auto BREAK = "break";
 constexpr auto SHOOT = "shoot";
+constexpr auto SECONDARY_TOOL_USE = "secondary_tool_use";
 constexpr auto SWITCH_WEAPON_1 = "switch_1";
 constexpr auto SWITCH_WEAPON_2 = "switch_2";
 constexpr auto SWITCH_WEAPON_3 = "switch_3";
