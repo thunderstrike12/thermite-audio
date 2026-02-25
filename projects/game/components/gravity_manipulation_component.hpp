@@ -15,16 +15,15 @@ class GravityManipulationComponent : public tmt::GameComponent<GravityManipulati
     void update(const tmt::FrameData& time) override;
     void end() override;
 
-    float range = 5.0f;
-    float forward_offset = 2.0f;
-    float vertical_offset = -0.2f;
-    float max_mass = 200.0f;
-    float pull_strength = 20.0f;
-    float push_strength = 40.0f;
-    float attraction_acceleration = 0.1f;
-    float push_cooldown = 1.0f;
-    entt::entity attraction_point_entity;
-    bool active = true;
+    float range = 2.0f;             // size of the gravity zone
+    float max_mass = 200.0f;        // max mass that will be able to be manipulated
+    float pull_strength = 8.0f;    // the speed of the objects affected by the gravity zone
+    float push_strength = 10.0f;     // how fast objects should be pushed away
+    float attraction_acceleration = 0.5f;   //how quickly objects accelerate when they enter the gravity zone
+    float push_cooldown = 1.0f;     // how long it takes to push objects away again in seconds
+    entt::entity attraction_point_entity;   // point of attraction
+    bool active = true;         // self-explanatory
+    bool input_active_on_non_player = false;  // if needs to be active on player input but is not on player entity
 
    private:
     std::vector<entt::entity> currently_manipulated_entities;
@@ -35,4 +34,6 @@ class GravityManipulationComponent : public tmt::GameComponent<GravityManipulati
 };
 
 }  // namespace game
-TMT_OBJECT(game::GravityManipulationComponent, (range, max_mass, pull_strength, push_strength, attraction_acceleration, push_cooldown, attraction_point_entity, active));
+TMT_OBJECT(
+    game::GravityManipulationComponent, (range, max_mass, pull_strength, push_strength, attraction_acceleration, push_cooldown, attraction_point_entity, active, input_active_on_non_player)
+);

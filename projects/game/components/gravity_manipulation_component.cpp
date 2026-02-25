@@ -15,23 +15,26 @@ void GravityManipulationComponent::start() {}
 void GravityManipulationComponent::update(const tmt::FrameData& time) {
     if (!active) return;
 
-    auto& input = tmt::engine.input;
     push_cooldown_counter -= time.delta_time;
-    if (input.is_action_pressed(action::SHOOT)) {
-        // if mb1 down
-        grav_point_check();
-        grav_attract();
-    }
-    if (input.is_action_pressed(action::SECONDARY_TOOL_USE)) {
-        // if mb2 down
-        grav_point_check();
-        grav_shoot();
+    if (tmt::engine.ecs.has_component<game::Player>(entity) || input_active_on_non_player) {
+        auto& input = tmt::engine.input;
+        if (input.is_action_pressed(action::SHOOT)) {
+            // if mb1 down
+            grav_point_check();
+            grav_attract();
+        }
+        if (input.is_action_pressed(action::SECONDARY_TOOL_USE)) {
+            // if mb2 down
+            grav_point_check();
+            grav_shoot();
+        }
     }
 }
 
 void GravityManipulationComponent::end() {}
 
 void GravityManipulationComponent::grav_point_check() {
+    if (!active) return;
     currently_manipulated_entities.clear();
     auto physical_entity_view = tmt::engine.ecs.get_registry().view<tmt::VoxelBody>();
 
@@ -51,6 +54,7 @@ void GravityManipulationComponent::grav_point_check() {
 }
 
 void GravityManipulationComponent::grav_attract() {
+    if (!active) return;
     for (auto manip_entity : currently_manipulated_entities) {
         auto& curr_vb = tmt::engine.ecs.get_component<tmt::VoxelBody>(manip_entity);
 
@@ -70,7 +74,8 @@ void GravityManipulationComponent::grav_attract() {
 }
 
 void GravityManipulationComponent::grav_shoot() {
-
+    if (!active) return;
+    if (push_cooldown_counter > 0) return;
     // Calculate player looking direction
     glm::vec3 direction = tmt::engine.ecs.get_component<tmt::Transform>(attraction_point_entity).get_forward();
 
