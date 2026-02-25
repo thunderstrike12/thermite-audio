@@ -36,7 +36,7 @@ class FileResource : public Resource {
    public:
     virtual ~FileResource() = default;
 
-    const IO::FileLocation file_location;
+    const IO::FileLocation file_location {};
 
    private:
     friend class Resources;

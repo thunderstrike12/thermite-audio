@@ -14,6 +14,7 @@ IGameComponent& ComponentCollection::add_component(const ComponentIndex& type_id
 
     auto info = engine.component_registry.get_component_info(type_id);
     components[type_id] = info.factory.create(entity);
+    get_gameplay_system()->register_component_instance(type_id, components[type_id]);
     return *components[type_id];
 }
 

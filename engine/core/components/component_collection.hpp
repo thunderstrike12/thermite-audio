@@ -8,6 +8,7 @@
 #include "engine/engine.hpp"
 #include "engine/core/logger.hpp"
 #include "engine/systems/gameplay/game_component_registry.hpp"
+#include "engine/systems/gameplay/gameplay.hpp"
 #include "engine/core/reflection.hpp"
 
 namespace tmt {
@@ -35,6 +36,7 @@ class ComponentCollection {
         GameComponentRegistry::is_registered_or_throw(type_id);
 
         components[type_id] = std::make_unique<T>(entity);
+        get_gameplay_system()->register_component_instance(type_id, components[type_id]);
         return static_cast<T&>(*components[type_id]);
     }
 
@@ -87,11 +89,20 @@ class ComponentCollection {
 
     bool has_component(const ComponentIndex& type_id) const;
 
-    const std::unordered_map<ComponentIndex, std::unique_ptr<IGameComponent>>& get_all_components() const { return components; }
+    const std::unordered_map<ComponentIndex, std::shared_ptr<IGameComponent>>& get_all_components() const { return components; }
 
    private:
     BEFRIEND_VISITABLE();
-    std::unordered_map<ComponentIndex, std::unique_ptr<IGameComponent>> components;
+    std::unordered_map<ComponentIndex, std::shared_ptr<IGameComponent>> components;
+
+    static Gameplay* get_gameplay_system() {
+        auto* game_play_system = engine.ecs.systems.try_get<Gameplay>();
+        if (game_play_system == nullptr) {
+            Log::error(Log::Scope::ENGINE, "[EcsComponentTraits] view: Gameplay system not found.");
+            throw std::runtime_error("[EcsComponentTraits] view: Gameplay system not found.");
+        }
+        return game_play_system;
+    }
 };
 
 }  // namespace tmt
@@ -101,8 +112,57 @@ TMT_COMPONENT(tmt::ComponentCollection, "ComponentCollection", (components));
 /* Specialization for IGameComponent derived types */
 namespace tmt {
 
+template <typename... Types>
+struct ViewElement {
+    const Entity entity;
+    std::tuple<Types&...> components;
+
+    ViewElement(Entity entity, Types&... components) : entity(std::move(entity)), components(components...) {}
+
+    template <typename T>
+    requires(std::is_same_v<T, Types> || ...)
+    T& get() {
+        return std::get<T&>(components);
+    }
+
+    template <typename T>
+    requires(std::is_same_v<T, Types> || ...)
+    const T& get() const {
+        return std::get<T&>(components);
+    }
+
+    template <typename T>
+    requires(std::is_same_v<T, Types> || ...)
+    operator T&() {
+        return get<T>();
+    }
+
+    template <typename T>
+    requires(std::is_same_v<T, Types> || ...)
+    operator const T&() const {
+        return get<T>();
+    }
+
+    template <std::size_t N>
+    decltype(auto) get() {
+        if constexpr (N == 0)
+            return entity;
+        else
+            return std::get<N - 1>(components);
+    }
+
+    template <std::size_t N>
+    decltype(auto) get() const {
+        if constexpr (N == 0)
+            return entity;
+        else
+            return std::get<N - 1>(components);
+    }
+};
+
 template <typename T>
 struct EcsComponentTraits<T, std::enable_if_t<std::is_base_of_v<IGameComponent, T>>> {
+    static constexpr bool IS_GAME_COMPONENT = true;
     static T& add(Registry& registry, Entity entity) {
         auto& collection = registry.get_or_emplace<ComponentCollection>(entity);
         return collection.add_component<T>(entity);
@@ -162,6 +222,76 @@ struct EcsComponentTraits<T, std::enable_if_t<std::is_base_of_v<IGameComponent, 
         }
         return nullptr;
     }
+
+    template <typename... Rest, typename... Excludes, typename Reg>
+    static auto view_with_impl(Reg& registry, entt::exclude_t<Excludes...>) {
+        const auto& instances = get_gameplay_system()->get_component_instances(typeid(T));
+
+        std::vector<ViewElement<T, Rest...>> result;
+        for (const auto& weak : instances) {
+            auto component = weak.lock();
+            if (!component) continue;
+
+            Entity e = static_cast<T*>(component.get())->entity;
+            if (!registry.all_of<ComponentCollection>(e)) continue;
+            auto& collection = registry.get<ComponentCollection>(e);
+
+            // Check includes
+            if (!(collection.has_component<Rest>() && ...)) continue;
+
+            // Check excludes - game components via collection, native via registry
+            bool excluded = false;
+            auto check_exclude = [&]<typename E>() {
+                if constexpr (EcsComponentTraits<E>::IS_GAME_COMPONENT) {
+                    if (collection.has_component<E>()) excluded = true;
+                } else {
+                    if (registry.all_of<E>(e)) excluded = true;
+                }
+            };
+            (check_exclude.template operator()<Excludes>(), ...);
+            if (excluded) continue;
+
+            result.emplace_back(e, static_cast<T&>(*component), collection.get_component<Rest>()...);
+        }
+        return result;
+    }
+
+    /* non-const */
+    template <typename... Rest, typename... Excludes>
+    static auto view_with(Registry& registry, entt::exclude_t<Excludes...> = entt::exclude_t {}) {
+        return view_with_impl<Rest...>(registry, entt::exclude_t<Excludes...> {});
+    }
+
+    /* const */
+    template <typename... Rest, typename... Excludes>
+    static auto view_with(const Registry& registry, entt::exclude_t<Excludes...> = entt::exclude_t {}) {
+        return view_with_impl<Rest...>(registry, entt::exclude_t<Excludes...> {});
+    }
+
+   private:
+    static Gameplay* get_gameplay_system() {
+        auto* game_play_system = engine.ecs.systems.try_get<Gameplay>();
+        if (game_play_system == nullptr) {
+            Log::error(Log::Scope::ENGINE, "[EcsComponentTraits] view: Gameplay system not found.");
+            throw std::runtime_error("[EcsComponentTraits] view: Gameplay system not found.");
+        }
+        return game_play_system;
+    }
 };
 
 }  // namespace tmt
+
+template <typename... Types>
+struct std::tuple_size<tmt::ViewElement<Types...>> : std::integral_constant<std::size_t, sizeof...(Types) + 1> {};
+
+// Index 0 = Entity
+template <typename... Types>
+struct std::tuple_element<0, tmt::ViewElement<Types...>> {
+    using type = tmt::Entity;
+};
+
+// Index N = Nth component type
+template <std::size_t N, typename... Types>
+struct std::tuple_element<N, tmt::ViewElement<Types...>> {
+    using type = std::tuple_element_t<N - 1, std::tuple<Types&...>>;
+};

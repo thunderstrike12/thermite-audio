@@ -16,8 +16,8 @@ class IO {
     enum class Location : uint8_t { PROJECT, ENGINE, EDITOR };
 
     struct FileLocation {
-        IO::Location sub_location;
-        std::filesystem::path relative_path;
+        IO::Location sub_location = IO::Location::PROJECT;
+        std::filesystem::path relative_path {};
 
         bool operator==(const FileLocation& other) const noexcept { return sub_location == other.sub_location && relative_path == other.relative_path; }
 
