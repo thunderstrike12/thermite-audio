@@ -10,6 +10,7 @@
 #include "engine/tools/timer.hpp"
 #include "engine/tools/svh_format.hpp"
 #include "engine/tools/uuid.hpp"
+#include "engine/shared/colorspace.hpp"
 
 #include <queue>
 #include <omp.h>
@@ -332,10 +333,14 @@ VoxelSceneNode parse_hierarchy(const vengi::Node* file_node) {
         /* Load the voxel material palette */
         const std::vector<vengi::PaletteColor>& palette = file_node->palette->colors;
         for (uint32_t i = 0u; i < palette.size(); ++i) {
-            Material material {};
-            material.albedo_r = (float)palette[i].color.r * (1.0f / 255.0f);
-            material.albedo_g = (float)palette[i].color.g * (1.0f / 255.0f);
-            material.albedo_b = (float)palette[i].color.b * (1.0f / 255.0f);
+            glm::vec3 color;
+            color.r = (float)palette[i].color.r * (1.0f / 255.0f);
+            color.g = (float)palette[i].color.g * (1.0f / 255.0f);
+            color.b = (float)palette[i].color.b * (1.0f / 255.0f);
+
+            Material material;
+            material.albedo = cs::r709_to_acescg(cs::linearize(color));
+
             node.tree->palette.entries[i] = material;
         }
     }

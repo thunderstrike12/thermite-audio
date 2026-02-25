@@ -1,5 +1,4 @@
 #include "ecs.hpp"
-#include "ecs.hpp"
 #include "engine/tools/serializer.hpp"
 
 #include "engine/core/entity.hpp"
@@ -547,7 +546,7 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
 
             /* Check if prefab instance already exists in scene, if yes, generate new instance id */
             if (existing_prefab_instances.contains(prefab_comp_original)) {
-                // Check global map first — was this instance already created at ANY level?
+                // Check global map first - was this instance already created at ANY level?
                 if (state.global_instance_map && state.global_instance_map->contains(prefab_comp_original.instance_id)) {
                     tmt::Entity already_created = state.global_instance_map->at(prefab_comp_original.instance_id);
                     // Wire it into current mapping scope so recursive deserialization uses it
@@ -555,7 +554,7 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
                     branch.set_value({ { prefab_comp_original.source_entity, already_created }, { entt::null, entt::null } });
                     continue;  // Don't re-instantiate
                 }
-                // Truly a fresh duplicate — generate new ID
+                // Truly a fresh duplicate - generate new ID
                 tmt::PrefabInstanceID new_instance_id = tmt::UUIDGenerator::generate();
 
                 state.instance_id_mapping[prefab_comp_original.instance_id] = new_instance_id;

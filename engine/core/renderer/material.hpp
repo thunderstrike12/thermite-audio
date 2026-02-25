@@ -1,14 +1,19 @@
 #pragma once
 
+#include "engine/shared/rgb10.hpp"
+
 namespace tmt {
 
 /* Voxel material data, used in a palette. */
 struct Material {
-    float albedo_r = 0.0f;
-    float albedo_g = 0.0f;
-    float albedo_b = 0.0f;
-    /* Padding */
-    uint32_t : 32;
+    Rgb10 albedo {};
+    uint16_t ior { 0x3C00 };   /* f16 encoding, 1.0f by default. */
+    uint16_t emission { 0x0000 }; /* f16 encoding. 0.0f by default. */
+    uint8_t roughness { 0 };
+    uint8_t metallic { 0 };
+    uint8_t transmission { 0 };
+    /* padding. */
+    uint8_t : 8;
 };
 
 /* Material palette index. */

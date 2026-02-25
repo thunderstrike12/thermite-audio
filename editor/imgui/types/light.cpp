@@ -122,9 +122,6 @@ void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Light& value, ImSettings
     tooltip("Temperature of the light emitted. (in kelvin, default: 6500k whitepoint)");
 
     /* Calculate the non-linear SRGB (Rec.709) color of the light source */
-    const glm::vec3 src = tmt::cs::acescg_to_r709(value.color);
-    const glm::vec3 dst = tmt::cs::r709_to_acescg(src);
-
     const glm::vec3 linear_srgb = tmt::cs::acescg_to_r709(value.color * tmt::cs::black_body_acescg(value.temperature));
     const glm::vec3 nonlinear_srgb = tmt::cs::delinearize(linear_srgb);
     const ImU32 color = ImGui::ColorConvertFloat4ToU32(ImVec4(nonlinear_srgb.x, nonlinear_srgb.y, nonlinear_srgb.z, 1.0f));

@@ -2,6 +2,7 @@ import view;
 import voxel;
 import visibility;
 import math;
+import colorspace;
 
 /* Active render view. */
 ConstantBuffer<RenderView> render_view;
@@ -33,6 +34,6 @@ void main(int2 thread_id: SV_DispatchThreadID) {
 
         /* Calculate some fake shading for the view */
         const float fake_shading = clamp(dot(-ray.dir, geo.normal), 0.2f, 0.8f);
-        render_target[thread_id] = float4(geo.material.albedo * fake_shading, 1.0f);
+        render_target[thread_id] = float4(cs::delinearize(cs::acescg_to_r709(decode_rgb10(geo.material.albedo) * fake_shading)), 1.0f);
     }
 }

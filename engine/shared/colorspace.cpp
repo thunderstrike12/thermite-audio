@@ -5,10 +5,10 @@ namespace tmt::cs {
 /* clang-format off */
 
 /* Color-space transformation matrices (generated using https://github.com/mxcop/chroma) */
-constexpr glm::mat3 R709_TO_ACESCG { 0.597314f, 0.073732f, 0.020689f, 0.332820f, 0.917381f, 0.118816f, 0.038138f, 0.017072f, 0.961536f };
-constexpr glm::mat3 ACESCG_TO_R709 { 1.753791f, -0.140577f, -0.020365f, -0.628701f, 1.142966f, -0.127707f, -0.058399f, -0.014717f, 1.043079f };
+constexpr glm::mat3 R709_TO_ACESCG { 0.613097f, 0.070194f, 0.020616f, 0.339523f, 0.916354f, 0.109570f, 0.047380f, 0.013452f, 0.869815f };
+constexpr glm::mat3 ACESCG_TO_R709 { 1.705051f, -0.130256f, -0.024003f, -0.621792f, 1.140805f, -0.128969f, -0.083259f, -0.010548f, 1.152972f };
 constexpr glm::mat3 ACESCG_TO_ACES2065 { 0.695452f, 0.044795f, -0.005526f, 0.140679f, 0.859671f, 0.004025f, 0.163869f, 0.095534f, 1.001501f };
-constexpr glm::mat3 ACES2065_TO_ACESCG { 1.451439f, -0.076554f, 0.008316f, -0.236511f, 1.176230f, -0.006033f, -0.214929f, -0.099676f, 0.997716f };
+constexpr glm::mat3 ACES2065_TO_ACESCG { 1.451439f, -0.076554f, 0.008316f, -0.236511f, 1.176230f, -0.006032f, -0.214929f, -0.099676f, 0.997716f };
 constexpr glm::mat3 XYZ_TO_ACESCG { 1.641023f, -0.663663f, 0.011722f, -0.324803f, 1.615332f, -0.008284f, -0.236425f, 0.016756f, 0.988395f };
 
 float linearize(const float value) {
@@ -40,11 +40,11 @@ glm::vec3 aces_filmic_tonemapping(const glm::vec3 acescg) {
 
 /* Rec.709 / ACEScg transformations */
 glm::vec3 r709_to_acescg(const glm::vec3 r709) { return R709_TO_ACESCG * r709; }
-glm::vec3 acescg_to_r709(const glm::vec3 acescg) { return glm::max(ACESCG_TO_R709 * acescg, 0.0f); }
+glm::vec3 acescg_to_r709(const glm::vec3 acescg) { return glm::clamp(ACESCG_TO_R709 * acescg, 0.0f, 1.0f); }
 
 /* ACEScg / ACES2065-1 transformations */
 glm::vec3 acescg_to_aces2065(const glm::vec3 acescg) { return ACESCG_TO_ACES2065 * acescg; }
-glm::vec3 aces2065_to_acescg(const glm::vec3 aces2065) { return glm::max(ACES2065_TO_ACESCG * aces2065, 0.0f); }
+glm::vec3 aces2065_to_acescg(const glm::vec3 aces2065) { return glm::clamp(ACES2065_TO_ACESCG * aces2065, 0.0f, 1.0f); }
 
 /* Calculate the black body color for a given temperature in Kelvin in the linear ACEScg color-space. */
 /* Equations from <https://google.github.io/filament/Filament.html#lighting> */
@@ -68,7 +68,7 @@ glm::vec3 black_body_acescg(const float k) {
 
     /* Convert from CIE XYZ to ACEScg color-space and normalize the result */
     const glm::vec3 acescg = XYZ_TO_ACESCG * glm::vec3(cx, 1.0f, cz);
-    return acescg; /* / glm::max(acescg.x, glm::max(acescg.y, acescg.z)) */
+    return acescg / glm::max(acescg.x, glm::max(acescg.y, acescg.z));
 }
 
 /* clang-format on */

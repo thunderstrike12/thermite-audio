@@ -284,7 +284,9 @@ void NodeHierarchy::export_file(const std::string& file_description, const std::
 
                         // Write the color then the alpha, which is always 1.0.
                         const Material& material = tree->palette.entries[i];
-                        mtl_file << std::format("Kd {} {} {}", cs::linearize(material.albedo_r), cs::linearize(material.albedo_g), cs::linearize(material.albedo_b)) << '\n';
+                        const glm::vec3 albedo = material.albedo.unpack();
+
+                        mtl_file << std::format("Kd {} {} {}", cs::linearize(albedo.r), cs::linearize(albedo.g), cs::linearize(albedo.b)) << '\n';
                         mtl_file << "d 1.0" << '\n';
                     }
                 }

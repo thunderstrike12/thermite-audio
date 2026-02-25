@@ -16,7 +16,7 @@ class Palette : public IWindow {
     constexpr bool default_open() const override { return true; }
 
     [[nodiscard]] MaterialIndex get_selected_material_index() const { return selected_material_index; }
-    void set_selected_material_index(const MaterialIndex material_index);
+    void set_selected_material_index(MaterialIndex material_index);
 
     void before_begin() override;
     void end_display() override;
@@ -27,14 +27,17 @@ class Palette : public IWindow {
     void on_editor_end() override {}
 
    private:
-    void display_palette(const ResourceRef<VoxelVolume>& resource);
-    void display_material_editor() const;
+    friend class MaterialEditor;
 
+    void display_palette(const ResourceRef<VoxelVolume>& resource);
+
+    // Flag used to update the static variable in the material editor when the selected material changes.
+    bool update_material_editor = true;
     MaterialIndex selected_material_index { 0 };
 
     struct Config {
-        constexpr static inline glm::uvec2 GRID_SIZE { 8, 32 };
-        constexpr static inline ImVec2 OUTSET { 2.0f, 2.0f };
+        constexpr static glm::uvec2 GRID_SIZE { 8, 32 };
+        constexpr static ImVec2 OUTSET { 2.0f, 2.0f };
     };
 };
 

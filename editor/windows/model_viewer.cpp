@@ -454,7 +454,7 @@ void ModelViewer::display() {
 
     const MaterialIndex material_index = editor.windows[Editor::Mode::VOXEL].get<Palette>().get_selected_material_index();
     const Material& material = resource->blas->palette.entries[material_index];
-    draw_selection(hit, half_extent, transform, glm::vec3 { material.albedo_r, material.albedo_g, material.albedo_b });
+    draw_selection(hit, half_extent, transform, material.albedo.unpack());
 
     handle_brush(brush_state, resource, hit, material_index);
 }

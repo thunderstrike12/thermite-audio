@@ -101,6 +101,16 @@ public float3 decode_rgb9e5(const uint p) {
     return float3(r, g, b);
 }
 
+/* Decode a SDR color value packed as RGB10. */
+public float3 decode_rgb10(const uint p) {
+    const float rcp_scale = 1.0f / (float)(1u << 10);
+    return float3(
+        (float)(p & 0x3FFu) * rcp_scale,
+        (float)((p >> 10) & 0x3FFu) * rcp_scale,
+        (float)((p >> 20) & 0x3FFu) * rcp_scale
+    );
+}
+
 public struct Basis {
     public float3 a;
     public float3 b;
