@@ -29,6 +29,7 @@
 #include "components/projectile_spawner.hpp"
 #include "components/rifle_projectile.hpp"
 #include "components/spawner.hpp"
+#include "components/text_component.hpp"
 #include "components/weapon.hpp"
 
 class Game : public tmt::Application {
@@ -73,8 +74,8 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     // clang-format on
 
     /* Register Scenes */
-    tmt::engine.scenes.register_scene<DanielTestScene>();
     tmt::engine.scenes.register_scene<MainGameScene>();
+    tmt::engine.scenes.register_scene<DanielTestScene>();
     tmt::engine.scenes.register_scene<MainMenuScene>();
     tmt::engine.scenes.register_scene<Gym>();
     tmt::engine.scenes.register_scene<Zoo>();
@@ -91,6 +92,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.component_registry.register_component<game::AnimationPlayer>();
     tmt::engine.component_registry.register_component<game::OreCollector>();
     tmt::engine.component_registry.register_component<game::CollisionTrigger>();
+    tmt::engine.component_registry.register_component<game::TextComponent>();
 
     return std::make_unique<Game>(specs);
 }

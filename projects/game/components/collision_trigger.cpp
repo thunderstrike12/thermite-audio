@@ -29,8 +29,7 @@ game::AABB game::CollisionTrigger::get_aabb_world() const {
     return collision_shape.world_aabb(tmt::engine.ecs.get_component<tmt::Transform>(entity).get_world_position());
 }
 void game::CollisionTrigger::draw_debug_lines() const {
-    tmt::engine.polyline.use_color(color);
-    tmt::engine.polyline.use_line_width(line_width);
+    line_config.set_values();
 
     auto world_abb = get_aabb_world();
     auto min_aabb = world_abb.min_bounds;
