@@ -5,11 +5,6 @@
         1,
         2
     ],
-    "UUID": {
-        "0": "b223c4c1-475b-4305-873e-2d8374347749",
-        "1": "54861566-8fbe-4061-9666-9f2f1abe9bd0",
-        "2": "64c318b1-6adc-4f96-a173-d91f40699d7c"
-    },
     "Name": {
         "0": {
             "name": "Particle Emitter"
@@ -24,9 +19,9 @@
     "Transform": {
         "0": {
             "local_position": {
-                "x": 0.0,
-                "y": 8.908308982849121,
-                "z": 0.0
+                "x": 2.071503162384033,
+                "y": -0.308652400970459,
+                "z": 22.71857452392578
             },
             "local_rotation": {
                 "w": 1.0,
@@ -65,8 +60,8 @@
         "2": {
             "local_position": {
                 "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "y": -9.403512954711914,
+                "z": 20.20056915283203
             },
             "local_rotation": {
                 "w": 1.0,
@@ -103,31 +98,67 @@
     },
     "ParticleEmitter": {
         "0": {
-            "pos": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "particle_lifetime": 1.0,
-            "dir": {
-                "x": 0.0,
-                "y": 1.0,
-                "z": 0.0
-            },
-            "cone_angle": 0.5,
-            "min_speed": 1.0,
-            "max_speed": 10.0,
-            "spawn_count": 8,
-            "active": true,
-            "texture": {
-                "file_location": {
-                    "sub_location": "ENGINE",
-                    "relative_path": "missing.png"
-                },
-                "data": {
-                    "dummy": 0
+            "effects": [
+                {
+                    "particle_lifetime": 3.0,
+                    "dir": {
+                        "x": 0.0,
+                        "y": 1.0,
+                        "z": 0.0
+                    },
+                    "cone_angle": 10.0,
+                    "spawn_count": 1,
+                    "speed": {
+                        "min": 2.0,
+                        "max": 2.0
+                    },
+                    "start_size": {
+                        "min": 0.0,
+                        "max": 0.0
+                    },
+                    "end_size": {
+                        "min": 256.0,
+                        "max": 256.0
+                    },
+                    "start_opacity": {
+                        "min": 1.0,
+                        "max": 1.0
+                    },
+                    "end_opacity": {
+                        "min": 1.0,
+                        "max": 1.0
+                    },
+                    "rotation": {
+                        "min": 0.0,
+                        "max": 0.0
+                    },
+                    "pos_jitter": {
+                        "min": 0.0,
+                        "max": 0.0
+                    },
+                    "jitter_speed": 1.0,
+                    "active": true,
+                    "test": {
+                        "values": [
+                            1.0,
+                            0.0078125,
+                            1.0,
+                            0.3359375,
+                            12.0
+                        ]
+                    },
+                    "texture": {
+                        "file_location": {
+                            "sub_location": "PROJECT",
+                            "relative_path": "bojan.png"
+                        },
+                        "data": {
+                            "dummy": 0
+                        }
+                    }
                 }
-            }
+            ],
+            "active": true
         }
     },
     "systems": null

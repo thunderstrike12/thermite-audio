@@ -139,6 +139,14 @@ if (THERMITE_EDITOR_BUILD)
         PRIVATE "./imgui-node-editor"
     )
 
+    # imgui-bezier-editor - nice looking bezier editor for imgui
+    # https://github.com/ocornut/imgui/issues/786
+    add_compile_definitions(IMGUI_DEFINE_MATH_OPERATORS)
+
+    target_include_directories(thermite-editor
+        PRIVATE "./imgui-bezier-editor"
+    )
+
     # ImPlot - Immediate Mode Plotting
     # https://github.com/epezent/implot
     target_sources(thermite-editor

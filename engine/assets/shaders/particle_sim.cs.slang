@@ -1,8 +1,10 @@
 import view;
 import particles;
+import math;
 
 ConstantBuffer<RenderView> render_view;
 
+StructuredBuffer<ParticleEffect> effects;
 RWStructuredBuffer<Particle> particles;
 RWStructuredBuffer<uint32_t> alive_list;
 RWStructuredBuffer<uint32_t> alive_list_new;
@@ -24,6 +26,18 @@ void main(uint3 thread_id: SV_DispatchThreadID) {
 
     if (p.age < p.lifetime) {
         p.pos += p.velocity * render_view.dt;
+
+        const float t = p.age / p.lifetime;
+
+        ParticleEffect effect = effects[p.effect_index];
+
+        p.size = lerp(p.start_size, p.end_size, effect.size_curve.evaluate(t));
+        p.opacity = lerp(p.start_opacity, p.end_opacity, effect.opacity_curve.evaluate(t));
+        p.rotation += p.rot_speed * render_view.dt;
+
+        uint32_t seed = particle_index + render_view.frame_index * 1337;
+        float3 new_jitter = (float3(rand_float(seed), rand_float(seed), rand_float(seed)) * 2.0f - 1.0f) * p.pos_jitter;
+        p.pos += new_jitter * render_view.dt;
 
         particles[particle_index] = p;
 
