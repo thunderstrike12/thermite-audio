@@ -88,7 +88,7 @@ std::vector<AsteroidPoissonPoint> AsteroidFieldComponent::get_poisson_points(con
             float candidate_radius = layer.layer_entries[entry_idx].radius_factor * layer.spacing_radius;
             glm::vec3 candidate_point = selected_p + rand_unit_vec * Random::rand_range(selected_spacing_radius + candidate_radius, 2.f * (selected_spacing_radius + candidate_radius));
 
-            if (point_valid(candidate_point, candidate_radius, max_radius, grid, layer, radii_points)) {
+            if (point_valid(candidate_point, candidate_radius, max_radius, grid, radii_points)) {
                 AsteroidPoissonPoint a_p;
                 a_p.entry_idx = entry_idx;
                 a_p.pos = candidate_point;
