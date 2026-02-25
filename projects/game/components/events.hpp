@@ -13,9 +13,14 @@ struct WeaponFiredEvent {
     glm::vec3 up;
     glm::vec3 direction;
 };
-struct ProjectileHit {
+struct ProjectileHitEvent {
     tmt::Entity projectile_entity;
     tmt::Entity hit_entity;
+};
+
+struct TriggerCollisionEvent {
+    tmt::Entity trigger;
+    tmt::Entity other_object;
 };
 
 }  // namespace game

@@ -92,6 +92,12 @@ class Log {
         }
     }
 
+    static void flush() {
+        for (auto& [scope, logger] : loggers) {
+            logger->flush();
+        }
+    }
+
    private:
     static inline std::unordered_map<Scope, std::shared_ptr<spdlog::logger>> loggers;
 };

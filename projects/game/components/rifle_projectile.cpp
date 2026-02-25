@@ -45,7 +45,7 @@ void RifleProjectile::collide(const tmt::Hit& hit) const {
     auto collision_entity = hit.entity;
 
     // spawn vfx sounds
-    tmt::engine.ecs.get_dispatcher().trigger(ProjectileHit { .projectile_entity = entity, .hit_entity = collision_entity });
+    tmt::engine.ecs.get_dispatcher().trigger(ProjectileHitEvent { .projectile_entity = entity, .hit_entity = collision_entity });
 
     // substract voxels
     // TODO use something else than a voxel renderer to do stuff

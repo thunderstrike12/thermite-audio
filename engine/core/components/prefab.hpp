@@ -42,7 +42,7 @@ struct Prefab {
 TMT_OBJECT(tmt::Prefab::ChainEntry, (source_location, source_entity));
 TMT_COMPONENT_NAME(tmt::Prefab, "Prefab");
 TMT_COMPONENT_SERIALIZE(tmt::Prefab, (source_location, source_entity, root_entity, instance_id));
-TMT_COMPONENT_INSPECT(tmt::Prefab, (source_location, source_entity, root_entity, instance_id, prefab_chain));
+TMT_COMPONENT_INSPECT(tmt::Prefab, (source_location, source_entity, root_entity, instance_id));
 
 namespace std {
 

@@ -23,6 +23,8 @@ class Physics : public ISystem {
     void on_fixed_update(const FrameData& time) override;
     void on_end() override;
 
+    const Bvh2<VoxelObject>& get_bvh() { return bvh; }
+
    private:
     // Simulation data
     float simulation_time_accum = 0.0f;
