@@ -34,7 +34,7 @@ std::vector<AsteroidPoissonPoint> AsteroidFieldComponent::get_poisson_points(con
     int y = y0 / grid.cell_size;
     int z = z0 / grid.cell_size;
 
-    int init_idx = x * grid.z_dim * grid.x_dim + y * grid.x_dim + z;
+    int init_idx = x * grid.y_dim * grid.z_dim + y * grid.z_dim + z;
 
     int init_entry_idx = Random::rand_range(0, layer.layer_entries.size() - 1);
 
@@ -103,7 +103,7 @@ std::vector<AsteroidPoissonPoint> AsteroidFieldComponent::get_poisson_points(con
                 int cell_y = static_cast<int>(candidate_point.y / cell_size);
                 int cell_z = static_cast<int>(candidate_point.z / cell_size);
 
-                int idx = cell_x * grid.z_dim * grid.x_dim + cell_y * grid.x_dim + cell_z;
+                int idx = cell_x * grid.y_dim * grid.z_dim + cell_y * grid.z_dim + cell_z;
                 grid[idx] = radii_points.size() - 1;
 
                 found_candidate = true;
@@ -120,7 +120,7 @@ std::vector<AsteroidPoissonPoint> AsteroidFieldComponent::get_poisson_points(con
 }
 
 bool AsteroidFieldComponent::point_valid(
-    glm::vec3 candidate, float candidate_radius, float max_radius, const SpatialLookupGrid& grid, const FAsteroidFieldLayer& layer, const std::vector<AsteroidPoissonPoint>& points
+    glm::vec3 candidate, float candidate_radius, float max_radius, const SpatialLookupGrid& grid, const std::vector<AsteroidPoissonPoint>& points
 ) {
     // candidate += grid.region_size * 0.5f;
 
@@ -144,7 +144,7 @@ bool AsteroidFieldComponent::point_valid(
     for (int x = start_search_x; x < end_search_x; x++) {
         for (int y = start_search_y; y < end_search_y; y++) {
             for (int z = start_search_z; z < end_search_z; z++) {
-                int idx = x * grid.z_dim * grid.x_dim + y * grid.x_dim + z;
+                int idx = x * grid.y_dim * grid.z_dim + y * grid.z_dim + z;
                 int existing_point_index = grid[idx];
 
                 if (existing_point_index != -1) {

@@ -66,7 +66,7 @@ struct AsteroidFieldComponent : public tmt::GameComponent<AsteroidFieldComponent
         int operator[](int idx) const { return grid[idx]; }
     };
 
-    bool point_valid(glm::vec3 point, float radius, float max_radius, const SpatialLookupGrid& grid, const FAsteroidFieldLayer& layer, const std::vector<AsteroidPoissonPoint>& points);
+    bool point_valid(glm::vec3 point, float radius, float max_radius, const SpatialLookupGrid& grid, const std::vector<AsteroidPoissonPoint>& points);
 
     // Inherited via GameComponent
     void start() override;
