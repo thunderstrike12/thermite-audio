@@ -4,6 +4,7 @@
 
 #include "engine.hpp"
 #include "rig_model.hpp"
+#include "animation_data.hpp"
 #include "engine/core/polyline.hpp"
 
 #define CONDITION(comparison) [](const Variant& parameter, const Variant& value) -> bool { return parameter comparison value; }
@@ -14,11 +15,25 @@ std::string tmt::RigModelManager::get_name() {
     return "animation system";
 }
 
+void tmt::RigModelManager::on_game_start() {
+    for (const auto& [entity, rig] : engine.ecs.get_registry().view<RigModel>().each()) {
+        auto& rigmodel = tmt::engine.ecs.get_component<tmt::RigModel>(entity);
+        rigmodel.init(rigmodel.data.file_location, entity);
+    }
+}
+
 void tmt::RigModelManager::on_start() {}
 
 void RigModelManager::on_update(const FrameData& time) {
     inspect(time.delta_time);
     for (const auto& [entity, rig] : engine.ecs.get_registry().view<RigModel>().each()) {
+        auto path = rig.vox_path.relative_path;
+        if (!rig.vox_is_loaded && !path.empty()) {
+            rig.attach_voxel_objects();
+        }
+
+        if (rig.data == nullptr) continue;
+
         if (rig.state != RigModel::State::STATIONARY && !rig.is_transferring()) rig.time += rig.animation_speed * time.delta_time;
 
         if (rig.is_transferring()) rig.transfer_time += time.delta_time * rig.animation_speed;

@@ -7,7 +7,52 @@ namespace tmt {
 tmt::RigData::RigData(const IO::FileLocation& directory) : FileResource(directory) {}
 
 bool tmt::RigData::load() {
-    load_fbx(file_location);
+    const std::vector<char>& rig = IO::read_file(file_location);
+
+    ufbx_error error;
+    ufbx_load_opts opts = {};
+    opts.evaluate_skinning = true;
+    ufbx_scene* rig_fbx = ufbx_load_memory(rig.data(), rig.size(), &opts, &error);
+
+    if (error.type != UFBX_ERROR_NONE) {
+        Log::error("Failed to load FBX rig: {}\n", error.description.data);
+        return false;
+    }
+
+    name = "Armature";
+
+    std::map<const ufbx_node*, const ufbx_node*> mesh_connections;
+    for (ufbx_node* node : rig_fbx->nodes) {
+        if (node->mesh == nullptr || node->mesh->skin_deformers.count <= 0) continue;
+
+        const auto* bone_node = node->mesh->skin_deformers[0]->clusters[0]->bone_node;
+        mesh_connections[bone_node] = node;
+    }
+
+    // Use std::find to find the node with the root bone (to start off our bone initialization)
+    const ufbx_bone* root_bone = rig_fbx->bones[0];
+    const ufbx_node* root_node = *std::find_if(rig_fbx->nodes.begin(), rig_fbx->nodes.end(), [&root_bone](const ufbx_node* bone_node) { return bone_node->bone == root_bone; });
+
+    init_bone_fbx(root_node, mesh_connections);
+
+    for (auto& [animation_directory, name] : animation_files) {
+        opts = {};
+        opts.ignore_geometry = true;
+        const std::vector<char>& animation_data = IO::read_file(animation_directory);
+        ufbx_scene* animation_fbx = ufbx_load_memory(animation_data.data(), animation_data.size(), &opts, &error);
+
+        if (error.type != UFBX_ERROR_NONE) {
+            Log::error("Failed to load FBX animation: {}\n", error.description.data);
+            continue;
+        }
+
+        extract_bone_keyframes_fbx(animation_fbx, rig_fbx, mesh_connections);
+
+        ufbx_free_scene(animation_fbx);
+    }
+
+    ufbx_free_scene(rig_fbx);
+
     return true;
 }
 
@@ -15,8 +60,8 @@ void tmt::RigData::unload() {}
 
 bool tmt::RigData::reload() {
     bones.clear();
-    load_fbx(file_location);
-    return true;
+
+    return load();
 }
 
 // from tools.cpp in kudzu
@@ -43,51 +88,6 @@ bool check_correct_bone(std::string_view rig_bone, std::string_view animation_bo
     }
 
     return rig_bone == animation_bone;
-}
-
-void RigData::load_fbx(const IO::FileLocation& directory) {
-    const std::vector<char>& rig = IO::read_file(directory);
-    // todo: invalid file error handling
-    ufbx_error error;
-    ufbx_load_opts opts = {};
-    opts.evaluate_skinning = true;
-    ufbx_scene* rig_fbx = ufbx_load_memory(rig.data(), rig.size(), &opts, &error);
-
-    if (error.type != UFBX_ERROR_NONE) Log::error("Failed to load FBX rig: {}\n", error.description.data);
-
-    name = "Armature";
-
-    std::map<const ufbx_node*, const ufbx_node*> mesh_connections;
-    for (ufbx_node* node : rig_fbx->nodes) {
-        if (node->mesh == nullptr || node->mesh->skin_deformers.count <= 0) continue;
-
-        const auto* bone_node = node->mesh->skin_deformers[0]->clusters[0]->bone_node;
-        mesh_connections[bone_node] = node;
-    }
-
-    // Use std::find to find the node with the root bone (to start off our bone initialization)
-    const ufbx_bone* root_bone = rig_fbx->bones[0];
-    const ufbx_node* root_node = *std::find_if(rig_fbx->nodes.begin(), rig_fbx->nodes.end(), [&root_bone](const ufbx_node* bone_node) { return bone_node->bone == root_bone; });
-
-    init_bone_fbx(root_node, mesh_connections);
-
-    for (auto& animation_directory : animation_files) {
-        opts = {};
-        opts.ignore_geometry = true;
-        const std::vector<char>& animation_data = IO::read_file(animation_directory);
-        ufbx_scene* animation_fbx = ufbx_load_memory(animation_data.data(), animation_data.size(), &opts, &error);
-
-        if (error.type != UFBX_ERROR_NONE) {
-            Log::error("Failed to load FBX animation: {}\n", error.description.data);
-            continue;
-        }
-
-        extract_bone_keyframes_fbx(animation_fbx, rig_fbx, mesh_connections);
-
-        ufbx_free_scene(animation_fbx);
-    }
-
-    ufbx_free_scene(rig_fbx);
 }
 
 void RigData::extract_bone_keyframes_fbx(const ufbx_scene* animation_fbx, const ufbx_scene* rig_fbx, const std::map<const ufbx_node*, const ufbx_node*>& mesh_connections) {

@@ -15,6 +15,17 @@
 #include <queue>
 #include <omp.h>
 
+namespace {
+
+void recurse_get_uuids(const tmt::VoxelSceneNode& node, std::vector<tmt::UUID>& uuids) {
+    uuids.push_back(node.uuid);
+    for (auto& children : node.children) {
+        recurse_get_uuids(children, uuids);
+    }
+}
+
+}  // namespace
+
 namespace tmt {
 
 void compute_physics_data(RawVoxels& voxels) {
@@ -380,6 +391,16 @@ bool VoxelScene::load() {
 
 void VoxelScene::unload() {
     root_nodes.clear();
+}
+
+std::vector<UUID> VoxelScene::get_all_uuids() const {
+    std::vector<UUID> uuids;
+
+    for (auto& node : root_nodes) {
+        recurse_get_uuids(node, uuids);
+    }
+
+    return uuids;
 }
 
 }  // namespace tmt

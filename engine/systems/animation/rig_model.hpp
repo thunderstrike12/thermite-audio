@@ -4,6 +4,10 @@
 #include "engine/core/ecs.hpp"
 #include "animation_data.hpp"
 
+#include "engine/core/resources.hpp"
+#include "engine/core/resources/voxel_volume.hpp"
+#include "engine/core/reflection.hpp"
+
 struct BoneComp {
     int id = -1;
 };
@@ -19,8 +23,7 @@ class RigModel {
 
     bool rig_is_loaded = false;
     bool vox_is_loaded = false;
-    std::string rig_path;
-    std::string vox_path;
+    IO::FileLocation vox_path = {};
 
     float time = 0.05f;
     float animation_speed = 1.0f;
@@ -31,9 +34,9 @@ class RigModel {
     std::vector<Entity> voxel_entities;
     std::vector<Entity> pivot_entities;
     ResourceRef<RigData> data;
-    IO::FileLocation file_directory = {};
 
-    // void attach_voxel_objects(const IO::FileLocation& directory);
+    void recurse(const tmt::VoxelSceneNode& node, tmt::Entity parent_entity, const glm::mat4& parent_matrix, glm::vec3 armature_pos);
+    void attach_voxel_objects();
 
     [[nodiscard]] bool is_transferring() const {
         if (state == State::TRANSFERRING_TO_LOOP || state == State::TRANSFERRING_TO_ONCE || state == State::TRANSFERRING_TO_STOP) return true;
@@ -66,3 +69,5 @@ class RigModel {
 };
 
 }  // namespace tmt
+
+TMT_COMPONENT(tmt::RigModel, "Animated Rig", (data, vox_path));

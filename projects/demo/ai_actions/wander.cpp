@@ -43,7 +43,7 @@ void Wander::on_tick(tmt::Entity walking_entity, float dt) {
     auto nm_nodes = nav_mesh.nodes;
 
     // generate wander path only once when no path
-    if (!has_path) {
+    if (!has_path && nav_mesh.nodes) {
         // pick a random node on the nav mesh
         if (!nav_mesh.nodes->empty()) {
             int random_node_index = rand() % static_cast<int>(nav_mesh.nodes->size());

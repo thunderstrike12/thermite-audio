@@ -269,6 +269,7 @@ int tmt::NavMesh::find_closest_node(const glm::vec3& position) {
 }
 
 std::optional<glm::vec3> tmt::NavMesh::follow_path(glm::vec3 start, glm::vec3 end) {
+    if (!nodes) return std::nullopt;
     // Calculate path
     int start_pos = find_closest_node(start);
     int closest_node_id = find_closest_node(end);

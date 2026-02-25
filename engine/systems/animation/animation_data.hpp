@@ -8,6 +8,7 @@
 #include "engine/core/resources.hpp"
 
 #include <unordered_map>
+#include "engine/core/reflection.hpp"
 
 struct FBX;
 struct ufbx_scene;
@@ -68,12 +69,14 @@ struct RigData : public FileResource {
 
     // Hacky way of ding this, this info should not be stored in the resources since it can not be found in the .FBX file itself
     // std::vector<std::pair<FileIO::Directory, std::string>> animation_files;
-    std::vector<IO::FileLocation> animation_files;
+    //std::vector<IO::FileLocation> animation_files;
+    std::unordered_map<IO::FileLocation, std::string> animation_files;
 
    private:
-    void load_fbx(const IO::FileLocation& directory);
     void extract_bone_keyframes_fbx(const ufbx_scene* animation_fbx, const ufbx_scene* rig_fbx, const std::map<const ufbx_node*, const ufbx_node*>& mesh_connections);
     void init_bone_fbx(const ufbx_node* node, const std::map<const ufbx_node*, const ufbx_node*>& mesh_connections);
 };
 
 }  // namespace tmt
+
+TMT_OBJECT(tmt::RigData, (animation_files));
