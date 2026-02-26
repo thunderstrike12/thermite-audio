@@ -44,15 +44,14 @@ void setup_inputs(tmt::InputMap& input_map) {
     input_map.add_action(action::SHOOT);
     input_map.add_action_mouse(action::SHOOT, tmt::MouseButton::LEFT);
 
+    input_map.add_action(action::SWITCH_RIFLE);
+    input_map.add_key_to_action(action::SWITCH_RIFLE, tmt::Key::NUM_1);
+    input_map.add_action(action::SWITCH_GRAVITY);
+    input_map.add_key_to_action(action::SWITCH_GRAVITY, tmt::Key::NUM_2);
+    input_map.add_action(action::SWITCH_MINING);
+    input_map.add_key_to_action(action::SWITCH_MINING, tmt::Key::NUM_3);
     input_map.add_action(action::SECONDARY_TOOL_USE);
     input_map.add_action_mouse(action::SECONDARY_TOOL_USE, tmt::MouseButton::RIGHT);
-
-    input_map.add_action(action::SWITCH_WEAPON_1);
-    input_map.add_key_to_action(action::SWITCH_WEAPON_1, tmt::Key::NUM_1);
-    input_map.add_action(action::SWITCH_WEAPON_2);
-    input_map.add_key_to_action(action::SWITCH_WEAPON_2, tmt::Key::NUM_2);
-    input_map.add_action(action::SWITCH_WEAPON_3);
-    input_map.add_key_to_action(action::SWITCH_WEAPON_3, tmt::Key::NUM_3);
 }
 
 void Player::start() {
@@ -65,7 +64,6 @@ void Player::start() {
 
 void Player::update(const tmt::FrameData& time) {
     // triggers the event for shooting
-    trigger_shoot();
     auto& input = tmt::engine.input;
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
     auto& camera = tmt::engine.ecs.get_component<tmt::Camera>(entity);
@@ -133,13 +131,6 @@ void Player::update(const tmt::FrameData& time) {
 
 void Player::end() {
     // Cleanup code for the player component
-}
-void Player::trigger_shoot() {
-    auto& input = tmt::engine.input;
-    // trigger signal
-    if (input.is_action_pressed(action::SHOOT)) {
-        tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { entity });
-    }
 }
 
 }  // namespace game

@@ -1,9 +1,16 @@
 #pragma once
 #include "events.hpp"
 #include "engine/systems/gameplay/game_component.hpp"
-
+#include "weapon_manager.hpp"
 namespace game {
 
+struct FireRate {
+    float shots_per_second = 5.0f;
+
+   private:
+    friend class Weapon;
+    float last_shot_time = 0.0f;
+};
 class Weapon : public tmt::GameComponent<Weapon> {
    public:
     using GameComponent::GameComponent;
@@ -13,16 +20,20 @@ class Weapon : public tmt::GameComponent<Weapon> {
     void start() override;
     void update(const tmt::FrameData& time) override;
     void end() override;
+    bool update_fire_rate(FireRate& fire_rate);
 
-    float fire_rate = 5.f;
+    FireRate primary_fire_rate;
+    FireRate secondary_fire_rate;
 
     tmt::Entity shooting_entity;
     tmt::Entity spawn_location_entity = entt::null;
 
    private:
+    friend class WeaponManager;
     void on_shoot(const ShootEvent& e);
-    float last_shot_time = 0.0f;
 };
 
 }  // namespace game
-TMT_OBJECT(game::Weapon, (fire_rate, shooting_entity, spawn_location_entity));
+TMT_OBJECT(game::FireRate, (shots_per_second));
+
+TMT_OBJECT(game::Weapon, (primary_fire_rate, secondary_fire_rate, shooting_entity, spawn_location_entity));

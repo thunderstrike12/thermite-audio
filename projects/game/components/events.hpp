@@ -6,9 +6,11 @@ namespace game {
 
 struct ShootEvent {
     tmt::Entity shooting_entity;
+    bool secondary_shot = false;
 };
 struct WeaponFiredEvent {
     tmt::Entity weapon_entity;
+    bool secondary_shot = false;
     glm::vec3 origin;
     glm::vec3 up;
     glm::vec3 direction;

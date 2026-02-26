@@ -14,8 +14,6 @@ class Player : public tmt::GameComponent<Player> {
     void update(const tmt::FrameData& time) override;
     void end() override;
 
-    void trigger_shoot();
-
     float camera_sensitivity = 0.1f;
 
     // Movement parameters

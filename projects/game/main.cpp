@@ -80,9 +80,10 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     // clang-format on
 
     /* Register Scenes */
+    tmt::engine.scenes.register_scene<MainGameScene>();
     tmt::engine.scenes.register_scene<DanielTestScene>();
     tmt::engine.scenes.register_scene<MikaTestScene>();
-    tmt::engine.scenes.register_scene<MainGameScene>();
+    tmt::engine.scenes.register_scene<DanielTestScene>();
     tmt::engine.scenes.register_scene<MainMenuScene>();
     tmt::engine.scenes.register_scene<Gym>();
     tmt::engine.scenes.register_scene<Zoo>();
@@ -100,6 +101,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.component_registry.register_component<game::GravityManipulationComponent>();
     tmt::engine.component_registry.register_component<game::OreCollector>();
     tmt::engine.component_registry.register_component<game::CollisionTrigger>();
+    tmt::engine.component_registry.register_component<game::WeaponManager>();
     tmt::engine.component_registry.register_component<game::TextComponent>();
 
     return std::make_unique<Game>(specs);
