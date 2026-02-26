@@ -103,6 +103,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.component_registry.register_component<game::CollisionTrigger>();
     tmt::engine.component_registry.register_component<game::WeaponManager>();
     tmt::engine.component_registry.register_component<game::TextComponent>();
+    tmt::engine.component_registry.register_component<game::Upgrade>();
 
     return std::make_unique<Game>(specs);
 }

@@ -18,7 +18,7 @@ class GravityManipulationComponent : public tmt::GameComponent<GravityManipulati
     void on_weapon_fired(const WeaponFiredEvent& e);
 
     float range = 2.0f;                    // size of the gravity zone
-    float max_mass = 200.0f;               // max mass that will be able to be manipulated
+    float max_mass = 20.0f;               // max mass that will be able to be manipulated
     float pull_strength = 8.0f;            // the speed of the objects affected by the gravity zone
     float push_strength = 10.0f;           // how fast objects should be pushed away
     float attraction_acceleration = 0.5f;  // how quickly objects accelerate when they enter the gravity zone

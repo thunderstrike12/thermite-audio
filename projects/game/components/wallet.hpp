@@ -22,7 +22,7 @@ class Wallet : public tmt::GameComponent<Wallet> {
     float silver = 0.0f;
     float copper = 0.0f;
     float iron = 0.0f;
-    int enemy_cores = 0;
+    float enemy_cores = 0.0f;
 };
 
 }  // namespace game
