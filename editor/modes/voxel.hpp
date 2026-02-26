@@ -5,6 +5,7 @@
 #include "engine/core/scene.hpp"
 #include "engine/core/components/camera.hpp"
 #include "engine/core/components/transform.hpp"
+#include "engine/core/renderer/renderer.hpp"
 
 namespace tmt {
 
@@ -24,6 +25,7 @@ class VoxelMode : public IEditorMode {
    private:
     Camera cached_editor_camera;
     Transform cached_editor_transform;
+    DisplayMode cached_display_mode;
 
     std::vector<char> edit_data;
 };

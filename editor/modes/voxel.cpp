@@ -56,6 +56,10 @@ void VoxelMode::on_switch_to(const std::any&) {
 
     engine.renderer.get_debug_camera() = cached_editor_camera;
     engine.renderer.get_debug_transform() = cached_editor_transform;
+
+    /* Switch to the albedo display mode, and cache the previous display mode */
+    cached_display_mode = engine.renderer.display_mode;
+    engine.renderer.display_mode = DisplayMode::ALBEDO;
 }
 
 void VoxelMode::on_switch_away() {
@@ -63,6 +67,9 @@ void VoxelMode::on_switch_away() {
 
     cached_editor_camera = engine.renderer.get_debug_camera();
     cached_editor_transform = engine.renderer.get_debug_transform();
+
+    /* Switch back to the previously cached display mode */
+    engine.renderer.display_mode = cached_display_mode;
 }
 
 }  // namespace tmt

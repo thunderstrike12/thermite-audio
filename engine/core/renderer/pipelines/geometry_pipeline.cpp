@@ -64,7 +64,6 @@ void GeometryPipeline::enqueue(RenderGraph& render_graph, RenderView& render_vie
         DISPLAY_MODE(VISIBILITY, "[debug] visibility pass", "debug/visibility.cs")
         DISPLAY_MODE(DEPTH, "[debug] depth pass", "debug/depth.cs")
         DISPLAY_MODE(NORMALS, "[debug] normals pass", "debug/normals.cs")
-        case DisplayMode::DEFAULT: /* TEMP: Until we have a proper default render path! */
         DISPLAY_MODE(ALBEDO, "[debug] albedo pass", "debug/albedo.cs")
         default: 
             break;

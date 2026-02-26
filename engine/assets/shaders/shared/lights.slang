@@ -67,7 +67,7 @@ public [ForceInline] float evaluate_weight(const float3 p, const float3 n, const
 
     /* Calculate the weight based on the perceived brightness of the light */
     const float luminance = cs::acescg_luminance(light.luminance);
-    return 1.0f + luminance * distance_attenuation(src_dist, light.culling_radius);
+    return 1.0f; // + luminance * distance_attenuation(src_dist, light.culling_radius);
 }
 
 /* Light source sample. */
@@ -103,29 +103,18 @@ public [ForceInline] LightSample sample_sun(const float3 point, const SceneView 
 public [ForceInline] LightSample sample_light(const float3 point, const Light light, const float2 r01) {
     LightSample sample;
 
-    /* Sphere, Sun, and Spot lights take the same path */
-    const float3 light_dir = normalize(light.origin - point);
-    const float light_dist = max(0.001f, distance(light.origin, point));
-    const float sample_angle = sqrt(1.0f - pow(light.source_radius / light_dist, 2.0f));
-
     /* Tube light requires special path */
+    float3 light_origin = light.origin;
     if (light.type == LightType::TUBE_LIGHT) {
         /* Generate a random point on the tube */
-        const float3 tube_point = light.origin 
-            + (r01.x - 0.5f) * light.source_length * light.direction 
-            + (r01.y - 0.5f) * light.source_radius * cross(light_dir, light.direction);
-
-        /* Calculate the tmax and sample direction */
-        const float3 sample_dir = tube_point - point;
-        sample.tmax = max(0.001f, length(sample_dir));
-        sample.dir = sample_dir / sample.tmax;
-
-        /* Calculate the PDF of the sample */
-        const float tube_area = light.source_length * light.source_radius;
-        const float cos_light = abs(dot(light_dir, sample.dir));
-        sample.rcp_pdf = (tube_area * cos_light) / (sample.tmax * sample.tmax);
-        return sample;
+        const float r = frac(r01.x + 1.61803398875f);
+        light_origin = light.origin + (r - 0.5f) * light.source_length * light.direction;
     }
+
+    /* Sphere, Sun, and Spot lights take the same path */
+    const float3 light_dir = normalize(light_origin - point);
+    const float light_dist = max(0.001f, distance(light_origin, point));
+    const float sample_angle = sqrt(1.0f - pow(light.source_radius / light_dist, 2.0f));
 
     /* Generate a direction within a cone in local-space */
     const float cos_theta = 1.0f - r01.x * (1.0f - sample_angle);
@@ -140,10 +129,10 @@ public [ForceInline] LightSample sample_light(const float3 point, const Light li
     sample.dir = local_dir.x * basis.a + local_dir.y * basis.b + local_dir.z * light_dir;
 
     /* Ray vs sphere intersection to find tmax */
-    const float3 light_local = point - light.origin;
+    const float3 light_local = point - light_origin;
     const float b = dot(light_local, sample.dir);
     const float c = dot(light_local, light_local) - light.source_radius * light.source_radius;
-    sample.tmax = max(0.0f, -b + sqrt(b * b - c));
+    sample.tmax = max(-b + sqrt(b * b - c), light_dist - light.source_radius);
 
     /* Calculate the PDF of the sample */
     sample.rcp_pdf = 2.0f * PI_F32 * (1.0f - sample_angle);

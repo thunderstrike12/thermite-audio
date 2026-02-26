@@ -1,5 +1,7 @@
 #pragma once
 
+#include <graphite/resources/handle.hh>
+
 #include "engine/shared/rgb10.hpp"
 
 namespace tmt {
@@ -28,5 +30,8 @@ struct MaterialPalette {
 
     MaterialIndex material_to_index(const Material* material) const { return static_cast<MaterialIndex>(material - entries); }
 };
+
+/* Generate/precompute directional albedo look-up texture. */
+void generate_e_lut(Texture& out_texture, const uint32_t resolution = 32u);
 
 }  // namespace tmt

@@ -8,6 +8,8 @@
         14,
         15,
         16,
+        17,
+        18,
         1048576,
         1048577,
         1048578,
@@ -40,6 +42,12 @@
         },
         "16": {
             "name": "TubeLight"
+        },
+        "17": {
+            "name": "TestWall"
+        },
+        "18": {
+            "name": "TestLight"
         },
         "1048576": {
             "name": "Camera"
@@ -200,15 +208,55 @@
                 "z": 120.85078430175781
             },
             "local_rotation": {
-                "w": 0.999171793460846,
-                "x": -0.017934195697307587,
-                "y": -0.0356765054166317,
-                "z": -0.007827133871614933
+                "w": 0.9733387231826782,
+                "x": -0.01936187408864498,
+                "y": 0.22853624820709229,
+                "z": -0.0028314264491200447
             },
             "local_scale": {
-                "x": 0.9999999403953552,
+                "x": 0.9999978542327881,
                 "y": 0.9999998807907104,
-                "z": 8.999999046325684
+                "z": 8.200002670288086
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "17": {
+            "local_position": {
+                "x": 0.0,
+                "y": -3.0,
+                "z": 10.0
+            },
+            "local_rotation": {
+                "w": 0.7071067690849304,
+                "x": 0.7071067690849304,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "18": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 17.5
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
             },
             "parent": 4294967295,
             "children": []
@@ -216,8 +264,8 @@
         "1048576": {
             "local_position": {
                 "x": 0.0,
-                "y": 10.0,
-                "z": 40.0
+                "y": 0.0,
+                "z": 0.0
             },
             "local_rotation": {
                 "w": 1.0,
@@ -415,18 +463,19 @@
         }
     },
     "Voxel Renderer": {
+        "17": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "wall.svh"
+                }
+            }
+        },
         "1048577": {
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_3.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 169,
-                        "y": 183,
-                        "z": 209
-                    }
                 }
             }
         },
@@ -435,13 +484,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_3.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 169,
-                        "y": 183,
-                        "z": 209
-                    }
                 }
             }
         },
@@ -450,13 +492,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_3.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 169,
-                        "y": 183,
-                        "z": 209
-                    }
                 }
             }
         },
@@ -465,13 +500,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_7.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 151,
-                        "y": 121,
-                        "z": 121
-                    }
                 }
             }
         },
@@ -480,13 +508,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_7.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 151,
-                        "y": 121,
-                        "z": 121
-                    }
                 }
             }
         },
@@ -495,13 +516,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_7.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 151,
-                        "y": 121,
-                        "z": 121
-                    }
                 }
             }
         },
@@ -510,13 +524,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_7.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 151,
-                        "y": 121,
-                        "z": 121
-                    }
                 }
             }
         },
@@ -525,13 +532,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_7.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 151,
-                        "y": 121,
-                        "z": 121
-                    }
                 }
             }
         },
@@ -540,13 +540,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_7.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 151,
-                        "y": 121,
-                        "z": 121
-                    }
                 }
             }
         }
@@ -565,13 +558,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_3.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 169,
-                        "y": 183,
-                        "z": 209
-                    }
                 }
             },
             "type": "STATIC",
@@ -582,13 +568,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_3.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 169,
-                        "y": 183,
-                        "z": 209
-                    }
                 }
             },
             "type": "STATIC",
@@ -599,13 +578,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_3.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 169,
-                        "y": 183,
-                        "z": 209
-                    }
                 }
             },
             "type": "STATIC",
@@ -616,13 +588,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_7.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 151,
-                        "y": 121,
-                        "z": 121
-                    }
                 }
             },
             "type": "STATIC",
@@ -633,13 +598,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_7.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 151,
-                        "y": 121,
-                        "z": 121
-                    }
                 }
             },
             "type": "STATIC",
@@ -650,13 +608,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_7.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 151,
-                        "y": 121,
-                        "z": 121
-                    }
                 }
             },
             "type": "STATIC",
@@ -667,13 +618,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_7.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 151,
-                        "y": 121,
-                        "z": 121
-                    }
                 }
             },
             "type": "STATIC",
@@ -684,13 +628,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_7.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 151,
-                        "y": 121,
-                        "z": 121
-                    }
                 }
             },
             "type": "STATIC",
@@ -701,13 +638,6 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "test_asteroid_7.vengi"
-                },
-                "data": {
-                    "size": {
-                        "x": 151,
-                        "y": 121,
-                        "z": 121
-                    }
                 }
             },
             "type": "STATIC",
@@ -824,16 +754,34 @@
                 "y": 1.0,
                 "z": 1.0
             },
-            "temperature": 3500.0,
+            "temperature": 2850.0,
             "type": "TUBE_LIGHT",
             "light": {
                 "index": 3,
                 "value": {
                     "source_radius": 0.20000000298023224,
                     "attenuation_distance": 11.5,
-                    "luminous_flux": 800.0
+                    "luminous_flux": 6000.0
+                }
+            }
+        },
+        "18": {
+            "color": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "temperature": 6000.0,
+            "type": "SPHERE_LIGHT",
+            "light": {
+                "index": 0,
+                "value": {
+                    "source_radius": 0.4000000059604645,
+                    "attenuation_radius": 30.0,
+                    "luminous_flux": 2000.0
                 }
             }
         }
-    }
+    },
+    "systems": null
 }
