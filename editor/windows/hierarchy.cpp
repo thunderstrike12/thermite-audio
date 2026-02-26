@@ -9,6 +9,7 @@
 #include "editor/editor.hpp"
 
 #include "engine/engine.hpp"
+#include "engine/core/resources.hpp"
 #include "engine/core/ecs.hpp"
 #include "engine/core/logger.hpp"
 #include "engine/core/renderer/renderer.hpp"
@@ -248,6 +249,15 @@ void Hierarchy::file_drag_drop(const tmt::Entity parent) {
                 const Entity root = PrefabHelper::instantiate_prefab(file_location, parent);
                 clear_selection();
                 selected_entities.insert(root);
+                OnSceneModified::dispatch();
+            } else if (VoxelScene::SUPPORTED_FILE_EXTENSIONS.contains(extension) && ImGui::AcceptDragDropPayload("FileLocation") != nullptr) {
+                const ResourceRef<VoxelScene>& scene = engine.resources.load_resource<VoxelScene>(file_location);
+                const std::vector<Entity> root_entities = scene->instantiate_entities();
+
+                for (const Entity root_entity : root_entities) {
+                    Transform& transform = engine.ecs.get_component<Transform>(root_entity);
+                    transform.set_parent(parent);
+                }
                 OnSceneModified::dispatch();
             }
         }

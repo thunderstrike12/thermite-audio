@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/core/entity.hpp"
 #include "engine/core/resource.hpp"
 #include "engine/shared/svt64.hpp"
 #include "engine/core/reflection.hpp"
@@ -37,7 +38,8 @@ class VoxelScene : public tmt::FileResource {
     bool load() override;
     void unload() override;
 
-    std::vector<UUID> get_all_uuids() const;
+    std::vector<Entity> instantiate_entities() const;
+    [[nodiscard]] std::vector<UUID> get_all_uuids() const;
 
     inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS { ".vengi", ".svh" };
 

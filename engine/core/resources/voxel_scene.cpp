@@ -3,6 +3,7 @@
 #include <graphite/vram_bank.hh>
 #include <glm/gtc/packing.hpp>
 
+#include "engine/core/ecs.hpp"
 #include "engine/tools/vengi_parser.hpp"
 #include "engine/core/logger.hpp"
 #include "engine/engine.hpp"
@@ -15,6 +16,9 @@
 
 #include <queue>
 #include <omp.h>
+
+#include "core/resources.hpp"
+#include "core/components/voxel_renderer.hpp"
 
 namespace {
 
@@ -386,6 +390,27 @@ VoxelSceneNode parse_hierarchy(const vengi::Node* file_node) {
     return node;
 }
 
+Entity recurse_instantiate_scene(
+    const ResourceRef<VoxelScene>& voxel_scene, const VoxelSceneNode& node, const Entity parent_entity = entt::null, const glm::mat4& parent_matrix = glm::identity<glm::mat4>()
+) {
+    const Entity entity = engine.ecs.create_entity(node.name);
+
+    Transform& transform = engine.ecs.get_component<Transform>(entity);
+    transform.set_world_matrix(parent_matrix * node.transform);
+    transform.set_parent(parent_entity);
+
+    if (node.tree != nullptr) {
+        VoxelRenderer& renderer = engine.ecs.add_component<VoxelRenderer>(entity);
+        renderer.resource = engine.resources.copy_resource<VoxelVolume>(voxel_scene, node.uuid);
+    }
+
+    for (const VoxelSceneNode& child : node.children) {
+        recurse_instantiate_scene(voxel_scene, child, entity, transform.get_world_matrix());
+    }
+
+    return entity;
+}
+
 bool VoxelScene::load() {
     TMT_ZONE_SCOPED
 
@@ -413,6 +438,18 @@ bool VoxelScene::load() {
 
 void VoxelScene::unload() {
     root_nodes.clear();
+}
+
+std::vector<Entity> VoxelScene::instantiate_entities() const {
+    std::vector<Entity> root_entities;
+    root_entities.reserve(root_nodes.size());
+
+    const ResourceRef this_scene = engine.resources.load_resource<VoxelScene>(file_location);
+    for (const VoxelSceneNode& root_node : root_nodes) {
+        root_entities.push_back(recurse_instantiate_scene(this_scene, root_node));
+    }
+
+    return root_entities;
 }
 
 std::vector<UUID> VoxelScene::get_all_uuids() const {
