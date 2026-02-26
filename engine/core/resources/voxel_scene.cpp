@@ -1,6 +1,7 @@
 #include "voxel_scene.hpp"
 
 #include <graphite/vram_bank.hh>
+#include <glm/gtc/packing.hpp>
 
 #include "engine/tools/vengi_parser.hpp"
 #include "engine/core/logger.hpp"
@@ -343,6 +344,7 @@ VoxelSceneNode parse_hierarchy(const vengi::Node* file_node) {
 
         /* Load the voxel material palette */
         const std::vector<vengi::PaletteColor>& palette = file_node->palette->colors;
+        const std::vector<vengi::Material>& material_palette = file_node->palette->materials;
         for (uint32_t i = 0u; i < palette.size(); ++i) {
             glm::vec3 color;
             color.r = (float)palette[i].color.r * (1.0f / 255.0f);
@@ -351,6 +353,26 @@ VoxelSceneNode parse_hierarchy(const vengi::Node* file_node) {
 
             Material material;
             material.albedo = cs::r709_to_acescg(cs::linearize(color));
+
+            // Only access the material palette if the index has material properties.
+            if (i < material_palette.size()) {
+                const std::map<std::string, float>& material_properties = material_palette[i].properties;
+
+                const auto ior_property = material_properties.find("ior");
+                if (ior_property != material_properties.end()) material.ior = glm::packHalf1x16(ior_property->second);
+
+                const auto emission_property = material_properties.find("emission");
+                if (emission_property != material_properties.end()) material.emission = glm::packHalf1x16(emission_property->second);
+
+                const auto roughness_property = material_properties.find("roughness");
+                if (roughness_property != material_properties.end()) material.roughness = static_cast<uint8_t>(roughness_property->second * 255.0f);
+
+                const auto metallic_property = material_properties.find("metallic");
+                if (metallic_property != material_properties.end()) material.metallic = static_cast<uint8_t>(metallic_property->second * 255.0f);
+
+                const auto transmission_property = material_properties.find("transmission");
+                if (transmission_property != material_properties.end()) material.transmission = static_cast<uint8_t>(transmission_property->second * 255.0f);
+            }
 
             node.tree->palette.entries[i] = material;
         }

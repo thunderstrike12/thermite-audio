@@ -45,14 +45,9 @@ struct PaletteColor {
     std::string name;
 };
 
-struct MaterialProperty {
-    std::string name;
-    float value;
-};
-
 struct Material {
     uint32_t type;
-    std::vector<MaterialProperty> properties;
+    std::map<std::string, float> properties;
 };
 
 struct Palette {

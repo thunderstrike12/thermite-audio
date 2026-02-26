@@ -290,10 +290,9 @@ bool BinaryParser::parse_palette_colors(vengi::Node& node) {
         uint8_t prop_count = read_uint8();
 
         for (uint8_t j = 0; j < prop_count; j++) {
-            MaterialProperty prop;
-            prop.name = read_string();
-            prop.value = read_float();
-            mat.properties.push_back(prop);
+            std::string name = read_string();
+            float value = read_float();
+            mat.properties[name] = value;
         }
 
         node.palette->materials.push_back(mat);
