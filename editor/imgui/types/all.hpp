@@ -9,4 +9,7 @@
 #include "editor/imgui/types/light.hpp"
 #include "editor/imgui/types/voxel_volume.hpp"
 #include "editor/imgui/types/io.hpp"
+#include "editor/imgui/types/color.hpp"
+#include "editor/imgui/types/named_type.hpp"
+#include "editor/imgui/types/button.hpp"
 #include "editor/imgui/types/bezier_curve.hpp"

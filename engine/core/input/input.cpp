@@ -6,6 +6,7 @@
 #include <SDL3/SDL_keyboard.h>
 #include <SDL3/SDL_gamepad.h>
 #include <magic_enum/magic_enum.hpp>
+#include <cmath>
 
 #include "engine/engine.hpp"
 #include "engine/core/logger.hpp"
@@ -49,6 +50,7 @@ void Input::update(const FrameData& time) {
     // Update gamepad states
     for (auto& [id, state] : gamepads) {
         state.prev_buttons = state.buttons;
+        state.prev_axes = state.axes;
 
         for (int32_t i = 0; i < static_cast<int32_t>(GamepadButton::COUNT); i++) {
             state.buttons[i] = SDL_GetGamepadButton(state.handle, static_cast<SDL_GamepadButton>(i));
@@ -99,6 +101,19 @@ void Input::update(const FrameData& time) {
                     state.name = SDL_GetGamepadName(handle) ? SDL_GetGamepadName(handle) : "Unknown";
                     gamepads[id] = state;
                     Log::info(Log::Scope::ENGINE, "Gamepad added: {}", state.name);
+
+                    // Dispatch gamepad connected event
+                    GamepadConnectedEvent conn_event;
+                    conn_event.device_id = id;
+                    conn_event.name = state.name.c_str();
+                    OnGamepadConnected::dispatch(conn_event);
+
+                    // Also dispatch AnyInputEvent
+                    AnyInputEvent any_event;
+                    any_event.type = InputType::GAMEPAD_CONNECTED;
+                    any_event.data.gamepad_connection.device_id = id;
+                    any_event.data.gamepad_connection.name = state.name.c_str();
+                    OnAnyInput::dispatch(any_event);
                 }
                 break;
             }
@@ -107,6 +122,20 @@ void Input::update(const FrameData& time) {
                 auto it = gamepads.find(id);
                 if (it != gamepads.end()) {
                     Log::info(Log::Scope::ENGINE, "Gamepad removed: {}", it->second.name);
+
+                    // Dispatch gamepad disconnected event before erasing
+                    GamepadDisconnectedEvent disc_event;
+                    disc_event.device_id = id;
+                    disc_event.name = it->second.name.c_str();
+                    OnGamepadDisconnected::dispatch(disc_event);
+
+                    // Also dispatch AnyInputEvent
+                    AnyInputEvent any_event;
+                    any_event.type = InputType::GAMEPAD_DISCONNECTED;
+                    any_event.data.gamepad_connection.device_id = id;
+                    any_event.data.gamepad_connection.name = it->second.name.c_str();
+                    OnAnyInput::dispatch(any_event);
+
                     SDL_CloseGamepad(it->second.handle);
                     gamepads.erase(it);
                 }
@@ -136,6 +165,181 @@ void Input::update(const FrameData& time) {
                 break;
         }
     }
+
+    // ========================================================================
+    // Dispatch Input Events
+    // ========================================================================
+
+    // Mouse move event (if there was any movement)
+    if (mouse_dx != 0.0f || mouse_dy != 0.0f) {
+        MouseMoveEvent move_event;
+        move_event.x = mouse_x;
+        move_event.y = mouse_y;
+        move_event.delta_x = mouse_dx;
+        move_event.delta_y = mouse_dy;
+        OnMouseMove::dispatch(move_event);
+
+        AnyInputEvent any_event;
+        any_event.type = InputType::MOUSE_MOVE;
+        any_event.data.mouse_move.x = mouse_x;
+        any_event.data.mouse_move.y = mouse_y;
+        any_event.data.mouse_move.delta_x = mouse_dx;
+        any_event.data.mouse_move.delta_y = mouse_dy;
+        OnAnyInput::dispatch(any_event);
+    }
+
+    // Mouse scroll event (if there was any scroll)
+    if (scroll_dx != 0.0f || scroll_dy != 0.0f) {
+        MouseScrollEvent scroll_event;
+        scroll_event.delta_x = scroll_dx;
+        scroll_event.delta_y = scroll_dy;
+        scroll_event.mouse_x = mouse_x;
+        scroll_event.mouse_y = mouse_y;
+        OnMouseScroll::dispatch(scroll_event);
+
+        AnyInputEvent any_event;
+        any_event.type = InputType::MOUSE_SCROLL;
+        any_event.data.mouse_scroll.delta_x = scroll_dx;
+        any_event.data.mouse_scroll.delta_y = scroll_dy;
+        any_event.data.mouse_scroll.mouse_x = mouse_x;
+        any_event.data.mouse_scroll.mouse_y = mouse_y;
+        OnAnyInput::dispatch(any_event);
+    }
+
+    // Mouse button events
+    constexpr MouseButton mouse_button_list[] = { MouseButton::LEFT, MouseButton::MIDDLE, MouseButton::RIGHT, MouseButton::X1, MouseButton::X2 };
+
+    for (auto button : mouse_button_list) {
+        auto mask = SDL_BUTTON_MASK(static_cast<int32_t>(button));
+        bool is_pressed = (mouse_buttons & mask) != 0;
+        bool was_pressed = (prev_mouse_buttons & mask) != 0;
+
+        if (is_pressed != was_pressed || is_pressed) {
+            MouseButtonEvent btn_event;
+            btn_event.button = button;
+            btn_event.x = mouse_x;
+            btn_event.y = mouse_y;
+
+            if (is_pressed && !was_pressed) {
+                btn_event.state = MouseButtonState::JUST_PRESSED;
+            } else if (!is_pressed && was_pressed) {
+                btn_event.state = MouseButtonState::JUST_RELEASED;
+            } else if (is_pressed) {
+                btn_event.state = MouseButtonState::PRESSED;
+            } else {
+                continue;  // No event needed
+            }
+
+            OnMouseButton::dispatch(btn_event);
+
+            AnyInputEvent any_event;
+            any_event.type = InputType::MOUSE_BUTTON;
+            any_event.data.mouse_button.button = button;
+            any_event.data.mouse_button.state = btn_event.state;
+            any_event.data.mouse_button.x = mouse_x;
+            any_event.data.mouse_button.y = mouse_y;
+            OnAnyInput::dispatch(any_event);
+        }
+    }
+
+    // Keyboard events - check modifier states
+    bool shift_pressed = keys_sdl[static_cast<int32_t>(Key::LEFT_SHIFT)] || keys_sdl[static_cast<int32_t>(Key::RIGHT_SHIFT)];
+    bool ctrl_pressed = keys_sdl[static_cast<int32_t>(Key::LEFT_CTRL)] || keys_sdl[static_cast<int32_t>(Key::RIGHT_CTRL)];
+    bool alt_pressed = keys_sdl[static_cast<int32_t>(Key::LEFT_ALT)] || keys_sdl[static_cast<int32_t>(Key::RIGHT_ALT)];
+
+    // Check all keys for state changes
+    for (size_t i = 0; i < prev_keys.size(); i++) {
+        bool is_pressed = keys_sdl[i];
+        bool was_pressed = prev_keys[i];
+
+        if (is_pressed != was_pressed || is_pressed) {
+            KeyboardEvent key_event;
+            key_event.key = static_cast<Key>(i);
+            key_event.shift = shift_pressed;
+            key_event.ctrl = ctrl_pressed;
+            key_event.alt = alt_pressed;
+
+            if (is_pressed && !was_pressed) {
+                key_event.state = KeyState::JUST_PRESSED;
+            } else if (!is_pressed && was_pressed) {
+                key_event.state = KeyState::JUST_RELEASED;
+            } else if (is_pressed) {
+                key_event.state = KeyState::PRESSED;
+            } else {
+                continue;  // No event needed
+            }
+
+            OnKeyboard::dispatch(key_event);
+
+            AnyInputEvent any_event;
+            any_event.type = InputType::KEYBOARD;
+            any_event.data.keyboard.key = key_event.key;
+            any_event.data.keyboard.state = key_event.state;
+            any_event.data.keyboard.shift = shift_pressed;
+            any_event.data.keyboard.ctrl = ctrl_pressed;
+            any_event.data.keyboard.alt = alt_pressed;
+            OnAnyInput::dispatch(any_event);
+        }
+    }
+
+    // Gamepad button and axis events
+    for (auto& [id, state] : gamepads) {
+        // Button events
+        for (int32_t i = 0; i < static_cast<int32_t>(GamepadButton::COUNT); i++) {
+            bool is_pressed = state.buttons[i];
+            bool was_pressed = state.prev_buttons[i];
+
+            if (is_pressed != was_pressed || is_pressed) {
+                GamepadButtonEvent btn_event;
+                btn_event.button = static_cast<GamepadButton>(i);
+                btn_event.device_id = id;
+
+                if (is_pressed && !was_pressed) {
+                    btn_event.state = GamepadButtonState::JUST_PRESSED;
+                } else if (!is_pressed && was_pressed) {
+                    btn_event.state = GamepadButtonState::JUST_RELEASED;
+                } else if (is_pressed) {
+                    btn_event.state = GamepadButtonState::PRESSED;
+                } else {
+                    continue;
+                }
+
+                OnGamepadButton::dispatch(btn_event);
+
+                AnyInputEvent any_event;
+                any_event.type = InputType::GAMEPAD_BUTTON;
+                any_event.data.gamepad_button.button = btn_event.button;
+                any_event.data.gamepad_button.state = btn_event.state;
+                any_event.data.gamepad_button.device_id = id;
+                OnAnyInput::dispatch(any_event);
+            }
+        }
+
+        // Axis events (only when value changes significantly)
+        constexpr float AXIS_CHANGE_THRESHOLD = 0.001f;
+        for (int32_t i = 0; i < static_cast<int32_t>(GamepadAxis::COUNT); i++) {
+            float current = state.axes[i];
+            float prev = state.prev_axes[i];
+
+            if (std::abs(current - prev) > AXIS_CHANGE_THRESHOLD) {
+                GamepadAxisEvent axis_event;
+                axis_event.axis = static_cast<GamepadAxis>(i);
+                axis_event.value = current;
+                axis_event.prev_value = prev;
+                axis_event.device_id = id;
+                OnGamepadAxis::dispatch(axis_event);
+
+                AnyInputEvent any_event;
+                any_event.type = InputType::GAMEPAD_AXIS;
+                any_event.data.gamepad_axis.axis = axis_event.axis;
+                any_event.data.gamepad_axis.value = current;
+                any_event.data.gamepad_axis.prev_value = prev;
+                any_event.data.gamepad_axis.device_id = id;
+                OnAnyInput::dispatch(any_event);
+            }
+        }
+    }
+
     // update hold timers
 
     for (auto& [action_name, input_action] : engine.input_map.actions) {
@@ -323,6 +527,10 @@ float Input::get_mouse_delta_x() const {
 float Input::get_mouse_delta_y() const {
     if (!can_use_input_mouse()) return 0.0f;
     return mouse_dy;
+}
+glm::vec2 Input::get_mouse_delta() const {
+    if (!can_use_input_mouse()) return {};
+    return { mouse_dx, mouse_dy };
 }
 void Input::set_mouse_relative_to_window(bool value) {
     SDL_SetWindowRelativeMouseMode(engine.window.window, value);

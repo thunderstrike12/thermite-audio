@@ -48,6 +48,8 @@ class UiPipeline {
     /* Cannot be copied */
     UiPipeline(const UiPipeline&) = delete;
     UiPipeline& operator=(const UiPipeline&) = delete;
+
+    bool render_ui_pipeline = true;
 };
 
 }  // namespace tmt

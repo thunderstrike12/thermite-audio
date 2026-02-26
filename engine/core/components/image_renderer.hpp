@@ -1,12 +1,13 @@
 #pragma once
 
 #include "engine/core/resources/texture_2d.hpp"
+#include "engine/tools/types/color.hpp"
 
 namespace tmt {
 
 struct ImageRenderer {
     ResourceRef<Texture2D> texture;
-    glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    RGBA color = RGBA(glm::vec4(1, 1, 1, 1));
 
     ImageRenderer() = default;
     ImageRenderer(const ResourceRef<Texture2D> texture);

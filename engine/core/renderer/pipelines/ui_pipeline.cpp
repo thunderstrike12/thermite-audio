@@ -87,6 +87,8 @@ static inline void decompose_matrix(const glm::mat4& m, glm::vec2& pos, glm::vec
 }
 
 void UiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view) {
+    if (!render_ui_pipeline) return;
+
     /* Temporary list of image instances */
     std::vector<GpuImage> images {};
 

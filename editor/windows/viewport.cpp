@@ -2,16 +2,20 @@
 #include <imgui.h>
 #include <ImGuizmo.h>
 #include "editor/editor.hpp"
+#include "editor/gizmo.hpp"
 #include "hierarchy.hpp"
 #include "engine/core/components/camera.hpp"
 #include "engine/core/logger.hpp"
 #include "engine/core/window.hpp"
 #include "engine/core/scenes.hpp"
 #include "engine/core/renderer/renderer.hpp"
+
+#include "engine/core/renderer/pipelines/ui_pipeline.hpp"
 #include "engine/core/input/input.hpp"
 #include "engine/core/input/input_map.hpp"
 #include "editor/events/scene.hpp"
 #include "editor/windows/scenes.hpp"
+#include "engine/core/components/ui_component.hpp"
 
 void tmt::Viewport::on_editor_start() {
     // Setup Input Actions
@@ -84,6 +88,9 @@ void tmt::Viewport::display() {
 
     float snap_value = 0.0f;
     const bool ctrl_held = ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
+    const bool shift_held = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
+    const bool alt_held = ImGui::IsKeyDown(ImGuiKey_LeftAlt) || ImGui::IsKeyDown(ImGuiKey_RightAlt);
+
     if (ctrl_held) {
         const auto operation = Gizmo::OPERATIONS[editor.gizmo.operation];
         switch (operation) {
@@ -96,6 +103,9 @@ void tmt::Viewport::display() {
             case ImGuizmo::OPERATION::SCALE:
                 snap_value = editor.save_data.snap_values.scale;
                 break;
+            case ImGuizmo::OPERATION::BOUNDS:
+                snap_value = editor.save_data.snap_values.move;  // Use move snap for bounds
+                break;
             default:
                 break;
         }
@@ -104,15 +114,22 @@ void tmt::Viewport::display() {
     const bool wants_to_capture_keyboard = ImGui::GetIO().WantCaptureKeyboard;
     if (wants_to_capture_keyboard == false && using_debug_camera == false) {
         if (ImGui::IsKeyPressed(ImGuiKey_W, false)) {
-            editor.gizmo.operation = 0;
+            editor.gizmo.operation = 0;  // Translate
         } else if (ImGui::IsKeyPressed(ImGuiKey_E, false)) {
-            editor.gizmo.operation = 1;
+            editor.gizmo.operation = 1;  // Rotate
         } else if (ImGui::IsKeyPressed(ImGuiKey_R, false)) {
-            editor.gizmo.operation = 2;
+            editor.gizmo.operation = 2;  // Scale
+        } else if (ImGui::IsKeyPressed(ImGuiKey_T, false)) {
+            editor.gizmo.operation = 3;  // Bounds
         }
     }
 
-    const bool gizmo_changed = editor.gizmo.manip(image_pos.x, image_pos.y, width, height, selected_entities, snap_value);
+    // Build modifiers for bounds manipulation
+    BoundsModifiers modifiers;
+    modifiers.uniform_scale = shift_held;    // Shift: maintain aspect ratio
+    modifiers.scale_from_center = alt_held;  // Alt: keep center fixed
+
+    const bool gizmo_changed = editor.gizmo.manip(image_pos.x, image_pos.y, width, height, selected_entities, snap_value, modifiers);
     if (gizmo_changed) OnSceneModified::dispatch();
 
     const bool toolbar_buttons_hovered = toolbar(image_pos);
@@ -165,7 +182,7 @@ bool tmt::Viewport::toolbar(const ImVec2& image_pos) {
 }
 
 void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const ImVec2& image_pos, bool toolbar_buttons_hovered) {
-    if(!is_hovered || engine.game_controller.is_running()) return;
+    if (!is_hovered || engine.game_controller.is_running()) return;
 
     auto& hierarchy = editor.windows[Editor::Mode::SCENE].get<Hierarchy>();
     const std::vector<Entity>& selected_entities = hierarchy.get_selected_entities();
@@ -190,19 +207,20 @@ void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const ImVec2&
             ImGui::GetWindowDrawList()->AddRectFilled(first_click_pos, imgui_io.MousePos, ImColor(1.f, 1.f, 1.f, 0.2f));
             ImGui::GetWindowDrawList()->AddRect(first_click_pos, imgui_io.MousePos, ImColor(1.f, 1.f, 1.f, 0.6f));
 
-            glm::ivec2 a = {first_click_pos.x - image_pos.x, first_click_pos.y - image_pos.y};
-            glm::ivec2 b = {imgui_mouse_pos.x - image_pos.x, imgui_mouse_pos.y - image_pos.y};
+            glm::ivec2 a = { first_click_pos.x - image_pos.x, first_click_pos.y - image_pos.y };
+            glm::ivec2 b = { imgui_mouse_pos.x - image_pos.x, imgui_mouse_pos.y - image_pos.y };
 
             int x0 = std::min(a.x, b.x);
             int x1 = std::max(a.x, b.x);
             int y0 = std::min(a.y, b.y);
             int y1 = std::max(a.y, b.y);
 
+            auto view = engine.ecs.get_registry().view<UIComponent>();
             static std::vector<Entity> tracking_rect_entities;
             tracking_rect_entities.clear();
             for (int x = x0; x < x1; x += 5) {
                 for (int y = y0; y < y1; y += 5) {
-                    const tmt::Ray selection_ray = tmt::engine.renderer.render_view.pixel_ray({x, y});
+                    const tmt::Ray selection_ray = tmt::engine.renderer.render_view.pixel_ray({ x, y });
                     const tmt::Hit hit = tmt::engine.renderer.trace_ray(selection_ray);
 
                     if (!hit.miss()) {
@@ -223,16 +241,26 @@ void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const ImVec2&
         }
     }
     if (imgui_io.MouseClicked[0] && !editor.gizmo.hovered() && !toolbar_buttons_hovered) {
-        const tmt::Ray selection_ray = tmt::engine.renderer.render_view.pixel_ray({mouse_pos.x, mouse_pos.y});
+        const tmt::Ray selection_ray = tmt::engine.renderer.render_view.pixel_ray({ mouse_pos.x, mouse_pos.y });
         const tmt::Hit hit = tmt::engine.renderer.trace_ray(selection_ray);
 
         if (not_multiple_select_modifier) hierarchy.clear_selection();
 
-        if (!hit.miss()) {
+        if(engine.renderer.ui_pipeline.render_ui_pipeline)
+        {
+            auto view = engine.ecs.get_registry().view<UIComponent>();
+            for (auto [entity, ui_comp] : view.each()) {
+                if (AnchorHelper::is_inside(entity, { mouse_pos.x, mouse_pos.y })) {
+                    hierarchy.add_entity_to_selection(entity);
+                    return;
+                }
+            }
+        }
 
-            if(hierarchy.is_entity_selected(hit.entity) && !(not_multiple_select_modifier)) hierarchy.remove_entity_from_selection(hit.entity);
-            else 
-            {
+        if (!hit.miss()) {
+            if (hierarchy.is_entity_selected(hit.entity) && !(not_multiple_select_modifier))
+                hierarchy.remove_entity_from_selection(hit.entity);
+            else {
                 hierarchy.add_entity_to_selection(hit.entity);
                 Entity first_entity = hierarchy.get_first_selected_entity();
 
@@ -247,7 +275,6 @@ void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const ImVec2&
                     }
                 }
             }
-            
         }
     }
 }

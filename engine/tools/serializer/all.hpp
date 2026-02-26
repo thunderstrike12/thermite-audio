@@ -10,3 +10,5 @@
 #include "engine/tools/serializer/audio.hpp"
 #include "engine/tools/serializer/uuid.hpp"
 #include "engine/tools/serializer/containers.hpp"
+#include "engine/tools/serializer/color.hpp"
+#include "engine/tools/serializer/named_type.hpp"

@@ -16,6 +16,8 @@
 #include "engine/core/scene.hpp"
 #include "engine/core/scenes.hpp"
 #include "engine/core/renderer/voxel_object.hpp"
+#include "engine/systems/gameplay/game_component.hpp"
+#include "engine/core/components/button.hpp"
 
 class Game : public tmt::Application {
    public:
@@ -41,6 +43,21 @@ class DragonScene : public tmt::Scene<DragonScene> {
     float elapsed_time = 0.0f;
 };
 
+class MyButton : public tmt::GameComponent<MyButton> {
+    // Inherited via GameComponent
+   public:
+    using GameComponent::GameComponent;
+
+    static std::string_view name() { return "MyButton"; }
+
+    void start() override;
+    void update(const tmt::FrameData& time) override {}
+    void end() override {}
+
+   private:
+    void on_click();
+};
+
 std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs& args) {
     // clang-format off
     tmt::ApplicationSpecs specs {
@@ -55,6 +72,9 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
 
     /* Register Scenes */
     tmt::engine.scenes.register_scene<DragonScene>();
+
+    /* Register game components */
+    tmt::engine.component_registry.register_component<MyButton>();
 
     return std::make_unique<Game>(specs);
 }
@@ -73,3 +93,14 @@ void DragonScene::on_start() {
 void DragonScene::on_update(const tmt::FrameData& /*time*/) {}
 
 void DragonScene::on_end() {}
+
+void MyButton::start() {
+    if (tmt::engine.ecs.has_component<tmt::Button>(entity) == false) return;
+
+    auto& button = tmt::engine.ecs.get_component<tmt::Button>(entity);
+    button.on_click.add(this, &MyButton::on_click);
+}
+
+void MyButton::on_click() {
+    tmt::Log::info("Button clicked!");
+}

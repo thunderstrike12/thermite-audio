@@ -25,7 +25,7 @@ struct UIComponent {
    public:
     glm::vec2 size = glm::vec2(50.0f);
     glm::vec2 pivot = glm::vec2(0.5f, 0.5f); /* center */
-    bool block_raycasts = false;
+    bool block_raycasts = false;             /* doesn't do anything yet */
     bool scale_with_parent_x = false;
     bool scale_with_parent_y = false;
     AspectMode aspect_mode = AspectMode::STRETCH;

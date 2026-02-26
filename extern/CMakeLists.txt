@@ -224,6 +224,11 @@ target_include_directories(thermite-engine
     PUBLIC "./uuid_v4"
 )
 
+# named_type - strong typedefs
+target_include_directories(thermite-engine
+    PUBLIC "./named_type"
+)
+
 # Link engine libraries publicly
 target_link_libraries(thermite-engine
     PUBLIC 

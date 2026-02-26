@@ -19,6 +19,7 @@ struct GamepadState {
     std::array<bool, static_cast<int32_t>(GamepadButton::COUNT)> buttons {};
     std::array<bool, static_cast<int32_t>(GamepadButton::COUNT)> prev_buttons {};
     std::array<float, static_cast<int32_t>(GamepadAxis::COUNT)> axes {};
+    std::array<float, static_cast<int32_t>(GamepadAxis::COUNT)> prev_axes {};
 };
 
 class Input {
@@ -155,6 +156,8 @@ class Input {
     /// </summary>
     /// <returns>Vertical movement in pixels.</returns>
     float get_mouse_delta_y() const;
+
+    glm::vec2 get_mouse_delta() const;
 
     /// <summary>
     /// Enables or disables relative mouse mode (cursor hidden, infinite movement).
