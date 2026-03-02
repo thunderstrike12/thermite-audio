@@ -26,6 +26,7 @@ class NodeHierarchy : public IWindow {
 
     void new_svh();
     void open_svh();
+    void open_svh(const IO::FileLocation& location);
     void save_svh();
     void save_svh_as();
     void import_file(const std::string& file_description, const std::string& file_extension);

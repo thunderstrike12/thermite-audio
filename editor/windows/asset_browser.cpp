@@ -15,8 +15,11 @@
 #include "engine/engine.hpp"
 #include "engine/core/resources.hpp"
 #include "engine/tools/prefab_helper.hpp"
+#include "engine/core/renderer/renderer.hpp"
 
 #include "editor/editor.hpp"
+
+#include "node_hierarchy.hpp"
 
 namespace {
 
@@ -438,13 +441,13 @@ void AssetBrowser::location_context_menu(const IO::FileLocation& location, const
     if (!ImGui::BeginPopupContextItem(nullptr, flags)) return;
 
     // Open the folder in file explorer and select the specific file.
-    if (ImGui::MenuItem(ICON_MS_OPEN_IN_NEW " Show In File Explorer")) {
+    if (ImGui::MenuItem(ICON_MS_OPEN_IN_NEW " Show in File Explorer")) {
         // We use "string()" instead of "generic_string()" because it automatically keeps the file separators consistent which is necessary for this command.
         const std::string show_command = std::format(R"(explorer.exe /select,"{}")", location.get_absolute_path().string());
         system(show_command.c_str());
     }
 
-    if (ImGui::BeginMenu(ICON_MS_ASSIGNMENT " Copy As Path")) {
+    if (ImGui::BeginMenu(ICON_MS_ASSIGNMENT " Copy as path")) {
         if (ImGui::MenuItem("Relative")) {
             const std::filesystem::path generic_path { location.get_relative_path(), std::filesystem::path::generic_format };
             ImGui::SetClipboardText(generic_path.generic_string().c_str());
@@ -455,6 +458,22 @@ void AssetBrowser::location_context_menu(const IO::FileLocation& location, const
         }
 
         ImGui::EndMenu();
+    }
+
+    const std::filesystem::path ext = location.get_absolute_path().extension();
+
+    // Shortcut for opening '.svh' files inside the voxel editor.
+    if (ext == ".svh") {
+        if (ImGui::MenuItem(ICON_MS_OPEN_JAM " Open in Voxel Editor")) {
+            editor.switch_mode(Editor::Mode::VOXEL, location);
+        }
+    }
+
+    // Shortcut for importing '.vengi' files.
+    if (ext == ".vengi") {
+        if (ImGui::MenuItem(ICON_MS_DOWNLOAD " Import as SVH")) {
+            import_asset(location, viewing_location);
+        }
     }
 
     ImGui::BeginDisabled(location_is_bookmarked(location));
@@ -550,6 +569,8 @@ void AssetBrowser::display_viewing_location() {
                 pending_viewing_location = location;
             } else if (location.get_relative_path().extension() == PrefabHelper::Config::PREFAB_EXTENSION) {
                 editor.switch_mode(Editor::Mode::PREFAB, location);
+            } else if (location.get_relative_path().extension() == ".svh") {
+                editor.switch_mode(Editor::Mode::VOXEL, location);
             } else {
                 const std::string open_file_command = std::format(R"(start "" "{}")", location.get_relative_path().generic_string());
                 if (system(open_file_command.c_str()) != 0) Log::warn(Log::Scope::ENGINE, "Couldn't open file.");

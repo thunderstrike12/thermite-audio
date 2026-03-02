@@ -43,19 +43,25 @@ void VoxelMode::display_main_menu() {
     ImGui::EndMenu();
 }
 
-void VoxelMode::on_switch_to(const std::any&) {
+void VoxelMode::on_switch_to(const std::any& meta_data) {
     engine.scenes.load_scene<VoxelEditScene>();
 
-    if (!edit_data.empty()) {
+    if (meta_data.has_value()) {
+        editor.switch_mode(Editor::Mode::VOXEL);
+        editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().open_svh(std::any_cast<IO::FileLocation>(meta_data));
+
+        engine.renderer.get_debug_transform().set_world_position(glm::vec3(0.0f, 0.0f, -32.0f));
+        engine.renderer.get_debug_transform().set_world_rotation(glm::identity<glm::quat>());
+    } else if (!edit_data.empty()) {
         std::vector<VoxelSceneNode> root_nodes = decode_svh(edit_data);
 
         editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().build_scene(root_nodes);
+
+        engine.renderer.get_debug_camera() = cached_editor_camera;
+        engine.renderer.get_debug_transform() = cached_editor_transform;
     }
 
     edit_data.clear();
-
-    engine.renderer.get_debug_camera() = cached_editor_camera;
-    engine.renderer.get_debug_transform() = cached_editor_transform;
 
     /* Switch to the albedo display mode, and cache the previous display mode */
     cached_display_mode = engine.renderer.display_mode;

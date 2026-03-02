@@ -180,6 +180,14 @@ void NodeHierarchy::open_svh() {
     );
 }
 
+void NodeHierarchy::open_svh(const IO::FileLocation& location) {
+    clear_hierarchy();
+    loaded_location = location;
+
+    const ResourceRef<VoxelScene> resource = engine.resources.load_resource<VoxelScene>(location);
+    build_scene(resource->root_nodes);
+}
+
 void NodeHierarchy::save_svh() {
     if (loaded_location.relative_path.empty()) {
         save_svh_as();
