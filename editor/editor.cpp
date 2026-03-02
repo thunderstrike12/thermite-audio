@@ -130,6 +130,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     windows[Mode::PREFAB].add<ScenesWindow>();
     windows[Mode::PREFAB].add<UndoRedoManager>();
     windows[Mode::PREFAB].add<UIEditor>();
+    windows[Mode::PREFAB].add<DebugLines>();
 
     for (auto& [mode, collection] : windows) {
         for (const auto& window : collection) {
@@ -247,10 +248,9 @@ void Editor::main_menu_bar() {
                 }
                 ImGui::EndMenu();
             }
-            
-            if(ImGui::MenuItem("Enable UI Pipeline", nullptr, engine.renderer.ui_pipeline.render_ui_pipeline))
-            {
-                engine.renderer.ui_pipeline.render_ui_pipeline = !engine.renderer.ui_pipeline.render_ui_pipeline;            
+
+            if (ImGui::MenuItem("Enable UI Pipeline", nullptr, engine.renderer.ui_pipeline.render_ui_pipeline)) {
+                engine.renderer.ui_pipeline.render_ui_pipeline = !engine.renderer.ui_pipeline.render_ui_pipeline;
             }
 
             ImGui::EndMenu();

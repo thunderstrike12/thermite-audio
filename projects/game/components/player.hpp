@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/systems/gameplay/game_component.hpp"
 #include "engine/core/components/camera.hpp"
-
+#include "events.hpp"
 namespace game {
 
 class Player : public tmt::GameComponent<Player> {
@@ -11,7 +11,10 @@ class Player : public tmt::GameComponent<Player> {
     static std::string_view get_name() { return "Player"; }
 
     void start() override;
+    void look_camera() const;
+    void move_player();
     void update(const tmt::FrameData& time) override;
+    void on_attach(const AttachEvent& event);
     void end() override;
 
     float camera_sensitivity = 0.1f;
@@ -33,6 +36,7 @@ class Player : public tmt::GameComponent<Player> {
     tmt::Camera& get_camera() { return tmt::engine.ecs.get_component<tmt::Camera>(entity); }
 
    private:
+    bool can_move = true;
     glm::vec3 velocity = { 0.0f, 0.0f, 0.0f };
 };
 

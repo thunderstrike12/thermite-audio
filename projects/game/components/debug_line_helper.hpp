@@ -1,10 +1,10 @@
 #pragma once
-#include "glm/vec4.hpp"
 #include "engine/core/reflection.hpp"
+#include "engine/tools/types/color.hpp"
 namespace game {
 
 struct DebugLineConfig {
-    glm::vec4 color { 1.0f };
+    tmt::RGBA color { glm::vec4 { 1.0f } };
     float line_width = 1.0f;
     void set_values() const;
 };
