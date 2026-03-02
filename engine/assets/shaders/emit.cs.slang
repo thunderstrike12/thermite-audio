@@ -66,9 +66,10 @@ void main(uint3 thread_id: SV_DispatchThreadID) {
     p.dither_scale = effect.dither_scale;
 
     float3 dir = sample_cone(effect.dir, effect.cone_angle, rand_float2(seed));
-    float speed = lerp(effect.speed.min, effect.speed.max, rand_float(seed));
+    p.start_speed = lerp(effect.start_speed.min, effect.start_speed.max, rand_float(seed));
+    p.end_speed = lerp(effect.end_speed.min, effect.end_speed.max, rand_float(seed));
 
-    p.velocity = dir * speed;
+    p.dir = dir;
     p.lifetime = effect.lifetime;
     
     uint32_t count_dead;

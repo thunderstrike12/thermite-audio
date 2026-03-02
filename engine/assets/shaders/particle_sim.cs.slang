@@ -24,9 +24,10 @@ void main(uint3 thread_id: SV_DispatchThreadID) {
     p.age += render_view.dt;
 
     if (p.age < p.lifetime) {
-        p.pos += p.velocity * render_view.dt;
-
         const float t = p.age / p.lifetime;
+
+        const float3 speed = lerp(p.start_speed, p.end_speed, p.speed_curve.evaluate(t));
+        p.pos += p.dir * speed * render_view.dt;
 
         p.size = lerp(p.start_size, p.end_size, p.size_curve.evaluate(t));
         p.opacity = lerp(p.start_opacity, p.end_opacity, p.opacity_curve.evaluate(t));

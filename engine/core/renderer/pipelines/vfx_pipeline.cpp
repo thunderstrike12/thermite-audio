@@ -94,8 +94,9 @@ void VfxPipeline::init(GPUAdapter& gpu) {
 
     /* Initialise Particle Effects Buffer */
     {
-        particle_effects_buffer = bank.create_buffer("[Particles] Particle Effects Buffer", BufferUsage::Storage | BufferUsage::TransferDst, MAX_EMITTERS * MAX_EFFECTS_PER_EMITTER, sizeof(GpuParticleEffect))
-                             .expect("failed to initialise the particle effects buffer.");
+        particle_effects_buffer =
+            bank.create_buffer("[Particles] Particle Effects Buffer", BufferUsage::Storage | BufferUsage::TransferDst, MAX_EMITTERS * MAX_EFFECTS_PER_EMITTER, sizeof(GpuParticleEffect))
+                .expect("failed to initialise the particle effects buffer.");
     }
 
     /* Initialize the Billboard Vertex Buffer */
@@ -142,7 +143,7 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
 
         GpuEmitter em {};
         em.effects_count = emitter.effects.size();
-        em.effects_offset = emitters.size();
+        em.effects_offset = effects.size();
 
         for (auto& effect : emitter.effects) {
             if (!effect.active && !effect.should_burst) continue;
@@ -154,7 +155,8 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
             eff.pos = transform.get_world_position() + effect.pos_offset;
             eff.dir = glm::normalize(effect.dir);
             eff.cone_angle = glm::cos(glm::radians(effect.cone_angle));
-            eff.speed = effect.speed;
+            eff.start_speed = effect.start_speed;
+            eff.end_speed = effect.end_speed;
             eff.lifetime = effect.particle_lifetime;
             eff.spawn_count = effect.spawn_count;
             eff.start_size = effect.start_size;

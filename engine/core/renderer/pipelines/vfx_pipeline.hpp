@@ -31,9 +31,9 @@ struct GpuParticleEffect {
     glm::vec3 dir {};
     float cone_angle {};
 
-    Range speed {};
-    uint32_t spawn_count {};
-    uint32_t tex_index {};
+    Range start_speed {};
+    Range end_speed {};
+    GpuBezierCurve speed_curve {};
 
     Range start_size {};
     Range end_size {};
@@ -50,6 +50,10 @@ struct GpuParticleEffect {
     uint32_t flipbook_frames {};
     float anim_speed {};
     float dither_scale {};
+
+    uint32_t spawn_count {};
+    uint32_t tex_index {};
+    glm::vec2 pad {};
 };
 
 struct GpuEmitter {
@@ -62,7 +66,12 @@ struct GpuParticle {
     glm::vec3 pos {};
     float age {};
 
-    glm::vec3 velocity {};
+    glm::vec3 start_speed {};
+    float pad {};
+    glm::vec3 end_speed {};
+    float pad2 {};
+
+    glm::vec3 dir {};
     float lifetime {};
 
     float size {};
@@ -77,6 +86,7 @@ struct GpuParticle {
 
     GpuBezierCurve size_curve {};
     GpuBezierCurve opacity_curve {};
+    GpuBezierCurve speed_curve {};
 
     float pos_jitter {};
     uint32_t tex_index {};
@@ -86,7 +96,7 @@ struct GpuParticle {
     uint32_t flipbook_frames {};
     float anim_speed {};
     float dither_scale {};
-    float pad {};
+    float pad3 {};
 };
 
 struct Counters {
