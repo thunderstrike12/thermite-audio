@@ -17,15 +17,13 @@ float4 main(BillboardVertexOutput input) : SV_Target0 {
     const float4 tex_sample = tex.Sample(point_sampler, anim_uv);
 
     const float2 screen_pos = input.pos.xy;
-    if (input.opacity <= 0.99f) {
-        const float dither = blue_noise1d.Sample(point_sampler, screen_pos / (512.0f * input.dither_scale)).r;
+    const bool partial_transparent = tex_sample.a > 0.0f && tex_sample.a < 1.0f;
+    const bool should_dither = input.opacity <= 0.99f || partial_transparent;
+    const float dither = should_dither ? blue_noise1d.Sample(point_sampler, screen_pos / (512.0f * input.dither_scale)).r : 0.0f;
 
-        if (input.opacity < dither)
-            discard;
-    }
-
-    if (tex_sample.a <= 0.0f)
+    // dither when alpha is above 0.0f but below 1.0f
+    if (tex_sample.a * input.opacity <= dither)
         discard;
-
+    
     return float4(tex_sample.rgb, 1.0f);
 }
