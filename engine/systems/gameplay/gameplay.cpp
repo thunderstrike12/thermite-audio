@@ -10,7 +10,8 @@ namespace tmt {
 
 template <typename Func>
 void for_each_component(Func&& func) {
-    const auto group = engine.ecs.group<ComponentCollection>();
+    /* using regsitry to also get disabled entities */
+    const auto group = engine.ecs.get_registry().group<ComponentCollection>();
     if (group.empty()) return;
 
     const auto& components = engine.component_registry.get_registered_components();
@@ -23,32 +24,43 @@ void for_each_component(Func&& func) {
             if (has_component == false) continue;
 
             IGameComponent& component = group_collection.get_component(component_index);
-            func(component);
+            func(entity, component);
         }
     }
 }
 
 void Gameplay::on_start() {
     TMT_ZONE_SCOPED_NS("Start Gameplay Components");
-    for_each_component([](IGameComponent& component) {
-        /* start */
+    for_each_component([](const Entity entity, IGameComponent& component) {
         component.start();
+        component.started = true;
     });
 }
 
 void Gameplay::on_update(const tmt::FrameData& time) {
     TMT_ZONE_SCOPED_NS("Update Gameplay Components");
-    for_each_component([&time](IGameComponent& component) {
+    for_each_component([&time](const Entity entity, IGameComponent& component) {
         /* update */
-        component.update(time);
+        if (component.started == false) {
+            component.start();
+            component.started = true;
+        }
+
+        const bool enabled = engine.ecs.is_enabled(entity);
+        if (enabled && component.started) {
+            component.update(time);
+        }
     });
 }
 
 void Gameplay::on_end() {
     TMT_ZONE_SCOPED_NS("End Gameplay Components");
-    for_each_component([](IGameComponent& component) {
+    for_each_component([](const Entity entity, IGameComponent& component) {
         /* end */
-        component.end();
+        if (component.started) {
+            component.end();
+            component.started = false;
+        }
     });
 
     clear_component_instances();
@@ -56,9 +68,12 @@ void Gameplay::on_end() {
 
 void Gameplay::on_fixed_update(const tmt::FrameData& time) {
     TMT_ZONE_SCOPED_NS("Fixed Update Gameplay Components");
-    for_each_component([&time](IGameComponent& component) {
+    for_each_component([&time](const Entity entity, IGameComponent& component) {
         /* fixed update */
-        component.fixed_update(time);
+        const bool enabled = engine.ecs.is_enabled(entity);
+        if (enabled && component.started) {
+            component.fixed_update(time);
+        }
     });
 }
 
