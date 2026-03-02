@@ -12,6 +12,8 @@
 #include "engine/core/window.hpp"
 #include "engine/core/input/input_map.hpp"
 #include "game_input.hpp"
+#include "engine/core/components/ui_component.hpp"
+
 // TODO before we have a serializer for input, you can add all the needed keybindings here.
 //  TODO we still have to add the gamepad inputs here
 
@@ -174,8 +176,17 @@ void Player::update(const tmt::FrameData& time) {
         }
     }
 
-    tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_max_entity)->size.x = max_health + 2.0f;
-    tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_current_entity)->size.x = health;
+    if (tmt::engine.ecs.valid(hp_bar_max_entity)) {
+        auto componenthpmax = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_max_entity);
+        componenthpmax->size.x = max_health + 2.0f;
+    }
+
+    
+    if (tmt::engine.ecs.valid(hp_bar_current_entity)) {
+        auto componentcurrhp = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_current_entity);
+    
+        componentcurrhp->size.x = health;
+    }
 }
 
 void Player::on_attach(const AttachEvent& event) {
