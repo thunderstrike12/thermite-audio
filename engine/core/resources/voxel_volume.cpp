@@ -37,7 +37,7 @@ const VoxelSceneNode* first_model(const VoxelSceneNode& parent) {
     return nullptr;
 }
 
-VoxelVolume::VoxelVolume(const glm::uvec3& grid_size) : RuntimeResource<VoxelScene>({}) {
+VoxelVolume::VoxelVolume(const glm::uvec3& grid_size) : Base({}, {}) {
     RawVoxels raw_voxels { .w = grid_size.x, .h = grid_size.y, .d = grid_size.z };
 
     const size_t total_size = grid_size.x * grid_size.y * grid_size.z;
@@ -54,7 +54,7 @@ VoxelVolume::VoxelVolume(const glm::uvec3& grid_size) : RuntimeResource<VoxelSce
     create_gpu_buffers();
 }
 
-VoxelVolume::VoxelVolume(const VoxelSceneNode& node) : RuntimeResource<VoxelScene>({}) {
+VoxelVolume::VoxelVolume(const VoxelSceneNode& node) : Base({}, {}) {
     /* Copy the voxel data from the model */
     blas = std::make_unique<Svt64>(*node.tree);
     size = node.size;

@@ -47,10 +47,12 @@ template <typename T>
 concept ResourceType = std::derived_from<T, FileResource>;
 
 /* Mutable, is allowed to be changed and can be shared between objects */
-template <ResourceType T>
+template <ResourceType T, typename... ConstructorArgs>
 class RuntimeResource : public Resource {
    public:
     using ResourceType = T;
+    using ConstructorArgTypes = std::tuple<ConstructorArgs...>;
+    using has_constructor_args = std::bool_constant<(sizeof...(ConstructorArgs) > 0)>;
     using is_runtime_resource = std::true_type;
 
     virtual ~RuntimeResource() = default;
@@ -59,8 +61,10 @@ class RuntimeResource : public Resource {
 
     const std::shared_ptr<T> file_resource;
 
+    const std::tuple<ConstructorArgs...> constructor_args;
+
    protected:
-    RuntimeResource(std::shared_ptr<T> resource) : file_resource(std::move(resource)) {}
+    RuntimeResource(std::shared_ptr<T> resource, ConstructorArgs... args) : file_resource(std::move(resource)), constructor_args(std::make_tuple(std::forward<ConstructorArgs>(args)...)) {}
 };
 
 template <typename T>
