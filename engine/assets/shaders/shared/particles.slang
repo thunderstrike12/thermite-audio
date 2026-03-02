@@ -7,6 +7,9 @@ public struct BillboardVertexOutput {
     public float2 uv : TEXCOORD0;
     public uint32_t tex_index : TEXINDEX0;
     public float opacity : OPACITY0;
+    public uint32_t current_frame : CURRFRAME0;
+    public uint32_t flipbook_frames : FRAMES0;
+    public float dither_scale : DITHERSCALE0;
 };
 
 public struct ParticleEffect {
@@ -32,6 +35,9 @@ public struct ParticleEffect {
     public Range pos_jitter;
 
     public float jitter_speed;
+    public uint32_t flipbook_frames;
+    public float anim_speed;
+    public float dither_scale;
 };
 
 public struct ParticleEmitter {
@@ -57,10 +63,17 @@ public struct Particle {
     public float rot_speed;
     public float rotation;
 
-    public float pos_jitter;
+    public BezierCurve size_curve;
+    public BezierCurve opacity_curve;
 
+    public float pos_jitter;
     public uint32_t tex_index;
     public uint32_t effect_index;
+    public uint32_t current_frame;
+
+    public uint32_t flipbook_frames;
+    public float anim_speed;
+    public float dither_scale;
 };
 
 public struct Counters {

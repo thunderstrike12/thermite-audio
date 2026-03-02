@@ -47,7 +47,9 @@ struct GpuParticleEffect {
     Range pos_jitter {};
 
     float jitter_speed {};
-    glm::vec3 pad {};
+    uint32_t flipbook_frames {};
+    float anim_speed {};
+    float dither_scale {};
 };
 
 struct GpuEmitter {
@@ -73,10 +75,17 @@ struct GpuParticle {
     float rot_speed {};
     float rotation {};
 
-    float pos_jitter {};
+    GpuBezierCurve size_curve {};
+    GpuBezierCurve opacity_curve {};
 
+    float pos_jitter {};
     uint32_t tex_index {};
     uint32_t effect_index {};
+    uint32_t current_frame {};
+
+    uint32_t flipbook_frames {};
+    float anim_speed {};
+    float dither_scale {};
     float pad {};
 };
 
@@ -117,7 +126,7 @@ class VfxPipeline {
     Buffer particle_effects_buffer {};
     Buffer billboard_vertices {};
 
-    Sampler linear_sampler {};
+    Sampler point_sampler {};
 };
 
 }  // namespace tmt

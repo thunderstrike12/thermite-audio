@@ -19,10 +19,13 @@ class Texture2D : public FileResource {
     Texture texture {};
     Image image {};
 
-    uint32_t width {};
-    uint32_t height {};
+    uint32_t width = 0;
+    uint32_t height = 0;
+    uint32_t flipbook_frames = 1;
 
     std::string name = "Unknown Texture";
 };
 
 }  // namespace tmt
+
+TMT_OBJECT(tmt::Texture2D, (flipbook_frames));

@@ -75,8 +75,9 @@ void RenderView::init() {
     // generate_e_lut(diralbedo_lut_texture, 256u);
     // diralbedo_lut = bank.create_image("Directional Albedo LUT Image", diralbedo_lut_texture).expect("failed to create directional albedo lut image.");
 
-    /* Load blue noise texture */
-    blue_noise = engine.resources.load_resource<Texture2D>({IO::Location::ENGINE, "blue_noise_rg512.png"});
+    /* Load blue noise textures */
+    blue_noise2d = engine.resources.load_resource<Texture2D>({ IO::Location::ENGINE, "blue_noise_rg512.png" });
+    blue_noise1d = engine.resources.load_resource<Texture2D>({ IO::Location::ENGINE, "blue_noise_r512.png" });
 }
 
 void RenderView::update() {
@@ -127,7 +128,8 @@ void RenderView::deinit() {
     /* Destroy directional albedo LUT */
     // bank.destroy(diralbedo_lut);
     // bank.destroy(diralbedo_lut_texture);
-    blue_noise = {};
+    blue_noise2d = {};
+    blue_noise1d = {};
 
     /* Destroy macrofacet buffers */
     bank.destroy(macrofacet_cache);

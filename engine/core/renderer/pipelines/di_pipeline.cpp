@@ -54,7 +54,7 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
         render_graph.add_compute_pass("direct illumination pass", "direct_illumination.cs")
             .read(render_view.render_view_buffer) /* Render view buffer */
             .read(scene_view.scene_view) /* Scene view buffer */
-            .read(render_view.blue_noise->image) /* Blue noise texture */
+            .read(render_view.blue_noise2d->image) /* Blue noise texture */
             .read(scene_view.bvh_nodes) /* TLAS nodes buffer */
             .read(scene_view.object_indices) /* Voxel object indices buffer */
             .read(scene_view.object_data) /* Voxel objects buffer */

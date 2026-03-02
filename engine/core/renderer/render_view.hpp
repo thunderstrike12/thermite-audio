@@ -78,8 +78,9 @@ struct RenderView {
     /* Directional albedo look up texture (32x32) */
     Texture diralbedo_lut_texture {};
     Image diralbedo_lut {};
-    /* Blue noise texture (512x512) */
-    ResourceRef<Texture2D> blue_noise {};
+    /* Blue noise textures (512x512) */
+    ResourceRef<Texture2D> blue_noise2d {};
+    ResourceRef<Texture2D> blue_noise1d {};
 
     /* Screen buffers */
     ScreenBuffer vbuffer {}; /* Visibility buffer (WxH, 6->8 bytes) */

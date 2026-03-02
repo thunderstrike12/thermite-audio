@@ -16,6 +16,7 @@ struct ParticleEffect {
 
     float particle_lifetime = 1.0f;
 
+    glm::vec3 pos_offset = { 0.0f, 0.0f, 0.0f };
     glm::vec3 dir = { 0.0f, 1.0f, 0.0f };
     float cone_angle = 10.0f;  // In Degrees
 
@@ -34,23 +35,31 @@ struct ParticleEffect {
     Range pos_jitter { 0.0f, 0.0f };
     float jitter_speed = 1.0f;
 
+    float anim_speed = 1.0f;
+    float dither_scale = 1.0f;
+
     bool active = true;
+    bool should_burst = false;
 
     ResourceRef<Texture2D> texture;
+
+    std::string name = "Particle Effect";
+    glm::vec3 name_color = { 1.0f, 1.0f, 1.0f };
 };
 
 struct ParticleEmitter {
     std::vector<ParticleEffect> effects;
 
     bool active = true;
+    bool should_burst = false;
 };
 
 }  // namespace tmt
 
 TMT_OBJECT(tmt::Range, (min, max));
 TMT_OBJECT(
-    tmt::ParticleEffect,
-    (particle_lifetime, dir, cone_angle, spawn_count, speed, start_size, end_size, size_curve, start_opacity, end_opacity, opacity_curve, rotation, pos_jitter, jitter_speed, active, texture)
+    tmt::ParticleEffect, (particle_lifetime, pos_offset, dir, cone_angle, spawn_count, speed, start_size, end_size, size_curve, start_opacity, end_opacity, opacity_curve, rotation, pos_jitter,
+                          jitter_speed, active, texture, name, name_color)
 );
 
 TMT_COMPONENT(tmt::ParticleEmitter, "ParticleEmitter", (effects, active));

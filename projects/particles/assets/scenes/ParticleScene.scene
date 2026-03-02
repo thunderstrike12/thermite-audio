@@ -106,19 +106,28 @@
                         "y": 1.0,
                         "z": 0.0
                     },
-                    "cone_angle": 10.0,
+                    "cone_angle": 45.0,
                     "spawn_count": 1,
                     "speed": {
-                        "min": 2.0,
-                        "max": 2.0
+                        "min": 1.0,
+                        "max": 1.0
                     },
                     "start_size": {
-                        "min": 0.0,
-                        "max": 0.0
+                        "min": 256.0,
+                        "max": 256.0
                     },
                     "end_size": {
                         "min": 256.0,
                         "max": 256.0
+                    },
+                    "size_curve": {
+                        "values": [
+                            0.0,
+                            0.0,
+                            1.0,
+                            0.625,
+                            0.0
+                        ]
                     },
                     "start_opacity": {
                         "min": 1.0,
@@ -127,6 +136,15 @@
                     "end_opacity": {
                         "min": 1.0,
                         "max": 1.0
+                    },
+                    "opacity_curve": {
+                        "values": [
+                            0.0,
+                            0.0,
+                            1.0,
+                            1.0,
+                            0.0
+                        ]
                     },
                     "rotation": {
                         "min": 0.0,
@@ -138,24 +156,16 @@
                     },
                     "jitter_speed": 1.0,
                     "active": true,
-                    "test": {
-                        "values": [
-                            1.0,
-                            0.0078125,
-                            1.0,
-                            0.3359375,
-                            12.0
-                        ]
-                    },
                     "texture": {
                         "file_location": {
                             "sub_location": "PROJECT",
-                            "relative_path": "bojan.png"
+                            "relative_path": "player1.png"
                         },
                         "data": {
-                            "dummy": 0
+                            "flipbook_frames": 6
                         }
-                    }
+                    },
+                    "name": "Particle Effect"
                 }
             ],
             "active": true
