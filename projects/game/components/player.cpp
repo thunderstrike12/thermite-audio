@@ -173,6 +173,9 @@ void Player::update(const tmt::FrameData& time) {
             move_player();
         }
     }
+
+    tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_max_entity)->size.x = max_health + 2.0f;
+    tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_current_entity)->size.x = health;
 }
 
 void Player::on_attach(const AttachEvent& event) {

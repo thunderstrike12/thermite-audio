@@ -50,6 +50,9 @@ class Player : public tmt::GameComponent<Player> {
         }
     }
 
+    tmt::Entity hp_bar_max_entity= entt::null;
+    tmt::Entity hp_bar_current_entity = entt::null;
+
    private:
     bool can_move = true;
     glm::vec3 velocity = { 0.0f, 0.0f, 0.0f };
@@ -58,4 +61,4 @@ class Player : public tmt::GameComponent<Player> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, health, battery, max_health, max_battery));
+TMT_OBJECT(game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, health, battery, max_health, max_battery, hp_bar_max_entity, hp_bar_current_entity));
