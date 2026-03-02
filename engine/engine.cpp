@@ -179,7 +179,7 @@ void Engine::end() {
     ecs.clear();
     scenes.end();
     audio.end();  // Needs to be ended after the ecs.
-    resources.unload_unused();
+    resources.force_unload_all();
     renderer.end();
     Log::info("Engine finished shutdown");
 }

@@ -121,6 +121,8 @@ class Resources {
 
     void unload_unused();
 
+    void force_unload_all();
+
     size_t resource_count() const;
 
     bool reload_resource(const std::shared_ptr<Resource>& resource) const;

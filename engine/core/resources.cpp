@@ -19,6 +19,23 @@ void Resources::unload_unused() {
     }
 }
 
+void Resources::force_unload_all() {
+    for (auto& [file_location, collection] : resources) {
+        const int ref_count = collection.file_resource.use_count();
+
+        if (ref_count > 1) {
+            tmt::Log::warn(tmt::Log::Scope::ENGINE, "[Resources] Force unloading file resource {} with {} active references!", file_location, ref_count - 1);
+        } else {
+            tmt::Log::info(tmt::Log::Scope::ENGINE, "[Resources] Force unloaded file resource {}", file_location);
+        }
+
+        collection.file_resource->unload();
+        collection.file_resource->loaded = false;
+    }
+    resources.clear();
+    resource_type_locations.clear();
+}
+
 size_t Resources::resource_count() const {
     return resources.size();
 }
