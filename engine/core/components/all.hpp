@@ -80,6 +80,6 @@ using InspectComponents = ComponentRegistry<
 
 }  // namespace tmt
 
-template <typename T>
-requires(tmt::SerializeComponents::contains<T>())
-struct JsonReflect::Detail::delta_serialize<T> : std::true_type {};
+//template <typename T>
+//requires(tmt::SerializeComponents::contains<T>())
+//struct JsonReflect::Detail::delta_serialize<T> : std::true_type {};
