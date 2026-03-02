@@ -32,12 +32,29 @@ class Player : public tmt::GameComponent<Player> {
     float max_battery = 100.0f;
 
     // Helper functions
-    tmt::Transform& get_transform() { return tmt::engine.ecs.get_component<tmt::Transform>(entity); }
-    tmt::Camera& get_camera() { return tmt::engine.ecs.get_component<tmt::Camera>(entity); }
+    tmt::Transform& get_transform() const { return tmt::engine.ecs.get_component<tmt::Transform>(entity); }
+    tmt::Camera& get_camera() const { return tmt::engine.ecs.get_component<tmt::Camera>(entity); }
+
+    void toggle_camera_movement() {
+        if (camera_movement) {
+            camera_movement = false;
+        } else {
+            camera_movement = true;
+        }
+    }
+    void toggle_player_movement() {
+        if (player_movement) {
+            player_movement = false;
+        } else {
+            player_movement = true;
+        }
+    }
 
    private:
     bool can_move = true;
     glm::vec3 velocity = { 0.0f, 0.0f, 0.0f };
+    bool camera_movement = true;
+    bool player_movement = true;
 };
 
 }  // namespace game

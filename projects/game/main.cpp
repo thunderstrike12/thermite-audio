@@ -27,6 +27,7 @@
 #include "components/attach_component.hpp"
 #include "components/gravity_manipulation_component.hpp"
 #include "components/collision_trigger.hpp"
+#include "components/menu_controller.hpp"
 #include "components/mover_component.hpp"
 #include "components/ore_collector.hpp"
 #include "components/projectile_spawner.hpp"
@@ -110,6 +111,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.component_registry.register_component<game::MoverComponent>();
     tmt::engine.component_registry.register_component<game::AttachComponent>();
     tmt::engine.component_registry.register_component<game::Upgrade>();
+    tmt::engine.component_registry.register_component<game::MenuController>();
     tmt::engine.component_registry.register_component<game::FuelComponent>();
 
     return std::make_unique<Game>(specs);

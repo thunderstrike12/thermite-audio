@@ -16,18 +16,18 @@ class Upgrade : public tmt::GameComponent<Upgrade> {
     // added {} to prevent warnings about missing function bodies
     void start() override;
     void update(const tmt::FrameData& time) override {}
-    void end() override {}
+    void end() override;
 
-    tmt::Entity upgrade_target;
+    tmt::Entity upgrade_target = entt::null;
     UpgradeType type = UpgradeType::MAX_HEALTH;
-    float upgrade_value = 1.0f;
-    tmt::Entity player_entity;
+    float upgrade_to = 1.0f;
+    tmt::Entity player_entity = entt::null;
     std::vector<std::tuple<UpgradeResource, float>> upgrade_costs = { { UpgradeResource::DOLLARS, 1.0f } };  // An initial cost
-
     bool apply_upgrade();
+    void button_apply();
 
    private:
 };
 
 }  // namespace game
-TMT_OBJECT(game::Upgrade, (upgrade_target, type, upgrade_value, player_entity, upgrade_costs));
+TMT_OBJECT(game::Upgrade, (upgrade_target, type, upgrade_to, player_entity, upgrade_costs));
