@@ -75,6 +75,8 @@ class Bvh2 {
 
     /* Trace the acceleration structure. */
     Hit trace(const Ray& ray) const;
+    /* Trace the acceleration structure. Used for raycasting to check for layers to ignore */
+    Hit trace(const Ray& ray, uint32_t ray_mask) const;
 };
 
 }  // namespace tmt

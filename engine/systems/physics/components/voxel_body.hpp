@@ -62,6 +62,8 @@ struct VoxelBody {
     float height = 1.0f;
     float depth = 1.0f;
 
+    uint32_t layer = 0;  // default layer
+
     ResourceRef<VoxelVolume> resource {};
 
     Aabb aabb() const;
@@ -73,4 +75,4 @@ struct VoxelBody {
 
 }  // namespace tmt
 
-TMT_COMPONENT(tmt::VoxelBody, "Voxel Body", (resource, type, gravity));
+TMT_COMPONENT(tmt::VoxelBody, "Voxel Body", (resource, type, gravity, layer));

@@ -130,16 +130,16 @@ void Physics::on_update(const FrameData&) {
          engine.renderer.draw_cross(vb.position + vb.rotation * vb.com_local_offset, glm::vec3(0.0f, 0.0f, 1.0f), 0.2f);*/
 
         //// Draw voxel normals
-        //engine.polyline.use_depth_testing(false);
-        //engine.polyline.use_color(1.0f, 0.0f, 0.0f);
+        // engine.polyline.use_depth_testing(false);
+        // engine.polyline.use_color(1.0f, 0.0f, 0.0f);
         //
-        //glm::uvec3 size = vb.resource->size;
-        //auto* tree = vb.resource->blas.get();
-        //for (size_t z = 0; z < size.z; z++) {
-        //    for (size_t y = 0; y < size.y; y++) {
-        //        for (size_t x = 0; x < size.x; x++) {
-        //            const tmt::PhysicsVoxel* voxel = tree->get_physics_voxel(x, y, z);
-        //            if (voxel == nullptr || voxel->normal_index == 0 || voxel->normal_index == 28) continue;
+        // glm::uvec3 size = vb.resource->size;
+        // auto* tree = vb.resource->blas.get();
+        // for (size_t z = 0; z < size.z; z++) {
+        //     for (size_t y = 0; y < size.y; y++) {
+        //         for (size_t x = 0; x < size.x; x++) {
+        //             const tmt::PhysicsVoxel* voxel = tree->get_physics_voxel(x, y, z);
+        //             if (voxel == nullptr || voxel->normal_index == 0 || voxel->normal_index == 28) continue;
 
         //            glm::ivec3 local_normal = voxel->get_normal();
         //            glm::vec3 normal = vb.rotation * glm::vec3((float)local_normal.x, (float)local_normal.y, (float)local_normal.z);
@@ -219,6 +219,8 @@ void Physics::on_fixed_update(const FrameData&) {
             object.local_to_world = transform.get_world_matrix();
             object.world_to_local = glm::inverse(object.local_to_world);
             object.size = vb.resource->size;
+            object.mask = (1u << vb.layer);
+            object.volume = vb.resource.resource.get();
             objects.push_back(std::move(object));
         }
 
@@ -281,6 +283,9 @@ void Physics::generate_constraint(int index, const PhysicsGroup& group) {
         VoxelBody& other_vb = group.get<VoxelBody>(other_entity);
         // Transform& other_transform = group.get<Transform>(other_entity);
         // auto& [other_vb, other_transform] = group.get<VoxelBody, Transform>(other_entity);
+
+        // --- check layer collision ---
+        if (!physics_layers.can_collide(vb.layer, other_vb.layer)) continue;
 
         if (sat_early_out(vb, other_vb)) continue;
 
@@ -823,17 +828,41 @@ void Physics::set_rotation(VoxelBody& vb, const glm::quat& rotation) {
     vb.center_of_mass = vb.position + (vb.rotation * vb.com_local_offset);
 }
 
+/**
+ * Cast a ray using a layer mask.
+ *
+ * Example:
+ *   uint32_t layer_mask = (1 << 1) | (1 << 2);
+ *   Hit hit = physics->raycast(ray, layer_mask);
+ *
+ * Result:
+ *   Layer 0 -> not in mask = cannot hit
+ *   Layer 1 -> in mask     = can hit
+ *   Layer 2 -> in mask     = can hit
+ *   Layer 3 -> not in mask = cannot hit
+ *
+ * The BVH filters objects internally using bitmask comparison:
+ *   (object.mask & layer_mask) != 0
+ *
+ * Objects whose mask does not overlap with the ray's mask
+ * are ignored during traversal.
+ */
+Hit Physics::raycast(const Ray& ray, uint32_t layer_mask) const {
+    return bvh.trace(ray, layer_mask);
+}
+
 void Physics::recalculate_physics_data(VoxelBody& vb) {
     initialize_voxel_body(vb);
     recalculate_surface_normals(vb);
 }
 
 // Count number of set bits in variable range [0..width]
-inline uint32_t popcnt_var64(uint64_t mask, uint32_t width) { return (uint32_t)__popcnt64(mask & ((1ull << width) - 1)); }
+inline uint32_t popcnt_var64(uint64_t mask, uint32_t width) {
+    return (uint32_t)__popcnt64(mask & ((1ull << width) - 1));
+}
 
 inline void recurse_recalculate_normals(
-    tmt::Svt64* tree, const uint32_t node_index, const uint32_t current_depth, const uint32_t node_scale, 
-    const uint32_t global_x, const uint32_t global_y, const uint32_t global_z
+    tmt::Svt64* tree, const uint32_t node_index, const uint32_t current_depth, const uint32_t node_scale, const uint32_t global_x, const uint32_t global_y, const uint32_t global_z
 ) {
     // Get current node
     const tmt::Svt64Node& node = tree->nodes[node_index];

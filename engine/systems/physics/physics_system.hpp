@@ -4,6 +4,7 @@
 
 #include "collision.hpp"
 #include "constraint_solver.hpp"
+#include "physics_layers.hpp"
 #include "components/voxel_body.hpp"
 #include "engine/core/renderer/voxel_object.hpp"
 #include "engine/shared/bvh2.hpp"
@@ -33,6 +34,9 @@ class Physics : public ISystem {
     ConstraintSolver solver = {};
     Bvh2<VoxelObject> bvh {};
 
+    // Layers
+    PhysicsLayers physics_layers;
+
     // Simulation functions
     bool sat_early_out(const VoxelBody& vb_a, const VoxelBody& vb_b);
     float ray_aabb(const glm::vec3& min, const glm::vec3& max, const glm::vec3& ro, const glm::vec3& rd) const;
@@ -52,6 +56,12 @@ class Physics : public ISystem {
     static void add_force_at_position(VoxelBody& vb, const glm::vec3& force, const glm::vec3& position);
     static void set_position(VoxelBody& vb, const glm::vec3& position);
     static void set_rotation(VoxelBody& vb, const glm::quat& rotation);
+
+    PhysicsLayers& layers() { return physics_layers; }
+    // Raycast against layers in the layer_mask
+    
+    Hit raycast(const Ray& ray, uint32_t layer_mask) const;
+
     static void recalculate_physics_data(VoxelBody& vb);
     static void recalculate_surface_normals(VoxelBody& vb);
     static void recalculate_surface_normals(VoxelVolume& volume);

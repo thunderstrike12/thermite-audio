@@ -341,6 +341,76 @@ Hit Bvh2<T>::trace(const Ray& ray) const {
 }
 
 template <typename T>
+Hit Bvh2<T>::trace(const Ray& ray, uint32_t ray_mask) const {
+    /* Avoid an infinite loop when the BVH has nothing inside it */
+    if (nodes[0].left_first == 0u && nodes[0].prim_count == 0u) return Hit();
+
+    /* Traversal state */
+    uint32_t stack[32] {}, stack_ptr = 0u, node_index = 0u;
+
+    /* Hit state */
+    float hit_t = 1e30f;
+    uint32_t hit_index = 0xFFFFFFFFu;
+    glm::uvec3 hit_coord {};
+    glm::vec3 hit_normal {};
+
+    for (;;) {
+        const Bvh2Node& node = nodes[node_index];
+
+        /* Leaf node */
+        if (node.is_leaf()) {
+            /* Intersect all primitives */
+            for (uint32_t i = 0u; i < node.prim_count; ++i) {
+                const T& prim = prims[indices[node.left_first + i]];
+
+                /* skip if masks don't match */
+                if ((prim.mask & ray_mask) == 0) continue;
+
+                const Hit hit = prim.intersect(ray, hit_t);
+                if (hit.distance < hit_t) {
+                    hit_t = hit.distance;
+                    hit_index = indices[node.left_first + i];
+                    hit_coord = hit.coord;
+                    hit_normal = hit.normal;
+                }
+            }
+
+            /* Pop the node stack */
+            if (stack_ptr == 0u) break;
+            node_index = stack[--stack_ptr];
+            continue;
+        }
+
+        /* Interior node */
+        uint32_t child1_index = node.left_first;
+        uint32_t child2_index = node.left_first + 1u;
+        const Bvh2Node &child1 = nodes[child1_index], &child2 = nodes[child2_index];
+        float dist1 = intersect_aabb(ray, child1.min_bounds, child1.max_bounds);
+        float dist2 = intersect_aabb(ray, child2.min_bounds, child2.max_bounds);
+
+        /* Swap child nodes so that the closest one comes first */
+        if (dist1 > dist2) {
+            std::swap(dist1, dist2), std::swap(child1_index, child2_index);
+        }
+
+        /* If we missed both child nodes */
+        if (dist1 == BIG_F32) {
+            /* Pop the node stack */
+            if (stack_ptr == 0u) break;
+            node_index = stack[--stack_ptr];
+        } else {
+            /* Continue with the closest child node */
+            node_index = child1_index;
+            /* Push the 2nd child onto the node stack if we hit it */
+            if (dist2 != BIG_F32) stack[stack_ptr++] = child2_index;
+        }
+    }
+
+    if (hit_t == 1e30f) return Hit(); /* miss */
+    return Hit(hit_t, engine.renderer.scene_view.entities[hit_index], hit_coord, hit_normal);
+}
+
+template <typename T>
 Bvh2<T>::~Bvh2() {
     if (node_count > 0u) {
         delete[] nodes;

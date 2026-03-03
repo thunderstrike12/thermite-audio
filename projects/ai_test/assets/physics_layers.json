@@ -1,0 +1,35 @@
+{
+    "collisions": [
+        [
+            true,
+            true,
+            true,
+            true
+        ],
+        [
+            null,
+            true,
+            true,
+            true
+        ],
+        [
+            null,
+            null,
+            true,
+            true
+        ],
+        [
+            null,
+            null,
+            null,
+            true
+        ]
+    ],
+    "layer_count": 4,
+    "names": [
+        "Default",
+        "Player",
+        "Enemy",
+        "Environment"
+    ]
+}

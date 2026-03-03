@@ -46,6 +46,15 @@ struct VoxelObject {
     /* Reciprocal of the width of the voxel tree structure. */
     float rcp_tree_width = 0.0f;
 
+    /**
+     * Mask used for physics layer filtering
+     *
+     * Note:
+     *   - default: all layers enabled.
+     *   - Physics bodies will change this mask to their layer.
+     */
+    uint32_t mask = 0xFFFFFFFFu;
+
     VoxelVolume* volume {};
 
     /* Get the axis-aligned bounding box of this voxel object. */
