@@ -1,15 +1,43 @@
 {
     "version": 1,
     "entities": [
+        1048577,
+        1048578,
         6291456
     ],
     "Name": {
+        "1048577": {
+            "name": "Agent_Enemy 1"
+        },
+        "1048578": {
+            "name": "Agent_Enemy 1"
+        },
         "6291456": {
             "name": "Agent_Enemy 1"
         }
     },
     "Transform": {
-        "6291456": {
+        "1048577": {
+            "local_position": {
+                "x": 7.800000190734863,
+                "y": 9.699999809265137,
+                "z": 15.699999809265137
+            },
+            "local_rotation": {
+                "w": 0.7072240114212036,
+                "x": 1.0249578963339445e-11,
+                "y": 0.7069895267486572,
+                "z": 1.0249578963339445e-11
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048578": {
             "local_position": {
                 "x": 0.0,
                 "y": 0.0,
@@ -28,9 +56,53 @@
             },
             "parent": 4294967295,
             "children": []
+        },
+        "6291456": {
+            "local_position": {
+                "x": -3.0999999046325684,
+                "y": -2.5,
+                "z": 7.300000190734863
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        }
+    },
+    "Voxel Renderer": {
+        "1048577": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "dragon128.vengi"
+                }
+            }
+        },
+        "6291456": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "test_asteroid_0.vengi"
+                }
+            }
         }
     },
     "GoapAgentTypeRef": {
+        "1048577": {
+            "type_id": "Enemy 1"
+        },
+        "1048578": {
+            "type_id": "Enemy 1"
+        },
         "6291456": {
             "type_id": "Enemy 1"
         }
