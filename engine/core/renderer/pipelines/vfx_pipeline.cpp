@@ -150,7 +150,21 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
 
             effect.should_burst = !effect.should_burst;
 
+            uint32_t actual_spawn_count = 0u;
+
             GpuParticleEffect eff {};
+
+            if (effect.spawn_interval <= 0.0f) {
+                // No interval so we spawn every frame
+                actual_spawn_count = effect.spawn_count;
+            } 
+            else {
+                effect.spawn_timer += render_view.gpu_view.dt;
+                while (effect.spawn_timer >= effect.spawn_interval) {
+                    actual_spawn_count += effect.spawn_count;
+                    effect.spawn_timer -= effect.spawn_interval;
+                }
+            }
 
             eff.pos = transform.get_world_position() + effect.pos_offset;
             eff.dir = glm::normalize(effect.dir);
@@ -158,7 +172,7 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
             eff.start_speed = effect.start_speed;
             eff.end_speed = effect.end_speed;
             eff.lifetime = effect.particle_lifetime;
-            eff.spawn_count = effect.spawn_count;
+            eff.spawn_count = actual_spawn_count;
             eff.start_size = effect.start_size;
             eff.end_size = effect.end_size;
             eff.size_curve.points = effect.size_curve.get_vec4();

@@ -14,6 +14,7 @@ inline void tag_invoke(ImReflect::ImInput_t, const char*, tmt::ParticleEffect& e
     ImReflect::Input("Direction", effect.dir, type_settings, type_response);
     ImReflect::Input("Cone Angle", effect.cone_angle, type_settings, type_response);
     ImReflect::Input("Spawn Count", effect.spawn_count, type_settings, type_response);
+    ImReflect::Input("Spawn Interval", effect.spawn_interval, type_settings, type_response);
     
     ImReflect::Input("Animation Speed", effect.anim_speed, type_settings, type_response);
     ImReflect::Input("Dither Scale", effect.dither_scale, type_settings, type_response);

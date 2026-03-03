@@ -21,6 +21,8 @@ struct ParticleEffect {
     float cone_angle = 10.0f;  // In Degrees
 
     uint32_t spawn_count = 8u;
+    float spawn_interval = 0.0f; // seconds between spawns (0.0f = every frame)
+
     Range start_speed { 1.0f, 1.0f };
     Range end_speed { 1.0f, 1.0f };
     BezierCurve speed_curve {};
@@ -45,8 +47,10 @@ struct ParticleEffect {
 
     ResourceRef<Texture2D> texture;
 
+    /* Internal Usage */
     std::string name = "Particle Effect";
     glm::vec3 name_color = { 1.0f, 1.0f, 1.0f };
+    float spawn_timer = 0.0f;
 };
 
 struct ParticleEmitter {
@@ -60,7 +64,7 @@ struct ParticleEmitter {
 
 TMT_OBJECT(tmt::Range, (min, max));
 TMT_OBJECT(
-    tmt::ParticleEffect, (particle_lifetime, pos_offset, dir, cone_angle, spawn_count, start_speed, end_speed, speed_curve, start_size, end_size, size_curve, start_opacity, end_opacity, opacity_curve, rotation, pos_jitter,
+    tmt::ParticleEffect, (particle_lifetime, pos_offset, dir, cone_angle, spawn_count, spawn_interval, start_speed, end_speed, speed_curve, start_size, end_size, size_curve, start_opacity, end_opacity, opacity_curve, rotation, pos_jitter,
                           jitter_speed, active, texture, name, name_color)
 );
 
