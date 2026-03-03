@@ -177,14 +177,13 @@ void Player::update(const tmt::FrameData& time) {
     }
 
     if (tmt::engine.ecs.valid(hp_bar_max_entity)) {
-        auto componenthpmax = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_max_entity);
+        if (auto componenthpmax = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_max_entity))
         componenthpmax->size.x = max_health + 2.0f;
     }
 
     
     if (tmt::engine.ecs.valid(hp_bar_current_entity)) {
-        auto componentcurrhp = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_current_entity);
-    
+        if (auto componentcurrhp = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_current_entity))
         componentcurrhp->size.x = health;
     }
 }
