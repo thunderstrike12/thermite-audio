@@ -57,7 +57,9 @@ void ImGuiConsole::DrawContent() {
     InputBar();
 }
 
-csys::System& ImGuiConsole::System() { return m_ConsoleSystem; }
+csys::System& ImGuiConsole::System() {
+    return m_ConsoleSystem;
+}
 
 void ImGuiConsole::InitIniSettings() {
     ImGuiContext& g = *ImGui::GetCurrentContext();
@@ -82,13 +84,14 @@ void ImGuiConsole::InitIniSettings() {
 void ImGuiConsole::DefaultSettings() {
     // Settings
     m_AutoScroll = true;
-    m_ScrollToBottom = false;
+    m_ScrollToBottom = true;
     m_ColoredOutput = true;
     m_FilterBar = true;
     m_TimeStamps = true;
+    m_CollapseMessages = true;
 
     m_ShowCommand = true;
-    m_ShowLog = true;
+    m_ShowLog = false;
     m_ShowWarning = true;
     m_ShowError = true;
     m_ShowInfo = true;
@@ -202,6 +205,8 @@ void ImGuiConsole::DrawLogTypeButtons() {
     ToggleButton(ICON_FA_TRIANGLE_EXCLAMATION, "Warnings", &m_ShowWarning, m_ColorPalette[COL_WARNING], warnCount);
     ImGui::SameLine();
     ToggleButton(ICON_FA_CIRCLE_XMARK, "Errors", &m_ShowError, m_ColorPalette[COL_ERROR], errCount);
+    ImGui::SameLine();
+    ToggleButton(ICON_FA_CIRCLE_INFO, "Programmer Logs", &m_ShowLog, m_ColorPalette[COL_LOG], logCount);
 }
 void ImGuiConsole::LogWindow() {
     auto& items = m_ConsoleSystem.Items();
@@ -210,11 +215,47 @@ void ImGuiConsole::LogWindow() {
     if (log_count > MAX_LOG_ITEMS) {
         items.erase(items.begin(), items.begin() + static_cast<int64_t>(log_count - MAX_LOG_ITEMS));
     }
+
+    // Build collapsed groups if collapsing is enabled
+    struct MessageGroup {
+        int startIndex;
+        int endIndex;
+        int count;
+        std::string text;
+        csys::ItemType type;
+        uint64_t timestamp;
+    };
+
+    std::vector<MessageGroup> groups;
+
+    if (m_CollapseMessages) {
+        int i = 0;
+        while (i < (int)items.size()) {
+            MessageGroup group;
+            group.startIndex = i;
+            group.endIndex = i;
+            group.count = 1;
+            group.text = items[i].Get();
+            group.type = items[i].m_Type;
+            group.timestamp = items[i].m_TimeStamp;
+
+            // Find consecutive duplicates (skip COMMAND types)
+            if (items[i].m_Type != csys::COMMAND) {
+                while (i + 1 < (int)items.size() && items[i + 1].Get() == group.text && items[i + 1].m_Type == group.type) {
+                    group.count++;
+                    group.endIndex = ++i;
+                }
+            }
+
+            groups.push_back(group);
+            i++;
+        }
+    }
+
     const float footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
     if (ImGui::BeginChild("ScrollRegion##", ImVec2(0, -footerHeightToReserve), false, 0)) {
         static const float timestamp_width = ImGui::CalcTextSize("00:00:00:0000").x;
         int count = 0;
-        int itemIndex = 0;
 
         ImVec2 mousePos = ImGui::GetMousePos();
         ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -229,6 +270,8 @@ void ImGuiConsole::LogWindow() {
             switch (type) {
                 case csys::INFO:
                     return m_ShowInfo;
+                case csys::LOG:
+                    return m_ShowLog;
                 case csys::WARNING:
                     return m_ShowWarning;
                 case csys::ERROR:
@@ -240,14 +283,14 @@ void ImGuiConsole::LogWindow() {
 
         // Build filtered index list for proper line-based selection
         std::vector<int> filteredIndices;
-        for (int i = 0; i < (int)m_ConsoleSystem.Items().size(); i++) {
-            const auto& item = m_ConsoleSystem.Items()[i];
+        for (int i = 0; i < (int)items.size(); i++) {
+            const auto& item = items[i];
             if (PassesTypeFilter(item.m_Type) && m_TextFilter.PassFilter(item.Get().c_str())) {
                 filteredIndices.push_back(i);
             }
         }
 
-        // Handle selection input - use LINE INDICES, not pixel coordinates
+        // Handle selection input
         if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0)) {
             m_IsSelecting = true;
             m_SelectionStartIndex = -1;
@@ -271,91 +314,182 @@ void ImGuiConsole::LogWindow() {
             }
         }
 
-        // Calculate normalized selection range (ensure start <= end)
+        // Calculate normalized selection range
         int selStart = m_SelectionStartIndex;
         int selEnd = m_SelectionEndIndex;
         if (selStart > selEnd && selEnd != -1) {
             std::swap(selStart, selEnd);
         }
 
-        // Display items
+        // Display items (with or without collapsing)
         int filteredIndex = 0;
-        for (const auto& item : m_ConsoleSystem.Items()) {
-            if (!PassesTypeFilter(item.m_Type) || !m_TextFilter.PassFilter(item.Get().c_str())) {
-                itemIndex++;
-                continue;
-            }
 
-            // Spacing between commands
-            if (item.m_Type == csys::COMMAND) {
-                if (m_TimeStamps) ImGui::PushTextWrapPos(ImGui::GetColumnWidth() - timestamp_width);
-                if (count++ != 0) {
-                    ImGui::Dummy(ImVec2(-1, ImGui::GetFontSize()));
+        if (m_CollapseMessages && !groups.empty()) {
+            // Render with collapsing (Unity-style: just show count, no expansion)
+            for (int groupIdx = 0; groupIdx < (int)groups.size(); groupIdx++) {
+                const auto& group = groups[groupIdx];
+                const auto& item = items[group.startIndex];
+
+                if (!PassesTypeFilter(item.m_Type) || !m_TextFilter.PassFilter(item.Get().c_str())) {
+                    continue;
                 }
-            }
 
-            float itemWrapWidth = wrapWidth;
-            if (item.m_Type == csys::COMMAND && m_TimeStamps) {
-                itemWrapWidth = ImGui::GetColumnWidth() - timestamp_width - ImGui::GetStyle().ItemSpacing.x;
-            }
-
-            ImVec2 textPosScreen = ImGui::GetCursorScreenPos();
-            ImVec2 textSize = ImGui::CalcTextSize(item.Get().data(), nullptr, false, itemWrapWidth);
-
-            // Check if mouse is over this line (for selection tracking)
-            bool mouseOverLine = (mousePos.y >= textPosScreen.y && mousePos.y <= textPosScreen.y + textSize.y);
-
-            if (mouseOverLine) {
-                if (ImGui::IsMouseClicked(0)) {
-                    m_SelectionStartIndex = filteredIndex;
-                    m_SelectionEndIndex = filteredIndex;
+                // Spacing between commands
+                if (item.m_Type == csys::COMMAND) {
+                    if (m_TimeStamps) ImGui::PushTextWrapPos(ImGui::GetColumnWidth() - timestamp_width);
+                    if (count++ != 0) {
+                        ImGui::Dummy(ImVec2(-1, ImGui::GetFontSize()));
+                    }
                 }
-                if (m_IsSelecting) {
-                    m_SelectionEndIndex = filteredIndex;
+
+                float itemWrapWidth = wrapWidth;
+                if (item.m_Type == csys::COMMAND && m_TimeStamps) {
+                    itemWrapWidth = ImGui::GetColumnWidth() - timestamp_width - ImGui::GetStyle().ItemSpacing.x;
                 }
-            }
 
-            // Check if this line is within selection range (LINE-BASED)
-            bool lineSelected = (selStart != -1 && selEnd != -1 && filteredIndex >= selStart && filteredIndex <= selEnd);
+                ImVec2 textPosScreen = ImGui::GetCursorScreenPos();
 
-            // Draw FULL LINE selection highlight
-            if (lineSelected) {
-                ImVec2 highlightMin = ImVec2(textPosScreen.x, textPosScreen.y);
-                ImVec2 highlightMax = ImVec2(textPosScreen.x + wrapWidth, textPosScreen.y + textSize.y);
+                // Build display text with count badge (if grouped)
+                std::string displayText = item.Get();
+                bool isGrouped = group.count > 1;
 
-                // Clip to visible window area
-                ImVec2 clipMin = ImGui::GetWindowPos();
-                ImVec2 clipMax = ImVec2(clipMin.x + ImGui::GetWindowSize().x, clipMin.y + ImGui::GetWindowSize().y);
+                if (isGrouped) {
+                    displayText = "[" + std::to_string(group.count) + "x] " + displayText;
+                }
 
-                if (highlightMax.y > clipMin.y && highlightMin.y < clipMax.y) {
-                    drawList->AddRectFilled(
-                        ImVec2(highlightMin.x, std::max(highlightMin.y, clipMin.y)), ImVec2(highlightMax.x, std::min(highlightMax.y, clipMax.y)), IM_COL32(80, 120, 200, 100)
+                ImVec2 textSize = ImGui::CalcTextSize(displayText.data(), nullptr, false, itemWrapWidth);
+
+                // Check if mouse is over this line (for selection only, not expansion)
+                bool mouseOverLine = (mousePos.y >= textPosScreen.y && mousePos.y <= textPosScreen.y + textSize.y);
+
+                if (mouseOverLine) {
+                    if (ImGui::IsMouseClicked(0)) {
+                        m_SelectionStartIndex = filteredIndex;
+                        m_SelectionEndIndex = filteredIndex;
+                    }
+                    if (m_IsSelecting) {
+                        m_SelectionEndIndex = filteredIndex;
+                    }
+                }
+
+                // Check if line is selected
+                bool lineSelected = (selStart != -1 && selEnd != -1 && filteredIndex >= selStart && filteredIndex <= selEnd);
+
+                // Draw selection highlight
+                if (lineSelected) {
+                    ImVec2 highlightMin = ImVec2(textPosScreen.x, textPosScreen.y);
+                    ImVec2 highlightMax = ImVec2(textPosScreen.x + wrapWidth, textPosScreen.y + textSize.y);
+
+                    ImVec2 clipMin = ImGui::GetWindowPos();
+                    ImVec2 clipMax = ImVec2(clipMin.x + ImGui::GetWindowSize().x, clipMin.y + ImGui::GetWindowSize().y);
+
+                    if (highlightMax.y > clipMin.y && highlightMin.y < clipMax.y) {
+                        drawList->AddRectFilled(
+                            ImVec2(highlightMin.x, std::max(highlightMin.y, clipMin.y)), ImVec2(highlightMax.x, std::min(highlightMax.y, clipMax.y)), IM_COL32(80, 120, 200, 100)
+                        );
+                    }
+
+                    selectedText += displayText + "\n";
+                }
+
+                // Render item text
+                if (m_ColoredOutput) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[item.m_Type]);
+                    ImGui::TextUnformatted(displayText.data());
+                    ImGui::PopStyleColor();
+                } else {
+                    ImGui::TextUnformatted(displayText.data());
+                }
+
+                // Time stamp
+                if (item.m_Type == csys::COMMAND && m_TimeStamps) {
+                    ImGui::PopTextWrapPos();
+                    ImGui::SameLine(ImGui::GetColumnWidth(-1) - timestamp_width);
+                    ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[COL_TIMESTAMP]);
+                    ImGui::Text(
+                        "%02d:%02d:%02d:%04d", ((item.m_TimeStamp / 1000 / 3600) % 24), ((item.m_TimeStamp / 1000 / 60) % 60), ((item.m_TimeStamp / 1000) % 60), item.m_TimeStamp % 1000
                     );
+                    ImGui::PopStyleColor();
                 }
 
-                selectedText += item.Get() + "\n";
+                filteredIndex++;
             }
+        } else {
+            // Original rendering without collapsing
+            int itemIndex = 0;
+            for (const auto& item : items) {
+                if (!PassesTypeFilter(item.m_Type) || !m_TextFilter.PassFilter(item.Get().c_str())) {
+                    itemIndex++;
+                    continue;
+                }
 
-            // Render item text
-            if (m_ColoredOutput) {
-                ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[item.m_Type]);
-                ImGui::TextUnformatted(item.Get().data());
-                ImGui::PopStyleColor();
-            } else {
-                ImGui::TextUnformatted(item.Get().data());
+                // Spacing between commands
+                if (item.m_Type == csys::COMMAND) {
+                    if (m_TimeStamps) ImGui::PushTextWrapPos(ImGui::GetColumnWidth() - timestamp_width);
+                    if (count++ != 0) {
+                        ImGui::Dummy(ImVec2(-1, ImGui::GetFontSize()));
+                    }
+                }
+
+                float itemWrapWidth = wrapWidth;
+                if (item.m_Type == csys::COMMAND && m_TimeStamps) {
+                    itemWrapWidth = ImGui::GetColumnWidth() - timestamp_width - ImGui::GetStyle().ItemSpacing.x;
+                }
+
+                ImVec2 textPosScreen = ImGui::GetCursorScreenPos();
+                ImVec2 textSize = ImGui::CalcTextSize(item.Get().data(), nullptr, false, itemWrapWidth);
+
+                bool mouseOverLine = (mousePos.y >= textPosScreen.y && mousePos.y <= textPosScreen.y + textSize.y);
+
+                if (mouseOverLine) {
+                    if (ImGui::IsMouseClicked(0)) {
+                        m_SelectionStartIndex = filteredIndex;
+                        m_SelectionEndIndex = filteredIndex;
+                    }
+                    if (m_IsSelecting) {
+                        m_SelectionEndIndex = filteredIndex;
+                    }
+                }
+
+                bool lineSelected = (selStart != -1 && selEnd != -1 && filteredIndex >= selStart && filteredIndex <= selEnd);
+
+                if (lineSelected) {
+                    ImVec2 highlightMin = ImVec2(textPosScreen.x, textPosScreen.y);
+                    ImVec2 highlightMax = ImVec2(textPosScreen.x + wrapWidth, textPosScreen.y + textSize.y);
+
+                    ImVec2 clipMin = ImGui::GetWindowPos();
+                    ImVec2 clipMax = ImVec2(clipMin.x + ImGui::GetWindowSize().x, clipMin.y + ImGui::GetWindowSize().y);
+
+                    if (highlightMax.y > clipMin.y && highlightMin.y < clipMax.y) {
+                        drawList->AddRectFilled(
+                            ImVec2(highlightMin.x, std::max(highlightMin.y, clipMin.y)), ImVec2(highlightMax.x, std::min(highlightMax.y, clipMax.y)), IM_COL32(80, 120, 200, 100)
+                        );
+                    }
+
+                    selectedText += item.Get() + "\n";
+                }
+
+                if (m_ColoredOutput) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[item.m_Type]);
+                    ImGui::TextUnformatted(item.Get().data());
+                    ImGui::PopStyleColor();
+                } else {
+                    ImGui::TextUnformatted(item.Get().data());
+                }
+
+                if (item.m_Type == csys::COMMAND && m_TimeStamps) {
+                    ImGui::PopTextWrapPos();
+                    ImGui::SameLine(ImGui::GetColumnWidth(-1) - timestamp_width);
+                    ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[COL_TIMESTAMP]);
+                    ImGui::Text(
+                        "%02d:%02d:%02d:%04d", ((item.m_TimeStamp / 1000 / 3600) % 24), ((item.m_TimeStamp / 1000 / 60) % 60), ((item.m_TimeStamp / 1000) % 60), item.m_TimeStamp % 1000
+                    );
+                    ImGui::PopStyleColor();
+                }
+
+                itemIndex++;
+                filteredIndex++;
             }
-
-            // Time stamp
-            if (item.m_Type == csys::COMMAND && m_TimeStamps) {
-                ImGui::PopTextWrapPos();
-                ImGui::SameLine(ImGui::GetColumnWidth(-1) - timestamp_width);
-                ImGui::PushStyleColor(ImGuiCol_Text, m_ColorPalette[COL_TIMESTAMP]);
-                ImGui::Text("%02d:%02d:%02d:%04d", ((item.m_TimeStamp / 1000 / 3600) % 24), ((item.m_TimeStamp / 1000 / 60) % 60), ((item.m_TimeStamp / 1000) % 60), item.m_TimeStamp % 1000);
-                ImGui::PopStyleColor();
-            }
-
-            itemIndex++;
-            filteredIndex++;
         }
 
         ImGui::PopTextWrapPos();
@@ -442,6 +576,11 @@ void ImGuiConsole::MenuBar() {
             ImGui::Checkbox("Time Stamps", &m_TimeStamps);
             ImGui::SameLine();
             HelpMaker("Display command execution timestamps");
+
+            // Collapse Messages
+            ImGui::Checkbox("Collapse Duplicates", &m_CollapseMessages);
+            ImGui::SameLine();
+            HelpMaker("Automatically collapse consecutive duplicate messages");
 
             // Reset to default settings
             if (ImGui::Button("Reset settings", ImVec2(ImGui::GetColumnWidth(), 0))) ImGui::OpenPopup("Reset Settings?");
@@ -650,12 +789,18 @@ void ImGuiConsole::SettingsHandler_ReadLine(ImGuiContext* ctx, ImGuiSettingsHand
 #pragma warning(push)
 #pragma warning(disable : 4996)
 
-#define INI_CONSOLE_LOAD_COLOR(type) \
-    (std::sscanf(line, #type "=%i,%i,%i,%i", &r, &g, &b, &a) == 4) { console->m_ColorPalette[type] = ImColor(r, g, b, a); }
-#define INI_CONSOLE_LOAD_FLOAT(var) \
-    (std::sscanf(line, #var "=%f", &f) == 1) { console->var = f; }
-#define INI_CONSOLE_LOAD_BOOL(var) \
-    (std::sscanf(line, #var "=%i", &b) == 1) { console->var = b == 1; }
+#define INI_CONSOLE_LOAD_COLOR(type)                                 \
+    (std::sscanf(line, #type "=%i,%i,%i,%i", &r, &g, &b, &a) == 4) { \
+        console->m_ColorPalette[type] = ImColor(r, g, b, a);         \
+    }
+#define INI_CONSOLE_LOAD_FLOAT(var)            \
+    (std::sscanf(line, #var "=%f", &f) == 1) { \
+        console->var = f;                      \
+    }
+#define INI_CONSOLE_LOAD_BOOL(var)             \
+    (std::sscanf(line, #var "=%i", &b) == 1) { \
+        console->var = b == 1;                 \
+    }
 
     float f;
     int r, g, b, a;
@@ -665,7 +810,7 @@ void ImGuiConsole::SettingsHandler_ReadLine(ImGuiContext* ctx, ImGuiSettingsHand
         else if INI_CONSOLE_LOAD_COLOR (COL_LOG) else if INI_CONSOLE_LOAD_COLOR (COL_WARNING) else if INI_CONSOLE_LOAD_COLOR (COL_ERROR) else if INI_CONSOLE_LOAD_COLOR (COL_INFO) else if INI_CONSOLE_LOAD_COLOR (COL_TIMESTAMP) else if INI_CONSOLE_LOAD_FLOAT (m_WindowAlpha)
 
             // Window settings
-            else if INI_CONSOLE_LOAD_BOOL (m_AutoScroll) else if INI_CONSOLE_LOAD_BOOL (m_ScrollToBottom) else if INI_CONSOLE_LOAD_BOOL (m_ColoredOutput) else if INI_CONSOLE_LOAD_BOOL (m_FilterBar) else if INI_CONSOLE_LOAD_BOOL (m_TimeStamps)
+            else if INI_CONSOLE_LOAD_BOOL (m_AutoScroll) else if INI_CONSOLE_LOAD_BOOL (m_ScrollToBottom) else if INI_CONSOLE_LOAD_BOOL (m_ColoredOutput) else if INI_CONSOLE_LOAD_BOOL (m_FilterBar) else if INI_CONSOLE_LOAD_BOOL (m_TimeStamps) else if INI_CONSOLE_LOAD_BOOL (m_CollapseMessages)
 
             // Log type filters
             else if INI_CONSOLE_LOAD_BOOL (m_ShowCommand) else if INI_CONSOLE_LOAD_BOOL (m_ShowLog) else if INI_CONSOLE_LOAD_BOOL (m_ShowWarning) else if INI_CONSOLE_LOAD_BOOL (m_ShowError) else if INI_CONSOLE_LOAD_BOOL (m_ShowInfo)
@@ -706,6 +851,7 @@ void ImGuiConsole::SettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHand
     INI_CONSOLE_SAVE_BOOL(m_ShowWarning);
     INI_CONSOLE_SAVE_BOOL(m_ShowError);
     INI_CONSOLE_SAVE_BOOL(m_ShowInfo);
+    INI_CONSOLE_SAVE_BOOL(m_CollapseMessages);
     // Window style/visuals
     INI_CONSOLE_SAVE_FLOAT(m_WindowAlpha);
     INI_CONSOLE_SAVE_COLOR(COL_COMMAND);

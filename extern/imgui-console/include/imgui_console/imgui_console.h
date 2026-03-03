@@ -8,6 +8,7 @@
 #include "csys/system.h"
 #include "imgui.h"
 #include <array>
+#include <set>
 
 struct ImGuiSettingsHandler;
 class ImGuiConsole {
@@ -45,23 +46,23 @@ class ImGuiConsole {
 
     // Main
 
-    std::string m_Buffer;          //!< Input buffer.
-    std::string m_ConsoleName;     //!< Console name string buffer.
-    ImGuiTextFilter m_TextFilter;  //!< Logging filer.
-    bool m_AutoScroll;             //!< Auto scroll flag.
-    bool m_ColoredOutput;          //!< Colored output flag.
-    bool m_ScrollToBottom;         //!< Scroll to bottom after is command is ran
-    bool m_FilterBar;              //!< Filter bar flag.
-    bool m_TimeStamps;             //!< Display time stamps flag
+    std::string m_Buffer;            //!< Input buffer.
+    std::string m_ConsoleName;       //!< Console name string buffer.
+    ImGuiTextFilter m_TextFilter;    //!< Logging filer.
+    bool m_AutoScroll;               //!< Auto scroll flag.
+    bool m_ColoredOutput;            //!< Colored output flag.
+    bool m_ScrollToBottom;           //!< Scroll to bottom after is command is ran
+    bool m_FilterBar;                //!< Filter bar flag.
+    bool m_TimeStamps;               //!< Display time stamps flag
 
     void InitIniSettings();          //!< Initialize Ini Settings handler
     void DefaultSettings();          //!< Restore console default settings
     void RegisterConsoleCommands();  //!< Register built-in console commands
 
-    void MenuBar();    //!< Console menu bar
-    void FilterBar();  //!< Console filter bar
-    void InputBar();   //!< Console input bar
-    void LogWindow();  //!< Console log
+    void MenuBar();                  //!< Console menu bar
+    void FilterBar();                //!< Console filter bar
+    void InputBar();                 //!< Console input bar
+    void LogWindow();                //!< Console log
     void DrawLogTypeButtons();
 
     static void HelpMaker(const char* desc);
@@ -73,15 +74,15 @@ class ImGuiConsole {
     enum COLOR_PALETTE {
         // This four have to match the csys item type enum.
 
-        COL_COMMAND = 0,  //!< Color for command logs
-        COL_LOG,          //!< Color for in-command logs
-        COL_WARNING,      //!< Color for warnings logs
-        COL_ERROR,        //!< Color for error logs
-        COL_INFO,         //!< Color for info logs
+        COL_COMMAND = 0,                           //!< Color for command logs
+        COL_LOG,                                   //!< Color for in-command logs
+        COL_WARNING,                               //!< Color for warnings logs
+        COL_ERROR,                                 //!< Color for error logs
+        COL_INFO,                                  //!< Color for info logs
 
-        COL_TIMESTAMP,  //!< Color for timestamps
+        COL_TIMESTAMP,                             //!< Color for timestamps
 
-        COL_COUNT  //!< For bookkeeping purposes
+        COL_COUNT                                  //!< For bookkeeping purposes
     };
 
     std::array<ImVec4, COL_COUNT> m_ColorPalette;  //!< Container for all available colors
@@ -92,6 +93,9 @@ class ImGuiConsole {
     bool m_ShowWarning = true;
     bool m_ShowError = true;
     bool m_ShowInfo = true;
+
+    // Message collapsing
+    bool m_CollapseMessages = true;
 
     bool m_IsSelecting = false;
     int m_SelectionStartIndex = -1;

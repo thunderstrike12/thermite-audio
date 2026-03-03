@@ -25,7 +25,7 @@ void RifleProjectile::update(const tmt::FrameData& time) {
 
     // TODO this is very dumb code that should be updated when we have proper raycasts check
     if (hit.entity != entt::null && hit.distance < step_distance && hit.entity != entity) {
-        tmt::Log::info("Would collide with entity {} at distance {}, step {}", hit.entity, hit.distance, step_distance);
+        // tmt::Log::info("Would collide with entity {} at distance {}, step {}", hit.entity, hit.distance, step_distance);
 
         collide(hit);
         return;

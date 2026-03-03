@@ -21,6 +21,9 @@ class ConsoleSink : public spdlog::sinks::base_sink<Mutex> {
 
         csys::ItemType type {};
         switch (msg.level) {
+            case spdlog::level::debug:
+                type = csys::ItemType::LOG;
+                break;
             case spdlog::level::info:
                 type = csys::ItemType::INFO;
                 break;

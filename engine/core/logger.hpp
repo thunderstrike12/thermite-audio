@@ -23,6 +23,7 @@ class Log {
         loggers[Scope::RENDERER] = spdlog::stdout_color_mt("Renderer");
         loggers[Scope::EDITOR] = spdlog::stdout_color_mt("Editor");
         loggers[Scope::GLOBAL] = spdlog::stdout_color_mt("Global");
+        spdlog::set_level(spdlog::level::debug);
 
         std::shared_ptr<spdlog::sinks::basic_file_sink_mt> file_sink = nullptr;
         if (!log_file.empty()) {
@@ -52,6 +53,10 @@ class Log {
     static void info(Scope scope, spdlog::format_string_t<Args...> fmt, Args&&... args) {
         loggers[scope]->info(fmt, std::forward<Args>(args)...);
     }
+    template <typename... Args>
+    static void debug(Scope scope, spdlog::format_string_t<Args...> fmt, Args&&... args) {
+        loggers[scope]->debug(fmt, std::forward<Args>(args)...);
+    }
 
     template <typename... Args>
     static void warn(Scope scope, spdlog::format_string_t<Args...> fmt, Args&&... args) {
@@ -62,7 +67,10 @@ class Log {
     static void error(Scope scope, spdlog::format_string_t<Args...> fmt, Args&&... args) {
         loggers[scope]->error(fmt, std::forward<Args>(args)...);
     }
-
+    template <typename... Args>
+    static void debug(spdlog::format_string_t<Args...> fmt, Args&&... args) {
+        loggers[Scope::GLOBAL]->debug(fmt, std::forward<Args>(args)...);
+    }
     template <typename... Args>
     static void info(spdlog::format_string_t<Args...> fmt, Args&&... args) {
         loggers[Scope::GLOBAL]->info(fmt, std::forward<Args>(args)...);
