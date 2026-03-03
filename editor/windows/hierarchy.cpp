@@ -7,6 +7,7 @@
 #include <ImReflect.hpp>
 
 #include "editor/editor.hpp"
+#include "editor/windows/viewport.hpp"
 
 #include "engine/engine.hpp"
 #include "engine/core/resources.hpp"
@@ -19,7 +20,7 @@
 #include "engine/core/components/transform.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
 
-#include "engine/tools/serializer/ecs.hpp"
+#include "engine/tools/serializer/all.hpp"
 #include "engine/tools/prefab_helper.hpp"
 
 #include "editor/events/scene.hpp"
@@ -27,7 +28,66 @@
 #include "editor/shared/colors.hpp"
 #include "editor/shared/icons.hpp"
 
+#include "editor/core/systems/undo_redo/entity_diff.hpp"
+#include "editor/core/systems/undo_redo/component_diff.hpp"
+#include "editor/core/systems/undo_redo/undo_redo_manager.hpp"
+
 namespace tmt {
+
+/* Strips any trailing " (N)" suffix from a name to get the base name. */
+static std::string get_base_name(const std::string& name) {
+    if (name.size() < 4) return name;
+
+    // Check if the name ends with " (N)" where N is one or more digits
+    if (name.back() != ')') return name;
+
+    auto paren_open = name.rfind(" (");
+    if (paren_open == std::string::npos) return name;
+
+    // Check that everything between " (" and ")" is digits
+    const std::string between = name.substr(paren_open + 2, name.size() - paren_open - 3);
+    if (between.empty()) return name;
+
+    for (char c : between) {
+        if (!std::isdigit(static_cast<unsigned char>(c))) return name;
+    }
+
+    return name.substr(0, paren_open);
+}
+
+/* Finds the next available duplicate number for a base name, considering all existing entity names. */
+static int find_next_duplicate_number(const std::string& base_name, const Registry& registry) {
+    int max_number = 0;
+
+    auto view = registry.view<Name>();
+    for (auto [entity, name_component] : view.each()) {
+        const std::string& existing_name = name_component.name;
+
+        if (existing_name == base_name) {
+            // The base name itself exists, so we need at least (1)
+            max_number = std::max(max_number, 1);
+        } else if (existing_name.size() > base_name.size()) {
+            // Check if it matches "base_name (N)"
+            const std::string prefix = base_name + " (";
+            if (existing_name.rfind(prefix, 0) == 0 && existing_name.back() == ')') {
+                const std::string num_str = existing_name.substr(prefix.size(), existing_name.size() - prefix.size() - 1);
+                bool all_digits = !num_str.empty();
+                for (char c : num_str) {
+                    if (!std::isdigit(static_cast<unsigned char>(c))) {
+                        all_digits = false;
+                        break;
+                    }
+                }
+                if (all_digits) {
+                    int num = std::stoi(num_str);
+                    max_number = std::max(max_number, num + 1);
+                }
+            }
+        }
+    }
+
+    return max_number == 0 ? 1 : max_number;
+}
 
 void Hierarchy::before_begin() {
     /* zero margin */
@@ -99,10 +159,7 @@ void Hierarchy::context_menu(const Entity hovered_entity) {
         if (selected_entities.empty() == false) { /* Delete selection */
             const auto text = selected_entities.size() > 1 ? "Delete Entities" : "Delete Entity";
             if (ImGui::MenuItem(text)) {
-                for (const auto selected : selected_entities) {
-                    tmt::engine.ecs.destroy_entity(selected);
-                }
-                clear_selection();
+                delete_selection();
                 ImGui::CloseCurrentPopup();
             }
         }
@@ -174,32 +231,69 @@ void Hierarchy::copy_selection() {
     ImGui::SetClipboardText(json.dump().c_str());
 }
 
-void Hierarchy::paste_entities(const Entity hovered_entity) {
+std::set<Entity> Hierarchy::paste_entities(const Entity hovered_entity, const bool overwrite_parent) {
     const char* clipboard_text = ImGui::GetClipboardText();
     if (clipboard_text == nullptr) {
         Log::warn("Failed to paste entities, clipboard is empty.");
-        return;
+        return {};
     }
     const json deserialized = json::parse(clipboard_text, nullptr, false);
     if (deserialized.is_discarded()) {
         Log::error("Failed to parse clipboard JSON for entities. Clipboard is: \"{}\"", clipboard_text);
-        return;
+        return {};
     }
 
     std::set<Entity> new_entities;
     Serializer::deserialize(deserialized, new_entities, tmt::engine.ecs);
 
     const std::set<Entity> parents = EntityHelper::upper_parents(new_entities);
-    for (const Entity parent : parents) {
-        Transform& parent_transform = tmt::engine.ecs.get_component<Transform>(parent);
-        parent_transform.set_parent(hovered_entity);
+    if (overwrite_parent) {
+        for (const Entity parent : parents) {
+            Transform& parent_transform = tmt::engine.ecs.get_component<Transform>(parent);
+            parent_transform.set_parent(hovered_entity);
+        }
     }
+
+    EntityDiff diff { parents, true };
+    EntityDiff::send_to_manager(std::move(diff), "Pasted Entities");
 
     clear_selection();
     for (const auto entity : parents) {
         selected_entities.insert(entity);
     }
     OnSceneModified::dispatch();
+    return new_entities;
+}
+
+void Hierarchy::duplicate_selection() {
+    if (selected_entities.empty()) return;
+
+    copy_selection();
+    const std::set<Entity> new_entities = paste_entities(entt::null, false);
+
+    // Rename duplicated entities with incrementing " (N)" suffixes
+    auto& reg = tmt::engine.ecs.get_registry();
+    for (const Entity entity : new_entities) {
+        if (!reg.all_of<Name>(entity)) continue;
+
+        Name& name_comp = reg.get<Name>(entity);
+        const std::string base = get_base_name(name_comp.name);
+        const int next_number = find_next_duplicate_number(base, reg);
+        name_comp.name = base + " (" + std::to_string(next_number) + ")";
+    }
+}
+
+void Hierarchy::delete_selection() {
+    if (selected_entities.empty()) return;
+
+    const std::set<Entity> upper_parents = EntityHelper::upper_parents(selected_entities);
+    EntityDiff diff { upper_parents, false };
+    EntityDiff::send_to_manager(std::move(diff), "Deleted Entities");
+
+    for (const auto selected : selected_entities) {
+        tmt::engine.ecs.destroy_entity(selected);
+    }
+    clear_selection();
 }
 
 void Hierarchy::clear_selection() {
@@ -231,6 +325,29 @@ void Hierarchy::on_editor_update(const FrameData&) {
         if (engine.ecs.valid(entity) == false) {
             selected_entities.erase(entity);
             break;
+        }
+    }
+
+    const bool is_playing = engine.game_controller.is_running();
+    const bool using_debug_cam = editor.windows[editor.editor_mode].get<Viewport>().is_using_debug_camera();
+    const bool wants_keyboard = ImGui::GetIO().WantCaptureKeyboard;
+    const bool has_selection = !selected_entities.empty();
+
+    /* print bools */
+    if (!is_playing && !using_debug_cam && !wants_keyboard) {
+        const bool ctrl_held = ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
+        if (ctrl_held) {
+            if (has_selection && ImGui::IsKeyPressed(ImGuiKey_C, false)) {
+                copy_selection();
+            } else if (ImGui::IsKeyPressed(ImGuiKey_V, false)) {
+                paste_entities(entt::null, false);
+            } else if (has_selection && ImGui::IsKeyPressed(ImGuiKey_D, false)) {
+                duplicate_selection();
+            }
+        }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_Delete, false)) {
+            delete_selection();
         }
     }
 }
@@ -275,6 +392,9 @@ void Hierarchy::top_bar() {
                 engine.ecs.add_or_get_component<Transform>(entity);
                 clear_selection();
                 selected_entities.insert(entity);
+
+                EntityDiff diff { entity, true };
+                EntityDiff::send_to_manager(std::move(diff), "Created Entity");
             }
             ImGui::EndMenu();
         }
@@ -486,21 +606,60 @@ bool Hierarchy::drag_drop_target(const Entity dropped_entity) {
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_ENTITY")) {
             const DragNDropPayload* payload_data = (DragNDropPayload*)payload->Data;
+
+            /* Collect the entities that will be moved */
+            std::vector<Entity> entities_to_move;
             if (payload_data->multiple) {
-                /* Multiple entities being moved */
                 for (const auto& selected_entity : selected_entities) {
                     if (selected_entity == dropped_entity) continue;
-                    auto& transform = engine.ecs.get_component<Transform>(selected_entity);
-                    transform.set_parent(dropped_entity);
+                    entities_to_move.push_back(selected_entity);
                 }
             } else {
-                /* Single entity being moved */
-                Entity single_entity = payload_data->entity;
-                if (dropped_entity != single_entity) {
-                    auto& transform = engine.ecs.get_component<Transform>(single_entity);
-                    transform.set_parent(dropped_entity);
+                if (dropped_entity != payload_data->entity) {
+                    entities_to_move.push_back(payload_data->entity);
                 }
             }
+
+            /* Collect all unique affected parents (old parents + new parent) for a single before/after snapshot each */
+            std::map<Entity, ComponentDiff<Transform>> parent_diffs;
+
+            if (dropped_entity != entt::null && engine.ecs.valid(dropped_entity)) {
+                parent_diffs.emplace(dropped_entity, ComponentDiff<Transform> { dropped_entity });
+            }
+
+            for (const Entity entity : entities_to_move) {
+                const Entity old_parent = engine.ecs.get_component<Transform>(entity).get_parent();
+                if (old_parent != entt::null && engine.ecs.valid(old_parent) && !parent_diffs.contains(old_parent)) {
+                    parent_diffs.emplace(old_parent, ComponentDiff<Transform> { old_parent });
+                }
+            }
+
+            /* Snapshot all parents and children BEFORE mutations */
+            for (auto& [_, diff] : parent_diffs) diff.before();
+
+            std::vector<ComponentDiff<Transform>> child_diffs;
+            child_diffs.reserve(entities_to_move.size());
+            for (const Entity entity : entities_to_move) {
+                child_diffs.emplace_back(entity);
+                child_diffs.back().before();
+            }
+
+            /* Perform all re-parenting */
+            for (const Entity entity : entities_to_move) {
+                auto& transform = engine.ecs.get_component<Transform>(entity);
+                transform.set_parent(dropped_entity);
+            }
+
+            /* Snapshot all parents and children AFTER mutations */
+            for (auto& [_, diff] : parent_diffs) diff.after();
+            for (auto& diff : child_diffs) diff.after();
+
+            /* Build the undo/redo collection */
+            UndoRedoCollection diff_collection;
+            for (auto& [_, diff] : parent_diffs) diff_collection.add_action(std::move(diff));
+            for (auto& diff : child_diffs) diff_collection.add_action(std::move(diff));
+            diff_collection.commit("Modified Hierarchy");
+
             ImGui::EndDragDropTarget();
             selected_index_begin = NULL_INDEX;
             selection_parent = entt::null;

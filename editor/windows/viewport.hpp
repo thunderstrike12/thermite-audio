@@ -28,6 +28,7 @@ class Viewport : public IWindow, public OnRetrieveMouseState {
     constexpr bool default_open() const override { return true; }
 
     bool get_is_hovered() const { return is_hovered; }
+    bool is_using_debug_camera() const { return using_debug_camera; }
 
    private:
     friend class ModelViewer;
