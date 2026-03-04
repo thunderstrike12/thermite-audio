@@ -8,8 +8,8 @@
     #include "editor/imgui/types/all.hpp"
     #include "editor/imgui/components/all.hpp"
 #else
-//class ImSettings;
-//class ImResponse;
+// class ImSettings;
+// class ImResponse;
 #endif
 
 /* Forward declare */
@@ -71,6 +71,10 @@ class IGameComponent {
     /* [ Optional ] */
     virtual void fixed_update(const FrameData& time) { (void)time; };
     virtual void draw_debug_lines() const {};
+    /* when switching from disabled to enabled */
+    virtual void on_entity_enabled() {};
+    /* when switching from enabled to disabled */
+    virtual void on_entity_disabled() {};
 
     /* [ Auto ] Helpers for engine */
     virtual nlohmann::json serialize(SerializationContext& ctx) const = 0;

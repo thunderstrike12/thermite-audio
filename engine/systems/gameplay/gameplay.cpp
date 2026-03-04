@@ -39,7 +39,18 @@ void Gameplay::on_start() {
 
 void Gameplay::on_update(const tmt::FrameData& time) {
     TMT_ZONE_SCOPED_NS("Update Gameplay Components");
-    for_each_component([&time](const Entity entity, IGameComponent& component) {
+    for_each_component([&](const Entity entity, IGameComponent& component) {
+
+        if (to_enable.contains(entity)) {
+            component.on_entity_enabled();
+            to_enable.erase(entity);
+        }
+
+        if (to_disable.contains(entity)) {
+            component.on_entity_disabled();
+            to_disable.erase(entity);
+        }
+
         /* update */
         if (component.started == false) {
             component.start();
@@ -91,6 +102,16 @@ const std::vector<std::weak_ptr<IGameComponent>>& Gameplay::get_component_instan
 
 void Gameplay::on_pre_unload_scene() {
     clear_component_instances();
+}
+
+void Gameplay::on_enable_entity(const Entity& entity) {
+    if (engine.game_controller.is_playing() == false) return;
+    to_enable.insert(entity);
+}
+
+void Gameplay::on_disable_entity(const Entity& entity) {
+    if (engine.game_controller.is_playing() == false) return;
+    to_disable.insert(entity);
 }
 
 }  // namespace tmt

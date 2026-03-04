@@ -1,4 +1,5 @@
 #include "ecs.hpp"
+#include "engine/events/ecs.hpp"
 
 namespace tmt {
 
@@ -19,6 +20,7 @@ void Ecs::enable(const Entity entity, const bool mark) {
 
     if (!parent_is_disabled) {
         remove_component<Disable>(entity);
+        OnEnableEntity::dispatch(entity);
         propagate_enable(entity);
     }
 }
@@ -30,6 +32,7 @@ void Ecs::propagate_enable(const Entity entity) {
             continue;
         }
         remove_component<Disable>(child);
+        OnEnableEntity::dispatch(child);
         propagate_enable(child);  // recurse into children
     }
 }
@@ -37,10 +40,13 @@ void Ecs::propagate_enable(const Entity entity) {
 void Ecs::disable(const Entity entity, const bool mark) {
     if (mark) add_or_get_component<DisableFlag>(entity);
     add_or_get_component<Disable>(entity);
+    OnDisableEntity::dispatch(entity);
+
 
     const auto children = get_component<Transform>(entity).get_all_children();
     for (const auto child : children) {
         add_or_get_component<Disable>(child);
+        OnDisableEntity::dispatch(child);
     }
 }
 

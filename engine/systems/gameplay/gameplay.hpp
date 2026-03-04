@@ -2,10 +2,11 @@
 #include "engine/core/system.hpp"
 #include "engine/systems/gameplay/types.hpp"
 #include "engine/events/scene.hpp"
+#include "engine/events/ecs.hpp"
 
 namespace tmt {
 
-class Gameplay : public ISystem, OnPreUnloadScene {
+class Gameplay : public ISystem, OnPreUnloadScene, OnEnableEntity, OnDisableEntity {
    public:
     constexpr virtual std::string get_name() override { return "Gameplay"; };
 
@@ -28,6 +29,12 @@ class Gameplay : public ISystem, OnPreUnloadScene {
 
     // Inherited via OnPreUnloadScene
     void on_pre_unload_scene() override;
+
+    void on_enable_entity(const Entity& entity) override;
+    void on_disable_entity(const Entity& entity) override;
+
+    std::set<Entity> to_disable {};
+    std::set<Entity> to_enable {};
 };
 
 }  // namespace tmt
