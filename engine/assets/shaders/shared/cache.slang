@@ -12,15 +12,15 @@ public static const uint64_t EMPTY_KEY = 0xFFFFFFFFFFFFFFFFull;
 /* Number of inactive frames after which to free a slot. */
 public static const uint INACTIVE_THRESHOLD = 60u;
 /* Number of slots available in the cache. */
-static const uint CAPACITY = 10000000u;
+public static const uint CAPACITY = 10000000u;
 
-static const uint TEMPORAL_SAMPLES = 32u;
+static const uint TEMPORAL_SAMPLES = 20u;
 
 /* Cache Slot (48 bytes) */
 public struct Slot {
     public uint64_t key; /* 64-bit hash key. */
-    public uint samples; /* Sample count & last sampled frame index. */
-    public uint temporal;
+    public uint samples; /* Sample count & warmup counter. */
+    public uint warmup;
     public uint4 diffuse; /* Spatial & temporal diffuse illuminance. */
     public uint4 specular; /* Spatial & temporal specular luminance. */
 
@@ -35,6 +35,10 @@ public struct Slot {
 
     /* Last frame index this cache slot was sampled. */
     public [ForceInline] uint last_sampled() { return samples >> SAMPLE_COUNT_BITS; };
+    public [ForceInline] [mutating] void set_last_sampled(uint value) { samples = sample_count() | (value << SAMPLE_COUNT_BITS); };
+
+    /* Warmup counter for this cache slot. */
+    public [ForceInline] uint warmup_counter() { return warmup; };
 
     /* Quantization factor */
     static const float QFACTOR = 1e3f;
@@ -61,33 +65,23 @@ public struct Slot {
         samples = last_sampled() << SAMPLE_COUNT_BITS;
 
         /* Accumulator warmup factor */
-        if (temporal < TEMPORAL_SAMPLES) temporal += 1u;
-        const float warmup_factor = 1.0f / (float)temporal;
+        if (warmup < TEMPORAL_SAMPLES) warmup += 1u;
 
-        /* Calculate a confidence factor based on spatial samples taken */
-        const float temporal_factor = saturate((float)spatial_samples / 128.0f);
-
-        /* Calculate a confidence factor based on staleness */
-        const float staleness = 1.0f - exp(-(float)(age / 60.0f) * 3.5f);
-
-        /* Merge factors to create EMA alpha */
-        const float alpha = lerp(warmup_factor * temporal_factor, 1.0f, staleness);
-
+        const float alpha = 1.0f / (float)warmup;
         diffuse.w = encode_rgb9e5(lerp(read_diffuse(), diffuse_accu, alpha));
         specular.w = encode_rgb9e5(lerp(read_specular(), specular_accu, alpha));
     }
 
     /* Find the inactivity of the cache slot compared to a reference frame index. */
-    public [ForceInline] uint inactivity(const uint ref_frame) {
-        const uint current_index = ref_frame & LAST_SAMPLED_MASK;
-        const uint sampled_index = last_sampled();
-        // if (sampled_index == 0u) return 0u; /* <- to avoid instantly marker slot as inactive */
-        return ((current_index - sampled_index) << SAMPLE_COUNT_BITS) >> SAMPLE_COUNT_BITS;
+    public [ForceInline] [mutating] uint inactivity(const uint frame_index) {
+        const uint last = last_sampled();
+        set_last_sampled(last + 1u);
+        return last;
     }
 
     /* Activate the cache slot for the given frame index. */
     public [ForceInline] [mutating] void activate(const uint frame_index) {
-        samples = sample_count() | (frame_index << SAMPLE_COUNT_BITS);
+        set_last_sampled(0u);
     }
 
     /* Accumulate into the cache slot. */
@@ -113,21 +107,35 @@ public struct Slot {
     public [ForceInline] [mutating] void reset() {
         key = EMPTY_KEY;
         diffuse = specular = 0u;
-        samples = temporal = 0u;
+        samples = warmup = 0u;
     }
 };
 
 /* Insert illuminance into the illuminance cache. */
 public [ForceInline] void insert(RWStructuredBuffer<cache::Slot> cache, const uint64_t key, const uint frame_index, const float3 diffuse, const float3 specular) {
     /* Modulo the hash to fall within the cache capacity */
-    uint slot = voxel_hash(key) % CAPACITY;
+    const uint base_hash = voxel_hash(key) % CAPACITY;
+    uint slot = base_hash;
 
-    /* Find or insert the macrofacet */
+    /* Find the macrofacet */
     for (uint fuse = 0u; fuse < FUSE_LENGTH; ++fuse) {
         /* Exit if we found a slot which already exists matching our key */
         if (cache[slot].key == key) {
             cache[slot].accumulate(diffuse, specular);
-            break;
+            return;
+        }
+
+        /* Move to the next hash cache slot */
+        slot = (slot + 1u) % CAPACITY;
+    }
+
+    /* Find or insert the macrofacet */
+    slot = base_hash;
+    for (uint fuse = 0u; fuse < FUSE_LENGTH; ++fuse) {
+        /* Exit if we found a slot which already exists matching our key */
+        if (cache[slot].key == key) {
+            cache[slot].accumulate(diffuse, specular);
+            return;
         }
 
         /* If the current slot is empty */
@@ -136,10 +144,9 @@ public [ForceInline] void insert(RWStructuredBuffer<cache::Slot> cache, const ui
             InterlockedCompareExchange(cache[slot].key, EMPTY_KEY, key, original_key);
 
             /* If instead this thread succeeded in claiming the slot */
-            if (original_key == EMPTY_KEY) {
-                cache[slot].activate(frame_index);
+            if (original_key == EMPTY_KEY || original_key == key) {
                 cache[slot].accumulate(diffuse, specular);
-                break;
+                return;
             }
         }
 
@@ -165,7 +172,7 @@ public [ForceInline] Slot sample(RWStructuredBuffer<cache::Slot> cache, const ui
         slot = (slot + 1u) % CAPACITY;
     }
 
-    return Slot(); /* Couldn't find a sample */
+    return Slot(EMPTY_KEY); /* Couldn't find a sample */
 }
 
 } // cache

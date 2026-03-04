@@ -24,6 +24,8 @@ class DiPipeline {
     void init(GPUAdapter& gpu);
     void enqueue(RenderGraph& render_graph, RenderView& render_view, SceneView& scene_view);
     void deinit(GPUAdapter& gpu);
+
+    bool cache_init = false;
 };
 
 }  // namespace tmt

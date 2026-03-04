@@ -23,6 +23,7 @@ enum class DisplayMode : uint32_t {
     NORMALS,     /* Visualize geometric normal data. */
     ALBEDO,      /* Visualize material albedo. */
     ILLUMINANCE, /* Visualize illuminance from the cache. */
+    CACHE,       /* Visualize cache info. */
 };
 
 class Renderer {
