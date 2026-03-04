@@ -60,7 +60,7 @@ class Resources {
         // load() success checking
         const bool file_exists = resource->last_modified_time != TimeStamp::min();
         if (!file_exists || !resource->load()) {
-            tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to load resource!");
+            tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to load resource: {}", file_location);
             resource->unload();
             resource->loaded = false;
             ResourceRef<T> ref(file_location);

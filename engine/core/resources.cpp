@@ -11,7 +11,7 @@ void Resources::unload_unused() {
         if (ref_count <= 1) {
             collection.file_resource->unload();
             collection.file_resource->loaded = false;
-            tmt::Log::info(tmt::Log::Scope::ENGINE, "[Resources] Unloaded unused file resource {}", file_location);
+            tmt::Log::debug(tmt::Log::Scope::ENGINE, "[Resources] Unloaded unused file resource {}", file_location);
             resource_type_locations[resources.at(file_location).type_hash].erase(file_location);  // Get the type hash
             resources.erase(file_location);
             i--;
@@ -24,9 +24,9 @@ void Resources::force_unload_all() {
         const int ref_count = collection.file_resource.use_count();
 
         if (ref_count > 1) {
-            tmt::Log::warn(tmt::Log::Scope::ENGINE, "[Resources] Force unloading file resource {} with {} active references!", file_location, ref_count - 1);
+            tmt::Log::debug(tmt::Log::Scope::ENGINE, "[Resources] Force unloading file resource {} with {} active references!", file_location, ref_count - 1);
         } else {
-            tmt::Log::info(tmt::Log::Scope::ENGINE, "[Resources] Force unloaded file resource {}", file_location);
+            tmt::Log::debug(tmt::Log::Scope::ENGINE, "[Resources] Force unloaded file resource {}", file_location);
         }
 
         collection.file_resource->unload();

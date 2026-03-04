@@ -249,6 +249,10 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
             registry.emplace_or_replace<Delete>(entity);
         }
 
+        /* Need to make sure it has transform since we can destroy empty entities */
+        const bool has_transform = registry.all_of<Transform>(entity);
+        if (has_transform == false) return;
+
         auto children = get_component<Transform>(entity).get_children();
         for (auto child : children) {
             destroy_entity(child, force);

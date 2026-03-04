@@ -14,24 +14,6 @@ struct Prefab {
     tmt::Entity source_entity = entt::null; /* in Prefab */
     IO::FileLocation source_location {};
 
-    /* TODO: should only be in editor, not in game */
-    struct ChainEntry {
-        IO::FileLocation source_location;
-        tmt::Entity source_entity;
-        PrefabInstanceID instance_id { NULL_UUID };
-    };
-
-    std::vector<ChainEntry> prefab_chain;
-
-    const ChainEntry* prefab_chain_contains(const PrefabInstanceID& id) const {
-        for (const auto& entry : prefab_chain) {
-            if (entry.instance_id == id) {
-                return &entry;
-            }
-        }
-        return nullptr;
-    }
-
     bool operator==(const Prefab& other) const {
         return instance_id == other.instance_id && root_entity == other.root_entity && source_entity == other.source_entity && source_location == other.source_location;
     }
@@ -39,7 +21,6 @@ struct Prefab {
 
 }  // namespace tmt
 
-TMT_OBJECT(tmt::Prefab::ChainEntry, (source_location, source_entity));
 TMT_COMPONENT_NAME(tmt::Prefab, "Prefab");
 TMT_COMPONENT_SERIALIZE(tmt::Prefab, (source_location, source_entity, root_entity, instance_id));
 TMT_COMPONENT_INSPECT(tmt::Prefab, (source_location, source_entity, root_entity, instance_id));

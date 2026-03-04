@@ -286,6 +286,25 @@ void Hierarchy::duplicate_selection() {
 void Hierarchy::delete_selection() {
     if (selected_entities.empty()) return;
 
+    for (const auto selected : selected_entities) {
+        const bool is_prefab = engine.ecs.has_component<Prefab>(selected);
+        if (is_prefab == false) continue;
+
+        const auto& prefab = engine.ecs.get_component<Prefab>(selected);
+        const auto& transform = engine.ecs.get_component<Transform>(selected);
+        auto parents = transform.get_all_parents();
+        for (const auto parent : parents) {
+            if (parent == selected) continue;
+            if (selected_entities.contains(parent)) continue;
+            if (engine.ecs.has_component<Prefab>(parent) == false) continue;
+            const auto& parent_prefab = engine.ecs.get_component<Prefab>(parent);
+            if (parent_prefab.instance_id == prefab.instance_id) {
+                Log::warn("Cannot delete selection because it contains a child prefab.", selected, parent);
+                return;
+            }
+        }
+    }
+
     const std::set<Entity> upper_parents = EntityHelper::upper_parents(selected_entities);
     EntityDiff diff { upper_parents, false };
     EntityDiff::send_to_manager(std::move(diff), "Deleted Entities");

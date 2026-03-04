@@ -56,7 +56,7 @@ inline void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Transform& value,
         ImReflect::Input("Parent", parent);
     }
     {
-        //const auto& children = value.get_children();
-        //ImReflect::Input("Children", children);
+        const auto& children = value.get_children();
+        ImReflect::Input("Children", children);
     }
 }

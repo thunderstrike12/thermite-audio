@@ -57,7 +57,7 @@ using SerializeComponents = ComponentRegistry<
 // clang-format off
 using InspectComponents = ComponentRegistry<
 	/* Order in which components are displayed in the editor */
-	Prefab,
+	//Prefab,
 	Name, 
 	Transform,
 	VoxelRenderer, 

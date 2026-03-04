@@ -20,6 +20,7 @@ class Viewport : public IWindow, public OnRetrieveMouseState {
 
     void before_begin() override;
     void display() override;
+    void snap_to_entity();
     void end_display() override;
 
     std::string get_title() const override;

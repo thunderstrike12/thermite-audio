@@ -1,0 +1,161 @@
+{
+    "version": 1,
+    "entities": [
+        0,
+        1,
+        2,
+        3,
+        4
+    ],
+    "Name": {
+        "0": {
+            "name": "root"
+        },
+        "1": {
+            "name": "node 1"
+        },
+        "2": {
+            "name": "root"
+        },
+        "3": {
+            "name": "sphere"
+        },
+        "4": {
+            "name": "Test"
+        }
+    },
+    "Transform": {
+        "0": {
+            "local_position": {
+                "x": 2.276299476623535,
+                "y": 3.609565496444702,
+                "z": -0.8691201210021973
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4,
+            "children": [
+                1
+            ]
+        },
+        "1": {
+            "local_position": {
+                "x": 0.0,
+                "y": 4.5,
+                "z": 0.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 0.3400000333786011,
+                "y": 0.3400000333786011,
+                "z": 0.3400000333786011
+            },
+            "parent": 0,
+            "children": []
+        },
+        "2": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4,
+            "children": [
+                3
+            ]
+        },
+        "3": {
+            "local_position": {
+                "x": 2.0,
+                "y": 2.0,
+                "z": -2.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 2,
+            "children": []
+        },
+        "4": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": [
+                0,
+                2
+            ]
+        }
+    },
+    "Voxel Renderer": {
+        "1": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "dragon128.vengi"
+                },
+                "constructor_args": [
+                    "8f6f327d-37e3-9ca3-0d43-59a6b11de4b0"
+                ]
+            }
+        },
+        "3": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "small_sphere.vengi"
+                },
+                "constructor_args": [
+                    "16769fba-f8c9-c1ac-474b-8594cbb34db2"
+                ]
+            }
+        }
+    },
+    "systems": null
+}

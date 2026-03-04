@@ -327,6 +327,17 @@ void Transform::remove_child(Entity child) {
     }
 }
 
+std::set<Entity> Transform::get_all_parents() const {
+    std::set<Entity> result;
+    Entity current_parent = parent;
+    while (current_parent != entt::null) {
+        result.insert(current_parent);
+        const auto& transform = engine.ecs.get_component<Transform>(current_parent);
+        current_parent = transform.parent;
+    }
+    return result;
+}
+
 bool Transform::has_children() const {
     return !children.empty();
 }

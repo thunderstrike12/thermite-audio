@@ -64,11 +64,14 @@ struct Transform {
 
     void add_child(const Entity child);
     void remove_child(const Entity child);
+    /* Get all parents recursively, aka parent of parent too */
+    std::set<Entity> get_all_parents() const;
 
     bool has_children() const;
     const std::set<Entity>& get_children() const;
     /* Get all children recursivly, aka children of children too */
     std::set<Entity> get_all_children() const;
+
 
     void mark_dirty();
 

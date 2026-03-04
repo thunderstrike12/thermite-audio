@@ -123,52 +123,7 @@ void tmt::Viewport::display() {
         } else if (ImGui::IsKeyPressed(ImGuiKey_T, false)) {
             editor.gizmo.operation = 3;  // Bounds
         } else if (ImGui::IsKeyPressed(ImGuiKey_F, false)) {
-            auto& hierarchy = editor.windows[Editor::Mode::SCENE].get<Hierarchy>();
-            Entity selected_entity = hierarchy.get_first_selected_entity();
-
-            auto& transform = engine.ecs.get_component<Transform>(selected_entity);
-            glm::vec3 target_pos = transform.get_world_position();
-            glm::vec3 target_scale = transform.get_world_scale();
-
-            const auto* target_renderer = engine.ecs.try_get_component<VoxelRenderer>(selected_entity);
-
-            float distance = 10.0f;  // fallback
-
-            Camera& camera = engine.renderer.get_debug_camera();
-            Transform& camTransform = engine.renderer.get_debug_transform();
-
-            if (target_renderer && target_renderer->resource) {
-                ResourceRef<VoxelVolume> volume = target_renderer->resource;
-
-                if (volume) {
-                    // Get voxel grid size
-                    glm::vec3 voxelSize = glm::vec3(volume->size);
-
-                    // Apply world scale
-                    glm::vec3 worldSize = voxelSize * target_scale;
-
-                    glm::vec3 halfExtents = worldSize * 0.5f;
-
-                    float radius = glm::length(halfExtents);
-
-                    float fovRadians = glm::radians(camera.fov);
-
-                    distance = radius / std::tan(fovRadians * 0.5f);
-
-                    distance *= 0.2f;  // padding
-                }
-            }
-
-            glm::vec3 forward = camTransform.get_forward();
-            glm::vec3 newCamPos = target_pos - forward * distance;
-
-            camTransform.set_world_position(newCamPos);
-            camTransform.look_at(target_pos, glm::vec3(0, 1, 0));
-
-            // Sync yaw/pitch
-            glm::vec3 dir = glm::normalize(target_pos - newCamPos);
-            camera.yaw = glm::degrees(atan2(dir.z, dir.x));
-            camera.pitch = glm::degrees(asin(dir.y));
+            snap_to_entity();
         }
     }
 
@@ -189,6 +144,56 @@ void tmt::Viewport::display() {
     if (ImGui::IsItemHovered() && ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
         ImGui::SetWindowFocus();
     }
+}
+
+void tmt::Viewport::snap_to_entity() {
+    const auto* hierarchy = editor.windows[editor.editor_mode].try_get<Hierarchy>();
+    if (hierarchy == nullptr) return;
+    Entity selected_entity = hierarchy->get_first_selected_entity();
+
+    auto& transform = engine.ecs.get_component<Transform>(selected_entity);
+    glm::vec3 target_pos = transform.get_world_position();
+    glm::vec3 target_scale = transform.get_world_scale();
+
+    const auto* target_renderer = engine.ecs.try_get_component<VoxelRenderer>(selected_entity);
+
+    float distance = 10.0f;  // fallback
+
+    Camera& camera = engine.renderer.get_debug_camera();
+    Transform& camTransform = engine.renderer.get_debug_transform();
+
+    if (target_renderer && target_renderer->resource) {
+        ResourceRef<VoxelVolume> volume = target_renderer->resource;
+
+        if (volume) {
+            // Get voxel grid size
+            glm::vec3 voxelSize = glm::vec3(volume->size);
+
+            // Apply world scale
+            glm::vec3 worldSize = voxelSize * target_scale;
+
+            glm::vec3 halfExtents = worldSize * 0.5f;
+
+            float radius = glm::length(halfExtents);
+
+            float fovRadians = glm::radians(camera.fov);
+
+            distance = radius / std::tan(fovRadians * 0.5f);
+
+            distance *= 0.2f;  // padding
+        }
+    }
+
+    glm::vec3 forward = camTransform.get_forward();
+    glm::vec3 newCamPos = target_pos - forward * distance;
+
+    camTransform.set_world_position(newCamPos);
+    camTransform.look_at(target_pos, glm::vec3(0, 1, 0));
+
+    // Sync yaw/pitch
+    glm::vec3 dir = glm::normalize(target_pos - newCamPos);
+    camera.yaw = glm::degrees(atan2(dir.z, dir.x));
+    camera.pitch = glm::degrees(asin(dir.y));
 }
 
 bool tmt::Viewport::toolbar(const ImVec2& image_pos) {
