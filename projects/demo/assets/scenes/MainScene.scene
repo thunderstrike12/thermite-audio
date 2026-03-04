@@ -4,32 +4,17 @@
         0,
         1,
         2,
-        4,
-        5,
-        1048579,
-        3145734
+        1048579
     ],
     "Name": {
         "0": {
-            "name": "Player"
+            "name": "navmesh"
         },
         "1": {
-            "name": "Walkable_asteroid"
+            "name": "walker"
         },
         "2": {
-            "name": "Asteroids"
-        },
-        "4": {
-            "name": "Walkable_asteroid"
-        },
-        "5": {
-            "name": "Walking Dragon"
-        },
-        "1048579": {
-            "name": "Entity_1048579"
-        },
-        "3145734": {
-            "name": "Walking Dragon"
+            "name": "player"
         }
     },
     "Transform": {
@@ -37,7 +22,7 @@
             "local_position": {
                 "x": 0.0,
                 "y": 0.0,
-                "z": -9.915840148925781
+                "z": 0.0
             },
             "local_rotation": {
                 "w": 1.0,
@@ -55,23 +40,25 @@
         },
         "1": {
             "local_position": {
-                "x": -6.309313774108887,
+                "x": 0.0,
                 "y": 0.0,
-                "z": 21.942337036132813
+                "z": 0.0
             },
             "local_rotation": {
-                "w": 0.7518202662467957,
+                "w": 1.0,
                 "x": 0.0,
-                "y": -0.659368097782135,
+                "y": 0.0,
                 "z": 0.0
             },
             "local_scale": {
-                "x": 1.0000001192092896,
+                "x": 1.0,
                 "y": 1.0,
-                "z": 1.0000001192092896
+                "z": 1.0
             },
             "parent": 4294967295,
-            "children": []
+            "children": [
+                1048579
+            ]
         },
         "2": {
             "local_position": {
@@ -93,123 +80,31 @@
             "parent": 4294967295,
             "children": []
         },
-        "4": {
-            "local_position": {
-                "x": -22.24384307861328,
-                "y": 0.0,
-                "z": 0.5516737699508667
-            },
-            "local_rotation": {
-                "w": -0.4213019609451294,
-                "x": 0.0,
-                "y": 0.9069204330444336,
-                "z": 0.0
-            },
-            "local_scale": {
-                "x": 1.0000001192092896,
-                "y": 1.0,
-                "z": 1.0000001192092896
-            },
-            "parent": 4294967295,
-            "children": []
-        },
-        "5": {
-            "local_position": {
-                "x": -0.562983512878418,
-                "y": 5.419820308685303,
-                "z": 23.93695831298828
-            },
-            "local_rotation": {
-                "w": 0.9147375226020813,
-                "x": 0.0,
-                "y": 0.4040485620498657,
-                "z": 0.0
-            },
-            "local_scale": {
-                "x": 0.19580405950546265,
-                "y": 0.19580404460430145,
-                "z": 0.19580405950546265
-            },
-            "parent": 4294967295,
-            "children": []
-        },
         "1048579": {
-            "local_position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "local_rotation": {
-                "w": 1.0,
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "local_scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            },
-            "parent": 4294967295,
-            "children": []
-        },
-        "3145734": {
-            "local_position": {
-                "x": -16.74327850341797,
-                "y": 5.419820308685303,
-                "z": -4.522403240203857
-            },
-            "local_rotation": {
-                "w": 1.0,
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "local_scale": {
-                "x": 0.19580404460430145,
-                "y": 0.19580404460430145,
-                "z": 0.19580404460430145
-            },
-            "parent": 4294967295,
-            "children": []
+            "diff": [
+                {
+                    "op": "replace",
+                    "path": "/parent",
+                    "value": 1
+                }
+            ]
         }
     },
     "Voxel Renderer": {
-        "1": {
+        "0": {
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "asteroids/test_asteroid_2.vengi"
-                }
-            }
-        },
-        "4": {
-            "resource": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "asteroids/test_asteroid_3.vengi"
-                }
-            }
-        },
-        "5": {
-            "resource": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "dragon128.vengi"
-                }
-            }
-        },
-        "3145734": {
-            "resource": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "dragon128.vengi"
-                }
+                    "relative_path": "asteroids\\test_asteroid_7.vengi"
+                },
+                "constructor_args": [
+                    "00000000-0000-0000-0000-000000000000"
+                ]
             }
         }
     },
     "Camera": {
-        "0": {
+        "2": {
             "fov": 80.0,
             "pitch": 0.0,
             "yaw": 90.0,
@@ -217,127 +112,55 @@
         }
     },
     "ComponentCollection": {
-        "0": {
-            "Player": {
-                "acceleration": 10.0,
-                "camera_sensitivity": 0.10000000149011612,
-                "drag": 2.5,
-                "max_speed": 5.0
+        "1": {
+            "Walking": {
+                "attack_range": 20.0,
+                "height_above_ground": 0.30000001192092896,
+                "max_chase_distance": 100.0,
+                "ray_count": 100,
+                "rotation_speed": 2.5,
+                "rotation_t": 0.0,
+                "walk_speed": 0.20000000298023224,
+                "walkable_asteroid": 0
             }
         },
         "2": {
-            "AsteroidSpawner": {
-                "asteroid_bodies": [
-                    {
-                        "file_location": {
-                            "relative_path": "asteroids/test_asteroid_0.vengi",
-                            "sub_location": "PROJECT"
-                        }
-                    },
-                    {
-                        "file_location": {
-                            "relative_path": "asteroids/test_asteroid_1.vengi",
-                            "sub_location": "PROJECT"
-                        }
-                    },
-                    {
-                        "file_location": {
-                            "relative_path": "asteroids/test_asteroid_2.vengi",
-                            "sub_location": "PROJECT"
-                        }
-                    },
-                    {
-                        "file_location": {
-                            "relative_path": "asteroids/test_asteroid_3.vengi",
-                            "sub_location": "PROJECT"
-                        }
-                    },
-                    {
-                        "file_location": {
-                            "relative_path": "asteroids/test_asteroid_4.vengi",
-                            "sub_location": "PROJECT"
-                        }
-                    },
-                    {
-                        "file_location": {
-                            "relative_path": "asteroids/test_asteroid_5.vengi",
-                            "sub_location": "PROJECT"
-                        }
-                    },
-                    {
-                        "file_location": {
-                            "relative_path": "asteroids/test_asteroid_6.vengi",
-                            "sub_location": "PROJECT"
-                        }
-                    },
-                    {
-                        "file_location": {
-                            "relative_path": "asteroids/test_asteroid_7.vengi",
-                            "sub_location": "PROJECT"
-                        }
-                    }
-                ],
-                "asteroid_count": 100,
-                "enable_random_rotation": true,
-                "max_height_offset": 10.0,
-                "max_radius": 200.0,
-                "max_scale_factor": 2.0,
-                "min_height_offset": -10.0,
-                "min_radius": 50.0,
-                "min_scale_factor": 0.5,
-                "radial_bias": 0.0,
-                "randomize_seed": true,
-                "seed": 42,
-                "use_3d_distribution": false
-            }
-        },
-        "5": {
-            "Walking": {
-                "attack_range": 1.0,
-                "max_chase_distance": 20.0,
-                "walk_speed": 2.5,
-                "walkable_asteroid": 1
-            }
-        },
-        "3145734": {
-            "Walking": {
-                "attack_range": 1.0,
-                "max_chase_distance": 20.0,
-                "walk_speed": 2.5,
-                "walkable_asteroid": 4
+            "Player": {
+                "acceleration": 20.0,
+                "camera_sensitivity": 0.10000000149011612,
+                "drag": 5.0,
+                "max_speed": 10.0
             }
         }
     },
     "Navigation Mesh": {
-        "1": {
+        "0": {
             "voxel_volume": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "asteroids/test_asteroid_2.vengi"
-                }
-            },
-            "lod_level": 1
-        },
-        "4": {
-            "voxel_volume": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "asteroids/test_asteroid_3.vengi"
-                }
+                    "relative_path": "asteroids\\test_asteroid_7.vengi"
+                },
+                "constructor_args": [
+                    "00000000-0000-0000-0000-000000000000"
+                ]
             },
             "lod_level": 1
         }
     },
-    "Animated Rig": {
+    "GoapAgentTypeRef": {
+        "1": {
+            "type_id": "dragon"
+        }
+    },
+    "Prefab": {
         "1048579": {
-            "data": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "animations\\Victory_animation.fbx"
-                }
+            "source_location": {
+                "sub_location": "PROJECT",
+                "relative_path": "Walker.prefab"
             },
-            "vox_path": "",
-            "animations": {}
+            "source_entity": 0,
+            "root_entity": 1048579,
+            "instance_id": "d7a68073-7655-4563-b4aa-9919250eb430"
         }
     },
     "systems": null

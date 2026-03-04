@@ -1,39 +1,41 @@
 #include "navigation_system.hpp"
-
 #include "engine/engine.hpp"
+#include "engine/core/renderer/renderer.hpp"
+#include "engine/core/renderer/scene_view.hpp"
 
 std::string tmt::NavigationSystem::get_name() {
     return "NavigationSystem";
 }
 
 void tmt::NavigationSystem::on_start() {
-    for (const auto& [entity, nav_mesh] : engine.ecs.view<NavMesh>().each()) {
-        // nav_mesh.generate_mesh();
-    }
-    for (const auto& [entity, nav_mesh] : engine.ecs.view<NavMesh>().each()) {
-        glm::mat4 world_matrix = engine.ecs.get_component<Transform>(entity).get_world_matrix();
-        if (!nav_mesh.nodes) continue;
-        for (auto& node : *nav_mesh.nodes) {
-            node.world_pos = glm::vec3(world_matrix * glm::vec4(node.local_pos, 1.0f));
-        }
-
-        nav_mesh.inspect();
-    }
+    
 }
 
 void tmt::NavigationSystem::on_update(const FrameData&) {
-    for (const auto& [entity, nav_mesh] : engine.ecs.view<NavMesh>().each()) {
-        glm::mat4 world_matrix = engine.ecs.get_component<Transform>(entity).get_world_matrix();
-        if (!nav_mesh.nodes) continue;
-        for (auto& node : *nav_mesh.nodes) {
+    for (const auto& [entity, transform, nav_mesh] : engine.ecs.view<Transform, NavMesh>().each()) {
+        if (nav_mesh.generating) {
+            nav_mesh.generate_mesh_over_time();
+        }
+        if(!nav_mesh.initialized)
+        {
+            auto& bvh = tmt::engine.renderer.scene_view.bvh;
+
+            if (bvh.nodes[0].left_first == 0u && bvh.nodes[0].prim_count == 0u) continue;
+
+            nav_mesh.initialized = true;
+            nav_mesh.generate_mesh_over_time();
+        }
+
+        if (!nav_mesh.nodes_mesh) continue;
+
+        glm::mat4 world_matrix = transform.get_world_matrix();
+        for (auto& node : *nav_mesh.nodes_mesh) {
             node.world_pos = glm::vec3(world_matrix * glm::vec4(node.local_pos, 1.0f));
         }
 
         nav_mesh.inspect();
 
-        if (nav_mesh.generating) {
-            nav_mesh.generate_mesh_over_time();
-        }
+
     }
 }
 

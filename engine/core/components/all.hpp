@@ -9,6 +9,8 @@
 #include "engine/core/components/camera.hpp"
 #include "engine/core/components/component_collection.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"
+#include "engine/systems/animation/components/constraints.hpp"
+#include "engine/systems/animation/components/bone_hierarchy_renderer.hpp"
 #include "engine/systems/ai/navigation/nav_mesh.hpp"
 #include "engine/core/components/audio_listener.hpp"
 #include "engine/core/components/audio_emitter.hpp"
@@ -40,6 +42,13 @@ using SerializeComponents = ComponentRegistry<
 	VoxelBody,
 	ComponentCollection,
 	NavMesh,
+	AnimConstraints::DampedTransformConstraint,
+	AnimConstraints::TwoBoneIKConstraint,
+	AnimConstraints::EffectorWalkCycle,
+	NoBone,
+	BendHint,
+	Effector,
+	BoneHierarchyRenderer,
 	AudioListener,
 	AudioEmitter,
 	Light,
@@ -64,6 +73,13 @@ using InspectComponents = ComponentRegistry<
 	Camera,
 	VoxelBody,
 	NavMesh,
+	AnimConstraints::DampedTransformConstraint,
+	AnimConstraints::TwoBoneIKConstraint,
+	AnimConstraints::EffectorWalkCycle,
+	NoBone,
+	BendHint,
+	Effector,
+	BoneHierarchyRenderer,
 	AudioListener,
 	AudioEmitter,
 	Light,

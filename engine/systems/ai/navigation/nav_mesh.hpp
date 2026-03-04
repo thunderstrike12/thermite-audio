@@ -27,11 +27,14 @@ struct NavVoxel {
     VoxelType type = VoxelType::EMPTY;
 };
 
-class Node {
+class NavNode {
    public:
     glm::vec3 local_pos;
     glm::vec3 world_pos;
+    glm::vec3 normal;
     int parent = 0;
+
+    int iteration = 0;
 
     uint32_t voxel_index = 0;
 
@@ -50,34 +53,42 @@ class NavMesh {
         delete buffer_b;
     };
 
-    std::vector<Node>* nodes;
+    std::vector<NavNode>* nodes_mesh;
     std::vector<int> path;
 
     tmt::ResourceRef<tmt::VoxelVolume> voxel_volume;
-    Volume volume;
     int lod_level = 0;
+    glm::vec3 inflation = glm::vec3(1.0f);
 
     bool generating = false;
-
+    bool initialized = false;
    private:
+    std::unordered_map<uint32_t, int>* node_map;
+    Volume volume;
     int generating_lod = 0;
     int iteration_nmg = 0;
     bool entered_loop = false;
 
     void init() {
+        delete node_map;
+        node_map = new std::unordered_map<uint32_t, int>;
         delete buffer_a;
         delete buffer_b;
-        buffer_a = new std::vector<Node>;
-        buffer_b = new std::vector<Node>;
-        nodes = buffer_a;
+        buffer_a = new std::vector<NavNode>;
+        buffer_b = new std::vector<NavNode>;
+        nodes_mesh = buffer_a;
         generating_nodes = buffer_b;
     }
-    std::vector<Node>* buffer_a = nullptr;
-    std::vector<Node>* buffer_b = nullptr;
+    std::vector<NavNode>* buffer_a = nullptr;
+    std::vector<NavNode>* buffer_b = nullptr;
 
-    std::vector<Node>* generating_nodes = nullptr;
+    std::vector<NavNode>* generating_nodes = nullptr;
 
    public:
+    glm::mat4 world_matrix = glm::mat4(1.f);
+    glm::vec3 compute_normal(NavNode& node);
+    
+    void average_neighbor_normals();
     void generate_mesh_over_time();
     void generate_mesh(int iterations = 1e34);
     std::vector<int> find_path(const int starting_node_id, const int ending_node_id);
@@ -87,5 +98,4 @@ class NavMesh {
 };
 
 }  // namespace tmt
-
 TMT_COMPONENT(tmt::NavMesh, "Navigation Mesh", (voxel_volume, lod_level));

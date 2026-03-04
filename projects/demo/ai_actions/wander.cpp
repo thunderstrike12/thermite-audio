@@ -8,21 +8,25 @@
 #include "engine/engine.hpp"
 
 #include "engine/core/polyline.hpp"
+#include "engine/core/components/voxel_renderer.hpp"
+
 
 #include <cstdlib>
 
-void Wander::on_start(tmt::Entity) {
+void Wander::on_start(tmt::Entity walking_entity) {
     for (const auto& [camEntity, camera] : tmt::engine.ecs.view<tmt::Camera>().each()) {
         player = camEntity;
         break;
     }
 
+    const auto& walking = tmt::engine.ecs.get_component<Walking>(walking_entity);
+    auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(walking.walkable_asteroid);
     done_walking = false;
     has_path = false;
 }
 
 void Wander::on_tick(tmt::Entity walking_entity, float dt) {
-    const auto& walking = tmt::engine.ecs.get_component<Walking>(walking_entity);
+    auto& walking = tmt::engine.ecs.get_component<Walking>(walking_entity);
     auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(walking.walkable_asteroid);
 
     tmt::Transform& walking_transform = tmt::engine.ecs.get_component<tmt::Transform>(walking_entity);
@@ -40,13 +44,13 @@ void Wander::on_tick(tmt::Entity walking_entity, float dt) {
         return;
     }
 
-    auto nm_nodes = nav_mesh.nodes;
+    auto nm_nodes = nav_mesh.nodes_mesh;
 
     // generate wander path only once when no path
-    if (!has_path && nav_mesh.nodes) {
+    if (!has_path && nav_mesh.nodes_mesh) {
         // pick a random node on the nav mesh
-        if (!nav_mesh.nodes->empty()) {
-            int random_node_index = rand() % static_cast<int>(nav_mesh.nodes->size());
+        if (!nav_mesh.nodes_mesh->empty()) {
+            int random_node_index = rand() % static_cast<int>(nav_mesh.nodes_mesh->size());
             wander_target = (*nm_nodes)[random_node_index].world_pos;
             has_path = true;
         }
@@ -61,16 +65,8 @@ void Wander::on_tick(tmt::Entity walking_entity, float dt) {
             return;
         }
 
-        walking_transform.set_world_position(walking_entity_pos + *direction * walking.walk_speed * dt);
-    }
-
-    // Debug drawing
-    if (nav_mesh.path.size() > 1) {
-        for (size_t i = 0; i < nav_mesh.path.size() - 1; ++i) {
-            const glm::vec3 from = (*nm_nodes)[nav_mesh.path[i]].world_pos;
-            const glm::vec3 to = (*nm_nodes)[nav_mesh.path[i + 1]].world_pos;
-            tmt::engine.polyline.draw_line(from, to);
-        }
+        auto velocity = glm::vec3(*direction * walking.walk_speed);
+        walking.velocity += velocity;
     }
 }
 

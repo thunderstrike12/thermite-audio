@@ -21,6 +21,7 @@
 #include "engine/core/scenes.hpp"
 
 #include "engine/systems/ai/navigation/navigation_system.hpp"
+#include "engine/core/renderer/renderer.hpp"
 
 class Game : public tmt::Application {
    public:
@@ -165,7 +166,8 @@ void AIScene::on_start() {
         voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "test_asteroid_7.vengi" });
         voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
         volumes[2] = voxel_volume;
-        voxel = tmt::engine.ecs.create_entity("Moving Voxel");
+
+        voxel = tmt::engine.ecs.create_entity("Asteroid");
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(voxel);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(voxel);
         renderer.resource = voxel_volume;
@@ -175,6 +177,5 @@ void AIScene::on_start() {
         nav_mesh = &tmt::engine.ecs.add_component<tmt::NavMesh>(voxel);
         nav_mesh->voxel_volume = voxel_volume;
         nav_mesh->lod_level = 1;
-        nav_mesh->generate_mesh_over_time();
     }
 }
