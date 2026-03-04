@@ -52,12 +52,14 @@ void Ecs::on_game_start() {
 
 void Ecs::on_game_update(const FrameData& time) {
     for (auto& system : systems) {
+        if (system->is_disabled()) continue;
         system->on_update(time);
     }
 }
 
 void Ecs::on_game_fixed_update(const FrameData& time) {
     for (auto& system : systems) {
+        if (system->is_disabled()) continue;
         system->on_fixed_update(time);
     }
 }
