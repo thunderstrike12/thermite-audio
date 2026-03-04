@@ -24,16 +24,13 @@ glm::uvec2 div_up(const glm::uvec2 a, const uint32_t ax, const uint32_t ay) {
     return glm::uvec2(div_up(a.x, ax), div_up(a.y, ay));
 }
 
-void DiPipeline::init(GPUAdapter& gpu) {
-    VRAMBank& bank = gpu.get_vram_bank();
-    // settings_buffer = bank.create_buffer("DI Settings Buffer", BufferUsage::Constant | BufferUsage::TransferDst, sizeof(DiSettings)).expect("failed to create di settings buffer.");
-}
+void DiPipeline::init(GPUAdapter&) {}
 
 /* clang-format off */
 
 void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, SceneView& scene_view) {
     /* TEMP: For now just don't do anything unless illuminance is visible */
-    // if (engine.renderer.display_mode != DisplayMode::ILLUMINANCE && engine.renderer.display_mode != DisplayMode::DEFAULT) return;
+    // if (engine.renderer.display_mode != DisplayMode::ILLUMINANCE && engine.renderer.display_mode != DisplayMode::CACHE && engine.renderer.display_mode != DisplayMode::DEFAULT) return;
 
     /* Get Render Image */
     const BindHandle render_image = render_view.get_render_image();
@@ -47,6 +44,13 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
             .work_size(CACHE_SIZE);
 
         cache_init = true;
+    } else {
+        /* Cache eviction pass (amortize over 8 frames) */
+        render_graph.add_compute_pass("cache eviction pass", "cache_evict.cs")
+            .read(render_view.render_view_buffer) /* Render view buffer */
+            .write(render_view.macrofacet_cache) /* Cache buffer */
+            .group_size(128)
+            .work_size(CACHE_SIZE);
     }
 
     /* Upload new settings if they changed */
@@ -77,11 +81,11 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
     }
     
     /* Cache eviction pass (amortize over 8 frames) */
-    render_graph.add_compute_pass("cache eviction pass", "cache_evict.cs")
-        .read(render_view.render_view_buffer) /* Render view buffer */
-        .write(render_view.macrofacet_cache) /* Cache buffer */
-        .group_size(128)
-        .work_size(CACHE_SIZE);
+    // render_graph.add_compute_pass("cache eviction pass", "cache_evict.cs")
+    //     .read(render_view.render_view_buffer) /* Render view buffer */
+    //     .write(render_view.macrofacet_cache) /* Cache buffer */
+    //     .group_size(128)
+    //     .work_size(CACHE_SIZE);
         
     // { /* Global illumination pass */
     //     glm::uvec2 shading_res = render_view.gpu_view.resolution;
@@ -155,9 +159,6 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
 
 /* clang-format on */
 
-void DiPipeline::deinit(GPUAdapter& gpu) {
-    // VRAMBank& bank = gpu.get_vram_bank();
-    // bank.destroy(settings_buffer);
-}
+void DiPipeline::deinit(GPUAdapter&) {}
 
 }  // namespace tmt

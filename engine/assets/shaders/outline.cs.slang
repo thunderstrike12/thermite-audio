@@ -40,7 +40,7 @@ void main(int2 thread_id: SV_DispatchThreadID) {
     is_outline |= check_neighbour(thread_id, int2( 0,  OUTLINE_RADIUS));
     is_outline |= check_neighbour(thread_id, int2( OUTLINE_RADIUS,  0));
     is_outline |= check_neighbour(thread_id, int2( 0, -OUTLINE_RADIUS));
-    is_outline |= check_neighbour(thread_id, int2(-OUTLINE_RADIUS, 0));
+    is_outline |= check_neighbour(thread_id, int2(-OUTLINE_RADIUS,  0));
     if (is_outline == false) return;
 
     /* Write outline color */
