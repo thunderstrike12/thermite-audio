@@ -117,9 +117,8 @@ void Player::move_player() {
     if (input.is_action_pressed(action::MOVE_UP)) input_dir += glm::vec3(0.0f, 1.0f, 0.0f);
     if (input.is_action_pressed(action::MOVE_DOWN)) input_dir -= glm::vec3(0.0f, 1.0f, 0.0f);
 
-        // Added button for breaking, port from prototype
+    // Added button for breaking, port from prototype
     bool breaking = input.is_action_pressed(action::BREAK);
-    
 
     auto delta_time = tmt::engine.frame_data().delta_time;
     // Apply acceleration or drag
@@ -158,41 +157,59 @@ void Player::move_player() {
 }
 
 void Player::update(const tmt::FrameData& time) {
-    // triggers the event for shooting
     auto& input = tmt::engine.input;
-    if (input.is_action_just_pressed(action::ATTACH_KEY)) {
-        tmt::engine.ecs.get_dispatcher().trigger<AttachAttemptEvent>({ .entity = entity });
-    }
-
-    if (camera_movement) {
-        look_camera();
-    }
-
-    // TODO this needs the state pattern for the player, it needs to move the camera, but not move while on the barge
-    //  Calculate desired movement direction (unchanged from demo)
-    if (can_move) {
-        if (player_movement) {
+    switch (state) {
+        case game::PlayerState::FREEMOVING:
+            attempt_attach(input);
+            look_camera();
             move_player();
-        }
-    }
 
+            break;
+        case game::PlayerState::ATTACHED:
+            attempt_attach(input);
+            look_camera();
+            refill(tmt::engine.frame_data().delta_time);
+            break;
+            // TODO this state might disappear
+        case game::PlayerState::PAUSED:
+            break;
+        default:
+            break;
+    }
+    // TODO state will be much easier to handle
+    // triggers the event for shooting
+
+    // TODO events, could also use entt on modifcation component for the UI components
     if (tmt::engine.ecs.valid(hp_bar_max_entity)) {
-        if (auto componenthpmax = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_max_entity))
-        componenthpmax->size.x = max_health + 2.0f;
+        if (auto componenthpmax = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_max_entity)) componenthpmax->size.x = health.max_value + 2.0f;
     }
 
-    
     if (tmt::engine.ecs.valid(hp_bar_current_entity)) {
-        if (auto componentcurrhp = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_current_entity))
-        componentcurrhp->size.x = health;
+        if (auto componentcurrhp = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_current_entity)) componentcurrhp->size.x = health.value;
     }
 }
 
+void Player::attempt_attach(tmt::Input& input) {
+    if (input.is_action_just_pressed(action::ATTACH_KEY)) {
+        tmt::engine.ecs.get_dispatcher().trigger<AttachAttemptEvent>({ .entity = entity });
+    }
+}
+
+void Player::refill(float delta) {
+    // TODO probably an event here for audio, graphics etc.
+
+    health.value = glm::min(health.max_value, health.value + delta * health.increase_multiplier);
+    energy.value = glm::min(energy.max_value, energy.value + delta * energy.increase_multiplier);
+}
 void Player::on_attach(const AttachEvent& event) {
     if (event.entity != entity) {
         return;
     }
-    can_move = !event.is_attached;
+    if (event.is_attached) {
+        state = PlayerState::ATTACHED;
+    } else {
+        state = PlayerState::FREEMOVING;
+    }
 }
 
 }  // namespace game

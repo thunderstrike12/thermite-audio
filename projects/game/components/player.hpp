@@ -4,6 +4,13 @@
 #include "events.hpp"
 namespace game {
 
+struct PlayerStat {
+    float max_value = 100.f;
+    float value = 100.f;
+    float increase_multiplier = 1.0f;
+};
+enum class PlayerState { FREEMOVING, ATTACHED, PAUSED };
+
 class Player : public tmt::GameComponent<Player> {
    public:
     using GameComponent::GameComponent;
@@ -14,6 +21,7 @@ class Player : public tmt::GameComponent<Player> {
     void look_camera() const;
     void move_player();
     void update(const tmt::FrameData& time) override;
+    void attempt_attach(tmt::Input& input);
     void on_attach(const AttachEvent& event);
     void end() override;
 
@@ -26,39 +34,23 @@ class Player : public tmt::GameComponent<Player> {
     float max_speed = 10.0f;
 
     // Player stats
-    float health = 100.0f;
-    float battery = 100.0f;
-    float max_health = 100.0f;
-    float max_battery = 100.0f;
+    PlayerStat health;
+    PlayerStat energy;
 
     // Helper functions
     tmt::Transform& get_transform() const { return tmt::engine.ecs.get_component<tmt::Transform>(entity); }
     tmt::Camera& get_camera() const { return tmt::engine.ecs.get_component<tmt::Camera>(entity); }
+    void set_state(PlayerState new_state) { state = new_state; };
 
-    void toggle_camera_movement() {
-        if (camera_movement) {
-            camera_movement = false;
-        } else {
-            camera_movement = true;
-        }
-    }
-    void toggle_player_movement() {
-        if (player_movement) {
-            player_movement = false;
-        } else {
-            player_movement = true;
-        }
-    }
-
-    tmt::Entity hp_bar_max_entity= entt::null;
+    tmt::Entity hp_bar_max_entity = entt::null;
     tmt::Entity hp_bar_current_entity = entt::null;
 
    private:
-    bool can_move = true;
+    void refill(float delta);
+    PlayerState state = PlayerState::FREEMOVING;
     glm::vec3 velocity = { 0.0f, 0.0f, 0.0f };
-    bool camera_movement = true;
-    bool player_movement = true;
 };
 
 }  // namespace game
-TMT_OBJECT(game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, health, battery, max_health, max_battery, hp_bar_max_entity, hp_bar_current_entity));
+TMT_OBJECT(game::PlayerStat, (max_value, value, increase_multiplier));
+TMT_OBJECT(game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, health, energy, hp_bar_max_entity, hp_bar_current_entity));

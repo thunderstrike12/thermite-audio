@@ -42,7 +42,7 @@ void MenuController::update(const tmt::FrameData& time) {
             return;
         }
 
-        if (tmt::engine.ecs.is_disabled(upgrade_menu_entity)){
+        if (tmt::engine.ecs.is_disabled(upgrade_menu_entity)) {
             enable_upgrade_menu();
         } else {
             disable_upgrade_menu();
@@ -90,8 +90,8 @@ void MenuController::lock_mouse() {
     tmt::engine.input.set_mouse_relative_to_window(true);
 
     auto player_entity = tmt::engine.ecs.view<Player>().front().entity;  // Assuming there's only one player entity in the game
-    tmt::engine.ecs.get_component<Player>(player_entity).toggle_camera_movement();
-    tmt::engine.ecs.get_component<Player>(player_entity).toggle_player_movement();
+    // TODO this will get removed when proper game state are implemented
+    tmt::engine.ecs.get_component<Player>(player_entity).set_state(PlayerState::FREEMOVING);
 }
 
 void MenuController::unlock_mouse() {
@@ -99,8 +99,8 @@ void MenuController::unlock_mouse() {
     tmt::engine.input.set_mouse_relative_to_window(false);
 
     auto player_entity = tmt::engine.ecs.view<Player>().front().entity;  // Assuming there's only one player entity in the game
-    tmt::engine.ecs.get_component<Player>(player_entity).toggle_camera_movement();
-    tmt::engine.ecs.get_component<Player>(player_entity).toggle_player_movement();
+    // TODO this will get removed when proper game state are implemented
+    tmt::engine.ecs.get_component<Player>(player_entity).set_state(PlayerState::PAUSED);
 }
 
 bool MenuController::check_for_open_menus() const {
@@ -109,4 +109,5 @@ bool MenuController::check_for_open_menus() const {
     if (tmt::engine.ecs.is_enabled(inventory_menu_entity)) return true;
     return false;
 }
+
 }  // namespace game
