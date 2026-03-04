@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/systems/gameplay/game_component.hpp"
 
+#include "events.hpp"
 namespace game {
 
 enum class WeaponType { RIFLE, GRAVITY, MINING };
@@ -23,9 +24,17 @@ class WeaponManager : public tmt::GameComponent<WeaponManager> {
 
     tmt::Entity shooting_entity;
 
+    float overheat_time = .8f;
+
    private:
+    float overheat_remaining_time = -0.1f;
+    /// <summary>
+    /// Handles the weapon overheat event when a weapon is fired.
+    /// </summary>
+    /// <param name="event">The weapon fired event containing information about the fired weapon.</param>
+    void on_overheat(const WeaponFiredEvent& event);
     WeaponType current_weapon;
 };
 
 }  // namespace game
-TMT_OBJECT(game::WeaponManager, (weapons, starting_weapon, shooting_entity));
+TMT_OBJECT(game::WeaponManager, (weapons, starting_weapon, shooting_entity, overheat_time));

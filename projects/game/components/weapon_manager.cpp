@@ -20,12 +20,32 @@ void game::WeaponManager::start() {
     tmt::Log::info("[WeaponManager] Starting with weapon: {}", magic_enum::enum_name(starting_weapon));
 
     subscribe_weapon(current_weapon);
+
+    tmt::engine.ecs.get_dispatcher().sink<WeaponFiredEvent>().connect<&WeaponManager::on_overheat>(this);
+}
+
+void game::WeaponManager::end() {
+    tmt::Log::info("[WeaponManager] Ending, unsubscribing {}", magic_enum::enum_name(current_weapon));
+    unsubscribe_weapon(current_weapon);
+    tmt::engine.ecs.get_dispatcher().sink<WeaponFiredEvent>().disconnect<&WeaponManager::on_overheat>(this);
+}
+
+void game::WeaponManager::on_overheat(const game::WeaponFiredEvent& event) {
+    auto weapon_entity = weapons.at(current_weapon);
+    if (event.weapon_entity != weapon_entity) {
+        return;
+    }
+    // Here as an example we overheat after a secondary shot, so we cannot do anything for less than a second
+    if (event.secondary_shot) {
+        overheat_remaining_time = overheat_time;
+    }
 }
 
 void game::WeaponManager::update(const tmt::FrameData& time) {
     auto& input = tmt::engine.input;
+    // TODO replace with proper state
 
-    if (input.is_action_pressed(action::SHOOT)) {
+    if (overheat_remaining_time < 0.0f && input.is_action_pressed(action::SHOOT)) {
         tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, false });
     }
     if (input.is_action_pressed(action::SECONDARY_TOOL_USE)) {
@@ -39,13 +59,11 @@ void game::WeaponManager::update(const tmt::FrameData& time) {
     } else if (input.is_action_just_pressed(action::SWITCH_GRAVITY)) {
         switch_to(WeaponType::GRAVITY);
     }
-}
 
-void game::WeaponManager::end() {
-    tmt::Log::info("[WeaponManager] Ending, unsubscribing {}", magic_enum::enum_name(current_weapon));
-    unsubscribe_weapon(current_weapon);
+    if (overheat_remaining_time > 0.0f) {
+        overheat_remaining_time -= tmt::engine.frame_data().delta_time;
+    }
 }
-
 void game::WeaponManager::subscribe_weapon(WeaponType slot) {
     auto e = weapons.at(slot);
     if (e == entt::null) {

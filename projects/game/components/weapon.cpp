@@ -28,7 +28,6 @@ void game::Weapon::on_shoot(const ShootEvent& e) {
         spawn_location_entity = entity;
     }
     const auto& tf = tmt::engine.ecs.get_component<tmt::Transform>(spawn_location_entity);
-    // tmt::Log::info("{} entity shot from {} to {}", shooting_entity, tf.get_world_position(), tf.get_forward());
     tmt::engine.ecs.get_dispatcher().trigger(
         WeaponFiredEvent { .weapon_entity = entity, .secondary_shot = e.secondary_shot, .origin = tf.get_world_position(), .up = tf.get_up(), .direction = tf.get_forward() }
     );
