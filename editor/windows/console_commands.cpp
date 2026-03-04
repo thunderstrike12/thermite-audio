@@ -12,6 +12,7 @@
 #include "engine/core/input/input.hpp"
 #include "engine/core/renderer/renderer.hpp"
 #include "extern/imgui-console/include/csys/arguments.h"
+#include <cstdlib>
 
 using namespace tmt;
 
@@ -357,6 +358,7 @@ void Console::register_commands() {
 
     // TODO add profiling info here and stats
     register_command("fps", "Show current FPS: fps", []() { Log::info("FPS: {:.1f} ({:.2f}ms)", 1.0f / engine.frame_data().delta_time, engine.frame_data().delta_time * 1000.0f); });
+    register_command("crash", "Crashes the engine!", []() { std::abort(); });
 
     // =========================================================================
     // Debug Drawing - State
