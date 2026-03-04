@@ -36,6 +36,8 @@ void Physics::on_start() {
             vb.center_of_mass = vb.position + (vb.rotation * vb.com_local_offset);
         }
     }
+
+    physics_layers.load();
 }
 
 void draw_node(tmt::Bvh2<VoxelObject>& bvh, uint32_t current_node) {
