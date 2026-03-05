@@ -3,6 +3,7 @@
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
 #include "engine/tools/insertion_ordered_set.hpp"
+#include "engine/core/logger.hpp"
 
 namespace tmt {
 
@@ -11,6 +12,7 @@ requires TypeRange<R, Entity>
 std::set<Entity> EntityHelper::upper_parents(const R& container) {
     std::set<Entity> input_entities(container.begin(), container.end());
     std::set<Entity> root_parents;
+    std::set<Entity> entities_with_invalid_parents;
 
     for (const auto& entity : container) {
         if (!EntityHelper::is_valid(entity)) continue;
@@ -28,9 +30,11 @@ std::set<Entity> EntityHelper::upper_parents(const R& container) {
             }
 
             Entity parent = transform.get_parent();
-            if (!EntityHelper::is_valid(parent)) {
+            if (!EntityHelper::is_valid(parent) || input_entities.contains(parent) == false) {
                 if (input_entities.contains(current)) {
                     root_parents.insert(current);
+                } else {
+                    entities_with_invalid_parents.insert(current);
                 }
                 break;
             }
@@ -40,10 +44,15 @@ std::set<Entity> EntityHelper::upper_parents(const R& container) {
     }
 
     if (root_parents.empty()) {
-        for (const auto& entity : container) {
-            if (input_entities.contains(entity)) {
-                root_parents.insert(entity);
+        if (entities_with_invalid_parents.empty()) {
+            for (const auto& entity : container) {
+                if (input_entities.contains(entity)) {
+                    root_parents.insert(entity);
+                }
             }
+        } else {
+            tmt::Log::debug(tmt::Log::Scope::ENGINE, "[EntityHelper::upper_parents] No valid root parents found, returning entities with invalid parents.");
+            return entities_with_invalid_parents;
         }
     }
 
