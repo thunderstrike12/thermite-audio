@@ -10,7 +10,19 @@ void game::WeaponManager::switch_to(WeaponType weapon_slot) {
         return;
     }
     tmt::Log::info("[WeaponManager] Switching: {} -> {}", magic_enum::enum_name(current_weapon), magic_enum::enum_name(weapon_slot));
-    unsubscribe_weapon(current_weapon);
+
+    // unsubscribe only the first time we are in a transition stage
+    if (switching == false) {
+        unsubscribe_weapon(current_weapon);
+    }
+
+    // the new subscription happens when the switching is done
+    switching_remaining_time = switching_time;
+    pending_weapon = weapon_slot;
+    switching = true;
+}
+
+void game::WeaponManager::set_new_weapon(game::WeaponType weapon_slot) {
     current_weapon = weapon_slot;
     subscribe_weapon(current_weapon);
 }
@@ -41,16 +53,59 @@ void game::WeaponManager::on_overheat(const game::WeaponFiredEvent& event) {
     }
 }
 
-void game::WeaponManager::update(const tmt::FrameData& time) {
+void game::WeaponManager::check_trigger_shoot_event() {
     auto& input = tmt::engine.input;
-    // TODO replace with proper state
 
-    if (overheat_remaining_time < 0.0f && input.is_action_pressed(action::SHOOT)) {
+    if (input.is_action_pressed(action::SHOOT)) {
         tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, false });
     }
-    if (input.is_action_pressed(action::SECONDARY_TOOL_USE)) {
-        tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, true });
+}
+
+void game::WeaponManager::complete_switch() {
+    current_weapon = pending_weapon;
+    switching = false;
+    subscribe_weapon(current_weapon);
+}
+void game::WeaponManager::update(const tmt::FrameData& time) {
+    // TODO replace with proper state
+
+    if (switching) {
+        switching_remaining_time -= tmt::engine.frame_data().delta_time;
+
+        if (switching_remaining_time < 0.0f) {
+            complete_switch();
+        }
     }
+    if (switching == false) {
+        switch (current_weapon) {
+            case game::WeaponType::RIFLE:
+                check_trigger_shoot_event();
+
+                break;
+            case game::WeaponType::GRAVITY:
+                if (overheat_remaining_time < 0.0f) {
+                    check_trigger_shoot_event();
+                }
+                if (tmt::engine.input.is_action_pressed(action::SECONDARY_TOOL_USE)) {
+                    tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, true });
+                }
+                break;
+            case game::WeaponType::MINING:
+                check_trigger_shoot_event();
+
+                break;
+        }
+    }
+
+    transition_to_other_weapons();
+
+    // state timers update
+    if (overheat_remaining_time > 0.0f) {
+        overheat_remaining_time -= tmt::engine.frame_data().delta_time;
+    }
+}
+void game::WeaponManager::transition_to_other_weapons() {
+    auto& input = tmt::engine.input;
 
     if (input.is_action_just_pressed(action::SWITCH_RIFLE)) {
         switch_to(WeaponType::RIFLE);
@@ -59,11 +114,8 @@ void game::WeaponManager::update(const tmt::FrameData& time) {
     } else if (input.is_action_just_pressed(action::SWITCH_GRAVITY)) {
         switch_to(WeaponType::GRAVITY);
     }
-
-    if (overheat_remaining_time > 0.0f) {
-        overheat_remaining_time -= tmt::engine.frame_data().delta_time;
-    }
 }
+
 void game::WeaponManager::subscribe_weapon(WeaponType slot) {
     auto e = weapons.at(slot);
     if (e == entt::null) {
