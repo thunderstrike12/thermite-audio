@@ -17,6 +17,7 @@
 #include "engine/tools/serializer/all.hpp"
 #include "engine/core/components/transform.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
+#include "engine/systems/physics/physics_system.hpp"
 
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -194,6 +195,8 @@ void NodeHierarchy::save_svh() {
         return;
     }
 
+    recalculate_all_physics();
+
     const std::vector<char> scene_data = encode_voxel_scene();
     IO::write_file(loaded_location, scene_data.data(), scene_data.size());
 }
@@ -203,6 +206,8 @@ void NodeHierarchy::save_svh_as() {
         [this](const IO::FileLocation& location) {
             loaded_location = location;
             if (loaded_location.relative_path.extension() != ".svh") loaded_location.relative_path += ".svh";  // Make sure the saved file has the correct extension.
+
+            recalculate_all_physics();
 
             const std::vector<char> scene_data = encode_voxel_scene();
             IO::write_file(loaded_location, scene_data.data(), scene_data.size());
@@ -330,6 +335,14 @@ std::vector<char> NodeHierarchy::encode_voxel_scene() const {
 
     // Encode those VoxelSceneNodes into the .svh format.
     return encode_svh(root_nodes);
+}
+
+void NodeHierarchy::recalculate_all_physics() {
+    const entt::basic_group renderer_group = engine.ecs.group<VoxelRenderer>(entt::get<Transform>);
+
+    for (const auto&& [entity, renderer, transform] : renderer_group.each()) {
+        Physics::recalculate_surface_normals(*renderer.resource.resource);
+    }
 }
 
 void NodeHierarchy::recurse_display_node(const Entity entity, const Name& name, Transform& transform) {

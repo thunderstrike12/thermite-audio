@@ -39,6 +39,7 @@ class NodeHierarchy : public IWindow {
    private:
     friend class VoxelNodeDiff;
 
+    static void recalculate_all_physics();
     void recurse_display_node(Entity entity, const Name& name, Transform& transform);
     void clear_hierarchy();
 
@@ -54,7 +55,7 @@ class NodeHierarchy : public IWindow {
     void on_editor_start() override {}
     void on_editor_update(const FrameData&) override;
     void on_editor_end() override {}
-    
+
     // Popup ids, will be set when the popups are first created, allows us to open them from anywhere in imgui (hacky workaround).
     uint32_t creation_popup_id { 0 };
     uint32_t resize_popup_id { 0 };
