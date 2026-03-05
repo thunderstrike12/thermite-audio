@@ -59,19 +59,21 @@ inline void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::ResourceRef
 
     const bool dropped = response.get<tmt::IO::FileLocation>().is_file_dropped();
 
-    ImGui::Indent();
+    if (value) {
+        ImGui::Indent();
 
-    tmt::UUID new_uuid = tmt::NULL_UUID;
-    if (ImGui::BeginCombo("Node", value->name.c_str())) {
-        for (const tmt::VoxelSceneNode& root_node : value->file_resource->root_nodes) {
-            recurse_node_names(root_node, value, new_uuid);
+        tmt::UUID new_uuid = tmt::NULL_UUID;
+        if (ImGui::BeginCombo("Node", value->name.c_str())) {
+            for (const tmt::VoxelSceneNode& root_node : value->file_resource->root_nodes) {
+                recurse_node_names(root_node, value, new_uuid);
+            }
+
+            ImGui::EndCombo();
         }
+        if (new_uuid != tmt::NULL_UUID) value.resource = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(value.file_location, new_uuid).resource;
 
-        ImGui::EndCombo();
+        ImGui::Unindent();
     }
-    if (new_uuid != tmt::NULL_UUID) value.resource = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(value.file_location, new_uuid).resource;
-
-    ImGui::Unindent();
 
     if (ImGui::Button("Load") || dropped) {
         value.resource = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(value.file_location).resource;
