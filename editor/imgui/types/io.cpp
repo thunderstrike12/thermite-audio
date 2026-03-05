@@ -15,11 +15,15 @@ void tag_invoke(ImReflect::ImInput_t, const char* name, tmt::IO::FileLocation& v
             const std::string_view json_string { static_cast<char*>(payload->Data), static_cast<size_t>(payload->DataSize) };
             tmt::IO::FileLocation file_location;
             tmt::Serializer::deserialize(nlohmann::ordered_json::parse(json_string), file_location);
+            location_response.active();
+            location_response.activated();
 
             if (ImGui::AcceptDragDropPayload("FileLocation") != nullptr) {
                 value = file_location;
                 location_response.dropped();
                 location_response.changed();
+                location_response.deactivated();
+                location_response.deactivated_after_edit();
             }
         }
 

@@ -172,7 +172,6 @@ void Inspector::display_compile_time_components(const tmt::Inspector::MenuContex
 
         static std::unordered_map<Entity, ComponentDiff<T>> component_diff;
         if (deactivated_after_edit) {
-            printf("Deactivated component editor: %s\n", name);
             UndoRedoCollection collection;
             for (auto& [entity, diff] : component_diff) {
                 diff.after();
@@ -183,7 +182,6 @@ void Inspector::display_compile_time_components(const tmt::Inspector::MenuContex
         }
 
         if (activated) {
-            printf("Activated component editor: %s\n", name);
             for (const Entity& entity : menu_context.selected_entities) {
                 const bool has_component_2 = tmt::engine.ecs.has_component<T>(entity);
                 if (has_component_2 == false) continue;

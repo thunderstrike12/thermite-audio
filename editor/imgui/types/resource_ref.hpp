@@ -21,6 +21,7 @@ inline void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::ResourceRef
         } else {
             static_assert(svh::always_false<T>::value, "JsonSerializer Error: Cannot deserialize ResourceRef<T> where T is not a FileResource or RuntimeResource");
         }
+        response.get<tmt::ResourceRef<T>>().changed();
     }
     ImGui::EndGroup();
 
