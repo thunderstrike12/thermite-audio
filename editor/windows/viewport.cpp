@@ -268,7 +268,7 @@ void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const ImVec2&
             int y0 = std::min(a.y, b.y);
             int y1 = std::max(a.y, b.y);
 
-            auto view = engine.ecs.get_registry().view<UIComponent>();
+            auto view = engine.ecs.view<UIComponent>();
             static std::vector<Entity> tracking_rect_entities;
             tracking_rect_entities.clear();
             for (int x = x0; x < x1; x += 5) {
@@ -300,7 +300,7 @@ void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const ImVec2&
         if (not_multiple_select_modifier) hierarchy.clear_selection();
 
         if (engine.renderer.ui_pipeline.render_ui_pipeline) {
-            auto view = engine.ecs.get_registry().view<UIComponent>();
+            auto view = engine.ecs.view<UIComponent>();
             for (auto [entity, ui_comp] : view.each()) {
                 if (AnchorHelper::is_inside(entity, { mouse_pos.x, mouse_pos.y })) {
                     hierarchy.add_entity_to_selection(entity);
