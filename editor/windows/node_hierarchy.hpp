@@ -34,7 +34,8 @@ class NodeHierarchy : public IWindow {
 
     void build_scene(const std::span<VoxelSceneNode>& root_nodes, bool assign_new_uuids = false);
 
-    std::vector<char> encode_voxel_scene() const;
+    [[nodiscard]] std::vector<char> encode_voxel_scene() const;
+    void clear_root_entities() { root_entities.clear(); }
 
    private:
     friend class VoxelNodeDiff;

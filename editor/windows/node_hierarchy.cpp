@@ -313,7 +313,7 @@ void NodeHierarchy::export_file(const std::string& file_description, const std::
 }
 
 void NodeHierarchy::build_scene(const std::span<VoxelSceneNode>& root_nodes, bool assign_new_uuids) {
-    for (VoxelSceneNode& root_node : root_nodes) {
+    for (const VoxelSceneNode& root_node : root_nodes) {
         const Entity root_entity = recurse_build_scene(root_node, assign_new_uuids);
 
         root_entities.emplace(root_entity);

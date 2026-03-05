@@ -69,13 +69,16 @@ void VoxelMode::on_switch_to(const std::any& meta_data) {
 }
 
 void VoxelMode::on_switch_away() {
-    edit_data = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().encode_voxel_scene();
+    NodeHierarchy& node_hierarchy = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>();
+    edit_data = node_hierarchy.encode_voxel_scene();
 
     cached_editor_camera = engine.renderer.get_debug_camera();
     cached_editor_transform = engine.renderer.get_debug_transform();
 
     /* Switch back to the previously cached display mode */
     engine.renderer.display_mode = cached_display_mode;
+
+    node_hierarchy.clear_root_entities();
 }
 
 }  // namespace tmt
