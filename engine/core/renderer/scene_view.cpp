@@ -82,6 +82,13 @@ inline std::vector<T> reserved(const size_t count) {
     return std::move(v);
 }
 
+/* Check if any element of a 4x4 matrix is NaN or Inf. */
+bool validate_transform(const glm::mat4 m) {
+    const glm::vec4 sum4 = m[0] + m[1] + m[2] + m[3];
+    const float sum = sum4[0] + sum4[1] + sum4[2] + sum4[3];
+    return glm::isnan(sum) || glm::isinf(sum);
+}
+
 void SceneView::update_voxel_objects(RenderGraph& render_graph) {
     /* Capture all voxel renderers in the scene */
     const entt::basic_group group = engine.ecs.group<VoxelRenderer>(entt::get<Transform>);
@@ -98,8 +105,13 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
         /* Respect the object limit */
         if (cpu_objects.size() >= (size_t)MAX_VOXEL_OBJECTS) break;
 
-        /* Don't render objects with a zero scale or null resource */
-        if (glm::any(glm::equal(transform.get_world_scale(), glm::vec3(0.0f))) || renderer.resource == nullptr) continue;
+        /* Don't render objects with a null resource */
+        if (renderer.resource == nullptr) continue;
+
+        /* Don't render objects with invalid transforms */
+        const bool zero_scale = glm::any(glm::equal(transform.get_world_scale(), glm::vec3(0.0f)));
+        const bool valid = validate_transform(transform.get_world_matrix());
+        if (zero_scale || valid) continue;
         renderer.resource->update_if_dirty();
 
         /* Create new CPU and GPU object */
