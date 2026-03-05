@@ -80,7 +80,8 @@ public [ForceInline] GeoData unpack_geometry(const VisData vis, StructuredBuffer
     /* Unpack the geometry normal (1b sign | 2b axis) */
     float3 local_normal = 0.0f;
     local_normal[vis.face_index & 0b11u] = (vis.face_index >> 2) == 0u ? -1.0f : 1.0f;
-    data.normal = normalize(mul(object.local_to_world, float4(local_normal, 0.0f)).xyz);
+    /* Use inverse ray direction as fallback normal for invalid values (3) */
+    data.normal = vis.face_index == 3u ? -ray.dir : normalize(mul(object.local_to_world, float4(local_normal, 0.0f)).xyz);
 
     /* Unpack the voxel position index (1D -> 3D) */
     const uint3 voxel_index = expand_voxel_index(vis.voxel_index);
@@ -101,23 +102,4 @@ public [ForceInline] GeoData unpack_geometry(const VisData vis, StructuredBuffer
     data.material = voxel_material(object, voxel_ptr);
     
     return data;
-}
-
-/* Unpack voxel facet from visibility data. */
-public [ForceInline] VoxelFacet unpack_geometry(const VisData vis, const StructuredBuffer<VoxelObject> objects) {
-    const VoxelObject object = objects[vis.object_index];
-
-    /* Unpack the geometry normal (1b sign | 2b axis) */
-    float3 local_normal = 0.0f;
-    local_normal[vis.face_index & 0b11u] = (vis.face_index >> 2) == 0u ? -1.0f : 1.0f;
-    const float3 facet_normal = normalize(mul(object.local_to_world, float4(local_normal, 0.0f)).xyz);
-
-    /* Unpack the voxel position index (1D -> 3D) */
-    const uint3 voxel_index = expand_voxel_index(vis.voxel_index);
-
-    /* Calculate the voxel face position in world-space */
-    const float3 local_voxel = (float3(voxel_index) + 0.5f + local_normal * 0.5f) * UNITS_PER_VOXEL;
-    const float3 half_extent = float3(object.size_rcp_width.xyz) * 0.5f * UNITS_PER_VOXEL;
-    const float3 facet_center = mul(object.local_to_world, float4(local_voxel - half_extent, 1.0f)).xyz;
-    return VoxelFacet(facet_center, facet_normal);
 }

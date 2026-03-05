@@ -73,7 +73,12 @@ public [ForceInline] void trace_voxel_object<let DEBUG : bool>(Ray ray, VoxelObj
     hit.t = hit_dist;
     hit.voxel_index = local_hit.voxel_index;
     hit.object_index = index;
-    hit.face_index = local_hit.face_index == 3u ? aabb_face_index(entry_uvw) : local_hit.face_index;
+    if (local_hit.face_index == 3u && t_near > 0.0f) {
+        /* Use the bounding box normals if we didn't get a normal from the SVT64 */
+        hit.face_index = aabb_face_index(entry_uvw);
+    } else {
+        hit.face_index = local_hit.face_index;
+    }
 }
 
 public [ForceInline] void occlusion_voxel_object(Ray ray, VoxelObject object, uint index, inout float t) {

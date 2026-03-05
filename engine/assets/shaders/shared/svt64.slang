@@ -98,8 +98,8 @@ public [ForceInline] Svt64Hit trace_svt64<let DEBUG : bool>(
         result:$$uint = OpLoad builtin(LocalInvocationIndex:uint);
     };
 
-    /* 16x8 thread group, 11 stack slots each. */
-    static groupshared uint gs_stack[16 * 8][11];
+    /* 16x8 thread group, 5 stack slots each. */
+    static groupshared uint gs_stack[16 * 8][5];
 
     /* Mirror ray origin for more efficient ray-octant traversal */
     ray.origin = mirror_pos(ray.origin, ray.dir, true);
@@ -124,7 +124,7 @@ public [ForceInline] Svt64Hit trace_svt64<let DEBUG : bool>(
         /* Descend down the tree until we find an empty node or leaf node */
         while (node.child_active(child_index) && !node.is_leaf()) {
             /* Push the current node on the stack (at `scale_exp / 2`) */
-            gs_stack[group_id][scale_exp >> 1] = node_index;
+            gs_stack[group_id][(scale_exp >> 1) - 6] = node_index;
 
             /* Fetch the child node */
             node_index = node.abs_ptr() + popcnt_var64(node.child_mask(), child_index);
@@ -159,7 +159,7 @@ public [ForceInline] Svt64Hit trace_svt64<let DEBUG : bool>(
             if (diff_exp > 21) break;
 
             /* Read the first common ancestor node from the stack */
-            node_index = gs_stack[group_id][scale_exp >> 1];
+            node_index = gs_stack[group_id][(scale_exp >> 1) - 6];
             node = nodes[node_index];
         }
 
