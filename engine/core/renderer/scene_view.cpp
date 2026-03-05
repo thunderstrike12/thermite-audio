@@ -82,8 +82,15 @@ inline std::vector<T> reserved(const size_t count) {
     return std::move(v);
 }
 
-/* Check if any element of a 4x4 matrix is NaN or Inf. */
+/* Validate a transform. */
 bool validate_transform(const glm::mat4 m) {
+    /* Calculate the scale of the transform */
+    const glm::vec3 scale = glm::vec3(glm::length(glm::vec3(m[0])), glm::length(glm::vec3(m[1])), glm::length(glm::vec3(m[2])));
+
+    /* Ensure the scale isn't too small */
+    if (glm::any(glm::epsilonEqual(scale, glm::vec3(0.0f), 0.001f))) return true;
+
+    /* Check for NaN and Inf values in the matrix */
     const glm::vec4 sum4 = m[0] + m[1] + m[2] + m[3];
     const float sum = sum4[0] + sum4[1] + sum4[2] + sum4[3];
     return glm::isnan(sum) || glm::isinf(sum);
@@ -109,9 +116,7 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
         if (renderer.resource == nullptr) continue;
 
         /* Don't render objects with invalid transforms */
-        const bool zero_scale = glm::any(glm::equal(transform.get_world_scale(), glm::vec3(0.0f)));
-        const bool valid = validate_transform(transform.get_world_matrix());
-        if (zero_scale || valid) continue;
+        if (validate_transform(transform.get_world_matrix())) continue;
         renderer.resource->update_if_dirty();
 
         /* Create new CPU and GPU object */
