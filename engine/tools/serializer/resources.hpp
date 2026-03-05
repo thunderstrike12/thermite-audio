@@ -7,6 +7,7 @@
 #include "engine/core/resources.hpp"
 #include "engine/tools/serializer.hpp"
 #include "engine/core/logger.hpp"
+#include "engine/core/resources/voxel_volume.hpp"
 
 template <typename T>
 static inline tmt::json tag_invoke(JsonReflect::serialize_t, const tmt::ResourceRef<T>& value) {
@@ -65,7 +66,8 @@ static inline void tag_invoke(JsonReflect::deserialize_t, const JsonReflect::jso
             value.resource = tmt::engine.resources.copy_resource<T>(file_ref).resource;
         }
     } else {
-        static_assert(svh::always_false<T>::value, "JsonSerializer Error: Cannot deserialize ResourceRef<T> where T is not a FileResource or RuntimeResource");
+        value = tmt::ResourceRef<T>();
+        tmt::Log::warn(tmt::Log::Scope::ENGINE, "[Serializer] ResourceRef: Json does not contain file_location entry");
     }
 
     if (value.resource == nullptr) {

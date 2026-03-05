@@ -110,14 +110,14 @@ class Resources {
 
     /* Runtime resources loading that takes in a file location (loads file resource first, then creates runtime resource) */
     template <typename T, typename... Args>
-    requires requires { typename T::is_runtime_resource; } && std::constructible_from<typename T::ResourceType, const IO::FileLocation&, Args...>
+    requires requires { typename T::is_runtime_resource; } && std::constructible_from<T, const std::shared_ptr<typename T::ResourceType>&, Args...>
     ResourceRef<T> copy_resource(const IO::FileLocation& file_location, Args&&... args) {
-        auto file_resource = load_resource<typename T::ResourceType>(file_location, std::forward<Args>(args)...);
+        auto file_resource = load_resource<typename T::ResourceType>(file_location);
         if (file_resource == nullptr) {
             ResourceRef<T> ref(file_location);
             return ref;
         }
-        return copy_resource<T>(file_resource);
+        return copy_resource<T>(file_resource, std::forward<Args>(args)...);
     }
 
     void unload_unused();

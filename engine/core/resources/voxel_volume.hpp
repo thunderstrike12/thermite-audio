@@ -18,7 +18,7 @@ class VoxelVolume : public tmt::RuntimeResource<VoxelScene, UUID> {
 
     VoxelVolume(const std::shared_ptr<VoxelScene>& file_resource) : Base(file_resource, NULL_UUID) {}
     VoxelVolume(const std::shared_ptr<VoxelScene>& file_resource, const UUID& uuid) : Base(file_resource, uuid), uuid { uuid } {}
-    ~VoxelVolume() { unload(); }
+    ~VoxelVolume() override { VoxelVolume::unload(); }
 
     bool load() override;
     void unload() override;
@@ -27,7 +27,10 @@ class VoxelVolume : public tmt::RuntimeResource<VoxelScene, UUID> {
     void update_if_dirty();
 
     /* Mark this voxel volume as dirty, meaning it needs to be re-uploaded to the GPU. */
-    inline void set_dirty() { is_dirty = true; };
+    void set_dirty() { is_dirty = true; }
+
+    /* Human-readable name */
+    std::string name {};
 
     /* 128 bit unique identifier. */
     UUID uuid { NULL_UUID };
