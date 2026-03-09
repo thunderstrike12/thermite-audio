@@ -234,4 +234,16 @@ class OnAnyInput : public EventListenerBase<OnAnyInput, AnyInputEvent> {
     void on_event(const AnyInputEvent& event) final override { (void)event; }
 };
 
+struct OnBlockInputEvent : public EventBase {
+    bool block = false;
+};
+
+class OnBlockInputRequest : public EventListenerBase<OnBlockInputRequest, OnBlockInputEvent> {
+   public:
+    OnBlockInputRequest() : EventListenerBase() {}
+    virtual void on_block_input_request(OnBlockInputEvent& event) = 0;
+    void on_event(OnBlockInputEvent& event) final override { on_block_input_request(event); }
+    void on_event(const OnBlockInputEvent& event) final override { (void)event; }
+};
+
 }  // namespace tmt

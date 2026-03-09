@@ -72,6 +72,7 @@ void tmt::Viewport::display() {
     height = size.y;
 
     const ImVec2 image_pos = ImGui::GetCursorScreenPos();
+    is_focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
 
     if (height <= 0.f) return;
 
@@ -144,12 +145,17 @@ void tmt::Viewport::display() {
     if (ImGui::IsItemHovered() && ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
         ImGui::SetWindowFocus();
     }
+    if(is_hovered && !engine.input.is_mouse_locked() && engine.game_controller.is_running() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+    {
+        engine.input.lock_mouse(true);
+        engine.input.set_mouse_relative_to_window(true);
+    }
 }
 
 void tmt::Viewport::snap_to_entity() {
     const auto* hierarchy = editor.windows[editor.editor_mode].try_get<Hierarchy>();
-    if (hierarchy == nullptr) return;
     Entity selected_entity = hierarchy->get_first_selected_entity();
+    if (hierarchy == nullptr || !engine.ecs.valid(selected_entity)) return;
 
     auto& transform = engine.ecs.get_component<Transform>(selected_entity);
     glm::vec3 target_pos = transform.get_world_position();
@@ -349,13 +355,25 @@ void tmt::Viewport::on_retrieve_mouse_state(MouseOverride& event) {
     event.handled = true;
 }
 
+void tmt::Viewport::on_block_input_request(OnBlockInputEvent& event) {
+    if (is_focused == false) {
+        event.block = true;
+    }
+    event.handled = true;
+}
+
+void tmt::Viewport::on_game_start() 
+{
+   ImGui::SetWindowFocus(get_title().c_str());
+}
+
 void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {
     if (engine.game_controller.is_running() || is_hovered == false) return;
     // Gather Variables to be used
     auto& input = engine.input;
 
-    const bool enable_mouse_look = input.is_action_pressed(action::RIGHT_CLICK);
-    const bool is_2d_axis_movement = input.is_action_pressed(action::LEFT_CLICK);
+    const bool enable_mouse_look = ImGui::IsMouseDown(ImGuiMouseButton_Right);
+    const bool is_2d_axis_movement = ImGui::IsMouseDown(ImGuiMouseButton_Left);
 
     if (!enable_mouse_look) {
         /* Show mouse cursor */
@@ -375,8 +393,11 @@ void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {
     Camera& camera = engine.renderer.get_debug_camera();
     Transform& transform = engine.renderer.get_debug_transform();
 
-    const float dx = input.get_mouse_delta_x();
-    const float dy = input.get_mouse_delta_y();
+    // const float dx = ImGui::GetIO().MouseDelta.x;
+    // const float dy = ImGui::GetIO().MouseDelta.y;
+    // printf("Mouse Delta: %f, %f\n", dx, dy);
+    const float dx = input.get_mouse_delta_engine_x();
+    const float dy = input.get_mouse_delta_engine_y();
 
     if (is_2d_axis_movement == false) {
         // Mouse Look
@@ -392,7 +413,8 @@ void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {
         transform.look_at(transform.get_world_position() + front, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
-    const float mouse_wheel_y_delta = input.get_mouse_wheel_y();
+    // const float mouse_wheel_y_delta = input.get_mouse_wheel_y();
+    const float mouse_wheel_y_delta = ImGui::GetIO().MouseWheel;
     camera_speed *= std::pow(2.0f, mouse_wheel_y_delta * 0.15f);
     camera_speed = glm::clamp(camera_speed, Config::MIN_BASE_SPEED, Config::MAX_BASE_SPEED);
 
@@ -400,7 +422,7 @@ void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {
 
     if (is_2d_axis_movement) {
         // 2D Axis Movement
-        const bool sprint = input.is_action_pressed(Config::SPRINT);
+        const bool sprint = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
         const glm::vec3 horizontal_move = transform.get_right() * dx * Config::MOUSE_SENSITIVITY * 0.1f;
         const glm::vec3 direction = sprint ? transform.get_forward() : transform.get_up();
         const glm::vec3 vertical_move = direction * -dy * Config::MOUSE_SENSITIVITY * 0.1f;
@@ -408,12 +430,12 @@ void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {
     } else {
         // Movement (WASD + QE)
         glm::vec3 move_dir = { 0.0f, 0.0f, 0.0f };
-        if (input.is_action_pressed(Config::FORWARD)) move_dir += transform.get_forward();
-        if (input.is_action_pressed(Config::BACKWARD)) move_dir -= transform.get_forward();
-        if (input.is_action_pressed(Config::LEFT)) move_dir -= transform.get_right();
-        if (input.is_action_pressed(Config::RIGHT)) move_dir += transform.get_right();
-        if (input.is_action_pressed(Config::UP)) move_dir += transform.get_up();
-        if (input.is_action_pressed(Config::DOWN)) move_dir -= transform.get_up();
+        if (ImGui::IsKeyDown(ImGuiKey_W)) move_dir += transform.get_forward();
+        if (ImGui::IsKeyDown(ImGuiKey_S)) move_dir -= transform.get_forward();
+        if (ImGui::IsKeyDown(ImGuiKey_A)) move_dir -= transform.get_right();
+        if (ImGui::IsKeyDown(ImGuiKey_D)) move_dir += transform.get_right();
+        if (ImGui::IsKeyDown(ImGuiKey_E)) move_dir += transform.get_up();
+        if (ImGui::IsKeyDown(ImGuiKey_Q)) move_dir -= transform.get_up();
 
         if (glm::length(move_dir) > 0.0f) pos += glm::normalize(move_dir) * camera_speed * time.delta_time;
     }

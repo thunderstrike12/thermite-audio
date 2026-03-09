@@ -43,11 +43,10 @@ void GameFlow::display() {
 void GameFlow::on_editor_start() {}
 
 void GameFlow::on_editor_update(const FrameData&) {
-    if (engine.input.is_keyboard_button_just_pressed(Key::F1)) {
+    //if (engine.input.is_keyboard_button_just_pressed(Key::F1)) {
+    if (ImGui::IsKeyPressed(ImGuiKey_F1)) {
         if (engine.input.is_mouse_locked()) {
             unlock_mouse();
-        } else {
-            lock_mouse();
         }
     }
 }
