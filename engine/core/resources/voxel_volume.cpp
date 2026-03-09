@@ -64,6 +64,16 @@ VoxelVolume::VoxelVolume(const VoxelSceneNode& node) : Base({}, {}) {
     create_gpu_buffers();
 }
 
+VoxelVolume::VoxelVolume(const ResourceRef<VoxelVolume>& volume, const UUID& new_uuid) : Base({}, {}) {
+    /* Copy the voxel data from the model */
+    blas = std::make_unique<Svt64>(*volume->blas);
+    size = volume->size;
+    uuid = new_uuid;
+    name = volume->name;
+
+    create_gpu_buffers();
+}
+
 bool VoxelVolume::load() {
     const VoxelSceneNode* model = nullptr;
 

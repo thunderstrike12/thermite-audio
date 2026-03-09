@@ -49,7 +49,7 @@ class NodeHierarchy : public IWindow {
 
     void popup_create_node();
     void popup_resize_node();
-    void node_context_menu(Entity node_entity) const;
+    void node_context_menu(Entity node_entity);
 
     void display() override;
 

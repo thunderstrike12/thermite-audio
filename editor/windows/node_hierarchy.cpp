@@ -152,6 +152,34 @@ void recurse_parse_scene(tmt::Entity entity, const tmt::Transform& transform, tm
     }
 }
 
+tmt::Entity recurse_duplicate_node(const tmt::Entity source_entity, const tmt::Entity parent = entt::null) {
+    const auto& [source_name, source_transform] = tmt::engine.ecs.get_component<tmt::Name, tmt::Transform>(source_entity);
+
+    const tmt::Entity entity = tmt::engine.ecs.create_entity(source_name.name);
+    auto&& [name, transform] = tmt::engine.ecs.get_component<tmt::Name, tmt::Transform>(entity);
+
+    transform.set_world_matrix(source_transform.get_world_matrix());
+    transform.set_parent(parent);
+
+    tmt::NodeHierarchy::NodeUUID& uuid_component = tmt::engine.ecs.add_component<tmt::NodeHierarchy::NodeUUID>(entity);
+    uuid_component.uuid = tmt::UUIDGenerator::generate();
+
+    const tmt::VoxelRenderer* source_renderer = tmt::engine.ecs.try_get_component<tmt::VoxelRenderer>(source_entity);
+    if (source_renderer != nullptr) {
+        tmt::VoxelRenderer& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
+
+        // Create a fake voxel resource managed by the voxel editor.
+        const tmt::ResourceRef volume { {}, std::make_shared<tmt::VoxelVolume>(source_renderer->resource, uuid_component.uuid) };
+        renderer.resource = volume;
+    }
+
+    for (const tmt::Entity& child : source_transform.get_children()) {
+        recurse_duplicate_node(child, entity);
+    }
+
+    return entity;
+}
+
 std::atomic_bool model_load_atomic { true };
 
 }  // namespace
@@ -644,19 +672,28 @@ void NodeHierarchy::popup_resize_node() {
     ImGui::EndPopup();
 }
 
-void NodeHierarchy::node_context_menu(const Entity node_entity) const {
+void NodeHierarchy::node_context_menu(const Entity node_entity) {
     constexpr ImGuiPopupFlags flags = ImGuiPopupFlags_NoOpenOverExistingPopup | ImGuiPopupFlags_MouseButtonRight;
     if (!ImGui::BeginPopupContextItem(nullptr, flags)) return;
 
-    if (ImGui::MenuItem(ICON_MS_ADD " Add node")) {
+    if (ImGui::MenuItem(ICON_MS_ADD " Add Node")) {
         node_creation_info = std::make_unique<NodeCreationData>();
         node_creation_info->parent = node_entity;
         ImGui::OpenPopupEx(creation_popup_id);
     }
-    if (ImGui::MenuItem(ICON_MS_REMOVE " Delete node")) {
+    if (ImGui::MenuItem(ICON_MS_REMOVE " Delete Node")) {
         VoxelNodeDiff diff { node_entity, false };
         engine.ecs.destroy_entity(node_entity);
         VoxelNodeDiff::send_to_manager(std::move(diff), "Deleted Voxel Node");
+    }
+
+    if (ImGui::MenuItem(ICON_MS_COPY_ALL " Duplicate Node")) {
+        const Entity parent = engine.ecs.get_component<Transform>(node_entity).get_parent();
+        const Entity new_entity = recurse_duplicate_node(node_entity, parent);
+        if (parent == entt::null) root_entities.emplace(new_entity);
+
+        VoxelNodeDiff diff { new_entity, true };
+        VoxelNodeDiff::send_to_manager(std::move(diff), "Duplicate Voxel Node");
     }
 
     ImGui::Separator();
