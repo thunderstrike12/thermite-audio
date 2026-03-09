@@ -109,6 +109,15 @@ void drag_drop_directory(const tmt::IO::FileLocation& location, const bool is_wi
     ImGui::EndDragDropTarget();
 }
 
+std::filesystem::path path_to_lower(const std::filesystem::path& path) {
+    std::string path_string = path.generic_string();
+    for (char& character : path_string) {
+        character = static_cast<char>(std::tolower(character));
+    }
+
+    return std::filesystem::path { path_string };
+}
+
 }  // namespace
 
 namespace tmt {
@@ -332,8 +341,8 @@ void AssetBrowser::update_viewing_locations() {
 
     // Sort the paths by name but make sure that directories are always first (just like how file explorer does it).
     std::ranges::sort(viewing_locations, [](const IO::FileLocation& a, const IO::FileLocation& b) {
-        const std::filesystem::path& a_path = a.get_relative_path();
-        const std::filesystem::path& b_path = b.get_relative_path();
+        const std::filesystem::path a_path = path_to_lower(a.get_relative_path());
+        const std::filesystem::path b_path = path_to_lower(b.get_relative_path());
 
         if (is_directory(a_path) == is_directory(b_path)) return a_path < b_path;
         return is_directory(a_path);
