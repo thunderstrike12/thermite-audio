@@ -54,6 +54,16 @@ void MaterialEditor::display() {
     float emission = glm::unpackHalf1x16(material.emission);
     if (ImGui::DragFloat("Emission", &emission, 0.1f, 0.0f, std::numeric_limits<float>::max(), "%.3f", ImGuiSliderFlags_ClampOnInput)) material.emission = glm::packHalf1x16(emission);
 
+    if (ImGui::BeginCombo("Type", magic_enum::enum_name(material.type).data())) {
+        for (const auto& [value, name] : magic_enum::enum_entries<Material::Type>()) {
+            if (!ImGui::Selectable(name.data(), material.type == value)) continue;
+
+            material.type = value;
+        }
+
+        ImGui::EndCombo();
+    }
+
     ImGui::EndGroup();
 
     if (ImGui::IsItemEdited()) renderer->resource->set_dirty();
