@@ -49,4 +49,63 @@ public [ForceInline] float acescg_luminance(const float3 acescg) {
     return dot(acescg, float3(0.2722287168f, 0.6740817658f, 0.0536895174f));
 }
 
+/* Mean error^2: 3.6705141e-06 */
+float3 agx_contrast_approx(float3 x) {
+    const float3 x2 = x * x;
+    const float3 x4 = x2 * x2;
+
+    return 15.5f * x4 * x2
+        - 40.14f * x4 * x
+        + 31.96f * x4
+        - 6.868f * x2 * x
+        + 0.4298f * x2
+        + 0.1191f * x
+        - 0.00232f;
+}
+
+public float3 agx(float3 val) {
+    const float3x3 agx_mat = float3x3(
+        0.842479062253094f, 0.0423282422610123f, 0.0423756549057051f,
+        0.0784335999999992f, 0.878468636469772f, 0.0784336f,
+        0.0792237451477643f, 0.0791661274605434f, 0.879142973793104f
+    );
+
+    const float min_ev = -12.47393f;
+    const float max_ev = 4.026069f;
+
+    /* Input transform (inset) */
+    val = mul(agx_mat, val);
+
+    /* Log2 space encoding */
+    val = clamp(log2(val), min_ev, max_ev);
+    val = (val - min_ev) / (max_ev - min_ev);
+
+    /* Apply sigmoid function approximation */
+    return agx_contrast_approx(val);
+}
+
+public float3 agx_eotf(float3 val) {
+    const float3x3 agx_mat_inv = float3x3(
+        1.19687900512017f, -0.0528968517574562f, -0.0529716355144438f,
+        -0.0980208811401368f, 1.15190312990417f, -0.0980434501171241f,
+        -0.0990297440797205f, -0.0989611768448433f, 1.15107367264116f
+    );
+    /* Output transform (outset) */
+    return mul(agx_mat_inv, val);
+}
+
+public float3 agx_look(float3 val) {
+    /* Look config */
+    const float3 offset = 0.0f;
+    const float3 slope = 1.0f;
+    const float3 power = 1.35f;
+    const float sat = 1.4f;
+
+    /* ASC CDL */
+    val = pow(val * slope + offset, power);
+    const float3 lw = float3(0.2126f, 0.7152f, 0.0722f);
+    float luma = dot(val, lw);
+    return luma + sat * (val - luma);
+}
+
 }

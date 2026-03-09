@@ -32,6 +32,10 @@ public struct SceneView {
     public float3 sun_luminance;
     /* Number of lights present in the scene. */
     public uint light_count;
+    /* Environment map (full) bindless handle. */
+    public uint envmap_full_handle;
+    /* Environment map (filtered) bindless handle. */
+    public uint envmap_filtered_handle;
 };
 
 /* Represents a ray that can be traced. */

@@ -8,11 +8,14 @@ import visibility;
 import voxel;
 import bvh2;
 import cache;
+import bindless;
 
 /* Active render & scene view. */
 ConstantBuffer<RenderView> render_view;
 ConstantBuffer<SceneView> scene_view;
 Texture2D<float4> blue_noise;
+/* Environment map sampler. */
+SamplerState envmap_sampler;
 /* Voxel objects buffers. */
 StructuredBuffer<float4> tlas_nodes;
 StructuredBuffer<uint> object_indices;
@@ -26,11 +29,19 @@ RWTexture2D<float3> lbuffer;
 
 static const float GI_RANGE = 32.0f/* m */;
 
-inline float ambient_occlusion(const float3 point, const float3 normal, const float2 noise) {
+inline float3 ambient_occlusion(const float3 point, const float3 normal, const float2 noise) {
     /* Generate a sample for the light we picked */
     const float3 ambient_dir = sample_hemisphere_cosine(normal, noise);
     const float t = occlusion_bvh2(tlas_nodes, object_indices, objects, custom_ray(point, ambient_dir), GI_RANGE);
-    return (t < GI_RANGE) ? 0.0f : 1.0f;
+    if (t < GI_RANGE) return 0.0f;
+
+    /* In case there's no envmap, use a base gray color */
+    if (scene_view.envmap_filtered_handle == 0u) return float3(0.2475f, 0.2475f, 0.2475f); 
+
+    /* Sample the filtered envmap */
+    const float2 uv = dir_to_latlong(ambient_dir);
+    const float3 env = bindless::texture_sampled<Texture2D<float4>>(scene_view.envmap_filtered_handle).SampleLevel(envmap_sampler, uv, 0).rgb;
+    return env;
 }
 
 [shader("compute")]
@@ -75,7 +86,7 @@ void main(int2 thread_id: SV_DispatchThreadID) {
 
     /* Ray trace global illuminance (AO for now) */
     const float2 noise = r2(blue_noise[pixel_id % 512].rg, render_view.frame_index % 1024u);
-    const float3 illuminance = ambient_occlusion(hit_point, geo.normal, noise) * 0.15f;
+    const float3 illuminance = ambient_occlusion(hit_point, geo.normal, noise);
 
     /* Insert the sample into the illuminance cache */
     /* TODO: This is very hacky (illuminance * 8.0f), we should properly handle this */

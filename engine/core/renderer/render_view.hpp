@@ -8,6 +8,7 @@
 #include "engine/core/components/camera.hpp"
 #include "engine/core/components/transform.hpp"
 #include "engine/core/resources/texture_2d.hpp"
+#include "engine/core/resources/envmap.hpp"
 #include "engine/shared/ray.hpp"
 
 class RenderGraph;

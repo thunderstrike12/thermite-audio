@@ -20,6 +20,7 @@
 #include "engine/core/components/ui_component.hpp"
 #include "engine/core/components/image_renderer.hpp"
 #include "engine/core/components/button.hpp"
+#include "engine/core/components/environment.hpp"
 #include "engine/systems/animation/rig_model.hpp"
 #include "engine/tools/uuid.hpp"
 #include "engine/systems/ai/goap/components/goap_agent_type_ref.hpp"
@@ -38,6 +39,7 @@ using SerializeComponents = ComponentRegistry<
 	Transform, 
 	DisableFlag,
 	VoxelRenderer, 
+	Environment,
 	Camera,
 	VoxelBody,
 	ComponentCollection,
@@ -70,6 +72,7 @@ using InspectComponents = ComponentRegistry<
 	Name, 
 	Transform,
 	VoxelRenderer, 
+	Environment,
 	Camera,
 	VoxelBody,
 	NavMesh,
@@ -96,6 +99,6 @@ using InspectComponents = ComponentRegistry<
 
 }  // namespace tmt
 
-//template <typename T>
-//requires(tmt::SerializeComponents::contains<T>())
-//struct JsonReflect::Detail::delta_serialize<T> : std::true_type {};
+// template <typename T>
+// requires(tmt::SerializeComponents::contains<T>())
+// struct JsonReflect::Detail::delta_serialize<T> : std::true_type {};

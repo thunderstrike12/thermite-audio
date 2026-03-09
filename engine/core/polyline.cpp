@@ -394,11 +394,11 @@ void Polyline::draw_scene_grid(float cell_size, int subdivisions, int grid_exten
     const float extent = grid_extent * cell_size;
 
     /* Colors and line widths */
-    const glm::vec4 minor_color = glm::vec4(1.0f, 1.0f, 1.0f, 0.1f);
-    const glm::vec4 major_color = glm::vec4(1.0f, 1.0f, 1.0f, 0.2f);
-    const glm::vec4 x_axis_color = glm::vec4(0.6f, 0.2f, 0.25f, 1.0f);
-    const glm::vec4 z_axis_color = glm::vec4(0.2f, 0.6f, 0.25f, 1.0f);
-    const float minor_width = 1.0f, major_width = 2.0f, axis_width = 2.5f;
+    const glm::vec4 minor_color = glm::vec4(0.329f, 0.329f, 0.329f, 0.5f);
+    const glm::vec4 major_color = glm::vec4(0.329f, 0.329f, 0.329f, 1.0f);
+    const glm::vec4 x_axis_color = glm::vec4(0.624f, 0.208f, 0.251f, 1.0f);
+    const glm::vec4 z_axis_color = glm::vec4(0.208f, 0.445f, 0.624f, 1.0f);
+    const float minor_width = 1.0f, major_width = 1.0f, axis_width = 1.5f;
 
     /* Z axis lines */
     for (int i = -grid_extent; i <= grid_extent; ++i) {

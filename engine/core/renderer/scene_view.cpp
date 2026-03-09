@@ -10,6 +10,7 @@
 
 #include "engine/core/components/voxel_renderer.hpp"
 #include "engine/core/components/light.hpp"
+#include "engine/core/components/environment.hpp"
 
 namespace tmt {
 
@@ -156,15 +157,15 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
 
 void SceneView::update_lights(RenderGraph& render_graph, const RenderView&) {
     /* Capture all lights in the scene */
-    const entt::basic_group group = engine.ecs.group<const Light>(entt::get<Transform>);
+    const entt::basic_group light_group = engine.ecs.group<const Light>(entt::get<Transform>);
 
     /* Allocate space for all lights */
-    const size_t count = std::min(group.size(), (size_t)MAX_LIGHTS);
+    const size_t count = std::min(light_group.size(), (size_t)MAX_LIGHTS);
     std::vector gpu_lights = reserved<UniversalLightDesc>(count);
     GpuSceneView gpu_view {};
 
     /* Iterate over all lights */
-    for (auto&& [entity, light, transform] : group.each()) {
+    for (auto&& [entity, light, transform] : light_group.each()) {
         const glm::vec3 scale = transform.get_world_scale();
 
         /* We only support 1 sun light in the scene at once */
@@ -213,6 +214,21 @@ void SceneView::update_lights(RenderGraph& render_graph, const RenderView&) {
             }
             default:
                 break;
+        }
+    }
+
+    /* Capture all environment in the scene */
+    const entt::basic_group env_group = engine.ecs.group<const Environment>();
+    gpu_view.envmap_full_handle = 0u;
+    gpu_view.envmap_filtered_handle = 0u;
+
+    /* Iterate over all environments */
+    for (auto&& [entity, env] : env_group.each()) {
+        if (env.resource) {
+            /* Select the first valid environment we find */
+            gpu_view.envmap_full_handle = env.resource->full_image.get_index();
+            gpu_view.envmap_filtered_handle = env.resource->filtered_image.get_index();
+            break;
         }
     }
 

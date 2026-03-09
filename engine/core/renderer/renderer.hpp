@@ -39,6 +39,8 @@ class Renderer {
     RenderView render_view {};
     SceneView scene_view {};
 
+    Sampler linear_sampler {};
+
     /* Display mode for debugging */
     DisplayMode display_mode = DisplayMode::DEFAULT;
 

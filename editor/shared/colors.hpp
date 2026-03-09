@@ -24,7 +24,7 @@ constexpr glm::vec3 BLUE = glm::vec3(0.27843137f, 0.56078431f, 0.94509803f);
 constexpr glm::vec3 SELECTED = glm::vec3(0.95686274f, 0.60392156f, 0.21960784f);
 
 /* Dark color, used for gizmos. */
-constexpr glm::vec3 DARK = glm::vec3(0.4f);
+constexpr glm::vec3 DARK = glm::vec3(0.0f);
 /* Light color, used for gizmos. */
 constexpr glm::vec3 LIGHT = glm::vec3(0.8f);
 

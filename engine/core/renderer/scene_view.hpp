@@ -24,7 +24,12 @@ struct GpuSceneView {
     float sun_angle = 0.0f;
     /* Exitent luminance of the light source. (in cd/m2, in ACEScg color-space) */
     glm::vec3 sun_luminance {};
-    uint32_t light_count = 0u;
+    /* Number of active lights in the scene. */
+    glm::uint light_count = 0u;
+    /* Environment map (full) bindless handle. */
+    glm::uint envmap_full_handle = 0u;
+    /* Environment map (filtered) bindless handle. */
+    glm::uint envmap_filtered_handle = 0u;
 };
 
 /* View of the scene, containing all scene data required for rendering. */
