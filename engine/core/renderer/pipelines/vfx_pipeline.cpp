@@ -166,8 +166,15 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
                 }
             }
 
-            eff.pos = transform.get_world_position() + effect.pos_offset;
-            eff.dir = glm::normalize(effect.dir);
+            // Convert from deg to dir vector
+            const glm::quat local_rot = glm::quat(glm::radians(effect.dir));
+            const glm::vec3 local_dir = local_rot * glm::vec3(0.0f, 0.0f, 1.0f);
+
+            // Get emitter's world rotation
+            const glm::quat world_rot = transform.get_world_rotation();
+
+            eff.pos = transform.get_world_position() + world_rot * effect.pos_offset;
+            eff.dir = glm::normalize(world_rot * local_dir);
             eff.cone_angle = glm::cos(glm::radians(effect.cone_angle));
             eff.start_speed = effect.start_speed;
             eff.end_speed = effect.end_speed;

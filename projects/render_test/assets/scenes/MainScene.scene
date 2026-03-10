@@ -11,6 +11,7 @@
         17,
         18,
         19,
+        20,
         1048576,
         1048577,
         1048578,
@@ -52,6 +53,9 @@
         },
         "19": {
             "name": "Environment"
+        },
+        "20": {
+            "name": "Test Emitter"
         },
         "1048576": {
             "name": "Camera"
@@ -285,6 +289,26 @@
             "parent": 4294967295,
             "children": []
         },
+        "20": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 11.028520584106445
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0000001192092896,
+                "y": 0.999999463558197,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
         "1048576": {
             "local_position": {
                 "x": 0.0,
@@ -502,7 +526,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_3.vengi"
+                    "relative_path": "test_asteroid_3.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -513,7 +537,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_3.vengi"
+                    "relative_path": "test_asteroid_3.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -524,7 +548,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_3.vengi"
+                    "relative_path": "test_asteroid_3.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -535,7 +559,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.vengi"
+                    "relative_path": "test_asteroid_7.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -546,7 +570,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.vengi"
+                    "relative_path": "test_asteroid_7.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -557,7 +581,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.vengi"
+                    "relative_path": "test_asteroid_7.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -568,7 +592,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.vengi"
+                    "relative_path": "test_asteroid_7.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -579,7 +603,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.vengi"
+                    "relative_path": "test_asteroid_7.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -590,7 +614,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.vengi"
+                    "relative_path": "test_asteroid_7.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -621,7 +645,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_3.vengi"
+                    "relative_path": "test_asteroid_3.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -635,7 +659,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_3.vengi"
+                    "relative_path": "test_asteroid_3.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -649,7 +673,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_3.vengi"
+                    "relative_path": "test_asteroid_3.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -663,7 +687,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.vengi"
+                    "relative_path": "test_asteroid_7.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -677,7 +701,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.vengi"
+                    "relative_path": "test_asteroid_7.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -691,7 +715,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.vengi"
+                    "relative_path": "test_asteroid_7.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -705,7 +729,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.vengi"
+                    "relative_path": "test_asteroid_7.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -719,7 +743,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.vengi"
+                    "relative_path": "test_asteroid_7.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -733,7 +757,7 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.vengi"
+                    "relative_path": "test_asteroid_7.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
@@ -881,6 +905,105 @@
                     "luminous_flux": 2000.0
                 }
             }
+        }
+    },
+    "ParticleEmitter": {
+        "20": {
+            "effects": [
+                {
+                    "particle_lifetime": 1.0,
+                    "pos_offset": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "dir": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "cone_angle": 90.0,
+                    "spawn_count": 8,
+                    "spawn_interval": 0.0,
+                    "start_speed": {
+                        "min": 1.0,
+                        "max": 1.0
+                    },
+                    "end_speed": {
+                        "min": 1.0,
+                        "max": 1.0
+                    },
+                    "speed_curve": {
+                        "values": [
+                            0.6000000238418579,
+                            0.03999999910593033,
+                            0.9800000190734863,
+                            0.33500000834465027,
+                            7.0
+                        ]
+                    },
+                    "start_size": {
+                        "min": 256.0,
+                        "max": 256.0
+                    },
+                    "end_size": {
+                        "min": 256.0,
+                        "max": 256.0
+                    },
+                    "size_curve": {
+                        "values": [
+                            0.0,
+                            0.0,
+                            1.0,
+                            1.0,
+                            0.0
+                        ]
+                    },
+                    "start_opacity": {
+                        "min": 1.0,
+                        "max": 1.0
+                    },
+                    "end_opacity": {
+                        "min": 0.0,
+                        "max": 0.0
+                    },
+                    "opacity_curve": {
+                        "values": [
+                            0.6000000238418579,
+                            0.03999999910593033,
+                            0.9800000190734863,
+                            0.33500000834465027,
+                            7.0
+                        ]
+                    },
+                    "rotation": {
+                        "min": 0.0,
+                        "max": 3.0
+                    },
+                    "pos_jitter": {
+                        "min": 0.0,
+                        "max": 0.0
+                    },
+                    "jitter_speed": 1.0,
+                    "active": true,
+                    "texture": {
+                        "file_location": {
+                            "sub_location": "PROJECT",
+                            "relative_path": "dust.png"
+                        },
+                        "data": {
+                            "flipbook_frames": 1
+                        }
+                    },
+                    "name": "Effect 1",
+                    "name_color": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0
+                    }
+                }
+            ],
+            "active": true
         }
     },
     "systems": null
