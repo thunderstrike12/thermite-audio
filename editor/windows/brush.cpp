@@ -55,7 +55,7 @@ void Brush::display() {
 
     switch (state.tool) {
         case Tool::GIZMO: {
-            const Entity selected_node = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().get_selected_entity();
+            const Entity selected_node = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().get_first_selected_entity();
             if (!engine.ecs.valid(selected_node)) break;
 
             const auto&& [name, transform] = engine.ecs.get_component<Name, Transform>(selected_node);
@@ -84,6 +84,12 @@ void Brush::display() {
             // Switch between gizmo operations (translation, rotation, scale).
             const char* mode_button_icon = Gizmo::gizmo_op_icons[editor.gizmo.operation];
             if (ImGui::Button(mode_button_icon)) editor.gizmo.operation = (editor.gizmo.operation + 1) % Gizmo::GIZMO_OP_COUNT;
+
+            ImGui::SameLine();
+
+            // Switch between modes of multi object transformations.
+            const char* multi_button_icon = editor.gizmo.multiselect_mode ? ICON_MS_FILTER_NONE : ICON_MS_FILTER_1;
+            if (ImGui::Button(multi_button_icon)) editor.gizmo.multiselect_mode = static_cast<uint8_t>(!editor.gizmo.multiselect_mode);
 
             // Handle undo/redo of the transform using the component diff.
             ImResponse transform_response = ImReflect::Input("", transform);

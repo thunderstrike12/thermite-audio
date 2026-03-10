@@ -13,16 +13,16 @@ namespace tmt {
 
 namespace {
 
-//// Get the resource with the UUID that we saved (storing the uuid prevents unnecessary storing of model resources).
-// Entity get_node_from_uuid(const UUID& uuid) {
-//     const entt::basic_group group = engine.ecs.group<NodeHierarchy::NodeUUID>();
-//
-//     for (const auto&& [entity, node_uuid] : group.each()) {
-//         if (node_uuid.uuid == uuid) return entity;
-//     }
-//
-//     return entt::null;  // Return empty resource meaning no node with that UUID exists or that node doesn't have a model.
-// }
+// Get the resource with the UUID that we saved (storing the uuid prevents unnecessary storing of model resources).
+Entity get_node_from_uuid(const UUID& uuid) {
+    const entt::basic_group group = engine.ecs.group<NodeHierarchy::NodeUUID>();
+
+    for (const auto&& [entity, node_uuid] : group.each()) {
+        if (node_uuid.uuid == uuid) return entity;
+    }
+
+    return entt::null;  // Return empty resource meaning no node with that UUID exists or that node doesn't have a model.
+}
 
 // Get the resource with the UUID that we saved (storing the uuid prevents unnecessary storing of model resources).
 ResourceRef<VoxelVolume> get_node_model(const UUID& uuid) {
@@ -101,7 +101,7 @@ void VoxelNodeDiff::undo() {
         Serializer::deserialize(entity_json, root_entity, engine.ecs);
 
         const Transform& transform = engine.ecs.get_component<Transform>(root_entity);
-        if (!transform.has_parent()) editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().root_entities.emplace(root_entity);
+        if (!transform.has_parent()) editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().root_entities.push_back(root_entity);
 
         for (const NodeData& data : node_data) {
             engine.ecs.add_component<NodeHierarchy::NodeUUID>(data.entity_id).uuid = data.uuid;
@@ -122,7 +122,7 @@ void VoxelNodeDiff::redo() {
         Serializer::deserialize(entity_json, root_entity, engine.ecs);
 
         const Transform& transform = engine.ecs.get_component<Transform>(root_entity);
-        if (!transform.has_parent()) editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().root_entities.emplace(root_entity);
+        if (!transform.has_parent()) editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().root_entities.push_back(root_entity);
 
         for (const NodeData& data : node_data) {
             engine.ecs.add_component<NodeHierarchy::NodeUUID>(data.entity_id).uuid = data.uuid;
@@ -181,6 +181,40 @@ void GridResizeDiff::redo() {
     for (const Entity child : transform.get_children()) {
         Transform& child_transform = engine.ecs.get_component<Transform>(child);
         child_transform.set_local_position(child_transform.get_local_position() - offset);
+    }
+}
+
+void NodeVectorDiff::before() {
+    before_uuids.reserve(container->size());
+    for (const Entity entity : *container) {
+        const UUID& uuid = engine.ecs.get_component<NodeHierarchy::NodeUUID>(entity).uuid;
+        before_uuids.push_back(uuid);
+    }
+}
+
+void NodeVectorDiff::after() {
+    after_uuids.reserve(container->size());
+    for (const Entity entity : *container) {
+        const UUID& uuid = engine.ecs.get_component<NodeHierarchy::NodeUUID>(entity).uuid;
+        after_uuids.push_back(uuid);
+    }
+}
+
+void NodeVectorDiff::undo() {
+    container->clear();
+
+    container->reserve(before_uuids.size());
+    for (const UUID& uuid : before_uuids) {
+        container->push_back(get_node_from_uuid(uuid));
+    }
+}
+
+void NodeVectorDiff::redo() {
+    container->clear();
+
+    container->reserve(after_uuids.size());
+    for (const UUID& uuid : after_uuids) {
+        container->push_back(get_node_from_uuid(uuid));
     }
 }
 

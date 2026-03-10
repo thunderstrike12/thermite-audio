@@ -16,8 +16,9 @@
 namespace tmt {
 
 void MaterialEditor::display() {
-    /* Doesn't actually work yet but for the idea */
-    const auto selected_entity = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().get_selected_entity();
+    const NodeHierarchy& hierarchy = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>();
+
+    const auto selected_entity = hierarchy.get_first_selected_entity();
     if (selected_entity == entt::null) {
         ImGui::TextWrapped("No voxel model selected.");
         return;

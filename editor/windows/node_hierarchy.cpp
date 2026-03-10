@@ -1,7 +1,6 @@
 #include "node_hierarchy.hpp"
 
 #include "editor.hpp"
-#include "editor/core/systems/undo_redo/type_diff.hpp"
 #include "editor/core/systems/undo_redo/component_diff.hpp"
 #include "editor/core/systems/undo_redo/voxel_edit_diff.hpp"
 #include "editor/core/systems/undo_redo/undo_redo_manager.hpp"
@@ -30,6 +29,37 @@
 #include <fstream>
 
 namespace {
+
+bool apply_requests(ImGuiMultiSelectIO* io, std::vector<tmt::Entity>& selection, const std::vector<tmt::Entity>& entities) {
+    bool set_all = false;
+
+    for (const auto& request : io->Requests) {
+        switch (request.Type) {
+            case ImGuiSelectionRequestType_None:
+                break;
+
+            case ImGuiSelectionRequestType_SetAll:
+                selection.clear();
+                // "entities" will only be populated after looping through entities, but the SetAll (ctrl + A) call can happen before the loop.
+                set_all = request.Selected;
+                break;
+
+            case ImGuiSelectionRequestType_SetRange: {
+                if (request.Selected) {
+                    for (ImGuiSelectionUserData i = request.RangeFirstItem; i <= request.RangeLastItem; i++) {
+                        selection.push_back(entities.at(i));
+                    }
+                } else {
+                    for (ImGuiSelectionUserData i = request.RangeFirstItem; i <= request.RangeLastItem; i++) {
+                        selection.erase(std::ranges::find(selection, *(entities.begin() + i)));
+                    }
+                }
+            } break;
+        }
+    }
+
+    return set_all;
+}
 
 void drag3_uint32(const char* label, uint32_t values[3], const float speed = 0.1f, const uint32_t& min = 0u, const uint32_t& max = 0u) {
     ImGui::DragScalarN(label, ImGuiDataType_U32, values, 3, speed, &min, &max, nullptr, ImGuiSliderFlags_ClampOnInput);
@@ -185,6 +215,62 @@ std::atomic_bool model_load_atomic { true };
 }  // namespace
 
 namespace tmt {
+
+bool NodeHierarchy::is_entity_selected(Entity entity) {
+    // Linear search because we use an std vector, but we need to keep our own order so there is no good alternative.
+    return std::ranges::find(selected_entities, entity) != selected_entities.end();
+}
+
+Entity NodeHierarchy::get_first_selected_entity() const {
+    if (selected_entities.empty()) return entt::null;
+
+    return *selected_entities.begin();
+}
+
+void NodeHierarchy::add_selected_entity(const Entity entity) {
+    if (entity == entt::null || is_entity_selected(entity)) return;
+
+    NodeVectorDiff diff { selected_entities };
+    diff.before();
+    selected_entities.push_back(entity);
+    diff.after();
+    IUndoRedo::send_to_manager(std::move(diff), "Add Node Selection");
+}
+
+void NodeHierarchy::set_selected_entity(const Entity entity) {
+    if (selected_entities.size() == 1 && selected_entities.front() == entity) return;
+
+    NodeVectorDiff diff { selected_entities };
+    diff.before();
+
+    selected_entities.clear();
+    if (entity != entt::null) selected_entities.push_back(entity);
+
+    diff.after();
+    IUndoRedo::send_to_manager(std::move(diff), "Set Node Selection");
+}
+
+void NodeHierarchy::remove_selected_entity(const Entity entity) {
+    const auto iterator = std::ranges::find(selected_entities, entity);
+
+    if (iterator == selected_entities.end()) return;
+
+    NodeVectorDiff diff { selected_entities };
+    diff.before();
+    selected_entities.erase(iterator);
+    diff.after();
+    IUndoRedo::send_to_manager(std::move(diff), "Remove Node Selection");
+}
+
+void NodeHierarchy::clear_selected_entities() {
+    if (selected_entities.empty()) return;
+
+    NodeVectorDiff diff { selected_entities };
+    diff.before();
+    selected_entities.clear();
+    diff.after();
+    IUndoRedo::send_to_manager(std::move(diff), "Clear Node Selection");
+}
 
 void NodeHierarchy::new_svh() {
     clear_hierarchy();
@@ -344,7 +430,7 @@ void NodeHierarchy::build_scene(const std::span<VoxelSceneNode>& root_nodes, boo
     for (const VoxelSceneNode& root_node : root_nodes) {
         const Entity root_entity = recurse_build_scene(root_node, assign_new_uuids);
 
-        root_entities.emplace(root_entity);
+        root_entities.push_back(root_entity);
     }
 }
 
@@ -373,7 +459,7 @@ void NodeHierarchy::recalculate_all_physics() {
     }
 }
 
-void NodeHierarchy::recurse_display_node(const Entity entity, const Name& name, Transform& transform) {
+void NodeHierarchy::recurse_display_node(const Entity entity, const Name& name, Transform& transform, std::vector<Entity>& all_entities) {
     ImGui::PushID(static_cast<int>(entity));
 
     const std::set<Entity>& children = transform.get_children();
@@ -383,7 +469,10 @@ void NodeHierarchy::recurse_display_node(const Entity entity, const Name& name, 
 
     ImGuiTreeNodeFlags flags = default_flags;
     flags |= (children.empty() ? ImGuiTreeNodeFlags_Leaf : 0);
-    flags |= (entity == selected_entity ? ImGuiTreeNodeFlags_Selected : 0);
+    flags |= (is_entity_selected(entity) ? ImGuiTreeNodeFlags_Selected : 0);
+
+    ImGui::SetNextItemSelectionUserData(static_cast<ImGuiSelectionUserData>(all_entities.size()));
+    all_entities.push_back(entity);
 
     const bool tree_open = ImGui::TreeNodeEx(name.name.c_str(), flags);
     node_context_menu(entity);
@@ -391,22 +480,24 @@ void NodeHierarchy::recurse_display_node(const Entity entity, const Name& name, 
     drop_node(entity, transform);
 
     const bool popup_clicked_open = (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup));
-    // Both left mouse button selects and opening the popup also selects, this makes it clear what node entity you have opened the popup for.
-    if (ImGui::IsItemClicked(ImGuiMouseButton_Left) || popup_clicked_open) selected_entity = entity;
+    if (popup_clicked_open) set_selected_entity(entity);
     if (tree_open) {
         for (const Entity child : children) {
             auto&& [child_name, child_transform] = engine.ecs.get_component<Name, Transform>(child);
-            recurse_display_node(child, child_name, child_transform);
+            recurse_display_node(child, child_name, child_transform, all_entities);
         }
 
         ImGui::TreePop();
+    } else {
+        const std::set<Entity> all_children = transform.get_all_children();
+        all_entities.insert(all_entities.end(), all_children.begin(), all_children.end());
     }
 
     ImGui::PopID();
 }
 
 void NodeHierarchy::clear_hierarchy() {
-    selected_entity = entt::null;
+    clear_selected_entities();
     root_entities.clear();
     engine.ecs.clear();
 
@@ -440,10 +531,10 @@ void NodeHierarchy::drop_hierarchy() {
             diff_collection.add_action(std::move(parent_diff));
             diff_collection.add_action(std::move(dropped_diff));
 
-            TypeDiff root_diff { &root_entities };
+            NodeVectorDiff root_diff { root_entities };
 
             root_diff.before();
-            root_entities.emplace(dropped_entity);
+            root_entities.push_back(dropped_entity);
             root_diff.after();
 
             diff_collection.add_action(std::move(root_diff));
@@ -482,12 +573,13 @@ void NodeHierarchy::drop_node(const Entity entity, Transform& transform) {
                 diff_collection.add_action(std::move(parent_diff));
                 diff_collection.add_action(std::move(child_diff));
 
-                if (root_entities.contains(dropped_entity)) {
+                const auto iterator = std::ranges::find(root_entities, dropped_entity);
+                if (iterator != root_entities.end()) {
                     // Diff to add entity back in root entities set.
-                    TypeDiff root_diff { &root_entities };
+                    NodeVectorDiff root_diff { root_entities };
 
                     root_diff.before();
-                    root_entities.erase(dropped_entity);
+                    root_entities.erase(iterator);
                     root_diff.after();
 
                     diff_collection.add_action(std::move(root_diff));
@@ -521,7 +613,7 @@ void NodeHierarchy::popup_create_node() {
         if (node_creation_info->parent != entt::null)
             engine.ecs.get_component<Transform>(new_node_entity).set_parent(node_creation_info->parent);
         else
-            root_entities.emplace(new_node_entity);
+            root_entities.push_back(new_node_entity);
 
         UUID uuid;
         if (has_voxel_grid) {
@@ -690,7 +782,7 @@ void NodeHierarchy::node_context_menu(const Entity node_entity) {
     if (ImGui::MenuItem(ICON_MS_COPY_ALL " Duplicate Node")) {
         const Entity parent = engine.ecs.get_component<Transform>(node_entity).get_parent();
         const Entity new_entity = recurse_duplicate_node(node_entity, parent);
-        if (parent == entt::null) root_entities.emplace(new_entity);
+        if (parent == entt::null) root_entities.push_back(new_entity);
 
         VoxelNodeDiff diff { new_entity, true };
         VoxelNodeDiff::send_to_manager(std::move(diff), "Duplicate Voxel Node");
@@ -717,11 +809,32 @@ void NodeHierarchy::display() {
     popup_create_node();
     popup_resize_node();
 
+    NodeVectorDiff diff { selected_entities };
+    diff.before();
+
+    constexpr ImGuiMultiSelectFlags multiselect_flags =
+        ImGuiMultiSelectFlags_ClearOnEscape | ImGuiMultiSelectFlags_ClearOnClickVoid | ImGuiMultiSelectFlags_BoxSelect1d | ImGuiMultiSelectFlags_SelectOnClickRelease;
+
+    // Handle multi selecting entities at the start of the recursive display.
+    std::vector<Entity> all_entities;
+
+    ImGuiMultiSelectIO* multi_select_io = ImGui::BeginMultiSelect(multiselect_flags, static_cast<int>(selected_entities.size()));
+    const bool select_all = apply_requests(multi_select_io, selected_entities, all_entities);
+
     for (const Entity entity : root_entities) {
         auto&& [transform, name] = engine.ecs.get_component<Transform, Name>(entity);
 
-        recurse_display_node(entity, name, transform);
+        recurse_display_node(entity, name, transform, all_entities);
     }
+
+    // Handle multi selecting entities after all entities have been displayed (e.g. Ctrl+A to select all entities).
+    multi_select_io = ImGui::EndMultiSelect();
+    apply_requests(multi_select_io, selected_entities, all_entities);
+    if (select_all) selected_entities.insert(selected_entities.end(), all_entities.begin(), all_entities.end());
+
+    diff.after();
+    if (diff.has_changed()) IUndoRedo::send_to_manager(std::move(diff), "Modified Node Selection");
+
     // Erase all root entities that have been marked for delete.
     std::erase_if(root_entities, [](const Entity& entity) { return !engine.ecs.valid(entity) || engine.ecs.has_component<Delete>(entity); });
 

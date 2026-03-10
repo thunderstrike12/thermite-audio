@@ -79,6 +79,7 @@ void VoxelMode::on_switch_away() {
     engine.renderer.display_mode = cached_display_mode;
 
     node_hierarchy.clear_root_entities();
+    node_hierarchy.clear_selected_entities();
 }
 
 }  // namespace tmt

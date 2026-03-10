@@ -84,4 +84,25 @@ class GridResizeDiff : public IUndoRedo {
     ResourceRef<VoxelVolume> after_resource {};
 };
 
+class NodeVectorDiff : public IUndoRedo {
+   public:
+    NodeVectorDiff(std::vector<Entity>& container) : container { &container } {}
+
+    void before();
+    void after();
+
+    [[nodiscard]] bool has_changed() const { return before_uuids != after_uuids; }
+
+    // Inherited via IUndoRedo
+    void undo() override;
+    void redo() override;
+    void inspect() override {}
+
+   private:
+    std::vector<Entity>* container { nullptr };
+
+    std::vector<UUID> before_uuids;
+    std::vector<UUID> after_uuids;
+};
+
 }  // namespace tmt

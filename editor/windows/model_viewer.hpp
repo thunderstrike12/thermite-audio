@@ -1,12 +1,11 @@
 #pragma once
 
 #include "editor/core/window.hpp"
-#include "editor/windows/brush.hpp"
-
-#include <imgui.h>
 
 #include <engine/core/entity.hpp>
-#include <engine/core/resource.hpp>
+#include <engine/events/input.hpp>
+
+#include <imgui.h>
 
 namespace tmt {
 

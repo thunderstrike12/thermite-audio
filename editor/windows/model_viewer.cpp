@@ -10,7 +10,6 @@
 #include "engine/core/resources.hpp"
 #include "engine/core/renderer/renderer.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
-#include "engine/core/input/input.hpp"
 #include "engine/tools/file_dialog.hpp"
 
 #include "editor/windows/palette.hpp"
@@ -321,7 +320,7 @@ void modify_voxel_volume(const ResourceRef<VoxelVolume>& model, const Brush::Mod
 void handle_brush(const Brush::State brush_state, const ResourceRef<VoxelVolume>& model, const Hit& hit, const MaterialIndex material_index) {
     switch (brush_state.tool) {
         case Brush::Tool::COLOR_PICKER: {
-            if (!engine.input.is_mouse_button_pressed(MouseButton::LEFT)) break;
+            if (!ImGui::IsMouseClicked(ImGuiMouseButton_Left)) break;
 
             const Material* picked_material = model->blas->get_voxel(hit.coord.x, hit.coord.y, hit.coord.z);
             if (picked_material == nullptr) break;
@@ -332,7 +331,7 @@ void handle_brush(const Brush::State brush_state, const ResourceRef<VoxelVolume>
         }
 
         case Brush::Tool::SINGLE: {
-            if (!engine.input.is_mouse_button_just_pressed(MouseButton::LEFT)) break;
+            if (!ImGui::IsMouseClicked(ImGuiMouseButton_Left)) break;
 
             VoxelEditDiff diff { model->uuid };
             switch (brush_state.mode) {
@@ -357,10 +356,10 @@ void handle_brush(const Brush::State brush_state, const ResourceRef<VoxelVolume>
         }
 
         case Brush::Tool::BOX: {
-            if (!engine.input.is_mouse_button_pressed(MouseButton::LEFT) && !engine.input.is_mouse_button_just_released(MouseButton::LEFT)) break;
+            if (!ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGui::IsMouseReleased(ImGuiMouseButton_Left)) break;
 
             static glm::uvec3 start_coord { std::numeric_limits<uint32_t>::max() };
-            if (engine.input.is_mouse_button_just_pressed(MouseButton::LEFT)) start_coord = hit.coord;
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) start_coord = hit.coord;
 
             const glm::uvec3& end_coord = hit.coord;
 
@@ -379,7 +378,7 @@ void handle_brush(const Brush::State brush_state, const ResourceRef<VoxelVolume>
             engine.polyline.draw_obb(world_position, select_half_extent, transform.get_world_rotation());
 
             // Releasing the mouse button to modify the area.
-            if (!engine.input.is_mouse_button_just_released(MouseButton::LEFT)) break;
+            if (!ImGui::IsMouseReleased(ImGuiMouseButton_Left)) break;
 
             modify_voxel_volume(model, brush_state.mode, min, max, material_index);
 
@@ -389,6 +388,56 @@ void handle_brush(const Brush::State brush_state, const ResourceRef<VoxelVolume>
         default:
             break;
     }
+}
+
+void use_gizmo(const NodeHierarchy& hierarchy, const ImVec2& window_pos, const ImVec2& window_size) {
+    const std::vector<Entity>& selected_entities = hierarchy.get_selected_entities();
+
+    float snap_value = 0.0f;
+    const bool ctrl_held = ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
+    const bool shift_held = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
+    const bool alt_held = ImGui::IsKeyDown(ImGuiKey_LeftAlt) || ImGui::IsKeyDown(ImGuiKey_RightAlt);
+
+    if (ctrl_held) {
+        const auto operation = Gizmo::OPERATIONS[editor.gizmo.operation];
+        switch (operation) {
+            case ImGuizmo::OPERATION::TRANSLATE:
+                snap_value = editor.save_data.snap_values.move;
+                break;
+            case ImGuizmo::OPERATION::ROTATE:
+                snap_value = editor.save_data.snap_values.rotation;
+                break;
+            case ImGuizmo::OPERATION::SCALE:
+                snap_value = editor.save_data.snap_values.scale;
+                break;
+            case ImGuizmo::OPERATION::BOUNDS:
+                snap_value = editor.save_data.snap_values.move;  // Use move snap for bounds
+                break;
+            default:
+                break;
+        }
+    }
+
+    const bool is_using_camera = editor.windows[Editor::Mode::SCENE].get<Viewport>().is_using_debug_camera();
+    const bool wants_to_capture_keyboard = ImGui::GetIO().WantCaptureKeyboard;
+    if (wants_to_capture_keyboard == false && !is_using_camera) {
+        if (ImGui::IsKeyPressed(ImGuiKey_W, false)) {
+            editor.gizmo.operation = 0;  // Translate
+        } else if (ImGui::IsKeyPressed(ImGuiKey_E, false)) {
+            editor.gizmo.operation = 1;  // Rotate
+        } else if (ImGui::IsKeyPressed(ImGuiKey_R, false)) {
+            editor.gizmo.operation = 2;  // Scale
+        } else if (ImGui::IsKeyPressed(ImGuiKey_T, false)) {
+            editor.gizmo.operation = 3;  // Bounds
+        }
+    }
+
+    // Build modifiers for bounds manipulation
+    BoundsModifiers modifiers;
+    modifiers.uniform_scale = shift_held;    // Shift: maintain aspect ratio
+    modifiers.scale_from_center = alt_held;  // Alt: keep center fixed
+
+    editor.gizmo.manip(window_pos.x, window_pos.y, window_size.x, window_size.y, selected_entities, snap_value, modifiers);
 }
 
 }  // namespace
@@ -408,16 +457,26 @@ void ModelViewer::display() {
     const Brush::State brush_state = editor.windows[Editor::Mode::VOXEL].get<Brush>().get_brush_state();
     const bool is_tool_gizmo = brush_state.tool == Brush::Tool::GIZMO;
     if (is_tool_gizmo) {
-        const Entity selected_entity = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().get_selected_entity();
+        NodeHierarchy& hierarchy = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>();
 
-        editor.gizmo.manip(window_pos.x, window_pos.y, size.x, size.y, { &selected_entity, &selected_entity + 1 }, 0.0f, {});
+        use_gizmo(hierarchy, window_pos, size);
 
         const bool can_select = (ImGui::IsWindowHovered() && !ImGuizmo::IsOver());
-        if (can_select && engine.input.is_mouse_button_just_pressed(MouseButton::LEFT)) {
+        if (can_select && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
             const Ray mouse_ray = engine.renderer.render_view.pixel_ray(mouse_position);
             const Hit hit = engine.renderer.trace_ray(mouse_ray);
 
-            editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().set_selected_entity(hit.entity);
+            if (!ImGui::GetIO().KeyCtrl) {
+                if (hit.miss())
+                    hierarchy.clear_selected_entities();
+                else
+                    hierarchy.set_selected_entity(hit.entity);
+            } else {
+                if (!hierarchy.is_entity_selected(hit.entity))
+                    editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().add_selected_entity(hit.entity);
+                else
+                    editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().remove_selected_entity(hit.entity);
+            }
         }
     }
 
@@ -430,7 +489,7 @@ void ModelViewer::display() {
 
     // Get the selected entity in the hierarchy and return early if it's invalid.
     NodeHierarchy& node_hierarchy = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>();
-    const Entity selected_entity = node_hierarchy.get_selected_entity();
+    const Entity selected_entity = node_hierarchy.get_first_selected_entity();
 
     if (!engine.ecs.valid(selected_entity) || !engine.ecs.has_component<VoxelRenderer>(selected_entity)) return;
 
