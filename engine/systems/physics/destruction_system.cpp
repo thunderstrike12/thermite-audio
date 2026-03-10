@@ -2,6 +2,7 @@
 #include "engine/engine.hpp"
 #include "engine/core/logger.hpp"
 #include "engine/core/resources/stencil.hpp"
+#include "engine/core/components/voxel_renderer.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"
 #include "engine/systems/physics/physics_system.hpp"
 
@@ -21,11 +22,11 @@ void Destruction::on_end() {
 
 void Destruction::destroy_voxels(Entity entity, const Stencil* stencil, glm::ivec3 offset) {
     // Get voxel body component
-    VoxelBody* vb = engine.ecs.try_get_component<VoxelBody>(entity);
-    if (vb == nullptr) return;
+    VoxelRenderer* renderer = engine.ecs.try_get_component<VoxelRenderer>(entity);
+    if (renderer == nullptr) return;
 
     // Subtract voxels from BLAS
-    auto* resource = vb->resource.resource.get();
+    auto* resource = renderer->resource.resource.get();
     resource->blas.get()->subtract(stencil, offset);
     resource->set_dirty();
 
@@ -35,12 +36,13 @@ void Destruction::destroy_voxels(Entity entity, const Stencil* stencil, glm::ive
     // Recalculate physics data for all seperate voxel bodies
     for (Entity seperate_entity : seperated_entities) {
         VoxelBody& seperate_vb = engine.ecs.get_component<VoxelBody>(seperate_entity);
-        Physics::recalculate_physics_data(seperate_vb);
+        auto& volume = engine.ecs.get_component<VoxelRenderer>(seperate_entity).resource;
+        Physics::recalculate_physics_data(seperate_vb, *volume.resource);
     }
 }
 
 std::vector<Entity> Destruction::find_seperations(Entity entity, const Stencil* stencil, glm::ivec3 offset) {
-    VoxelBody& vb = engine.ecs.get_component<VoxelBody>(entity);
+    VoxelRenderer& vb = engine.ecs.get_component<VoxelRenderer>(entity);
     auto* resource = vb.resource.resource.get();
     Svt64* tree = resource->blas.get();
 
@@ -79,11 +81,11 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const Stencil* 
                         edge_indices.push_back((glm::uvec3)neighbor_pos);
                     } else {  // We are not on the edge of the stencil so only mark the neighboring voxel if its empty int the tree
                         glm::ivec3 neighbor_pos = local_pos + dirs[d] + offset;
-                        
+
                         // If the world position is outside the bounds of the resource, skip it
                         if (neighbor_pos.x < 0 || neighbor_pos.y < 0 || neighbor_pos.z < 0) continue;
                         if (neighbor_pos.x >= resource->size.x || neighbor_pos.y >= resource->size.y || neighbor_pos.z >= resource->size.z) continue;
-                        
+
                         // If this voxel is empty in the tree, skip it
                         if (tree->get_physics_voxel(neighbor_pos.x, neighbor_pos.y, neighbor_pos.z) == nullptr) continue;
 
@@ -113,7 +115,7 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const Stencil* 
 
             // Calculate index of this voxel in the flood grid
             uint32_t current_i = current.x + current.y * resource->size.x + current.z * resource->size.x * resource->size.y;
-            
+
             // If this voxel is already marked, or it does not exist in the tree, skip it
             if (flood_grid[current_i] != 0 || tree->get_physics_voxel(current.x, current.y, current.z) == nullptr) continue;
 
@@ -134,7 +136,7 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const Stencil* 
 
     if (current_mark > 2) Log::info("Seperation Found!");
 
-    return std::vector<Entity> {entity};
+    return std::vector<Entity> { entity };
 
     // for (size_t i = 0; i < stencil_size; i++) {
     //     // if this voxel is empty, skip it
@@ -147,8 +149,6 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const Stencil* 
     //
     //    edge_indices.push_back(i);
     //}
-
-
 }
 
 }  // namespace tmt

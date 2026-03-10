@@ -109,10 +109,9 @@ void MainScene::on_update(const tmt::FrameData& time) {
                 auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
                 renderer.resource = box_model;
                 auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
-                vb.resource = box_model;
                 vb.gravity = 0.0f;
                 vb.type = tmt::VoxelBody::DYNAMIC;
-                tmt::Physics::initialize_voxel_body(vb);
+                tmt::Physics::initialize_voxel_body(vb, *box_model.resource.get());
 
                 const glm::vec3 x_offset = cam_transform.get_right() * ((float)x * 1.5f);
                 const glm::vec3 y_offset = cam_transform.get_up() * ((float)y * 1.5f);

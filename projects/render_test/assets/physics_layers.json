@@ -1,3 +1,11 @@
 {
-    "layer_count": 0
+    "collisions": [
+        [
+            true
+        ]
+    ],
+    "layer_count": 1,
+    "names": [
+        "Default"
+    ]
 }

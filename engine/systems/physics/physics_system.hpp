@@ -6,12 +6,13 @@
 #include "constraint_solver.hpp"
 #include "physics_layers.hpp"
 #include "components/voxel_body.hpp"
+#include "engine/core/components/voxel_renderer.hpp"
 #include "engine/core/renderer/voxel_object.hpp"
 #include "engine/shared/bvh2.hpp"
 
 namespace tmt {
 
-using PhysicsGroup = decltype(std::declval<Ecs>().group<VoxelBody>(entt::get<Transform>));
+using PhysicsGroup = decltype(std::declval<Ecs>().group<VoxelBody>(entt::get<Transform, VoxelRenderer>));
 
 class Physics : public ISystem {
    public:
@@ -50,7 +51,7 @@ class Physics : public ISystem {
     );
    public:
     // Static utility functions
-    static void initialize_voxel_body(VoxelBody& vb);
+    static void initialize_voxel_body(VoxelBody& vb, VoxelVolume& volume);
     static void add_force(VoxelBody& vb, const glm::vec3& force);
     static void add_torque(VoxelBody& vb, const glm::vec3& torque);
     static void add_force_at_position(VoxelBody& vb, const glm::vec3& force, const glm::vec3& position);
@@ -62,8 +63,8 @@ class Physics : public ISystem {
     
     Hit raycast(const Ray& ray, uint32_t layer_mask) const;
 
-    static void recalculate_physics_data(VoxelBody& vb);
-    static void recalculate_surface_normals(VoxelBody& vb);
+    static void recalculate_physics_data(VoxelBody& vb, VoxelVolume& volume);
+    static void recalculate_surface_normals(VoxelRenderer& renderer);
     static void recalculate_surface_normals(VoxelVolume& volume);
 };
 

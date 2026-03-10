@@ -82,11 +82,9 @@ void Game::on_start() {
 
     {
         auto entity = tmt::engine.ecs.create_entity();
-        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
         renderer.resource = voxel_volume_piece;
         auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
-        vb.resource = voxel_volume_piece;
         vb.gravity = 0.0f;
         vb.type = tmt::VoxelBody::STATIC;
     }
@@ -364,14 +362,12 @@ void Game::on_update(const tmt::FrameData& time) {
 
         {
             auto entity = tmt::engine.ecs.create_entity();
-            auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
             auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(entity);
             renderer.resource = voxel_volume_cube;
             auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
-            vb.resource = voxel_volume_cube;
             vb.gravity = 0.0f;
             vb.type = tmt::VoxelBody::DYNAMIC;
-            tmt::Physics::initialize_voxel_body(vb);
+            tmt::Physics::initialize_voxel_body(vb, *voxel_volume_cube.resource);
             tmt::Physics::set_position(vb, cam_pos + cam_forward * 2.0f);
             tmt::Physics::set_rotation(vb, cam_transform.get_world_rotation());
             tmt::Physics::add_force(vb, cam_forward * 10.0f);
