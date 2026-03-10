@@ -9,9 +9,14 @@
 
 #include "engine/tools/serializer/ecs.hpp"
 
+#include "engine/core/input/input.hpp"
+
 namespace tmt {
 
 void Scenes::update() {
+    if (first_frame_of_new_scene == true) {
+        first_frame_of_new_scene = false;
+    }
     if (next_scene_type == NULL_SCENE) return;
 
     swap_scenes();
@@ -46,6 +51,11 @@ void Scenes::swap_scenes() {
     engine.ecs.clear();
     OnSceneEnd::dispatch();
 
+    const bool was_playing = engine.game_controller.is_playing();
+    if (was_playing) {
+        engine.ecs.on_game_end();
+    }
+
     /* Load */
     SceneInfo& info = registered_scenes.at(next_scene_type);
     active_scene = info.factory.create();
@@ -69,8 +79,14 @@ void Scenes::swap_scenes() {
     /* Deserialize */
     deserialize_scene(pre_load_event);
 
+    first_frame_of_new_scene = true;
+
     OnPostLoadScene::dispatch();
     active_scene->on_post_load();
+
+    if (was_playing) {
+        engine.ecs.on_game_start();
+    }
 
     /* Start */
     if (engine.game_controller.is_playing() && engine.game_controller.should_game_end() == false) {
@@ -143,6 +159,13 @@ const SceneInfo& Scenes::get_scene_info(const SceneIndex& type_index) const {
         throw std::runtime_error("Scene not registered");
     }
     return registered_scenes.at(type_index);
+}
+
+void Scenes::on_block_input_request(OnBlockInputEvent& event) {
+    if (first_frame_of_new_scene) {
+        event.block = true;
+        event.handled = true;
+    }
 }
 
 }  // namespace tmt

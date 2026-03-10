@@ -8,10 +8,11 @@
 
 #include "engine/tools/scene_types.hpp"
 #include "engine/events/scene.hpp"
+#include "engine/events/input.hpp"
 
 namespace tmt {
 
-class Scenes {
+class Scenes : public OnBlockInputRequest {
    public:
     Scenes() = default;
     ~Scenes() = default;
@@ -51,7 +52,7 @@ class Scenes {
 
     void enqueue_scene(const SceneIndex& type_id);
 
-    /* Immediatly load a new scene */
+    /* Immediatly load a new scene. DO NOT USE FOR GAMEPLAY */
     template <typename T>
     requires std::is_base_of_v<SceneBase, T>
     void load_scene() {
@@ -59,6 +60,7 @@ class Scenes {
         swap_scenes();
     }
 
+    /* Immediatly load a new scene. DO NOT USE FOR GAMEPLAY */
     void load_scene(const SceneIndex& type_id);
 
     bool is_scene_loaded() const { return active_scene_type != NULL_SCENE && active_scene != nullptr; }
@@ -88,7 +90,11 @@ class Scenes {
 
     std::unordered_map<SceneIndex, SceneInfo> registered_scenes;
 
+    bool first_frame_of_new_scene = false;
+
     void deserialize_scene(PreLoadSceneEvent& event);
+
+    void on_block_input_request(OnBlockInputEvent& event) override;
 };
 
 }  // namespace tmt

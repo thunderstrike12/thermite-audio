@@ -310,6 +310,8 @@ class Input {
     /// <returns>Duration in seconds, or 0.0 if not pressed.</returns>
     float get_action_duration(const std::string& name) const;
 
+    void clear_input_state();
+
    private:
     bool can_use_input_mouse() const;
     bool can_use_input_keyboard() const;

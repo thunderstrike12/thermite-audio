@@ -206,6 +206,7 @@ void Engine::fixed_update_engine(const FrameData& frame_data) {
 void Engine::start_game() {
     TMT_ZONE_SCOPED_N("Engine::start_game")
 
+    input.clear_input_state();
     app->on_start();
     if (scenes.get_active_scene()) scenes.get_active_scene()->on_start();
 
