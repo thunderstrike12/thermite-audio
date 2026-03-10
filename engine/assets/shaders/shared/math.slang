@@ -121,20 +121,16 @@ public float3 decode_rgb10(const uint p) {
     );
 }
 
-public struct Basis {
-    public float3 a; /* tangent */
-    public float3 b; /* bitangent */
-};
-
-/* Create two orthonormal basis vectors for a given normal vector. */
-public [ForceInline] Basis orthonormal_basis(const float3 n) {
-    const float sign = n.z >= 0.0f ? 1.0f : -1.0f;
-    const float a = -1.0f / (sign + n.z);
+/* Create orthonormal basis matrix for a given normal vector. */
+public [ForceInline] float3x3 orthonormal_basis(const float3 n) {
+    const float s = n.z >= 0.0f ? 1.0f : -1.0f;
+    const float a = -1.0f / (s + n.z);
     const float b = n.x * n.y * a;
-
-    return Basis(
-        float3(1.0f + sign * n.x * n.x * a, sign * b, -sign * n.x),
-        float3(b, sign + n.y * n.y * a, -n.y)
+    /* Tangent, Bitangent, Normal */
+    return float3x3(
+        float3(1.0f + s * n.x * n.x * a, s * b, -s * n.x),
+        float3(b, s + n.y * n.y * a, -n.y),
+        n
     );
 }
 
@@ -181,8 +177,8 @@ public float3 sample_cone(const float3 dir, const float half_angle, const float2
     const float sin_theta = sqrt(1.0f - cos_theta * cos_theta);
     const float phi = 2.0f * PI_F32 * uv.y;
     const float3 local_dir = float3(sin_theta * cos(phi), sin_theta * sin(phi), cos_theta);
-    const Basis basis = orthonormal_basis(dir);
-    return normalize(local_dir.x * basis.a + local_dir.y * basis.b + local_dir.z * dir);
+    const float3x3 basis = orthonormal_basis(dir);
+    return normalize(local_dir.x * basis[0] + local_dir.y * basis[1] + local_dir.z * dir);
 }
 
 /* Generate a cosine weighted sample in the hemisphere around a normal vector. */
@@ -192,8 +188,8 @@ public float3 sample_hemisphere_cosine(const float3 n, const float2 uv) {
     const float x = r * cos(phi);
     const float y = r * sin(phi);
     const float z = sqrt(1.0f - uv.x);
-    const Basis basis = orthonormal_basis(n);
-    return normalize(x * basis.a + y * basis.b + z * n);
+    const float3x3 basis = orthonormal_basis(n);
+    return normalize(x * basis[0] + y * basis[1] + z * n);
 }
 
 /* Generate a uniformly weighted sample in the hemisphere around a normal vector. */
@@ -203,8 +199,8 @@ public float3 sample_hemisphere_uniform(const float3 n, const float2 uv) {
     const float phi = 2.0f * PI_F32 * uv.y;
     const float x = r * cos(phi);
     const float y = r * sin(phi);
-    const Basis basis = orthonormal_basis(n);
-    return normalize(x * basis.a + y * basis.b + z * n);
+    const float3x3 basis = orthonormal_basis(n);
+    return normalize(x * basis[0] + y * basis[1] + z * n);
 }
 
 /* Convert a 3D direction to a lat long coordinate. */

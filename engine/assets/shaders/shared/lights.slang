@@ -88,10 +88,10 @@ public [ForceInline] LightSample sample_sun(const float3 point, const SceneView 
     const float3 local_dir = float3(sin_theta * cos(phi), sin_theta * sin(phi), cos_theta);
 
     /* Form an orthonormal basis around the light source direction */
-    const Basis basis = orthonormal_basis(scene_view.sun_dir);
+    const float3x3 basis = orthonormal_basis(scene_view.sun_dir);
 
     /* Convert the local-space direction to a world-space one */
-    sample.dir = local_dir.x * basis.a + local_dir.y * basis.b + local_dir.z * scene_view.sun_dir;
+    sample.dir = local_dir.x * basis[0] + local_dir.y * basis[1] + local_dir.z * scene_view.sun_dir;
     sample.tmax = BIG_F32;
 
     /* Calculate the PDF of the sample */
@@ -123,10 +123,10 @@ public [ForceInline] LightSample sample_light(const float3 point, const Light li
     const float3 local_dir = float3(sin_theta * cos(phi), sin_theta * sin(phi), cos_theta);
 
     /* Form an orthonormal basis around the light source direction */
-    const Basis basis = orthonormal_basis(light_dir);
+    const float3x3 basis = orthonormal_basis(light_dir);
 
     /* Convert the local-space direction to a world-space one */
-    sample.dir = local_dir.x * basis.a + local_dir.y * basis.b + local_dir.z * light_dir;
+    sample.dir = local_dir.x * basis[0] + local_dir.y * basis[1] + local_dir.z * light_dir;
 
     /* Ray vs sphere intersection to find tmax */
     const float3 light_local = point - light_origin;

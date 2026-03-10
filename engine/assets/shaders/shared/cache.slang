@@ -19,26 +19,23 @@ static const uint TEMPORAL_SAMPLES = 20u;
 /* Cache Slot (48 bytes) */
 public struct Slot {
     public uint64_t key; /* 64-bit hash key. */
-    public uint samples; /* Sample count & warmup counter. */
-    public uint warmup;
+    public uint sample_count; /* Spatial sample count. */
+    public uint warmup_last; /* Warmup count & last sampled count. */
     public uint4 diffuse; /* Spatial & temporal diffuse illuminance. */
     public uint4 specular; /* Spatial & temporal specular luminance. */
 
     /* Samples bits */
-    static const uint SAMPLE_COUNT_BITS = 20u;
-    static const uint SAMPLE_COUNT_MASK = (1u << SAMPLE_COUNT_BITS) - 1u;
-    static const uint LAST_SAMPLED_BITS = 32u - SAMPLE_COUNT_BITS;
+    static const uint WARMUP_BITS = 16u;
+    static const uint WARMUP_MASK = (1u << WARMUP_BITS) - 1u;
+    static const uint LAST_SAMPLED_BITS = 32u - WARMUP_BITS;
     static const uint LAST_SAMPLED_MASK = (1u << LAST_SAMPLED_BITS) - 1u;
 
-    /* Number of accumulated samples in the cache slot. */
-    public [ForceInline] uint sample_count() { return samples & SAMPLE_COUNT_MASK; };
+    /* Warmup counter for this cache slot. */
+    public [ForceInline] uint warmup_counter() { return warmup_last & WARMUP_MASK; }
 
     /* Last frame index this cache slot was sampled. */
-    public [ForceInline] uint last_sampled() { return samples >> SAMPLE_COUNT_BITS; };
-    public [ForceInline] [mutating] void set_last_sampled(uint value) { samples = sample_count() | (value << SAMPLE_COUNT_BITS); };
-
-    /* Warmup counter for this cache slot. */
-    public [ForceInline] uint warmup_counter() { return warmup; };
+    public [ForceInline] uint last_sampled() { return warmup_last >> WARMUP_BITS; }
+    public [ForceInline] [mutating] void set_last_sampled(uint value) { warmup_last = warmup_counter() | (value << WARMUP_BITS); }
 
     /* Quantization factor */
     static const float QFACTOR = 1e3f;
@@ -51,8 +48,10 @@ public struct Slot {
 
     /* Flush the diffuse and specular accumulators of the cache slot. */
     /* This resets the spatial accumulators and updates the temporal accumulators. */
-    public [ForceInline] [mutating] void flush_accu(const uint age) {
-        const uint spatial_samples = sample_count();
+    public [ForceInline] [mutating] void flush_accu() {
+        /* Atomically claim the cache slot for flushing */
+        uint spatial_samples = 0u;
+        InterlockedExchange(sample_count, 0u, spatial_samples);
         if (spatial_samples == 0u) return;
 
         /* Calculate the mean of both spatial accumulators */
@@ -62,12 +61,11 @@ public struct Slot {
 
         /* Reset the spatial accumulators */
         diffuse.rgb = specular.rgb = 0u;
-        samples = last_sampled() << SAMPLE_COUNT_BITS;
 
         /* Accumulator warmup factor */
-        if (warmup < TEMPORAL_SAMPLES) warmup += 1u;
+        if (warmup_counter() < TEMPORAL_SAMPLES) warmup_last += 1u;
 
-        const float alpha = 1.0f / (float)warmup;
+        const float alpha = 1.0f / (float)warmup_counter();
         diffuse.w = encode_rgb9e5(lerp(read_diffuse(), diffuse_accu, alpha));
         specular.w = encode_rgb9e5(lerp(read_specular(), specular_accu, alpha));
     }
@@ -87,7 +85,7 @@ public struct Slot {
     /* Accumulate into the cache slot. */
     public [ForceInline] [mutating] void accumulate(const float3 diffuse_sample, const float3 specular_sample) {
         /* Avoid accumulating too many samples, we can only handle ~1.000.000 */
-        if (sample_count() > 100000u) return;
+        if (sample_count > 100000u) return;
 
         /* Convert to fixed point representation for atomics */
         const uint3 diffuse_fxp = uint3(diffuse_sample * QFACTOR);
@@ -100,18 +98,18 @@ public struct Slot {
         if (specular_fxp.r > 0u) InterlockedAdd(specular.r, specular_fxp.r);
         if (specular_fxp.g > 0u) InterlockedAdd(specular.g, specular_fxp.g);
         if (specular_fxp.b > 0u) InterlockedAdd(specular.b, specular_fxp.b);
-        InterlockedAdd(samples, 1u);
+        InterlockedAdd(sample_count, 1u);
     }
 
     /* Reset the cache slot so it can be re-used. */
     public [ForceInline] [mutating] void reset() {
         key = EMPTY_KEY;
         diffuse = specular = 0u;
-        samples = warmup = 0u;
+        sample_count = warmup_last = 0u;
     }
 };
 
-/* Insert illuminance into the illuminance cache. */
+/* Insert data into the cache. */
 public [ForceInline] void insert(RWStructuredBuffer<cache::Slot> cache, const uint64_t key, const uint frame_index, const float3 diffuse, const float3 specular) {
     /* Modulo the hash to fall within the cache capacity */
     const uint base_hash = voxel_hash(key) % CAPACITY;
@@ -155,8 +153,8 @@ public [ForceInline] void insert(RWStructuredBuffer<cache::Slot> cache, const ui
     }
 }
 
-/* Sample illuminance from the illuminance cache. (returns BIG_F32 if no sample was found) */
-public [ForceInline] Slot sample(RWStructuredBuffer<cache::Slot> cache, const uint64_t key, const uint frame_index) {
+/* Fetch a slot with a given key from the cache. */
+public [ForceInline] Slot fetch(RWStructuredBuffer<cache::Slot> cache, const uint64_t key, const uint frame_index) {
     /* Modulo the hash to fall within the cache capacity */
     uint slot = voxel_hash(key) % CAPACITY;
 
@@ -173,6 +171,24 @@ public [ForceInline] Slot sample(RWStructuredBuffer<cache::Slot> cache, const ui
     }
 
     return Slot(EMPTY_KEY); /* Couldn't find a sample */
+}
+
+/* Flush the spatial accumulator for a given key. */
+public [ForceInline] void flush(RWStructuredBuffer<cache::Slot> cache, const uint64_t key) {
+    /* Modulo the hash to fall within the cache capacity */
+    uint slot = voxel_hash(key) % CAPACITY;
+
+    /* Find the macrofacet */
+    for (uint fuse = 0u; fuse < FUSE_LENGTH; ++fuse) {
+        /* Exit if we found a slot which matches our key */
+        if (cache[slot].key == key) {
+            cache[slot].flush_accu();
+            return;
+        }
+
+        /* Move to the next hash cache slot */
+        slot = (slot + 1u) % CAPACITY;
+    }
 }
 
 } // cache

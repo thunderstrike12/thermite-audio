@@ -43,7 +43,7 @@ void main(int2 thread_id: SV_DispatchThreadID) {
     if (null_visibility(packed)) {
         render_target[thread_id] = float4(0.075f, 0.075f, 0.075f, 1.0f);
     } else {
-        const cache::Slot slot = cache::sample(macrofacet_cache, packed, render_view.frame_index);
+        const cache::Slot slot = cache::fetch(macrofacet_cache, packed, render_view.frame_index);
 
         if (slot.key == cache::EMPTY_KEY) {
             render_target[pixel_id] = float4(1.0f, 0.0f, 1.0f, 1.0f);

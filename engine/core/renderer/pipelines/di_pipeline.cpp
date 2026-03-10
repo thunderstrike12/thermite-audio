@@ -50,7 +50,7 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
             .read(render_view.render_view_buffer) /* Render view buffer */
             .write(render_view.macrofacet_cache) /* Cache buffer */
             .group_size(128)
-            .work_size(CACHE_SIZE);
+            .work_size(div_up(CACHE_SIZE, 8u));
     }
 
     { /* Shading resolution based on shading rate */
@@ -73,6 +73,14 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
             .group_size(16, 8)
             .work_size(shading_res.x, shading_res.y);
     }
+
+    /* Cache flush pass */
+    render_graph.add_compute_pass("cache flush pass", "cache_flush.cs")
+        .read(render_view.render_view_buffer) /* Render view buffer */
+        .write(render_view.macrofacet_cache) /* Cache buffer */
+        .read(render_view.vbuffer.image) /* Visibility buffer */
+        .group_size(16, 8)
+        .work_size(render_res.x, render_res.y);
     
     // { /* Global illumination pass */
     //     glm::uvec2 shading_res = render_view.gpu_view.resolution;

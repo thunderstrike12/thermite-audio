@@ -15,10 +15,9 @@ public struct ShadingFrame {
 
 /* Create a shading frame for the given normal, incident and outgoing directions. */
 public [ForceInline] ShadingFrame create_shading_frame(const float3 n, const float3 wi, const float3 wo) {
-    const Basis basis = orthonormal_basis(n);
-    const float3x3 world_to_shade = float3x3(basis.a, basis.b, n);
-    const float3 wi_shade = mul(world_to_shade, wi);
-    const float3 wo_shade = mul(world_to_shade, wo);
+    const float3x3 basis = orthonormal_basis(n);
+    const float3 wi_shade = mul(basis, wi);
+    const float3 wo_shade = mul(basis, wo);
     return ShadingFrame(wi_shade, wo_shade, normalize(wi_shade + wo_shade));
 }
 
@@ -76,9 +75,30 @@ public struct Material {
     return albedo * RCP_PI_F32;
 }
 
+/* Fresnel equation. */
+[ForceInline] public float fresnel(float wi_costheta, float eta) {
+    /* If the incoming direction comes from within */
+    if (wi_costheta < 0.0f) {
+        /* Invert relative index of refraction, ensuring cos(theta_i) is always positive */
+        eta = 1.0f / eta;
+        wi_costheta = -wi_costheta;
+    }
+
+    /* Apply Snell's law to find cos(theta_t) */
+    const float i_sintheta_2 = 1.0f - wi_costheta * wi_costheta;
+    const float t_sintheta_2 = i_sintheta_2 / (eta * eta);
+    // bool t_int = t_sintheta_2 >= 1.0f; /* Total internal reflection */
+    const float t_costheta = sqrt(max(0.0f, 1.0f - t_sintheta_2));
+
+    /* Fresnel equation */
+    const float r_parl = (eta * wi_costheta - t_costheta) / (eta * wi_costheta + t_costheta);
+    const float r_perp = (wi_costheta - eta * t_costheta) / (wi_costheta + eta * t_costheta);
+    return (r_parl * r_parl + r_perp * r_perp) * 0.5f;
+}
+
 /* Torrance–Sparrow Microfacet BRDF. */
-/* Source: https://www.pbr-book.org/4ed/Reflection_Models */ 
-[ForceInline] float gloss_slab(
+/* Source: https://www.pbr-book.org/4ed/Reflection_Models */
+[ForceInline] public float gloss_slab(
     const float wi_costheta, /* incident cos(theta) */
     const float wo_costheta, /* outgoing cos(theta) */
     const float wh_costheta, /* half-way cos(theta) */
@@ -101,24 +121,8 @@ public struct Material {
     const float wo_lambda = (-1.0f + sqrt(1.0f + alpha_2 * wo_tantheta_2)) * 0.5f;
     const float g = 1.0f / (1.0f + wi_lambda + wo_lambda);
 
-    float i_costheta = wi_costheta;
-    /* If the incoming direction comes from within */
-    if (i_costheta < 0.0f) {
-        /* Invert relative index of refraction, ensuring cos(theta_i) is always positive */
-        eta = rcp(eta);
-        i_costheta = -i_costheta;
-    }
-
-    /* Apply Snell's law to find cos(theta_t) */
-    const float i_sintheta_2 = 1.0f - i_costheta * i_costheta;
-    const float t_sintheta_2 = i_sintheta_2 / (eta * eta);
-    const bool t_int = t_sintheta_2 >= 1.0f; /* Total internal reflection */
-    const float t_costheta = sqrt(1.0f - t_sintheta_2);
-
     /* Fresnel equation */
-    const float r_parl = (eta * i_costheta - t_costheta) / (eta * i_costheta + t_costheta);
-    const float r_perp = (i_costheta - eta * t_costheta) / (i_costheta + eta * t_costheta);
-    const float f = t_int ? 1.0f : ((r_parl * r_parl + r_perp * r_perp) * 0.5f);
+    const float f = fresnel(wi_costheta, eta);
 
     /* Torrance–Sparrow BRDF */
     return (d * g * f) / (4.0f * wo_costheta * wi_costheta);
