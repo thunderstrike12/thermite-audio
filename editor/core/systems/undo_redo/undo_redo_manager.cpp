@@ -76,10 +76,10 @@ void UndoRedoManager::on_editor_start() {}
 void UndoRedoManager::on_editor_update(const FrameData&) {
     if (engine.game_controller.is_running()) return;
 
-    const bool ctrl_down = engine.input.is_keyboard_button_pressed(Key::LEFT_CTRL);
-    const bool is_shift_down = engine.input.is_keyboard_button_pressed(Key::LEFT_SHIFT);
-    const bool is_z_just_pressed = engine.input.is_keyboard_button_just_pressed(Key::Z);
-    const bool is_y_just_pressed = engine.input.is_keyboard_button_just_pressed(Key::Y);
+    const bool ctrl_down = ImGui::GetIO().KeyCtrl;
+    const bool is_shift_down = ImGui::GetIO().KeyShift;
+    const bool is_z_just_pressed = ImGui::IsKeyPressed(ImGuiKey_Z, false);
+    const bool is_y_just_pressed = ImGui::IsKeyPressed(ImGuiKey_Y, false);
 
     if (ctrl_down && is_z_just_pressed) {
         if (is_shift_down) {
