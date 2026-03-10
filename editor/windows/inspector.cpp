@@ -123,7 +123,7 @@ void Inspector::display_compile_time_components(const tmt::Inspector::MenuContex
         }
 
         if (context_response.copy_component) {
-            const json serialized = tmt::Serializer::serialize(component_instance);
+            const json serialized = tmt::Serializer::serialize(component_instance, inspect_only);
             json clipboard_json;
             clipboard_json["runtime"] = false;
             clipboard_json["component_type"] = name;

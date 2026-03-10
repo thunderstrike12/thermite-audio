@@ -12,3 +12,4 @@
 #include "engine/tools/serializer/color.hpp"
 #include "engine/tools/serializer/named_type.hpp"
 #include "engine/tools/serializer/prefab.hpp"
+#include "engine/tools/serializer/inspection.hpp"
