@@ -5,15 +5,7 @@
 #include "engine/core/polyline.hpp"
 
 void Walking::start() {
-    //tmt::GoapAgentFactory::spawn_agent_from_type("dragon", entity);
-
-    for (int i = 0; i < leg_amount; ++i) {
-        if (!tmt::engine.ecs.valid(end_effector[i])) {
-            end_effector[i] = tmt::engine.ecs.create_entity();
-            auto& name = tmt::engine.ecs.get_component<tmt::Name>(end_effector[i]);
-            name.name = "End Effector " + std::to_string(i);
-        }
-    }
+    // tmt::GoapAgentFactory::spawn_agent_from_type("dragon", entity);
 }
 
 void Walking::update(const tmt::FrameData& time) {
@@ -27,7 +19,7 @@ void Walking::update(const tmt::FrameData& time) {
     auto nodes = nav_mesh.nodes_mesh;
     if (nodes->empty()) return;
     int closest_node = nav_mesh.find_closest_node(walking_transform.get_world_position());
-    
+
     auto& normal = (*nodes)[closest_node].normal;
 
     tmt::Ray ray;
@@ -80,16 +72,6 @@ void Walking::update(const tmt::FrameData& time) {
     right -= ground_up * glm::dot(right, ground_up);
     forward = glm::normalize(forward);
     right = glm::normalize(right);
-
-    for (int i = 0; i < leg_amount; i++) {
-        float angle = glm::radians(360.0f * (static_cast<float>(i) / leg_amount) + 180.0f / leg_amount);
-        float c = std::cos(angle);
-        float s = std::sin(angle);
-        glm::vec3 leg_dir = forward * c + right * s;
-        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(end_effector[i]);
-        transform.set_world_position(walking_transform.get_world_position() + leg_dir);
-        //tmt::engine.polyline.draw_sphere(transform.get_world_position(), 0.1f);
-    }
 }
 
 void Walking::end() {}

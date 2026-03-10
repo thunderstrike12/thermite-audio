@@ -117,9 +117,7 @@
                 "attack_range": 20.0,
                 "height_above_ground": 0.30000001192092896,
                 "max_chase_distance": 100.0,
-                "ray_count": 100,
                 "rotation_speed": 2.5,
-                "rotation_t": 0.0,
                 "walk_speed": 0.20000000298023224,
                 "walkable_asteroid": 0
             }
