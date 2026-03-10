@@ -46,6 +46,7 @@ void GameFlow::on_editor_update(const FrameData&) {
     // if (engine.input.is_keyboard_button_just_pressed(Key::F1)) {
     if (ImGui::IsKeyPressed(ImGuiKey_F1)) {
         if (engine.input.is_mouse_locked()) {
+            engine.input.set_game_preferred_mouse_lock(true);
             unlock_mouse();
         }
     }
@@ -71,6 +72,8 @@ void GameFlow::on_game_end() {
 }
 
 void GameFlow::on_pre_load_scene(PreLoadSceneEvent& event) {
+    engine.input.set_game_preferred_mouse_lock(false);  // reset
+
     if (has_ended == false) return;
     event.scene_json = cached_scene;
     event.handled = true;

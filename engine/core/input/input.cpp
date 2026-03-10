@@ -28,7 +28,8 @@ bool Input::can_use_input_keyboard() const {
 
 void Input::init() {
     int32_t number_keys;
-    keys_sdl = SDL_GetKeyboardState(&number_keys);
+    SDL_GetKeyboardState(&number_keys);
+    curr_keys.resize(number_keys, false);
     prev_keys.resize(number_keys, false);
 
     engine.input_map.setup_default_actions();
@@ -152,6 +153,12 @@ void Input::update(const FrameData& time) {
         can_use_keyboard_input = true;
     }
 
+    // update keys
+    int32_t number_keys;
+    const bool* keys_sdl = SDL_GetKeyboardState(&number_keys);
+    prev_keys = curr_keys;
+    std::copy(keys_sdl, keys_sdl + number_keys, curr_keys.begin());
+
     // reset hold timers
     for (auto& [action_name, input_action] : engine.input_map.actions) {
         for (auto& event : input_action.events) {
@@ -160,7 +167,6 @@ void Input::update(const FrameData& time) {
             }
         }
     }
-    std::copy_n(keys_sdl, prev_keys.size(), prev_keys.begin());
     prev_mouse_buttons = mouse_buttons;
 
     {
@@ -376,36 +382,28 @@ void Input::update(const FrameData& time) {
     }
 }
 bool Input::is_keyboard_button_pressed(Key key) const {
-    if (!can_use_input_keyboard()) return false;
-    return keys_sdl[static_cast<SDL_Scancode>(key)];
+    return curr_keys[static_cast<SDL_Scancode>(key)];
 }
 
 bool Input::is_keyboard_button_just_pressed(Key key) const {
-    if (!can_use_input_keyboard()) return false;
     const auto sdl_scancode = static_cast<SDL_Scancode>(key);
-    return keys_sdl[sdl_scancode] == true && prev_keys[sdl_scancode] == false;
+    return curr_keys[sdl_scancode] == true && prev_keys[sdl_scancode] == false;
 }
 bool Input::is_keyboard_button_released(Key key) const {
-    if (!can_use_input_keyboard()) return false;
     auto sdl_scancode = static_cast<SDL_Scancode>(key);
-    return keys_sdl[sdl_scancode] == false && prev_keys[sdl_scancode] == true;
+    return curr_keys[sdl_scancode] == false && prev_keys[sdl_scancode] == true;
 }
 
 bool Input::is_mouse_button_pressed(MouseButton button) const {
-    if (!can_use_input_mouse()) return false;
     return mouse_buttons & SDL_BUTTON_MASK(static_cast<int>(button));
 }
 bool Input::is_mouse_button_just_pressed(MouseButton button) const {
-    if (!can_use_input_mouse()) return false;
-
     auto mask = SDL_BUTTON_MASK(static_cast<int32_t>(button));
     bool is_pressed = (mouse_buttons & mask) != 0;
     bool was_pressed = (prev_mouse_buttons & mask) != 0;
     return is_pressed == true && was_pressed == false;
 }
 bool Input::is_mouse_button_just_released(MouseButton button) const {
-    if (!can_use_input_mouse()) return false;
-
     auto mask = SDL_BUTTON_MASK(static_cast<int32_t>(button));
     bool is_pressed = (mouse_buttons & mask) != 0;
     bool was_pressed = (prev_mouse_buttons & mask) != 0;
@@ -500,7 +498,8 @@ float Input::get_action_raw_strength(const std::string& name) {
 }
 void Input::clear_input_state() {
     int32_t number_keys;
-    keys_sdl = SDL_GetKeyboardState(&number_keys);
+    SDL_GetKeyboardState(&number_keys);
+    curr_keys.resize(number_keys, false);
     prev_keys.resize(number_keys, false);
     prev_mouse_buttons = 0;
     mouse_dx = 0.0f;
@@ -597,6 +596,13 @@ void Input::lock_mouse(bool value) {
 
 bool Input::is_mouse_locked() const {
     return mouse_locked;
+}
+
+void Input::set_game_preferred_mouse_lock(bool value) {
+    game_mouse_lockstate = value;
+}
+bool Input::get_game_preferred_mouse_lock() const {
+    return game_mouse_lockstate;
 }
 
 void Input::warp_mouse(const glm::vec2& pos, bool relative) {

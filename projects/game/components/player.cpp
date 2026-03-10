@@ -114,16 +114,15 @@ void Player::move_player() {
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     /* If not locked don't move player */
-    const bool mouse_locked = input.is_mouse_locked();
-    if (mouse_locked && input.is_action_pressed(action::MOVE_FORWARD)) input_dir += transform.get_forward();
-    if (mouse_locked && input.is_action_pressed(action::MOVE_BACKWARD)) input_dir -= transform.get_forward();
-    if (mouse_locked && input.is_action_pressed(action::MOVE_RIGHT)) input_dir += transform.get_right();
-    if (mouse_locked && input.is_action_pressed(action::MOVE_LEFT)) input_dir -= transform.get_right();
-    if (mouse_locked && input.is_action_pressed(action::MOVE_UP)) input_dir += glm::vec3(0.0f, 1.0f, 0.0f);
-    if (mouse_locked && input.is_action_pressed(action::MOVE_DOWN)) input_dir -= glm::vec3(0.0f, 1.0f, 0.0f);
+    if (input.is_action_pressed(action::MOVE_FORWARD)) input_dir += transform.get_forward();
+    if (input.is_action_pressed(action::MOVE_BACKWARD)) input_dir -= transform.get_forward();
+    if (input.is_action_pressed(action::MOVE_RIGHT)) input_dir += transform.get_right();
+    if (input.is_action_pressed(action::MOVE_LEFT)) input_dir -= transform.get_right();
+    if (input.is_action_pressed(action::MOVE_UP)) input_dir += glm::vec3(0.0f, 1.0f, 0.0f);
+    if (input.is_action_pressed(action::MOVE_DOWN)) input_dir -= glm::vec3(0.0f, 1.0f, 0.0f);
 
     // Added button for breaking, port from prototype
-    bool breaking = mouse_locked && input.is_action_pressed(action::BREAK);
+    bool breaking = input.is_action_pressed(action::BREAK);
 
     auto delta_time = tmt::engine.frame_data().delta_time;
     // Apply acceleration or drag

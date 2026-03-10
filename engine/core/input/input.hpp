@@ -243,6 +243,14 @@ class Input {
     bool is_mouse_locked() const;
 
     /// <summary>
+    /// Sets the game's preferred mouse lock state. Useful when an external event temporarily takes control of this state.
+    /// </summary>
+    /// <param name="value">What the game had as its lock state.
+    void set_game_preferred_mouse_lock(bool value);
+
+    bool get_game_preferred_mouse_lock() const;
+
+    /// <summary>
     /// Moves the cursor position to given position using the default window.
     /// </summary>
     /// <param name="pos">The position used to set the cursor.</param>
@@ -318,7 +326,7 @@ class Input {
     bool can_use_keyboard_input = false;
     bool can_use_mouse_input = false;
     // non-owning pointer from SDL, do not free manually
-    const bool* keys_sdl = nullptr;
+    // const bool* keys_sdl = nullptr;
     uint32_t mouse_buttons = 0u;
     uint32_t prev_mouse_buttons = 0u;
     float mouse_x = 0.0f;
@@ -330,6 +338,8 @@ class Input {
     float scroll_dx = 0.0f;
     float scroll_dy = 0.0f;
     bool mouse_locked = false;
+    bool game_mouse_lockstate = false;
+    std::vector<bool> curr_keys {};
     std::vector<bool> prev_keys {};
     std::unordered_map<int32_t, GamepadState> gamepads {};
 };
