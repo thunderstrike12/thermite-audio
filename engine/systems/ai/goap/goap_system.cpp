@@ -4,6 +4,8 @@
 #include "components/goap_agent_factory.hpp"
 #include "components/goap_agent_type_ref.hpp"
 
+#include "systems/ai/steering/components/steering_agent.hpp"
+
 #include "engine.hpp"
 #include "core/ecs.hpp"
 
@@ -28,6 +30,7 @@ void Goap::on_start() {
         if (registry.any_of<GoapAgent>(entity)) continue;
 
         GoapAgentFactory::spawn_agent_from_type(type_ref.type_id, entity);
+        registry.emplace<SteeringAgent>(entity);
     }
 }
 
@@ -183,10 +186,6 @@ EffectiveGoapAction build_effective_action(const GoapAction& base, const GoapAct
  *   - If goal satisfied -> reconstruct plan
  */
 void Goap::update_plan(Entity entity, GoapAgent& agent, WorldState& ws) {
-    // This has to be inside to allow for Unity Builds
-    // ------------------------------------------------------
-    // A* GOAP Planner
-    // ------------------------------------------------------
     /**
      * Internal search node used for A*.
      *

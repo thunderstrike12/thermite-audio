@@ -17,6 +17,21 @@
                 "player_alive": true,
                 "area_secure": false
             }
+        },
+        "Enemy 2": {
+            "id": "Enemy 2",
+            "action_ids": [
+                "a_GoToTarget",
+                "a_WanderAround"
+            ],
+            "goal_ids": [
+                "g_ReachTarget",
+                "g_WanderAround"
+            ],
+            "default_world_state": {
+                "at_target": false,
+                "can_move": true
+            }
         }
     }
 }

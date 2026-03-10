@@ -17,6 +17,9 @@
 #include "goap_actions/chase_player.hpp"
 #include "goap_actions/kill_player.hpp"
 #include "goap_actions/patrol_area.hpp"
+#include "goap_actions/go_to_target.hpp"
+#include "goap_actions/wander_around.hpp"
+
 #include "engine/core/scene.hpp"
 #include "engine/core/scenes.hpp"
 
@@ -72,6 +75,8 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     action_reg.register_action(std::make_unique<tmt::PatrolArea>());
     action_reg.register_action(std::make_unique<tmt::ChasePlayer>());
     action_reg.register_action(std::make_unique<tmt::KillPlayer>());
+    action_reg.register_action(std::make_unique<tmt::GoToTarget>());
+    action_reg.register_action(std::make_unique<tmt::WanderAround>());
 
     // --- Register Goals ---
     {
@@ -92,6 +97,24 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
         kill.valid = true;
 
         goal_reg.register_goal("g_KillPlayer", kill);
+    }
+
+    {
+        tmt::GoapGoal reach_target;
+        reach_target.name = "g_ReachTarget";
+        reach_target.desired_state = { { tmt::FactId("at_target"), true } };
+        reach_target.priority = 5;
+        reach_target.valid = true;
+        goal_reg.register_goal("g_ReachTarget", reach_target);
+    }
+
+    {
+        tmt::GoapGoal wander_around;
+        wander_around.name = "g_WanderAround";
+        wander_around.desired_state = { { tmt::FactId("can_move"), true } };
+        wander_around.priority = 1;
+        wander_around.valid = true;
+        goal_reg.register_goal("g_WanderAround", wander_around);
     }
 
     return std::make_unique<Game>(specs);
@@ -157,25 +180,25 @@ void AIScene::on_start() {
     }
 
     {  // voxel entity with navmesh
-        auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "test_asteroid_5.vengi" });
-        auto voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
-        volumes[0] = voxel_volume;
-        voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "test_asteroid_6.vengi" });
-        voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
-        volumes[1] = voxel_volume;
-        voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "test_asteroid_7.vengi" });
-        voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
-        volumes[2] = voxel_volume;
+       // auto voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "test_asteroid_5.vengi" });
+       // auto voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
+       // volumes[0] = voxel_volume;
+       // voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "test_asteroid_6.vengi" });
+       // voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
+       // volumes[1] = voxel_volume;
+       // voxel_file = tmt::engine.resources.load_resource<tmt::VoxelScene>({ tmt::IO::Location::PROJECT, "test_asteroid_7.vengi" });
+       // voxel_volume = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(voxel_file);
+       // volumes[2] = voxel_volume;
 
-        voxel = tmt::engine.ecs.create_entity("Asteroid");
-        auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(voxel);
-        auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(voxel);
-        renderer.resource = voxel_volume;
-        // transform.set_world_rotation(glm::vec3(glm::radians(45.0f), glm::radians(45.0f), 0.0f));
-        transform.set_world_scale(glm::vec3(1.0f, 1.0f, 1.0f));
+        // voxel = tmt::engine.ecs.create_entity("Asteroid");
+        // auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(voxel);
+        // auto& renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(voxel);
+        // renderer.resource = voxel_volume;
+        //// transform.set_world_rotation(glm::vec3(glm::radians(45.0f), glm::radians(45.0f), 0.0f));
+        // transform.set_world_scale(glm::vec3(1.0f, 1.0f, 1.0f));
 
-        nav_mesh = &tmt::engine.ecs.add_component<tmt::NavMesh>(voxel);
-        nav_mesh->voxel_volume = voxel_volume;
-        nav_mesh->lod_level = 1;
+        // nav_mesh = &tmt::engine.ecs.add_component<tmt::NavMesh>(voxel);
+        // nav_mesh->voxel_volume = voxel_volume;
+        // nav_mesh->lod_level = 1;
     }
 }

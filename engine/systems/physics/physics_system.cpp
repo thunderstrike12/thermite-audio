@@ -223,6 +223,7 @@ void Physics::on_fixed_update(const FrameData&) {
             object.size = vb.resource->size;
             object.mask = (1u << vb.layer);
             object.volume = vb.resource.resource.get();
+            object.rcp_tree_width = 1.0f / powf(4.0f, (float)vb.resource->blas->depth);
             objects.push_back(std::move(object));
         }
 

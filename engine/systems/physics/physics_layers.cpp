@@ -40,11 +40,17 @@ void PhysicsLayers::enable_collision(uint32_t a, uint32_t b, bool enable) {
 /**
  * Check if two layers can collide
  *
+ * It will always check smaller vs bigger, since I only fill in
+ * the opper triangle if the collision matrix.
+ *
  * Returns:
  *   - true if collision enabled, false otherwise
  */
 bool PhysicsLayers::can_collide(uint32_t a, uint32_t b) const {
     if (a >= MAX_LAYERS || b >= MAX_LAYERS) return false;
+
+    // ensure we always access upper triangle
+    if (a > b) std::swap(a, b);
 
     return collision_matrix[a][b];
 }
