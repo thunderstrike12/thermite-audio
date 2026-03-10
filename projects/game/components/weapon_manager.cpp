@@ -58,6 +58,8 @@ void game::WeaponManager::check_trigger_shoot_event() {
 
     if (input.is_action_pressed(action::SHOOT)) {
         tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, false });
+    } else if (input.is_action_just_released(action::SHOOT)) {
+        tmt::engine.ecs.get_dispatcher().trigger(ReleaseShootEvent { shooting_entity });
     }
 }
 

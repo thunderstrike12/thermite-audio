@@ -8,7 +8,7 @@ namespace tmt {
 
 /* Voxel material data, used in a palette. */
 struct Material {
-    enum class Type : uint8_t { NONE };
+    enum class Type : uint8_t { NONE, THERMITE, COPPER, TITANIUM };
 
     Rgb10 albedo {};
     uint16_t ior { 0x3C00 };      /* f16 encoding, 1.0f by default. */

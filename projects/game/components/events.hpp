@@ -8,6 +8,9 @@ struct ShootEvent {
     tmt::Entity shooting_entity;
     bool secondary_shot = false;
 };
+struct ReleaseShootEvent {
+    tmt::Entity shooting_entity;
+};
 struct WeaponFiredEvent {
     tmt::Entity weapon_entity;
     bool secondary_shot = false;
