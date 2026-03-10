@@ -330,9 +330,9 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
     void disable(const Entity entity, const bool mark = true);
 
     Collection<ISystem> systems;
-    
+
     void on_game_start() override;
-    
+
     void on_game_end() override;
 
    private:

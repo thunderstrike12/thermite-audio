@@ -49,6 +49,7 @@ class Physics : public ISystem {
         tmt::Svt64* tree_a, const glm::vec3& center_a, const glm::quat& rotation_a, float half_extent_a, tmt::Svt64* tree_b, const glm::vec3& center_b, const glm::quat& rotation_b,
         float half_extent_b, Collision& coll
     );
+
    public:
     // Static utility functions
     static void initialize_voxel_body(VoxelBody& vb, VoxelVolume& volume);
@@ -60,7 +61,7 @@ class Physics : public ISystem {
 
     PhysicsLayers& layers() { return physics_layers; }
     // Raycast against layers in the layer_mask
-    
+
     Hit raycast(const Ray& ray, uint32_t layer_mask) const;
 
     static void recalculate_physics_data(VoxelBody& vb, VoxelVolume& volume);

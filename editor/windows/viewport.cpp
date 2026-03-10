@@ -145,8 +145,7 @@ void tmt::Viewport::display() {
     if (ImGui::IsItemHovered() && ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
         ImGui::SetWindowFocus();
     }
-    if(is_hovered && !engine.input.is_mouse_locked() && engine.game_controller.is_running() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-    {
+    if (is_hovered && !engine.input.is_mouse_locked() && engine.game_controller.is_running() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         engine.input.lock_mouse(true);
         engine.input.set_mouse_relative_to_window(true);
     }
@@ -362,9 +361,8 @@ void tmt::Viewport::on_block_input_request(OnBlockInputEvent& event) {
     event.handled = true;
 }
 
-void tmt::Viewport::on_game_start() 
-{
-   ImGui::SetWindowFocus(get_title().c_str());
+void tmt::Viewport::on_game_start() {
+    ImGui::SetWindowFocus(get_title().c_str());
 }
 
 void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {

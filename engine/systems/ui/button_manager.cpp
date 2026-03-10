@@ -11,7 +11,7 @@
 namespace tmt {
 
 void ButtonManager::on_start() {
-    auto view = engine.ecs.get_registry().view<Button>();
+    auto view = engine.ecs.view<Button>();
     for (auto [entity, button] : view.each()) {
         button.state = ButtonState::IDLE;
     }
@@ -25,7 +25,7 @@ void ButtonManager::on_update(const tmt::FrameData& time) {
 
 void ButtonManager::update_states(const tmt::FrameData& time) {
     /* group with buttons and image renderers */
-    auto group = engine.ecs.get_registry().group<Button>(entt::get<ImageRenderer>);
+    auto group = engine.ecs.group<Button>(entt::get<ImageRenderer>);
     for (const auto& [entity, button, image_renderer] : group.each()) {
         image_renderer.color = button.colors.at(static_cast<uint8_t>(button.state));
 
@@ -69,7 +69,7 @@ void ButtonManager::select_button(const Entity button) {
 
     /* Deselect previous button */
     if (selected_button != entt::null) {
-        auto* prev_button = engine.ecs.get_registry().try_get<Button>(selected_button);
+        auto* prev_button = engine.ecs.try_get_component<Button>(selected_button);
         if (prev_button) prev_button->state = ButtonState::ON_DESELECT;
         previous_button = selected_button;
     }
@@ -80,7 +80,7 @@ void ButtonManager::select_button(const Entity button) {
     /* Select new button */
     if (selected_button == entt::null) return;
 
-    auto* new_button = engine.ecs.get_registry().try_get<Button>(selected_button);
+    auto* new_button = engine.ecs.try_get_component<Button>(selected_button);
     if (new_button) new_button->state = ButtonState::ON_SELECT;
 }
 
@@ -90,7 +90,7 @@ void ButtonManager::next_button(Direction direction) {
         return;
     }
 
-    auto* button = engine.ecs.get_registry().try_get<Button>(selected_button);
+    auto* button = engine.ecs.try_get_component<Button>(selected_button);
     if (!button) {
         set_default_button();
         return;
@@ -111,12 +111,12 @@ void ButtonManager::set_default_button() {
         return;
     }
 
-    auto view = engine.ecs.get_registry().view<Button>();
+    auto view = engine.ecs.view<Button>();
     /* set top-left most button as first */
     Entity default_button = entt::null;
     float min_distance = std::numeric_limits<float>::max();
     for (auto [entity, button] : view.each()) {
-        auto* transform = engine.ecs.get_registry().try_get<Transform>(entity);
+        auto* transform = engine.ecs.try_get_component<Transform>(entity);
         if (!transform) continue;
         const auto& pos = transform->get_world_position();
         float distance = std::sqrt(pos.x * pos.x + pos.y * pos.y);
@@ -134,7 +134,7 @@ void ButtonManager::set_default_button() {
 void ButtonManager::set_state(ButtonState state) {
     if (selected_button == entt::null) return;
 
-    auto* button = engine.ecs.get_registry().try_get<Button>(selected_button);
+    auto* button = engine.ecs.try_get_component<Button>(selected_button);
     if (!button) return;
     button->state = state;
 }
@@ -149,7 +149,7 @@ void ButtonManager::update_move_state(float dt) {
 
 void ButtonManager::on_mouse_move(MouseMoveEvent& event) {
     const auto mouse_pos = glm::vec2(event.x, event.y);
-    auto view = engine.ecs.get_registry().view<Button>();
+    auto view = engine.ecs.view<Button>();
     for (auto [entity, button] : view.each()) {
         if (AnchorHelper::is_inside(entity, mouse_pos)) {
             select_button(entity);

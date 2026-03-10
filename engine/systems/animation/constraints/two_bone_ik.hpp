@@ -6,6 +6,7 @@
 namespace tmt {
 namespace AnimConstraints {
 namespace TwoBoneIK {
+
 // bone output data
 struct TwoBoneIKSolverOutput {
     glm::vec3 mid;
@@ -80,6 +81,7 @@ struct EffectorWalkCycle {
     // the internally tracked effector
     glm::vec3 effector;
 };
-}
+
+}  // namespace TwoBoneIK
 }  // namespace AnimConstraints
 }  // namespace tmt

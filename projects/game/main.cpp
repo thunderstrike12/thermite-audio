@@ -38,6 +38,11 @@
 #include "components/fuel.hpp"
 #include "components/ore_properties.hpp"
 #include "components/upgrade.hpp"
+#include "components/ui_components/scene_switch_component.hpp"
+#include "components/ui_components/entity_control_component.hpp"
+
+// Data Headers
+#include "data_headers/scene_list.hpp"
 
 class Game : public tmt::Application {
    public:
@@ -48,33 +53,7 @@ class Game : public tmt::Application {
     void on_end() override {};
 };
 
-class MainMenuScene : public tmt::Scene<MainMenuScene> {
-   public:
-    static constexpr std::string_view scene_name() { return "MainMenuScene"; }
-};
-
-class MainGameScene : public tmt::Scene<MainGameScene> {
-   public:
-    static constexpr std::string_view scene_name() { return "MainGameScene"; }
-};
-class Zoo : public tmt::Scene<Zoo> {
-   public:
-    static constexpr std::string_view scene_name() { return "Zoo"; }
-};
-class Gym : public tmt::Scene<Gym> {
-   public:
-    static constexpr std::string_view scene_name() { return "Gym"; }
-};
-
-class DanielTestScene : public tmt::Scene<DanielTestScene> {
-   public:
-    static constexpr std::string_view scene_name() { return "DanielTestScene"; }
-};
-
-class MikaTestScene : public tmt::Scene<MikaTestScene> {
-   public:
-    static constexpr std::string_view scene_name() { return "MikaTestScene"; }
-};
+// Moved scenes to data_headers/scene_list.hpp
 
 std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs& args) {
     // clang-format off
@@ -86,13 +65,12 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     // clang-format on
 
     /* Register Scenes */
+    tmt::engine.scenes.register_scene<MainMenuScene>();
     tmt::engine.scenes.register_scene<MainGameScene>();
+    tmt::engine.scenes.register_scene<Zoo>();
+    tmt::engine.scenes.register_scene<Gym>();
     tmt::engine.scenes.register_scene<DanielTestScene>();
     tmt::engine.scenes.register_scene<MikaTestScene>();
-    tmt::engine.scenes.register_scene<DanielTestScene>();
-    tmt::engine.scenes.register_scene<MainMenuScene>();
-    tmt::engine.scenes.register_scene<Gym>();
-    tmt::engine.scenes.register_scene<Zoo>();
 
     /* Register Game Components */
     tmt::engine.component_registry.register_component<game::Player>();
@@ -115,6 +93,9 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.component_registry.register_component<game::MenuController>();
     tmt::engine.component_registry.register_component<game::FuelComponent>();
     tmt::engine.component_registry.register_component<game::OreProperties>();
+    /* Register Game UI Components */
+    tmt::engine.component_registry.register_component<game::SceneSwitchComponent>();
+    tmt::engine.component_registry.register_component<game::EntityControlComponent>();
 
     return std::make_unique<Game>(specs);
 }

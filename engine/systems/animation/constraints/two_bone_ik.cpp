@@ -8,6 +8,7 @@
 namespace tmt {
 namespace AnimConstraints {
 namespace TwoBoneIK {
+
 TwoBoneIKSolverOutput solve_two_bone_ik(const TwoBoneInputData& input_data) {
     // world space solver input state variables
     glm::vec3 in_root, in_mid, in_end;
@@ -128,7 +129,7 @@ glm::vec3 EffectorWalkCycle::do_walk_cycle(float dt, const WalkCycleUpdateVariab
     }
 
     // predict based on positional change
-    glm::vec3 prediction_vec = (point_velocity*dt) * step_prediction_strength;
+    glm::vec3 prediction_vec = (point_velocity * dt) * step_prediction_strength;
     glm::vec3 subtraction_vec = prediction_vec * walk_cycle_vars.up;
     prediction_vec -= subtraction_vec;
 
@@ -175,6 +176,7 @@ glm::vec3 EffectorWalkCycle::do_walk_cycle(float dt, const WalkCycleUpdateVariab
 void EffectorWalkCycle::set_offset(float offset) {
     cycle_offset = offset;
 }
-}
+
+}  // namespace TwoBoneIK
 }  // namespace AnimConstraints
 }  // namespace tmt

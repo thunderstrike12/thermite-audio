@@ -73,8 +73,8 @@ struct Button {
 
     /* Color for each state */
     std::array<RGBA, 8> colors = {
-        RGBA(glm::vec4(1.0f)), 
-        RGBA(glm::vec4(0.8f, 0.8f, 0.8f, 1.0f)), 
+        RGBA(glm::vec4(1.0f)),
+        RGBA(glm::vec4(0.8f, 0.8f, 0.8f, 1.0f)),
         RGBA(glm::vec4(0.6f, 0.6f, 0.6f, 1.0f)),
         RGBA(glm::vec4(0.8f, 0.8f, 0.8f, 1.0f)),
         RGBA(glm::vec4(0.2f, 0.2f, 0.2f, 1.0f)),

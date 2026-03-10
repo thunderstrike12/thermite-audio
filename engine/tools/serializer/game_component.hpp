@@ -31,7 +31,10 @@ inline void tag_invoke(JsonReflect::deserialize_t, const JsonReflect::json& j, t
     for (const auto& [key, value] : j.items()) {
         const bool is_registered = tmt::engine.component_registry.is_component_registered(key);
         if (is_registered == false) {
-            tmt::Log::warn(tmt::Log::Scope::ENGINE, "[ComponentCollection] deserialize: Component with name '{}' is not registered in the GameComponentRegistry. Skipping deserialization of this component.", key);
+            tmt::Log::warn(
+                tmt::Log::Scope::ENGINE,
+                "[ComponentCollection] deserialize: Component with name '{}' is not registered in the GameComponentRegistry. Skipping deserialization of this component.", key
+            );
             continue;
         }
 

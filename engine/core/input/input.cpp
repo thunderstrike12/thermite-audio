@@ -147,9 +147,7 @@ void Input::update(const FrameData& time) {
         can_use_mouse_input = false;
         can_use_keyboard_input = false;
         return;
-    }
-    else 
-    {
+    } else {
         can_use_mouse_input = true;
         can_use_keyboard_input = true;
     }

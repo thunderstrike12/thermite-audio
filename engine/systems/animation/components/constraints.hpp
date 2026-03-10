@@ -17,15 +17,14 @@ struct LocalRestPose {
     std::vector<LocalRestPose> children_rest_poses;
 };
 
-struct DampedTransformConstraint{
+struct DampedTransformConstraint {
     float damp = 0.f;
-    LocalRestPose local_rest_pose; // root
+    LocalRestPose local_rest_pose;  // root
 };
-struct TwoBoneIKConstraint
-{
-    //automatically set
+struct TwoBoneIKConstraint {
+    // automatically set
     tmt::Entity parent = entt::null;
-    //automatically set
+    // automatically set
     tmt::Entity root;
 
     tmt::Entity mid;
@@ -34,8 +33,7 @@ struct TwoBoneIKConstraint
     tmt::Entity target_position_entity;
     tmt::Entity bend_position_entity;
 };
-struct EffectorWalkCycle
-{
+struct EffectorWalkCycle {
     // step after how much time?
     float step_time;
 
@@ -77,5 +75,8 @@ struct EffectorWalkCycle
 }  // namespace tmt
 TMT_COMPONENT(tmt::AnimConstraints::DampedTransformConstraint, "Damped Transform Constraint", (damp));
 TMT_COMPONENT(tmt::AnimConstraints::TwoBoneIKConstraint, "Two Bone IK Constraint", (mid, tip, target_position_entity, bend_position_entity));
-TMT_COMPONENT(tmt::AnimConstraints::EffectorWalkCycle, "Effector Walk Cycle", (step_time, step_duration, step_height, desired_target_entity, effector_entity, ground_entity, cycle_offset, grounded, step_prediction_strength));
-//TMT_COMPONENT(tmt::AnimConstraints::EffectorWalkCycle, "Effector e"
+TMT_COMPONENT(
+    tmt::AnimConstraints::EffectorWalkCycle, "Effector Walk Cycle",
+    (step_time, step_duration, step_height, desired_target_entity, effector_entity, ground_entity, cycle_offset, grounded, step_prediction_strength)
+);
+// TMT_COMPONENT(tmt::AnimConstraints::EffectorWalkCycle, "Effector e"

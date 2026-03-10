@@ -2,6 +2,7 @@
 #include "engine/systems/gameplay/game_component.hpp"
 #include "engine/core/components/camera.hpp"
 #include "events.hpp"
+
 namespace game {
 
 struct PlayerStat {

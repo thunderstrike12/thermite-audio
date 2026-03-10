@@ -4,8 +4,8 @@
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
 
-namespace tmt
-{
+namespace tmt {
+
 void AnimConstraints::DampedTransform::set_local_rest_pose(const tmt::Transform& transform, AnimConstraints::LocalRestPose& rest_pose) {
     rest_pose.local_rot = transform.get_local_rotation();
     rest_pose.local_pos = transform.get_local_position();
@@ -47,4 +47,5 @@ void AnimConstraints::DampedTransform::update_damped_pose(AnimConstraints::Local
         update_damped_pose(child_pose, new_world_pos, new_world_rot, damp);
     }
 }
-}
+
+}  // namespace tmt

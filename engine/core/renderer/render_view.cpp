@@ -53,7 +53,7 @@ void RenderView::init() {
     dbuffer.image = bank.create_image("Depth Buffer Image", dbuffer.texture).expect("failed to create depth buffer image.");
 
     /* Calculate the render size (based on shading rate) */
-    Size3D render_size {view_size.x, view_size.y};
+    Size3D render_size { view_size.x, view_size.y };
     if (shading_rate_di == ShadingRate::HALF_RATE) {
         render_size.x = render_size.x >> 1;
     } else if (shading_rate_di == ShadingRate::QUARTER_RATE) {
@@ -62,14 +62,16 @@ void RenderView::init() {
     }
 
     /* Create the illuminance buffer */
-    lbuffer.texture = bank.create_texture("Luminance Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, render_size).expect("failed to create ibuffer texture.");
+    lbuffer.texture =
+        bank.create_texture("Luminance Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, render_size).expect("failed to create ibuffer texture.");
     lbuffer.image = bank.create_image("Luminance Buffer Image", lbuffer.texture).expect("failed to create ibuffer image.");
-    nbuffer.texture = bank.create_texture("Denoised Luminance Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, render_size).expect("failed to create nbuffer texture.");
+    nbuffer.texture = bank.create_texture("Denoised Luminance Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, render_size)
+                          .expect("failed to create nbuffer texture.");
     nbuffer.image = bank.create_image("Denoised Luminance Buffer Image", nbuffer.texture).expect("failed to create nbuffer image.");
 
     /* Create the macrofacet cache */
     const uint64_t cache_size = 10'000'000u; /* 480 MB */
-    macrofacet_cache = bank.create_buffer("Macrofacet Cache Buffer", BufferUsage::Storage, cache_size, 48ull/* bytes */).expect("failed to create macrofacet cache buffer.");
+    macrofacet_cache = bank.create_buffer("Macrofacet Cache Buffer", BufferUsage::Storage, cache_size, 48ull /* bytes */).expect("failed to create macrofacet cache buffer.");
 
     /* Generate directional albedo LUT */
     // generate_e_lut(diralbedo_lut_texture, 256u);
@@ -191,7 +193,7 @@ void RenderView::resize_textures() {
     VRAMBank& bank = engine.renderer.vram_bank();
 
     /* Calculate the render size (based on shading rate) */
-    Size3D render_size {view_size.x, view_size.y};
+    Size3D render_size { view_size.x, view_size.y };
     if (shading_rate_di == ShadingRate::HALF_RATE) {
         render_size.x = render_size.x >> 1;
     } else if (shading_rate_di == ShadingRate::QUARTER_RATE) {

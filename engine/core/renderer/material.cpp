@@ -12,11 +12,11 @@ namespace tmt {
 inline float compute_e(float wo_costheta, float roughness, uint32_t sample_count = 1024u) {
     const float alpha = roughness * roughness;
     const float alpha_2 = alpha * alpha;
-    
+
     /* Build the view vector in tangent space (N = 0,0,1) */
     const float wo_sintheta = 1.0f - wo_costheta;
     const glm::vec3 wo = glm::vec3(wo_sintheta, 0.0f, wo_costheta);
-    
+
     float e = 0.0f;
     for (uint32_t i = 0u; i < sample_count; ++i) {
         /* Compute 2D hammersley sequence */
@@ -28,17 +28,17 @@ inline float compute_e(float wo_costheta, float roughness, uint32_t sample_count
         bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
         bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
         const float u2 = (float)bits * 2.3283064365386963e-10f; /* 0x100000000 */
-        
+
         /* Sample GGX NDF */
         const float phi = 2.0f * glm::pi<float>() * u1;
         const float wh_costheta = sqrt((1.0f - u2) / (1.0f + (alpha_2 - 1.0f) * u2));
         const float wh_sintheta = sqrt(1.0f - wh_costheta * wh_costheta);
         const glm::vec3 wh = glm::vec3(wh_sintheta * glm::cos(phi), wh_sintheta * glm::sin(phi), wh_costheta);
-        
+
         /* Reflect outgoing around half-way to get incident */
         const glm::vec3 wi = 2.0f * glm::dot(wo, wh) * wh - wo;
         const float wi_costheta = wi.z;
-        
+
         if (wi_costheta > 0.0f) {
             /* Smith G2 height correlated for GGX */
             const float g_v = 2.0f * wo_costheta / (wo_costheta + glm::sqrt(alpha_2 + (1.0f - alpha_2) * wo_costheta * wo_costheta));
@@ -49,7 +49,7 @@ inline float compute_e(float wo_costheta, float roughness, uint32_t sample_count
             e += g * glm::max(glm::dot(wo, wh), 0.0f) / (wo_costheta * wh_costheta);
         }
     }
-    
+
     return e / (float)sample_count;
 }
 
@@ -69,7 +69,8 @@ void generate_e_lut(Texture& out_texture, const uint32_t resolution) {
 
     /* Create and upload look-up texture resource */
     VRAMBank& bank = engine.renderer.vram_bank();
-    out_texture = bank.create_texture("Directional Albedo LUT Texture", TextureUsage::Sampled | TextureUsage::TransferDst, TextureFormat::R32Sfloat, Size3D(resolution, resolution)).expect("failed to create directional albedo lut texture.");
+    out_texture = bank.create_texture("Directional Albedo LUT Texture", TextureUsage::Sampled | TextureUsage::TransferDst, TextureFormat::R32Sfloat, Size3D(resolution, resolution))
+                      .expect("failed to create directional albedo lut texture.");
     bank.upload_texture(out_texture, lut, resolution * resolution * sizeof(float));
 
     /* Free the LUT */

@@ -31,7 +31,6 @@ void tmt::RigModelManager::on_game_start() {
 void tmt::RigModelManager::on_start() {}
 
 void RigModelManager::on_update(const FrameData& time) {
-    
     for (const auto& [entity, rig] : engine.ecs.view<RigModel>().each()) {
         auto path = rig.vox_path.relative_path;
         if (!rig.vox_is_loaded && !path.empty()) {
@@ -70,7 +69,7 @@ void RigModelManager::on_update(const FrameData& time) {
         const Bone& last_bone = rig.data->bones.back();
         const std::string& current_animation = rig.get_current_animation();
         if (last_bone.animations.find(current_animation) == last_bone.animations.end()) {
-            //Log::warn(R"(Animation "{}" isn't a valid animation!)", current_animation);
+            // Log::warn(R"(Animation "{}" isn't a valid animation!)", current_animation);
             continue;
         }
 
@@ -99,17 +98,15 @@ void RigModelManager::on_update(const FrameData& time) {
 
 void tmt::RigModelManager::on_end() {}
 
-void RigModelManager::on_draw_lines() const 
-{
+void RigModelManager::on_draw_lines() const {
     for (const auto& [entity, transform, bone_renderer] : engine.ecs.get_registry().view<Transform, BoneHierarchyRenderer>().each()) {
         tmt::engine.polyline.use_depth_testing(true);
         tmt::engine.polyline.use_color(bone_renderer.color);
         tmt::engine.polyline.use_line_width(bone_renderer.line_width);
         tmt::RenderBoneHierarchy(transform);
     }
-    
-    for (const auto& [entity, transform, bend_hint] : engine.ecs.get_registry().view<Transform, BendHint>().each())
-    {
+
+    for (const auto& [entity, transform, bend_hint] : engine.ecs.get_registry().view<Transform, BendHint>().each()) {
         tmt::engine.polyline.use_color(glm::vec4(1.f, 0.f, 0.f, 1.f));
         tmt::engine.polyline.draw_sphere(transform.get_world_position(), bend_hint.radius);
     }
@@ -120,8 +117,7 @@ void RigModelManager::on_draw_lines() const
     }
 }
 
-void tmt::AnimationConstraintSystem::on_start() 
-{
+void tmt::AnimationConstraintSystem::on_start() {
     for (const auto& [entity, transform, damped_constraint] : engine.ecs.view<Transform, AnimConstraints::DampedTransformConstraint>().each()) {
         damped_constraint.local_rest_pose.bone_entity = entity;
         AnimConstraints::DampedTransform::set_local_rest_pose(transform, damped_constraint.local_rest_pose);
@@ -131,19 +127,18 @@ void tmt::AnimationConstraintSystem::on_start()
         two_bone_constraint.parent = transform.get_parent();
     }
 }
-void tmt::AnimationConstraintSystem::on_update(const tmt::FrameData& time) 
-{
+void tmt::AnimationConstraintSystem::on_update(const tmt::FrameData& time) {
     for (const auto& [entity, transform, damped_constraint] : engine.ecs.view<Transform, AnimConstraints::DampedTransformConstraint>().each()) {
         damped_constraint.local_rest_pose.local_pos = transform.get_local_position();
         damped_constraint.local_rest_pose.local_rot = transform.get_local_rotation();
 
-        AnimConstraints::DampedTransform::update_damped_pose(damped_constraint.local_rest_pose, damped_constraint.local_rest_pose.local_pos, damped_constraint.local_rest_pose.local_rot, damped_constraint.damp);
+        AnimConstraints::DampedTransform::update_damped_pose(
+            damped_constraint.local_rest_pose, damped_constraint.local_rest_pose.local_pos, damped_constraint.local_rest_pose.local_rot, damped_constraint.damp
+        );
     }
     for (const auto& [entity, transform, two_bone_constraint] : engine.ecs.view<Transform, AnimConstraints::TwoBoneIKConstraint>().each()) {
-
         AnimConstraints::TwoBoneIK::TwoBoneInputData input_data;
-        if(engine.ecs.valid(two_bone_constraint.parent))
-        {
+        if (engine.ecs.valid(two_bone_constraint.parent)) {
             input_data.parent = &engine.ecs.get_component<Transform>(two_bone_constraint.parent);
         }
 
@@ -162,7 +157,7 @@ void tmt::AnimationConstraintSystem::on_update(const tmt::FrameData& time)
         input_data.bend_pos = bend_target_transform.get_world_position();
 
         auto output = AnimConstraints::TwoBoneIK::solve_two_bone_ik(input_data);
-        
+
         root_transform.set_local_rotation(output.root_rot);
         mid_transform.set_local_rotation(output.mid_rot);
     }
@@ -194,7 +189,6 @@ void tmt::AnimationConstraintSystem::on_update(const tmt::FrameData& time)
             walk_cycle.initial_pos = walk_cycle.effector;
         }
 
-
         // predict based on positional change
         glm::vec3 prediction_vec = (point_velocity * time.delta_time) * walk_cycle.step_prediction_strength;
         glm::vec3 subtraction_vec = prediction_vec * up;
@@ -205,7 +199,6 @@ void tmt::AnimationConstraintSystem::on_update(const tmt::FrameData& time)
         }*/
 
         walk_cycle.desired_pos = continuous_available_pos + prediction_vec;
-
 
         if (walk_cycle.grounded) {
             if (!walk_cycle.became_grounded) {
@@ -238,16 +231,16 @@ void tmt::AnimationConstraintSystem::on_update(const tmt::FrameData& time)
             walk_cycle.effector = glm::mix(walk_cycle.effector, continuous_available_pos + up * walk_cycle.step_height, 20.f * time.delta_time);
             walk_cycle.became_grounded = false;
         }
-        
+
         auto& effector_transform = engine.ecs.get_component<Transform>(walk_cycle.effector_entity);
         effector_transform.set_world_position(walk_cycle.effector);
     }
- }
-
-
+}
 
 void tmt::AnimationConstraintSystem::on_end() {}
 
-std::string tmt::AnimationConstraintSystem::get_name() { return std::string(); }
-
+std::string tmt::AnimationConstraintSystem::get_name() {
+    return std::string();
 }
+
+}  // namespace tmt

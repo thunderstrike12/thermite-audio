@@ -27,7 +27,6 @@
 #include "ai_actions/chase_player.hpp"
 #include "ai_actions/wander.hpp"
 
-
 class Demo : public tmt::Application {
    public:
     Demo(const tmt::ApplicationSpecs& specs) : Application(specs) {}

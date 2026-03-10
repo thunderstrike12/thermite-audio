@@ -4,7 +4,7 @@
 
 template <typename T, typename Parameter, template <typename> class... Skills>
 static inline JsonReflect::json tag_invoke(JsonReflect::serialize_t, const fluent::NamedType<T, Parameter, Skills...>& type) {
-    //type.get();
+    // type.get();
     return JsonReflect::to_json(type.get());
 }
 template <typename T, typename Parameter, template <typename> class... Skills>

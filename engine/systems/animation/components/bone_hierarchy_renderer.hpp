@@ -1,21 +1,20 @@
 #pragma once
 #include "glm/fwd.hpp"
 #include "engine/core/reflection.hpp"
-namespace tmt
-{
-struct BoneHierarchyRenderer
-{
-	glm::vec4 color;
-	float line_width;
+namespace tmt {
+
+struct BoneHierarchyRenderer {
+    glm::vec4 color;
+    float line_width;
 };
 struct NoBone {};
-struct BendHint 
-{
-	float radius;
+struct BendHint {
+    float radius;
 };
 struct Effector {
-	float radius;
+    float radius;
 };
+
 }  // namespace tmt
 TMT_COMPONENT(tmt::BoneHierarchyRenderer, "BoneHierarchyRenderer", (color, line_width));
 TMT_COMPONENT(tmt::BendHint, "Bend Hint", (radius));

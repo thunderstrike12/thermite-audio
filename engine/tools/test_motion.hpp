@@ -3,20 +3,20 @@
 #include <cmath>
 #include <glm/gtc/quaternion.hpp>
 
+namespace tmt::TestMotion {  // aka lotta vibecode
 
-namespace tmt::TestMotion { // aka lotta vibecode
 struct Params {
-    glm::vec3 center {0.0f};
-    glm::vec3 amp {10.5f, 5.6f, 10.5f};  // overall range per-axis
-    float speed = 1.0f;                // global speed scalar
+    glm::vec3 center { 0.0f };
+    glm::vec3 amp { 10.5f, 5.6f, 10.5f };  // overall range per-axis
+    float speed = 1.0f;                    // global speed scalar
 
     // Secondary wobble (adds "life" without noise)
-    glm::vec3 wobble_amp {0.25f, 0.12f, 0.25f};
-    glm::vec3 wobble_freq {2.7f, 3.9f, 3.3f};
+    glm::vec3 wobble_amp { 0.25f, 0.12f, 0.25f };
+    glm::vec3 wobble_freq { 2.7f, 3.9f, 3.3f };
 
     // Slow drift of the center (prevents repeating in-place feel)
     float drift_amp = 0.8f;
-    glm::vec2 drift_freq {0.12f, 0.08f};  // x/z drift frequencies
+    glm::vec2 drift_freq { 0.12f, 0.08f };  // x/z drift frequencies
 };
 
 inline glm::vec3 sample_position(float t_seconds, const Params& p = {}) {
@@ -48,4 +48,5 @@ inline glm::quat sample_rotation(float t_seconds, float dt, const Params& p = {}
 
     return glm::quat(glm::radians(glm::vec3(0.f, -90.f, 0.f))) * glm::quatLookAtLH(glm::normalize(v), glm::vec3(0, 1, 0));
 }
+
 }  // namespace tmt::TestMotion

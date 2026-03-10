@@ -16,7 +16,7 @@ class PrefabHelper {
         constexpr static const char* PREFAB_EXTENSION = ".prefab";
     };
 
-    private:
+   private:
     static Entity instantiate_prefab(const tmt::json& parsed_json, const IO::FileLocation& location, const Entity& parent);
 };
 

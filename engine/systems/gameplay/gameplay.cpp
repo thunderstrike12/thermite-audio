@@ -40,7 +40,6 @@ void Gameplay::on_start() {
 void Gameplay::on_update(const tmt::FrameData& time) {
     TMT_ZONE_SCOPED_NS("Update Gameplay Components");
     for_each_component([&](const Entity entity, IGameComponent& component) {
-
         if (to_enable.contains(entity)) {
             component.on_entity_enabled();
             to_enable.erase(entity);

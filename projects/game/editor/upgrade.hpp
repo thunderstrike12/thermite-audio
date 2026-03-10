@@ -8,4 +8,5 @@ inline void tag_invoke(ImReflect::ImInput_t, const char* name, game::Upgrade& va
     ImReflect::Detail::imgui_input_visit_field(name, value, settings, response);
     if (ImGui::Button("Apply")) {
         value.apply_upgrade();
-    } }
+    }
+}

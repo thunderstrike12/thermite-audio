@@ -69,8 +69,7 @@ bool Resources::reload_resource(const std::shared_ptr<Resource>& resource) const
 bool Resources::reload_resource(const std::shared_ptr<FileResource>& resource) const {
     const auto last_modified_time = IO::get_file_last_modified_time(resource->file_location);
     // Check if the file to reload from exists.
-    if (last_modified_time == TimeStamp::min())
-    {
+    if (last_modified_time == TimeStamp::min()) {
         tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to reload resource, couldn't find file: {}", resource->file_location);
         return false;
     }

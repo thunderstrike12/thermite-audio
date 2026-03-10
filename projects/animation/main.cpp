@@ -16,8 +16,6 @@
 #include "engine/systems/animation/components/bone_hierarchy_renderer.hpp"
 #include "engine/systems/animation/constraints/two_bone_ik.hpp"
 
-
-
 class Game : public tmt::Application {
    public:
     Game(const tmt::ApplicationSpecs& specs) : Application(specs) {}
@@ -73,16 +71,14 @@ void AnimationScene::on_start() {
     //    auto rig_ent = tmt::engine.ecs.create_entity();
     //    auto& rig_ent_rig_model_comp = tmt::engine.ecs.add_component<tmt::RigModel>(rig_ent);
 
-        //IO::FileLocation location { IO::Location::PROJECT, "Victory_animation.fbx" };
-        //rig_ent_rig_model_comp.init(location, rig_ent);
-        //rig_ent_rig_model_comp.data->animation_files.push_back(location);
-      //  rig_ent_rig_model_comp.data->reload();
+    // IO::FileLocation location { IO::Location::PROJECT, "Victory_animation.fbx" };
+    // rig_ent_rig_model_comp.init(location, rig_ent);
+    // rig_ent_rig_model_comp.data->animation_files.push_back(location);
+    //  rig_ent_rig_model_comp.data->reload();
 
-       // rig_ent_rig_model_comp.set_current_animation("Victory_animation");
-        //rig_ent_rig_model_comp.state = RigModel::State::ANIMATE_LOOP;
-       // rig_ent_rig_model_comp.time = 0.0f;
-    
-
+    // rig_ent_rig_model_comp.set_current_animation("Victory_animation");
+    // rig_ent_rig_model_comp.state = RigModel::State::ANIMATE_LOOP;
+    // rig_ent_rig_model_comp.time = 0.0f;
 
     { /* Test rig */
         parent_entity = engine.ecs.create_entity();
@@ -101,15 +97,15 @@ void AnimationScene::on_start() {
         auto& child_1_transform = engine.ecs.get_component<Transform>(child_1);
         child_1_transform.set_local_position(glm::vec3(5.f, 4.f, -4.f));
 
-         auto child_2 = engine.ecs.create_entity();
+        auto child_2 = engine.ecs.create_entity();
         auto& child_2_transform = engine.ecs.get_component<Transform>(child_2);
         child_2_transform.set_local_position(glm::vec3(5.f, 5.f, -7.f));
 
-         auto child_3 = engine.ecs.create_entity();
+        auto child_3 = engine.ecs.create_entity();
         auto& child_3_transform = engine.ecs.get_component<Transform>(child_3);
         child_3_transform.set_local_position(glm::vec3(5.f, 6.f, -10.0f));
 
-         auto child_4 = engine.ecs.create_entity();
+        auto child_4 = engine.ecs.create_entity();
         auto& child_4_transform = engine.ecs.get_component<Transform>(child_4);
         child_4_transform.set_local_position(glm::vec3(5.f, 6.5f, -12.f));
 
@@ -155,22 +151,20 @@ void AnimationScene::on_start() {
         child_3_transform.add_child(child_4);
     }
     {
-        //walker_entity = engine.ecs.create_entity("walker");
-        //auto& bone_renderer = engine.ecs.add_component<BoneHierarchyRenderer>(walker_entity);
-        //for(int i = 0; i < 3; i++)
+        // walker_entity = engine.ecs.create_entity("walker");
+        // auto& bone_renderer = engine.ecs.add_component<BoneHierarchyRenderer>(walker_entity);
+        // for(int i = 0; i < 3; i++)
         //{
-        //    walk_cycles[i].step_time = 0.8f;
-        //    walk_cycles[i].step_height = 0.5f;
-        //    walk_cycles[i].step_duration = 0.5f;
-        //    walk_cycles[i].step_prediction_strength = 5.f;
-        //    walk_cycles[i].set_offset(i * (0.8f/3.f));
+        //     walk_cycles[i].step_time = 0.8f;
+        //     walk_cycles[i].step_height = 0.5f;
+        //     walk_cycles[i].step_duration = 0.5f;
+        //     walk_cycles[i].step_prediction_strength = 5.f;
+        //     walk_cycles[i].set_offset(i * (0.8f/3.f));
 
-        //    float rad_ang = (i+1) * 2.f/3.f * glm::pi<float>(); 
+        //    float rad_ang = (i+1) * 2.f/3.f * glm::pi<float>();
 
         //    glm::quat rot = glm::angleAxis(rad_ang, glm::vec3(0.f, 1.f, 0.f));
         //    glm::vec3 p = glm::normalize(rot * glm::vec3(0.f, 0.f, 1.f));
-
-
 
         //    arm_entities[i] = engine.ecs.create_entity();
         //    auto& two_bone_ik_constraint = engine.ecs.add_component<AnimConstraints::TwoBoneIKConstraint>(arm_entities[i]);
@@ -199,25 +193,23 @@ void AnimationScene::on_start() {
         //    two_bone_ik_constraint.mid = child_0;
         //    two_bone_ik_constraint.tip = child_1;
         //    two_bone_ik_constraint.bend_position_entity = bend_entity;
-        //    
+        //
         //    transform.set_parent(walker_entity);
         //    transform.add_child(child_0);
-        //    child_0_transform.add_child(child_1);      
+        //    child_0_transform.add_child(child_1);
         //}
-        
     }
 }
 
-void AnimationScene::on_update(const tmt::FrameData& time) 
-{
+void AnimationScene::on_update(const tmt::FrameData& time) {
     using namespace tmt;
     static float x = 0.f;
-    x-=time.delta_time*2.f;
+    x -= time.delta_time * 2.f;
 
     auto& parent_transform = engine.ecs.get_component<Transform>(walker_entity);
-    //for (size_t i = 0; i < 3; i++) {
+    // for (size_t i = 0; i < 3; i++) {
 
-    //    float rad_ang = (i+1) * 2.f/3.f * glm::pi<float>(); 
+    //    float rad_ang = (i+1) * 2.f/3.f * glm::pi<float>();
 
     //    glm::quat rot = glm::angleAxis(rad_ang, glm::vec3(0.f, 1.f, 0.f));
     //    glm::vec3 p = glm::normalize(rot * glm::vec3(0.f, 0.f, 1.f));
@@ -231,15 +223,15 @@ void AnimationScene::on_update(const tmt::FrameData& time)
     //    anim_vars.up = glm::vec3(0.f, 1.f, 0.f);
 
     //    two_bone_ik.target_position_entity = snake_entity;//walk_cycles[i].do_walk_cycle(time.delta_time, anim_vars);
-    //    
+    //
     //}
 
-    //auto& snake_transform = engine.ecs.get_component<Transform>(snake_entity);
-    //snake_transform.set_local_position(TestMotion::sample_position(time.elapsed_time));
-    //snake_transform.set_local_rotation(TestMotion::sample_rotation(time.elapsed_time, time.delta_time));
+    // auto& snake_transform = engine.ecs.get_component<Transform>(snake_entity);
+    // snake_transform.set_local_position(TestMotion::sample_position(time.elapsed_time));
+    // snake_transform.set_local_rotation(TestMotion::sample_rotation(time.elapsed_time, time.delta_time));
 
-    //auto& two_bone_ik = engine.ecs.get_component<AnimConstraints::TwoBoneIKConstraint>(arm_entity);
-    //two_bone_ik.target_position = TestMotion::sample_position(time.elapsed_time + 100.f);
+    // auto& two_bone_ik = engine.ecs.get_component<AnimConstraints::TwoBoneIKConstraint>(arm_entity);
+    // two_bone_ik.target_position = TestMotion::sample_position(time.elapsed_time + 100.f);
 }
 
 void AnimationScene::on_end() {}

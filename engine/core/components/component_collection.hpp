@@ -296,12 +296,12 @@ struct std::tuple_element<N, tmt::ViewElement<Types...>> {
     using type = std::tuple_element_t<N - 1, std::tuple<Types&...>>;
 };
 
-//template <typename T>
-//requires(std::is_base_of_v<tmt::IGameComponent, T>)
-//struct JsonReflect::Detail::delta_serialize<T> : std::true_type {};
+// template <typename T>
+// requires(std::is_base_of_v<tmt::IGameComponent, T>)
+// struct JsonReflect::Detail::delta_serialize<T> : std::true_type {};
 //
-//template <typename T>
-//requires(std::is_base_of_v<tmt::IGameComponent, T>)
-//struct JsonReflect::Detail::delta_default<T> {
-//    static T make() { return T(static_cast<tmt::Entity>(entt::null)); }
-//};
+// template <typename T>
+// requires(std::is_base_of_v<tmt::IGameComponent, T>)
+// struct JsonReflect::Detail::delta_default<T> {
+//     static T make() { return T(static_cast<tmt::Entity>(entt::null)); }
+// };

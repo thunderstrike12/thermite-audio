@@ -1,7 +1,6 @@
 #pragma once
 #include "engine/systems/gameplay/game_component.hpp"
 
-
 namespace game {
 
 class Wallet : public tmt::GameComponent<Wallet> {

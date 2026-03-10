@@ -42,7 +42,6 @@ void Ecs::disable(const Entity entity, const bool mark) {
     add_or_get_component<Disable>(entity);
     OnDisableEntity::dispatch(entity);
 
-
     const auto children = get_component<Transform>(entity).get_all_children();
     for (const auto child : children) {
         add_or_get_component<Disable>(child);

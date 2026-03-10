@@ -108,7 +108,7 @@ inline bool ColorWheel3(const char* label, float color[3], ImGuiColorWheelFlags 
     bool v_cursor_active = false;
 
     // Convert the custom color space to rec709 to work with in ImGui.
-    float srgb_color[3]; // Store the color separately to use for the color selection circle later.
+    float srgb_color[3];  // Store the color separately to use for the color selection circle later.
     std::memcpy(srgb_color, color, sizeof(srgb_color));
     if (flags & ImGuiColorWheelFlags_CustomColorSpace) ConvertColorSpace(INV_CUSTOM_COLOR_MATRIX, srgb_color);
 

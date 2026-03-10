@@ -72,7 +72,6 @@ struct Transform {
     /* Get all children recursivly, aka children of children too */
     std::set<Entity> get_all_children() const;
 
-
     void mark_dirty();
 
    private:

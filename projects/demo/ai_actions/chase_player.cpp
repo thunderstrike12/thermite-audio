@@ -11,7 +11,6 @@
 
 #include <cstdlib>
 
-
 void ChasePlayer::on_start(tmt::Entity walking_entity) {
     //
     for (const auto& [CamEntity, camera] : tmt::engine.ecs.view<tmt::Camera>().each()) {
