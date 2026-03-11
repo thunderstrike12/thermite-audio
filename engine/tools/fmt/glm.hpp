@@ -10,4 +10,7 @@ FMT_LOGGING(glm::vec4, "(x={}, y={}, z={}, w={})", obj.x, obj.y, obj.z, obj.w);
 FMT_LOGGING(glm::ivec2, "(x={}, y={})", obj.x, obj.y);
 FMT_LOGGING(glm::ivec3, "(x={}, y={}, z={})", obj.x, obj.y, obj.z);
 FMT_LOGGING(glm::ivec4, "(x={}, y={}, z={}, w={})", obj.x, obj.y, obj.z, obj.w);
+FMT_LOGGING(glm::uvec2, "(x={}, y={})", obj.x, obj.y);
+FMT_LOGGING(glm::uvec3, "(x={}, y={}, z={})", obj.x, obj.y, obj.z);
+FMT_LOGGING(glm::uvec4, "(x={}, y={}, z={}, w={})", obj.x, obj.y, obj.z, obj.w);
 FMT_LOGGING(glm::quat, "(w={}, x={}, y={}, z={})", obj.w, obj.x, obj.y, obj.z);

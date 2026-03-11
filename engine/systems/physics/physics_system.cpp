@@ -211,6 +211,8 @@ void Physics::on_fixed_update(const FrameData&) {
     const entt::basic_group group = engine.ecs.group<VoxelBody>(entt::get<Transform, VoxelRenderer>);
     std::vector<VoxelObject> objects {};
     objects.reserve(group.size());
+    entities = std::vector<Entity>();
+    entities.reserve(group.size());
     {
         TMT_ZONE_SCOPED_N("Build BVH")
         for (auto&& [entity, vb, transform, renderer] : group.each()) {
@@ -226,6 +228,10 @@ void Physics::on_fixed_update(const FrameData&) {
             object.volume = renderer.resource.resource.get();
             object.rcp_tree_width = 1.0f / powf(4.0f, (float)renderer.resource->blas->depth);
             objects.push_back(std::move(object));
+            
+            /* Save the entity id */
+            /* QUICK FIX: This is to get the entity ID from a raycast() */
+            entities.push_back(entity);
         }
 
         bvh.build(objects.data(), (uint32_t)objects.size());
@@ -854,7 +860,9 @@ void Physics::set_rotation(VoxelBody& vb, const glm::quat& rotation) {
  * are ignored during traversal.
  */
 Hit Physics::raycast(const Ray& ray, uint32_t layer_mask) const {
-    return bvh.trace(ray, layer_mask);
+    Hit hit = bvh.trace(ray, layer_mask);
+    if (hit) hit.entity = entities[(uint32_t)hit.entity];
+    return hit;
 }
 
 void Physics::recalculate_physics_data(VoxelBody& vb, VoxelVolume& volume) {

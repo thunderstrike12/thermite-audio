@@ -134,8 +134,10 @@ Svt64Node Svt64::subdivide(const RawVoxels& raw_data, uint32_t scale, glm::uvec3
 bool Svt64::is_empty(const uint32_t x, const uint32_t y, const uint32_t z) {
     TMT_ZONE_SCOPED
 
-    // range check
-    if (x >= (1u << (depth * 2u)) || y >= (1u << (depth * 2u)) || z >= (1u << (depth * 2u))) return true;
+    /* Bounds check */
+    if (x >= (1u << (depth * 2u)) || y >= (1u << (depth * 2u)) || z >= (1u << (depth * 2u))) {
+        return true;
+    }
 
     Svt64Node* current = &nodes[0];
 
@@ -151,7 +153,7 @@ bool Svt64::is_empty(const uint32_t x, const uint32_t y, const uint32_t z) {
             return false;
         }
 
-        const uint32_t child_pos = (uint32_t)__popcnt64(current->child_mask & ((1ull << child_index) - 1u));
+        const uint32_t child_pos = popcnt_var64(current->child_mask, child_index);
         current = &nodes[current->abs_ptr() + child_pos];
     }
 

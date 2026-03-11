@@ -34,6 +34,7 @@ class Physics : public ISystem {
     bool simulating = true;
     ConstraintSolver solver = {};
     Bvh2<VoxelObject> bvh {};
+    std::vector<Entity> entities {};
 
     // Layers
     PhysicsLayers physics_layers;

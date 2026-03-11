@@ -337,7 +337,7 @@ Hit Bvh2<T>::trace(const Ray& ray) const {
     }
 
     if (hit_t == 1e30f) return Hit(); /* miss */
-    return Hit(hit_t, engine.renderer.scene_view.entities[hit_index], hit_coord, hit_normal);
+    return Hit(hit_t, (Entity)hit_index, hit_coord, hit_normal);
 }
 
 template <typename T>
@@ -407,7 +407,7 @@ Hit Bvh2<T>::trace(const Ray& ray, uint32_t ray_mask) const {
     }
 
     if (hit_t == 1e30f) return Hit(); /* miss */
-    return Hit(hit_t, engine.renderer.scene_view.entities[hit_index], hit_coord, hit_normal);
+    return Hit(hit_t, (Entity)hit_index, hit_coord, hit_normal);
 }
 
 template <typename T>
