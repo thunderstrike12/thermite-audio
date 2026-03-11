@@ -71,8 +71,8 @@ void NavMesh::compute_normals(int iterations) {
         glm::vec3 edge_acc(0.f);
         glm::vec3 last_edge(0.f, 1.f, 0.f);
         auto& neighbors = node.connecting_nodes;
-        for (int i = 0; i < neighbors.size(); i++) {
-            glm::vec3 edge = (*generating_nodes)[neighbors[i]].local_pos - node.local_pos;
+        for (size_t j = 0; j < neighbors.size(); j++) {
+            glm::vec3 edge = (*generating_nodes)[neighbors[j]].local_pos - node.local_pos;
 
             //  float edge_weight = 1.f - glm::clamp(glm::dot(edge, last_edge), 0.f, 1.f);
 
@@ -84,11 +84,11 @@ void NavMesh::compute_normals(int iterations) {
             // flat side, needs special handling
             edge_acc = glm::vec3(0.f);
 
-            for (int i = 0; i < neighbors.size(); i++) {
-                glm::vec3 edge_a = glm::normalize((*generating_nodes)[neighbors[i]].local_pos - node.local_pos);
-                glm::vec3 edge_b = glm::normalize((*generating_nodes)[neighbors[(i + 1) % neighbors.size()]].local_pos - node.local_pos);
+            for (size_t j = 0; j < neighbors.size(); j++) {
+                glm::vec3 edge_a = glm::normalize((*generating_nodes)[neighbors[j]].local_pos - node.local_pos);
+                glm::vec3 edge_b = glm::normalize((*generating_nodes)[neighbors[(j + 1) % neighbors.size()]].local_pos - node.local_pos);
 
-                if (i % 2 == 0) edge_b += glm::vec3(0.f, 0.01f, 0.f);
+                if (j % 2 == 0) edge_b += glm::vec3(0.f, 0.01f, 0.f);
 
                 if (abs(glm::dot(edge_a, edge_b)) > 0.99f) continue;
 
@@ -122,8 +122,8 @@ void NavMesh::average_neighbor_normals(int iterations) {
         entered_loop = true;
         auto& node = (*generating_nodes)[i];
         auto node_normal = node.normal;
-        for (unsigned int i = 0; i < node.connecting_nodes.size(); i++) {
-            unsigned int idx = node.connecting_nodes[i];
+        for (size_t j = 0; j < node.connecting_nodes.size(); j++) {
+            unsigned int idx = node.connecting_nodes[j];
             node_normal += (*generating_nodes)[idx].normal;
         }
         node.normal = glm::normalize(node_normal);

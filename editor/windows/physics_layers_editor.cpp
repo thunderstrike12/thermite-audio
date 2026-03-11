@@ -82,8 +82,7 @@ void PhysicsLayersEditor::draw_layer_list(PhysicsLayers& layers) {
             g_state.selected_layer = i;
 
             // Copy current name into rename buffer
-            strncpy(g_state.rename_buffer, name.c_str(), sizeof(g_state.rename_buffer) - 1);
-            g_state.rename_buffer[sizeof(g_state.rename_buffer) - 1] = '\0';
+            strncpy_s(g_state.rename_buffer, sizeof(g_state.rename_buffer), name.c_str(), _TRUNCATE);
         }
     }
 

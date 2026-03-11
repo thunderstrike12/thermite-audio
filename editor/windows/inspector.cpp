@@ -105,20 +105,20 @@ void Inspector::display_compile_time_components(const tmt::Inspector::MenuContex
         if (context_response.remove_component) {
             if constexpr (CanBeDeleted<T>::value == false) {
                 tmt::Log::warn("Component '{}' cannot be removed.", name);
-                return;
-            }
-            UndoRedoCollection collection;
-            for (const Entity& entity : menu_context.selected_entities) {
-                const bool has_comp = engine.ecs.has_component<T>(entity);
-                if (has_comp == false) continue;
+            } else {
+                UndoRedoCollection collection;
+                for (const Entity& entity : menu_context.selected_entities) {
+                    const bool has_comp = engine.ecs.has_component<T>(entity);
+                    if (has_comp == false) continue;
 
-                ComponentDiff<T> component_diff(entity);
-                component_diff.before();
-                tmt::engine.ecs.remove_component<T>(entity);
-                component_diff.after();
-                collection.add_action(component_diff);
+                    ComponentDiff<T> component_diff(entity);
+                    component_diff.before();
+                    tmt::engine.ecs.remove_component<T>(entity);
+                    component_diff.after();
+                    collection.add_action(component_diff);
+                }
+                collection.commit("Remove Component: " + std::string(name));
             }
-            collection.commit("Remove Component: " + std::string(name));
             return;
         }
 
@@ -160,8 +160,8 @@ void Inspector::display_compile_time_components(const tmt::Inspector::MenuContex
             for (const Entity& entity : menu_context.selected_entities) {
                 if (entity == menu_context.primary_entity) continue;
 
-                const bool has_component = tmt::engine.ecs.has_component<T>(entity);
-                if (has_component == false) continue;
+                const bool entity_has_component = tmt::engine.ecs.has_component<T>(entity);
+                if (entity_has_component == false) continue;
 
                 T& other_instance = tmt::engine.ecs.get_component<T>(entity);
                 json other_json = tmt::Serializer::serialize(other_instance);

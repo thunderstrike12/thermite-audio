@@ -26,7 +26,7 @@ namespace UUIDv4 {
   Converts a 128-bits unsigned int to an UUIDv4 string representation.
   Uses SIMD via Intel's AVX2 instruction set.
  */
-#pragma optimize("", off);
+#pragma optimize("", off)
 void inline m128itos(__m128i x, char* mem) {
   // Expand each byte in x to two bytes in res
   // i.e. 0x12345678 -> 0x0102030405060708
@@ -98,7 +98,7 @@ __m128i inline stom128i(const char* mem) {
 
   return _mm256_castsi256_si128(a);
 }
-#pragma optimize("", on);
+#pragma optimize("", on)
 
 /*
  * UUIDv4 (random 128-bits) RFC-4122

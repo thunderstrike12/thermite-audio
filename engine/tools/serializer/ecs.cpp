@@ -346,10 +346,9 @@ tmt::json tag_invoke(JsonReflect::serialize_t, const std::set<tmt::Entity>& enti
     /* Serialize each component */
     tmt::SerializeComponents::for_each([&state](auto type_tag) {
         using ComponentType = typename decltype(type_tag)::type;
-        if constexpr (std::is_same_v<ComponentType, tmt::Prefab>) {
-            return;
+        if constexpr (!std::is_same_v<ComponentType, tmt::Prefab>) {
+            serialize_component<ComponentType>(state);
         }
-        serialize_component<ComponentType>(state);
     });
     /* Serialize Prefab component last */
     serialize_component<tmt::Prefab>(state);
@@ -657,10 +656,9 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
     /* Deserialize each component */
     tmt::SerializeComponents::for_each([&state](auto type_tag) {
         using ComponentType = typename decltype(type_tag)::type;
-        if constexpr (std::is_same_v<ComponentType, tmt::Prefab>) {
-            return;
+        if constexpr (!std::is_same_v<ComponentType, tmt::Prefab>) {
+            deserialize_component<ComponentType>(state);
         }
-        deserialize_component<ComponentType>(state);
     });
 
     if (state.current_prefab_instance_id != tmt::NULL_UUID) {

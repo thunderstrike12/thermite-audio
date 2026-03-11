@@ -23,7 +23,7 @@ struct EntityHelper {
 
     template <typename R>
     requires TypeRange<R, Entity>
-    static inline std::set<Entity> upper_parents(const R& container);
+    static std::set<Entity> upper_parents(const R& container);
 };
 
 }  // namespace tmt

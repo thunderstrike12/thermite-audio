@@ -66,7 +66,8 @@ Entity PrefabHelper::instantiate_prefab(const ResourceRef<Json>& prefab_json, co
 }
 
 Entity PrefabHelper::instantiate_prefab(const tmt::json& parsed_json, const IO::FileLocation& location, const Entity& parent) {
-    const bool has_prefab = engine.ecs.has_component<Prefab>(parent);
+    // Note: has_prefab could be used in the future to handle nested prefab overrides
+    // const bool has_prefab = engine.ecs.has_component<Prefab>(parent);
 
     /* New prefab */
     Prefab prefab_data {};

@@ -12,9 +12,9 @@ void Destruction::on_start() {
     Log::info("Destruction on_start");
 }
 
-void Destruction::on_update(const FrameData& time) {}
+void Destruction::on_update(const FrameData& /*time*/) {}
 
-void Destruction::on_fixed_update(const FrameData& time) {}
+void Destruction::on_fixed_update(const FrameData& /*time*/) {}
 
 void Destruction::on_end() {
     Log::info("Destruction on_end");
@@ -60,7 +60,9 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const Stencil* 
                 glm::ivec3 tree_pos = glm::ivec3(local_x, local_y, local_z) + offset;
 
                 // If the world position of this voxel is outside the bounds of the resource, skip it
-                if (tree_pos.x < 0 || tree_pos.y < 0 || tree_pos.z < 0 || tree_pos.x > resource->size.x - 1 || tree_pos.y > resource->size.y - 1 || tree_pos.z > resource->size.z - 1) continue;
+                if (tree_pos.x < 0 || tree_pos.y < 0 || tree_pos.z < 0 || static_cast<uint32_t>(tree_pos.x) > resource->size.x - 1 ||
+                    static_cast<uint32_t>(tree_pos.y) > resource->size.y - 1 || static_cast<uint32_t>(tree_pos.z) > resource->size.z - 1)
+                    continue;
 
                 const uint32_t edge_vals[] = { 0, stencil->size.x - 1, 0, stencil->size.y - 1, 0, stencil->size.z - 1 };
                 const glm::ivec3 local_pos(local_x, local_y, local_z);
@@ -73,7 +75,9 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const Stencil* 
 
                         // If the world position is outside the bounds of the resource, skip it
                         if (neighbor_pos.x < 0 || neighbor_pos.y < 0 || neighbor_pos.z < 0) continue;
-                        if (neighbor_pos.x >= resource->size.x || neighbor_pos.y >= resource->size.y || neighbor_pos.z >= resource->size.z) continue;
+                        if (static_cast<uint32_t>(neighbor_pos.x) >= resource->size.x || static_cast<uint32_t>(neighbor_pos.y) >= resource->size.y ||
+                            static_cast<uint32_t>(neighbor_pos.z) >= resource->size.z)
+                            continue;
 
                         // If this voxel is empty in the tree, skip it
                         if (tree->get_physics_voxel(neighbor_pos.x, neighbor_pos.y, neighbor_pos.z) == nullptr) continue;
@@ -84,7 +88,9 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const Stencil* 
 
                         // If the world position is outside the bounds of the resource, skip it
                         if (neighbor_pos.x < 0 || neighbor_pos.y < 0 || neighbor_pos.z < 0) continue;
-                        if (neighbor_pos.x >= resource->size.x || neighbor_pos.y >= resource->size.y || neighbor_pos.z >= resource->size.z) continue;
+                        if (static_cast<uint32_t>(neighbor_pos.x) >= resource->size.x || static_cast<uint32_t>(neighbor_pos.y) >= resource->size.y ||
+                            static_cast<uint32_t>(neighbor_pos.z) >= resource->size.z)
+                            continue;
 
                         // If this voxel is empty in the tree, skip it
                         if (tree->get_physics_voxel(neighbor_pos.x, neighbor_pos.y, neighbor_pos.z) == nullptr) continue;
@@ -127,7 +133,9 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const Stencil* 
                 glm::ivec3 neighbor_pos = glm::ivec3(current) + dirs[d];
                 // If the world position is outside the bounds of the resource, skip it
                 if (neighbor_pos.x < 0 || neighbor_pos.y < 0 || neighbor_pos.z < 0) continue;
-                if (neighbor_pos.x >= resource->size.x || neighbor_pos.y >= resource->size.y || neighbor_pos.z >= resource->size.z) continue;
+                if (static_cast<uint32_t>(neighbor_pos.x) >= resource->size.x || static_cast<uint32_t>(neighbor_pos.y) >= resource->size.y ||
+                    static_cast<uint32_t>(neighbor_pos.z) >= resource->size.z)
+                    continue;
                 stack.push_back((glm::uvec3)neighbor_pos);
             }
         }

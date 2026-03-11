@@ -948,25 +948,25 @@ inline void recurse_recalculate_normals(
             if (empty_sides == 0) {
                 voxel.type = PhysicsVoxelType::INSIDE;
             } else if (empty_sides == 1) {
-                for (size_t i = 1; i < 7; i++) {
-                    if (NORMAL_LUT[i] == normal) {
-                        voxel.normal_index = i;
+                for (size_t lut_idx = 1; lut_idx < 7; lut_idx++) {
+                    if (NORMAL_LUT[lut_idx] == normal) {
+                        voxel.normal_index = lut_idx;
                         break;
                     }
                 }
                 voxel.type = PhysicsVoxelType::FACE;
             } else if (empty_sides == 2) {
-                for (size_t i = 7; i < 19; i++) {
-                    if (NORMAL_LUT[i] == normal) {
-                        voxel.normal_index = i;
+                for (size_t lut_idx = 7; lut_idx < 19; lut_idx++) {
+                    if (NORMAL_LUT[lut_idx] == normal) {
+                        voxel.normal_index = lut_idx;
                         break;
                     }
                 }
                 voxel.type = PhysicsVoxelType::EDGE;
             } else {  // empty_sides >= 3
-                for (size_t i = 19; i < 27; i++) {
-                    if (NORMAL_LUT[i] == normal) {
-                        voxel.normal_index = i;
+                for (size_t lut_idx = 19; lut_idx < 27; lut_idx++) {
+                    if (NORMAL_LUT[lut_idx] == normal) {
+                        voxel.normal_index = lut_idx;
                         break;
                     }
                 }

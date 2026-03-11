@@ -1,8 +1,7 @@
 #pragma once
 #include <engine/tools/types/color.hpp>
 
-inline void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::RGBA& value, ImSettings& settings, ImResponse& response) {
-    auto& type_settings = settings.get<tmt::RGBA>();
+inline void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::RGBA& value, ImSettings&, ImResponse& response) {
     auto& type_response = response.get<tmt::RGBA>();
 
     bool changed = false;

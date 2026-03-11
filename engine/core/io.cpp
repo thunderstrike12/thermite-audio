@@ -91,6 +91,9 @@ std::pair<bool, std::filesystem::path> IO::find_root(const std::filesystem::path
 
     // not found, we might be in packaged mode
     if (std::filesystem::exists(exe_dir / "assets/engine")) return std::make_pair(true, exe_dir);
+
+    // Root not found - throw an error as this is an unrecoverable state
+    throw std::runtime_error("Could not find root directory - neither development nor packaged mode detected!");
 }
 
 /* Absolute path */

@@ -25,7 +25,7 @@ class SteeringSystem : public ISystem {
     // Inherited via ISystem
     std::string get_name() override { return "Steering System"; }
     void on_start() override;
-    void on_update(const FrameData& time) override {}
+    void on_update(const FrameData& /* time */) override {}
     void on_fixed_update(const FrameData& time) override;
     void on_end() override {}
 

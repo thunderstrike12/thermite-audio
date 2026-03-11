@@ -147,7 +147,7 @@ glm::vec3 SteeringSystem::wander(const SteeringAgent& agent, const glm::vec3& po
  *  - Query the Physics system to detect hits, ignoring the enemy layer.
  *  - For each hit within avoidDistance, accumulate a repelling force proportional to proximity.
  */
-glm::vec3 SteeringSystem::collision_avoidance(Entity entity, const SteeringAgent& agent, const glm::vec3& position, const VoxelBody& body) {
+glm::vec3 SteeringSystem::collision_avoidance(Entity /* entity */, const SteeringAgent& agent, const glm::vec3& position, const VoxelBody& body) {
     if (glm::length2(body.velocity) < 0.0001f) return glm::vec3(0);
 
     glm::vec3 forward = glm::normalize(body.velocity);
@@ -228,7 +228,7 @@ glm::vec3 SteeringSystem::calculate_force(const SteeringAgent& agent, const Stee
  * For ARRIVE requests, checks if the agent is within arrive_radius and moving slowly enough.
  * Stops the agent and marks the request as completed.
  */
-void SteeringSystem::check_completion(Entity entity, SteeringRequest& request, const Transform& transform, VoxelBody& body) {
+void SteeringSystem::check_completion(Entity /* entity */, SteeringRequest& request, const Transform& transform, VoxelBody& body) {
     if (request.mode != SteeringMode::ARRIVE) return;
 
     float dist = glm::distance(transform.get_world_position(), request.target_position);

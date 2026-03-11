@@ -120,8 +120,7 @@ inline void tag_invoke(ImReflect::ImInput_t, const char*, tmt::ParticleEmitter& 
 
             /* Editable name field */
             char name_buf[128];
-            strncpy(name_buf, effect.name.c_str(), sizeof(name_buf));
-            name_buf[sizeof(name_buf) - 1] = '\0';
+            strncpy_s(name_buf, sizeof(name_buf), effect.name.c_str(), _TRUNCATE);
             if (ImGui::InputText("Name", name_buf, sizeof(name_buf))) {
                 effect.name = name_buf;
             }

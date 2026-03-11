@@ -7,9 +7,10 @@ file(GLOB_RECURSE THERMITE_SOURCES CONFIGURE_DEPENDS
 # Add the engine as static library
 add_library(thermite-engine STATIC ${THERMITE_SOURCES})
 
-# Supress SPDLOG warnings
-# "warning C4459: declaration of 'formattable' hides global declaration"
-target_compile_options(thermite-engine PRIVATE /wd4459)
+# Supress external library warnings
+# SPDLOG: "warning C4459: declaration of 'formattable' hides global declaration"
+# uuid_v4: "warning C4081: expected 'newline'; found ';'" (malformed pragma warning in header)
+target_compile_options(thermite-engine PRIVATE /wd4459 /wd4081)
 
 # Add include paths
 target_include_directories(thermite-engine 
@@ -28,9 +29,5 @@ compile_shaders()
 # Add the precompiled header
 target_precompile_headers(thermite-engine PRIVATE "shared/pch.hpp")
 
-# Set warning level
-if(THERMITE_CI)
-    target_compile_options(thermite-engine PRIVATE /W4 /permissive- /WX)
-else()
-    target_compile_options(thermite-engine PRIVATE /W4 /permissive-)
-endif()
+# Set warning level (W4 = level 4, WX = warnings as errors)
+target_compile_options(thermite-engine PRIVATE /W4 /permissive- /WX)
