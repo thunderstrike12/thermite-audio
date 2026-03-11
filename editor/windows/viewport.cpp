@@ -18,22 +18,7 @@
 #include "editor/windows/scenes.hpp"
 #include "engine/core/components/ui_component.hpp"
 
-void tmt::Viewport::on_editor_start() {
-    // Setup Input Actions
-    register_input_actions();
-}
-
-void tmt::Viewport::register_input_actions() {
-    engine.input_map.add_action_keys(Config::SPRINT, Key::LEFT_SHIFT);
-    engine.input_map.add_action_keys(Config::FORWARD, Key::W);
-    engine.input_map.add_action_keys(Config::BACKWARD, Key::S);
-    engine.input_map.add_action_keys(Config::RIGHT, Key::D);
-    engine.input_map.add_action_keys(Config::LEFT, Key::A);
-    engine.input_map.add_action_keys(Config::UP, Key::E);
-    engine.input_map.add_action_keys(Config::DOWN, Key::Q);
-    engine.input_map.add_action_keys(Config::UP, Key::SPACE);
-    engine.input_map.add_action_keys(Config::DOWN, Key::LEFT_CTRL);
-}
+void tmt::Viewport::on_editor_start() {}
 
 void tmt::Viewport::on_editor_update(const tmt::FrameData& frame_data) {
     update_debug_camera(frame_data);
@@ -146,7 +131,6 @@ void tmt::Viewport::display() {
         ImGui::SetWindowFocus();
     }
     if (is_hovered && engine.input.get_game_preferred_mouse_lock() && engine.game_controller.is_running() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-
         engine.input.lock_mouse(true);
         engine.input.set_mouse_relative_to_window(true);
         engine.input.set_game_preferred_mouse_lock(false);
@@ -413,7 +397,6 @@ void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {
         transform.look_at(transform.get_world_position() + front, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
-    // const float mouse_wheel_y_delta = input.get_mouse_wheel_y();
     const float mouse_wheel_y_delta = ImGui::GetIO().MouseWheel;
     camera_speed *= std::pow(2.0f, mouse_wheel_y_delta * 0.15f);
     camera_speed = glm::clamp(camera_speed, Config::MIN_BASE_SPEED, Config::MAX_BASE_SPEED);
@@ -435,7 +418,9 @@ void tmt::Viewport::update_debug_camera(const tmt::FrameData& time) {
         if (ImGui::IsKeyDown(ImGuiKey_A)) move_dir -= transform.get_right();
         if (ImGui::IsKeyDown(ImGuiKey_D)) move_dir += transform.get_right();
         if (ImGui::IsKeyDown(ImGuiKey_E)) move_dir += transform.get_up();
+        if (ImGui::IsKeyDown(ImGuiKey_Space)) move_dir += transform.get_up();
         if (ImGui::IsKeyDown(ImGuiKey_Q)) move_dir -= transform.get_up();
+        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) move_dir -= transform.get_up();
 
         if (glm::length(move_dir) > 0.0f) pos += glm::normalize(move_dir) * camera_speed * time.delta_time;
     }

@@ -15,7 +15,6 @@ class Viewport : public IWindow, public OnRetrieveMouseState, public OnBlockInpu
 
     // Inherited via IWindow
     void on_editor_start() override;
-    void register_input_actions();
     void on_editor_update(const tmt::FrameData& time) override;
     void on_editor_end() override;
 
