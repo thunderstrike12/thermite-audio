@@ -16,7 +16,8 @@ if (NOT MSVC)
 endif()
 
 # Enable bigobj flag so we can compile big object files
-add_compile_options( /bigobj )
+# Enable C++ exception handling (required for EnTT consistency across all targets)
+add_compile_options( /bigobj /EHsc )
 
 # Set output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
