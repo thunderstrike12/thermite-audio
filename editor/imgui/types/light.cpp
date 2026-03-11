@@ -1,5 +1,7 @@
 #include "light.hpp"
 
+#define IM_CUSTOM_COLORSPACE_MATRIX { 0.597314f, 0.073732f, 0.020689f, 0.332820f, 0.917381f, 0.118816f, 0.038138f, 0.017072f, 0.961536f }
+#include "editor/shared/imgui_color_wheel.hpp"
 #include "editor/imgui/extra.hpp"
 
 void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Light& value, ImSettings&, ImResponse&) {
@@ -44,13 +46,13 @@ void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Light& value, ImSettings
         case tmt::LightType::SPHERE_LIGHT: {
             tmt::SphereLight light = std::get<tmt::SphereLight>(value.light);
 
-            ImGui::DragFloat("Source Radius", &light.source_radius, 0.025f, 0.0f, light.attenuation_radius, "%.3f u");
-            tooltip("Radius of the sphere light source. (larger means softer shadows)");
             ImGui::DragFloat("Attenuation Radius", &light.attenuation_radius, 0.1f, light.source_radius, 100.0f, "%.3f u");
-            tooltip("Radius at which the light influence will be zero.");
+            tooltip("Attenuation Radius", "Radius at which the light influence will be zero.");
+            ImGui::DragFloat("Source Radius", &light.source_radius, 0.025f, 0.0f, light.attenuation_radius, "%.3f u");
+            tooltip("Source Radius", "Radius of the sphere light source. (larger means softer shadows)");
 
-            ImGui::DragFloat("Luminous Flux", &light.luminous_flux, 1.0f, 0.0f, 10000.0f, "%.3f lm");
-            tooltip("Luminous flux of the sphere light.");
+            ImGui::DragFloat("Power", &light.luminous_flux, 1.0f, 0.0f, 10000.0f, "%.3f lm");
+            tooltip("Power (Luminous flux)", "Intensity of the light as luminous flux.");
 
             value.light = light;
             break;
@@ -63,10 +65,10 @@ void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Light& value, ImSettings
             if (ImGui::DragFloat("Source Angle", &source_angle, 0.1f, 0.0f, 90.0f, "%.3f deg")) {
                 light.source_angle = glm::radians(source_angle);
             }
-            tooltip("Angle between the center of the sun and its edge, as seen from your position. (larger means softer shadows)");
+            tooltip("Source Angle", "Angle between the center of the sun and its edge, as seen from your position. (larger means softer shadows)");
 
-            ImGui::DragFloat("Luminous Intensity", &light.luminous_intensity, 1.0f, 0.0f, 10000.0f, "%.3f cd");
-            tooltip("Luminous intensity of the sun light.");
+            ImGui::DragFloat("Power", &light.luminous_intensity, 1.0f, 0.0f, 10000.0f, "%.3f cd");
+            tooltip("Power (Luminous intensity)", "Intensity of the light as luminous intensity.");
 
             value.light = light;
             break;
@@ -75,23 +77,23 @@ void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Light& value, ImSettings
         case tmt::LightType::SPOT_LIGHT: {
             tmt::SpotLight light = std::get<tmt::SpotLight>(value.light);
 
-            ImGui::DragFloat("Source Radius", &light.source_radius, 0.025f, 0.0f, light.attenuation_distance, "%.3f u");
-            tooltip("Radius of the spot light source. (larger means softer shadows)");
             ImGui::DragFloat("Attenuation Distance", &light.attenuation_distance, 0.1f, light.source_radius, 100.0f, "%.3f u");
-            tooltip("Distance at which the light influence will be zero.");
+            tooltip("Attenuation Distance", "Distance at which the light influence will be zero.");
+            ImGui::DragFloat("Source Radius", &light.source_radius, 0.025f, 0.0f, light.attenuation_distance, "%.3f u");
+            tooltip("Source Radius", "Radius of the spot light source. (larger means softer shadows)");
             float beam_angle = glm::degrees(light.beam_angle);
             if (ImGui::DragFloat("Beam Angle", &beam_angle, 0.1f, 1.0f, 180.0f, "%.3f deg")) {
                 light.beam_angle = glm::radians(beam_angle);
             }
-            tooltip("Angular diameter of the spot light beam.");
+            tooltip("Beam Angle", "Angular diameter of the spot light beam.");
             float spot_blend = light.spot_blend * 100.0f;
             if (ImGui::DragFloat("Spot Blend", &spot_blend, 0.1f, 0.0f, 100.0f, "%.3f %")) {
                 light.spot_blend = spot_blend / 100.0f;
             }
-            tooltip("The softness of the spot light edge.");
+            tooltip("Spot Blend", "The softness of the spot light edge.");
 
-            ImGui::DragFloat("Luminous Intensity", &light.luminous_intensity, 1.0f, 0.0f, 10000.0f, "%.3f cd");
-            tooltip("Luminous intensity of the spot light.");
+            ImGui::DragFloat("Power", &light.luminous_intensity, 1.0f, 0.0f, 10000.0f, "%.3f cd");
+            tooltip("Power (Luminous intensity)", "Intensity of the light as luminous intensity.");
 
             value.light = light;
             break;
@@ -100,13 +102,13 @@ void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Light& value, ImSettings
         case tmt::LightType::TUBE_LIGHT: {
             tmt::TubeLight light = std::get<tmt::TubeLight>(value.light);
 
-            ImGui::DragFloat("Source Radius", &light.source_radius, 0.025f, 0.0f, light.attenuation_distance, "%.3f u");
-            tooltip("Radius of the tube light source. (larger means softer shadows)");
             ImGui::DragFloat("Attenuation Distance", &light.attenuation_distance, 0.1f, light.source_radius, 100.0f, "%.3f u");
-            tooltip("Distance at which the light influence will be zero.");
+            tooltip("Attenuation Distance", "Distance at which the light influence will be zero.");
+            ImGui::DragFloat("Source Radius", &light.source_radius, 0.025f, 0.0f, light.attenuation_distance, "%.3f u");
+            tooltip("Source Radius", "Radius of the tube light source. (larger means softer shadows)");
 
-            ImGui::DragFloat("Luminous Flux", &light.luminous_flux, 1.0f, 0.0f, 10000.0f, "%.3f lm");
-            tooltip("Luminous flux of the tube light.");
+            ImGui::DragFloat("Power", &light.luminous_flux, 1.0f, 0.0f, 10000.0f, "%.3f lm");
+            tooltip("Power (Luminous flux)", "Intensity of the light as luminous flux.");
 
             value.light = light;
             break;
@@ -116,13 +118,21 @@ void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Light& value, ImSettings
     ImGui::Separator();
 
     /* Shared parameters */
-    ImGui::DragFloat3("Color (ACEScg)", &value.color.x, 0.01f, 0.0f, 1.0f);
-    tooltip("Color of the light emitted. (in ACEScg, multiplied together with temperature)");
-    ImGui::DragFloat("Temperature", &value.temperature, 10.0f, 1000.0f, 16000.0f, "%.3f K");
-    tooltip("Temperature of the light emitted. (in kelvin, default: 6500k whitepoint)");
+    bool use_temp = value.temperature >= 0.0f;
+    if (ImGui::Checkbox("##UseTemperature", &use_temp)) {
+        value.temperature = use_temp ? abs(value.temperature) : -abs(value.temperature);
+    }
+    ImGui::SameLine();
+    float temperature = abs(value.temperature);
+    if (ImGui::DragFloat("Temperature", &temperature, 10.0f, 1000.0f, 16000.0f, "%.3f K", use_temp ? ImGuiSliderFlags_None : ImGuiSliderFlags_ReadOnly)) {
+        value.temperature = temperature;
+    }
+    tooltip("Temperature", "Temperature of the light emitted in kelvin.");
+    ImGui::ColorWheel3("Color", &value.color.x, ImGuiColorWheelFlags_CustomColorSpace);
+    tooltip("Color", "Color of the light emitted in ACEScg, multiplied together with temperature.");
 
     /* Calculate the non-linear SRGB (Rec.709) color of the light source */
-    const glm::vec3 linear_srgb = tmt::cs::acescg_to_r709(value.color * tmt::cs::black_body_acescg(value.temperature));
+    const glm::vec3 linear_srgb = tmt::cs::acescg_to_r709(value.color * (use_temp ? tmt::cs::black_body_acescg(value.temperature) : glm::vec3(1.0f)));
     const glm::vec3 nonlinear_srgb = tmt::cs::delinearize(linear_srgb);
     const ImU32 color = ImGui::ColorConvertFloat4ToU32(ImVec4(nonlinear_srgb.x, nonlinear_srgb.y, nonlinear_srgb.z, 1.0f));
 

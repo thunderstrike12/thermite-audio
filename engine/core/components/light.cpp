@@ -46,7 +46,7 @@ glm::vec3 Light::calculate_luminance(const glm::vec3 scale) const {
         }
     }
 
-    return color * temperature_acescg * luminance;
+    return (temperature >= 0.0f) ? (color * temperature_acescg * luminance) : (color * luminance);
 }
 
 }  // namespace tmt
