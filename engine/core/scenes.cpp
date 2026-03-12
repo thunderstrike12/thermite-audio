@@ -83,6 +83,7 @@ void Scenes::swap_scenes() {
 
     OnPostLoadScene::dispatch();
     active_scene->on_post_load();
+    engine.input.clear_input_state();
 
     if (was_playing) {
         engine.ecs.on_game_start();

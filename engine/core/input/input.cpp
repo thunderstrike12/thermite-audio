@@ -502,6 +502,7 @@ void Input::clear_input_state() {
     curr_keys.resize(number_keys, false);
     prev_keys.resize(number_keys, false);
     prev_mouse_buttons = 0;
+    mouse_buttons = 0;
     mouse_dx = 0.0f;
     mouse_dy = 0.0f;
 }
