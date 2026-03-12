@@ -18,6 +18,7 @@ class Salvo;
 class Scenes;
 class GameComponentRegistry;
 class Polyline;
+class PlayerData;
 
 class Engine {
    public:
@@ -58,6 +59,7 @@ class Engine {
     Scenes& scenes;
     GameComponentRegistry& component_registry;
     Polyline& polyline;
+    PlayerData& player_data;
 
     GameController game_controller;
 
@@ -86,6 +88,9 @@ class Engine {
     void pause_game();
     void resume_game();
     void end_game();
+
+    void setup_signals();
+    static void on_crash_signal(int signal);
 };
 
 /* Singleton */

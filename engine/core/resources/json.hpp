@@ -14,6 +14,7 @@ class Json : public FileResource {
     inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS { ".json" };
 
     const nlohmann::ordered_json& get_parsed_json() const { return parsed_json; }
+    nlohmann::ordered_json& get_parsed_json() { return parsed_json; }
 
    private:
     nlohmann::ordered_json parsed_json;

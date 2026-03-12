@@ -10,6 +10,11 @@ bool Json::load() {
     }
 
     const std::string file_content = IO::read_text_file(file_location);
+    if (file_content.empty()) {
+        Log::error(Log::Scope::ENGINE, "[Json] File is empty: {}", file_location);
+        return false;
+    }
+
     nlohmann::ordered_json temp_json;
     try {
         temp_json = nlohmann::json::parse(file_content, nullptr, true);

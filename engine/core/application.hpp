@@ -23,6 +23,7 @@ struct CommandLineArgs {
 
 struct ApplicationSpecs {
     std::string name = "Thermite App";
+    std::string organization = "Thermite";  // For user data folder: %APPDATA%/organization/name/
     CommandLineArgs command_args;
     std::filesystem::path log_file;
     const int test = 0;

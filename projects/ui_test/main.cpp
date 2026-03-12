@@ -18,6 +18,7 @@
 #include "engine/core/renderer/voxel_object.hpp"
 #include "engine/systems/gameplay/game_component.hpp"
 #include "engine/core/components/button.hpp"
+#include "engine/tools/player_data.hpp"
 
 class Game : public tmt::Application {
    public:
@@ -62,6 +63,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     // clang-format off
     tmt::ApplicationSpecs specs {
         .name = "Example Game",
+        .organization = "Thermite",
         .command_args = args,
         .log_file = "example_game_logs.txt"
     };
@@ -88,6 +90,9 @@ void DragonScene::on_start() {
         auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
         transform.set_world_position(glm::vec3(0.0f, 0.25f, -120.0f));
     }
+
+    auto& health = tmt::engine.player_data.get<int>("Health");
+    health = 42;
 }
 
 void DragonScene::on_update(const tmt::FrameData& /*time*/) {}

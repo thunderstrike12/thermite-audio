@@ -56,6 +56,7 @@
 #include "editor/windows/brush.hpp"
 #include "editor/windows/editor_settings.hpp"
 #include "editor/windows/ui.hpp"
+#include "editor/windows/player_data.hpp"
 
 /* Singleton */
 tmt::Editor tmt::editor;
@@ -113,6 +114,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     windows[Mode::SCENE].add<EditorSettingsWindow>();
     windows[Mode::SCENE].add<BuildPackager>();
     windows[Mode::SCENE].add<UIEditor>();
+    windows[Mode::SCENE].add<PlayerDataWindow>();
 
     engine.scenes.register_scene<VoxelEditScene>();
     windows[Mode::VOXEL].add<ModelViewer>();

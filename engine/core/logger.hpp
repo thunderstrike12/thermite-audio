@@ -4,8 +4,6 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks-inl.h"
 
-#include <csignal>
-
 namespace tmt {
 
 class Log {
@@ -41,14 +39,6 @@ class Log {
                 logger.second->sinks().push_back(file_sink);
             }
         }
-
-        // Set signal functions to be called when certain crashes happen, this is to flush the loggers into the log file.
-        (void)std::signal(SIGABRT, &on_signal);
-        (void)std::signal(SIGFPE, &on_signal);
-        (void)std::signal(SIGILL, &on_signal);
-        (void)std::signal(SIGINT, &on_signal);
-        (void)std::signal(SIGSEGV, &on_signal);
-        (void)std::signal(SIGTERM, &on_signal);
     }
 
     enum class Scope {
@@ -118,10 +108,6 @@ class Log {
 
    private:
     friend class Console;
-    static void on_signal(const int signal) {
-        error("Flushing logs due to signal: {}", signal);
-        flush();
-    }
 
     static inline std::unordered_map<Scope, std::shared_ptr<spdlog::logger>> loggers;
 };

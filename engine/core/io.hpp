@@ -13,7 +13,7 @@ using TimeStamp = std::filesystem::file_time_type;
 
 class IO {
    public:
-    enum class Location : uint8_t { PROJECT, ENGINE, EDITOR };
+    enum class Location : uint8_t { PROJECT, ENGINE, EDITOR, USERDATA };
 
     struct FileLocation {
         IO::Location sub_location = IO::Location::PROJECT;
@@ -39,7 +39,8 @@ class IO {
     };
 
     // Resolve IO::FileLocation mounts automatically
-    static void init_mounts();
+    // org and app_name are used for USERDATA location (e.g., %APPDATA%/org/app_name/)
+    static void init_mounts(const std::string& org = "", const std::string& app_name = "");
 
     // Write arbitrary data, returns success
     static bool write_file(const FileLocation& file_location, const char* data, size_t size);
@@ -71,7 +72,7 @@ class IO {
     [[nodiscard]] static FileLocation path_to_file_location(const std::filesystem::path& path);
 
    private:
-    static std::filesystem::path sub_locations[3];
+    static std::filesystem::path sub_locations[4];
 
     static bool stream_open(std::fstream& file_stream, const std::filesystem::path& absolute, std::ios::openmode open_mode);
     static bool create_directories(const std::filesystem::path& absolute);

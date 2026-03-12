@@ -11,10 +11,11 @@
     #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
+#include <shlobj.h>
 
 namespace tmt {
 
-std::filesystem::path IO::sub_locations[3] {};
+std::filesystem::path IO::sub_locations[4] {};
 const char* project_relative_dir;
 
 extern "C" const char* TMT_PROJECT_RELATIVE_ASSETS_DIR;
@@ -49,10 +50,11 @@ std::filesystem::path IO::FileLocation::get_relative_path() const {
     return sub_path / relative_path;
 }
 
-void IO::init_mounts() {
+void IO::init_mounts(const std::string& org, const std::string& app_name) {
     // 0 : PROJECT
     // 1 : ENGINE
     // 2 : EDITOR
+    // 3 : USERDATA
 
     auto exe_path = get_exec_path();
     auto pair = find_root(exe_path);
@@ -68,6 +70,21 @@ void IO::init_mounts() {
         sub_locations[0] = root_path / TMT_PROJECT_RELATIVE_ASSETS_DIR;
         sub_locations[1] = root_path / "engine/assets";
         sub_locations[2] = root_path / "editor/assets";
+    }
+
+    // USERDATA - Windows AppData/Roaming
+    if (!org.empty() && !app_name.empty()) {
+        wchar_t* appdata_path = nullptr;
+        if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &appdata_path))) {
+            sub_locations[3] = std::filesystem::path(appdata_path) / org / app_name;
+            CoTaskMemFree(appdata_path);
+        } else {
+            tmt::Log::warn(tmt::Log::Scope::ENGINE, "[IO] Failed to get AppData path, falling back to project directory for USERDATA");
+            sub_locations[3] = sub_locations[0];
+        }
+    } else {
+        // Fallback to project location if no names provided
+        sub_locations[3] = sub_locations[0];
     }
 }
 
