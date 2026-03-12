@@ -19,6 +19,8 @@ namespace tmt {
 struct GpuView {
     /* World-space to clip-space transformation matrix. */
     glm::mat4 world_to_clip = glm::mat4(1.f);
+    /* Prev frame world-space to clip-space transformation matrix. */
+    glm::mat4 prev_world_to_clip = glm::mat4(1.f);
     /* Clip-space to world-space transformation matrix. */
     glm::mat4 clip_to_world = glm::mat4(1.f);
     /* Origin of the view in world-space. */
@@ -33,6 +35,10 @@ struct GpuView {
     glm::uint shading_rate_di = 0u;
     /* Shading rate GI. (0 = 1/1, 1 = 1/2, 2 = 1/4) */
     glm::uint shading_rate_gi = 2u;
+    /* Current frame jitter offset */
+    glm::vec2 jitter {};
+    /* Prev frame jitter offset */
+    glm::vec2 prev_jitter {};
 };
 
 /* Screen buffer resource. */
@@ -84,10 +90,13 @@ struct RenderView {
     ResourceRef<Texture2D> blue_noise1d {};
 
     /* Screen buffers */
-    ScreenBuffer vbuffer {}; /* Visibility buffer (WxH, 6->8 bytes) */
-    ScreenBuffer dbuffer {}; /* Depth buffer (WxH, 4 bytes) */
-    ScreenBuffer lbuffer {}; /* Raw luminance buffer (WxH, 4 bytes) */
-    ScreenBuffer nbuffer {}; /* Denoised luminance buffer (WxH, 4 bytes) */
+    ScreenBuffer vbuffer {};  /* Visibility buffer (WxH, 6->8 bytes) */
+    ScreenBuffer dbuffer {};  /* Depth buffer (WxH, 4 bytes) */
+    ScreenBuffer lbuffer {};  /* Raw luminance buffer (WxH, 4 bytes) */
+    ScreenBuffer nbuffer {};  /* Denoised luminance buffer (WxH, 4 bytes) */
+    ScreenBuffer hbuffer1 {}; /* Accumulated (History) frame buffer (WxH, 8 bytes) */
+    ScreenBuffer hbuffer2 {}; /* Accumulated (History) frame buffer (WxH, 8 bytes) */
+    ScreenBuffer mbuffer {};  /* Motion Vector buffer (WxH, 4 bytes) */
 
     /* Macrofacet buffers */
     Buffer macrofacet_cache {}; /* Macrofacet hash cache (10.000.000, 48 bytes) */
@@ -103,6 +112,10 @@ struct RenderView {
     /* (Final) Render target */
     RenderTarget render_target {};
     glm::uint frame_counter = 0u;
+
+    /* Prev Frame */
+    glm::mat4 prev_world_to_clip = glm::mat4(1.f);
+    glm::vec2 prev_jitter { 0.0f };
 
    private:
     ShadingRate shading_rate_di = ShadingRate::FULL_RATE;

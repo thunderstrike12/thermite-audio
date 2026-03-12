@@ -291,20 +291,20 @@
         },
         "20": {
             "local_position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 11.028520584106445
+                "x": -17.194856643676758,
+                "y": -14.613883972167969,
+                "z": 86.97493743896484
             },
             "local_rotation": {
-                "w": 1.0,
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
+                "w": 0.6810653209686279,
+                "x": -0.6810654997825623,
+                "y": 0.1901313066482544,
+                "z": -0.190131276845932
             },
             "local_scale": {
-                "x": 1.0000001192092896,
-                "y": 0.999999463558197,
-                "z": 1.0
+                "x": 0.9999998211860657,
+                "y": 0.9998719692230225,
+                "z": 0.999872088432312
             },
             "parent": 4294967295,
             "children": []
@@ -642,127 +642,46 @@
     },
     "Voxel Body": {
         "1048577": {
-            "resource": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_3.svh"
-                },
-                "constructor_args": [
-                    "00000000-0000-0000-0000-000000000000"
-                ]
-            },
             "type": "STATIC",
             "gravity": 0.0,
             "layer": 0
         },
         "1048578": {
-            "resource": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_3.svh"
-                },
-                "constructor_args": [
-                    "00000000-0000-0000-0000-000000000000"
-                ]
-            },
             "type": "STATIC",
             "gravity": 0.0,
             "layer": 0
         },
         "1048579": {
-            "resource": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_3.svh"
-                },
-                "constructor_args": [
-                    "00000000-0000-0000-0000-000000000000"
-                ]
-            },
             "type": "STATIC",
             "gravity": 0.0,
             "layer": 0
         },
         "1048580": {
-            "resource": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.svh"
-                },
-                "constructor_args": [
-                    "00000000-0000-0000-0000-000000000000"
-                ]
-            },
             "type": "STATIC",
             "gravity": 0.0,
             "layer": 0
         },
         "1048581": {
-            "resource": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.svh"
-                },
-                "constructor_args": [
-                    "00000000-0000-0000-0000-000000000000"
-                ]
-            },
             "type": "STATIC",
             "gravity": 0.0,
             "layer": 0
         },
         "1048582": {
-            "resource": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.svh"
-                },
-                "constructor_args": [
-                    "00000000-0000-0000-0000-000000000000"
-                ]
-            },
             "type": "STATIC",
             "gravity": 0.0,
             "layer": 0
         },
         "1048583": {
-            "resource": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.svh"
-                },
-                "constructor_args": [
-                    "00000000-0000-0000-0000-000000000000"
-                ]
-            },
             "type": "STATIC",
             "gravity": 0.0,
             "layer": 0
         },
         "1048584": {
-            "resource": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.svh"
-                },
-                "constructor_args": [
-                    "00000000-0000-0000-0000-000000000000"
-                ]
-            },
             "type": "STATIC",
             "gravity": 0.0,
             "layer": 0
         },
         "1048585": {
-            "resource": {
-                "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "test_asteroid_7.svh"
-                },
-                "constructor_args": [
-                    "00000000-0000-0000-0000-000000000000"
-                ]
-            },
             "type": "STATIC",
             "gravity": 0.0,
             "layer": 0
@@ -923,7 +842,7 @@
                         "z": 0.0
                     },
                     "cone_angle": 90.0,
-                    "spawn_count": 8,
+                    "spawn_count": 32,
                     "spawn_interval": 0.0,
                     "start_speed": {
                         "min": 1.0,

@@ -53,6 +53,9 @@ void SceneView::init() {
     object_data = bank.create_buffer("Object Data Buffer", s, MAX_VOXEL_OBJECTS, sizeof(GpuVoxelObject)).expect("failed to create object data buffer.");
     lights_data = bank.create_buffer("Lights Data Buffer", s, MAX_LIGHTS, sizeof(UniversalLightDesc)).expect("failed to create lights data buffer.");
     scene_view = bank.create_buffer("Scene View Buffer", c, sizeof(GpuSceneView)).expect("failed to create scene view buffer.");
+
+    /* Subscribe to EnTT */
+    engine.ecs.get_registry().on_destroy<entt::entity>().connect<&SceneView::on_entity_destroyed>(this);
 }
 
 void SceneView::update(RenderGraph& render_graph, const RenderView& render_view) {
@@ -126,6 +129,8 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
 
         /* Shared data */
         cpu_object.local_to_world = gpu_object.local_to_world = transform.get_world_matrix();
+        /* Check if the entity had a transform last frame, if not use current frame matrix */
+        gpu_object.prev_local_to_world = prev_transforms.contains(entity) ? prev_transforms.at(entity) : gpu_object.local_to_world;
         cpu_object.world_to_local = gpu_object.world_to_local = glm::inverse(cpu_object.local_to_world);
         cpu_object.size = gpu_object.size = renderer.resource->size;
         cpu_object.rcp_tree_width = gpu_object.rcp_tree_width = 1.0f / powf(4.0f, (float)renderer.resource->blas->depth);
@@ -144,6 +149,9 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
 
         /* Save the entity id */
         entities.push_back(entity);
+
+        /* Insert Entity Transform */
+        prev_transforms[entity] = gpu_object.local_to_world;
     }
 
     /* Build a BVH over the scene */
@@ -238,6 +246,10 @@ void SceneView::update_lights(RenderGraph& render_graph, const RenderView&) {
     /* Upload the light buffers */
     render_graph.upload_buffer(lights_data, gpu_lights.data(), 0u, gpu_lights.size() * sizeof(UniversalLightDesc));
     render_graph.upload_buffer(scene_view, &gpu_view, 0u, sizeof(GpuSceneView));
+}
+
+void SceneView::on_entity_destroyed(entt::registry&, entt::entity entity) {
+    prev_transforms.erase(entity);
 }
 
 }  // namespace tmt

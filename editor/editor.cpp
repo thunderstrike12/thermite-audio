@@ -215,7 +215,8 @@ void Editor::main_menu_bar() {
 
         if (ImGui::BeginMenu("Renderer")) {
             /* List of display mode labels */
-            static const std::vector<std::string> DISPLAY_MODE_LABELS { "Default", "Steps (0..128)", "Visibility", "Depth (0..100)", "Normals", "Albedo", "Illuminance", "Cache" };
+            static const std::vector<std::string> DISPLAY_MODE_LABELS { "Default", "Steps (0..128)", "Visibility", "Depth (0..100)", "Normals",
+                                                                        "Albedo",  "Illuminance",    "Cache",      "Motion Vectors" };
 
             const uint32_t display_mode_index = (uint32_t)magic_enum::enum_index<DisplayMode>(engine.renderer.display_mode).value_or(0u);
             const std::string& display_mode = DISPLAY_MODE_LABELS[display_mode_index];
@@ -230,6 +231,11 @@ void Editor::main_menu_bar() {
                     }
                 }
                 ImGui::EndMenu();
+            }
+            if (engine.renderer.display_mode == DisplayMode::DEFAULT || engine.renderer.display_mode == DisplayMode::MOTIONVECTORS) {
+                engine.renderer.enable_taa = true;
+            } else {
+                engine.renderer.enable_taa = false;
             }
 
             /* List of shading rate labels */
@@ -253,6 +259,10 @@ void Editor::main_menu_bar() {
 
             if (ImGui::MenuItem("Enable UI Pipeline", nullptr, engine.renderer.ui_pipeline.render_ui_pipeline)) {
                 engine.renderer.ui_pipeline.render_ui_pipeline = !engine.renderer.ui_pipeline.render_ui_pipeline;
+            }
+
+            if (ImGui::MenuItem("Toggle TAA", nullptr, engine.renderer.enable_taa)) {
+                engine.renderer.enable_taa = !engine.renderer.enable_taa;
             }
 
             ImGui::EndMenu();

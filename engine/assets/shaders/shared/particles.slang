@@ -10,6 +10,7 @@ public struct BillboardVertexOutput {
     public uint32_t current_frame : CURRFRAME0;
     public uint32_t flipbook_frames : FRAMES0;
     public float dither_scale : DITHERSCALE0;
+    public float2 motion_vec : MOTIONVEC;
 };
 
 public struct ParticleEffect {
@@ -80,6 +81,8 @@ public struct Particle {
     public uint32_t flipbook_frames;
     public float anim_speed;
     public float dither_scale;
+
+    public float3 prev_pos;
 };
 
 public struct Counters {

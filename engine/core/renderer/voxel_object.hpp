@@ -15,6 +15,8 @@ struct alignas(16) GpuVoxelObject {
     glm::mat4 world_to_local {};
     /* Local-space to world-space transformation matrix. */
     glm::mat4 local_to_world {};
+    /* Previous frame local-space to world-space transformation matrix. */
+    glm::mat4 prev_local_to_world {};
 
     /* Size of the object in voxels. */
     glm::uvec3 size {};

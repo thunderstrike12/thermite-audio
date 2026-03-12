@@ -38,6 +38,21 @@ BillboardVertexOutput main(VertexInput input, uint32_t instance_id: SV_InstanceI
     BillboardVertexOutput output;
     /* 6. Convert to clip space */
     output.pos = float4(ndc_pos * clip_pos.w, clip_pos.z, clip_pos.w);
+
+    /* Motion Vectors */
+    float2 curr_ndc = clip_pos.xy / clip_pos.w;
+
+    const float4 prev_clip_pos = mul(gpu_view.prev_world_to_clip, float4(particle.prev_pos, 1.0f));
+    float2 prev_ndc = prev_clip_pos.xy / prev_clip_pos.w;
+
+    curr_ndc -= gpu_view.jitter;
+    prev_ndc -= gpu_view.prev_jitter;
+
+    output.motion_vec = (prev_ndc - curr_ndc) * float2(0.5f, 0.5f);
+
+    if (length(output.motion_vec) < 1e-5f)
+        output.motion_vec = float2(0.0f, 0.0f);
+
     output.uv = input.uv;
     output.tex_index = particle.tex_index;
     output.opacity = particle.opacity;

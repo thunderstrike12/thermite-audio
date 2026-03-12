@@ -19,9 +19,7 @@ Texture2D<uint2> vbuffer;
 /* Macrofacet illuminance cache buffer. */
 RWStructuredBuffer<cache::Slot> macrofacet_cache;
 /* Luminance buffer. */
-Texture2D<float3> lbuffer;
-/* Render target. */
-RWTexture2D<float4> render_target;
+RWTexture2D<float3> lbuffer;
 
 [shader("compute")]
 [numthreads(16, 8, 1)]
@@ -43,7 +41,7 @@ void main(int2 thread_id: SV_DispatchThreadID) {
             luminance = bindless::texture_sampled<Texture2D<float4>>(scene_view.envmap_full_handle).SampleLevel(envmap_sampler, uv, 0).rgb;
         } else {
             /* Default environment color */
-            render_target[thread_id] = float4(0.247f, 0.247f, 0.247f, 1.0f);
+            lbuffer[thread_id] = float3(0.247f, 0.247f, 0.247f);
             return;
         }
     } else {
@@ -61,16 +59,5 @@ void main(int2 thread_id: SV_DispatchThreadID) {
         }
     }
 
-    /* Convert from ACEScg to r709 */
-    luminance = cs::acescg_to_r709(luminance);
-
-    /* Apply AGX tonemapping */
-    luminance = cs::agx(luminance);
-    luminance = cs::agx_look(luminance);
-    luminance = cs::agx_eotf(luminance);
-
-    /* Output device transform */
-    luminance = cs::delinearize(luminance);
-
-    render_target[thread_id] = float4(luminance, 1.0f);
+    lbuffer[thread_id] = luminance;
 }

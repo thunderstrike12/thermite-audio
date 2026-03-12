@@ -97,6 +97,9 @@ struct GpuParticle {
     float anim_speed {};
     float dither_scale {};
     float pad3 {};
+
+    glm::vec3 prev_pos {};
+    float pad4 {};
 };
 
 struct Counters {

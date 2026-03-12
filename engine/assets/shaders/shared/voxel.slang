@@ -10,6 +10,7 @@ import bindless;
 public struct VoxelObject {
     public float4x4 world_to_local;
     public float4x4 local_to_world;
+    public float4x4 prev_local_to_world;
     public uint4 size_rcp_width; /* .xyz = voxel size ~ .w = reciprocal tree width */
     public uint tree_depth; /* Depth of this objects SVT64. */
     public uint blas_handle;

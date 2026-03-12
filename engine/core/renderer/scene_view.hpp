@@ -59,6 +59,12 @@ struct SceneView {
 
     /* Collect and upload all lights in the scene. */
     void update_lights(RenderGraph& render_graph, const RenderView& render_view);
+
+    /* EnTT Subscribe Event Callback */
+    void on_entity_destroyed(entt::registry& registry, entt::entity entity);
+
+    /* Track Prev Frame Transform */
+    std::unordered_map<Entity, glm::mat4> prev_transforms {};
 };
 
 }  // namespace tmt

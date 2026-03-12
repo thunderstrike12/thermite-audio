@@ -44,6 +44,7 @@ void main(uint3 thread_id: SV_DispatchThreadID) {
 
     Particle p;
     p.pos = effect.pos;
+    p.prev_pos = effect.pos;
     p.age = 0.0f;
     p.lifetime = effect.lifetime;
     p.size = effect.start_size.min;

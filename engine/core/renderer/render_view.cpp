@@ -19,6 +19,13 @@
 
 namespace tmt {
 
+/* R2 quasi-random sequence. [0, 1) */
+static glm::vec2 r2_sequence(const uint32_t n) {
+    /* Improved coefficients from <https://www.martysmods.com/a-better-r2-sequence/> */
+    /* (1.0 - original coefficients) */
+    return glm::fract(glm::vec2((float)n) * glm::vec2(0.2451223337533073f, 0.4301597090019468f));
+}
+
 void RenderView::init() {
     VRAMBank& bank = engine.renderer.vram_bank();
 
@@ -61,13 +68,26 @@ void RenderView::init() {
         render_size.y = render_size.y >> 1;
     }
 
-    /* Create the illuminance buffer */
-    lbuffer.texture =
-        bank.create_texture("Luminance Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, render_size).expect("failed to create ibuffer texture.");
+    /* Create the luminance buffer */
+    lbuffer.texture = bank.create_texture("Luminance Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, render_size)
+                          .expect("failed to create ibuffer texture.");
     lbuffer.image = bank.create_image("Luminance Buffer Image", lbuffer.texture).expect("failed to create ibuffer image.");
     nbuffer.texture = bank.create_texture("Denoised Luminance Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, render_size)
                           .expect("failed to create nbuffer texture.");
     nbuffer.image = bank.create_image("Denoised Luminance Buffer Image", nbuffer.texture).expect("failed to create nbuffer image.");
+
+    /* History Screen Buffers */
+    hbuffer1.texture = bank.create_texture("History1 Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA16Sfloat, render_size)
+                           .expect("failed to initialize history buffer texture");
+    hbuffer1.image = bank.create_image("History1 Buffer Image", hbuffer1.texture).expect("failed to initialize history buffer image.");
+    hbuffer2.texture = bank.create_texture("History2 Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA16Sfloat, render_size)
+                           .expect("failed to initialize history buffer texture");
+    hbuffer2.image = bank.create_image("History2 Buffer Image", hbuffer2.texture).expect("failed to initialize history buffer image.");
+
+    /* Motion Vector Buffer */
+    mbuffer.texture = bank.create_texture("Motion Vector Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RG16Sfloat, render_size)
+                          .expect("failed to initialize motion vector buffer texture");
+    mbuffer.image = bank.create_image("Motion Vector Buffer Image", mbuffer.texture).expect("failed to initialize motion vector buffer image.");
 
     /* Create the macrofacet cache */
     const uint64_t cache_size = 10'000'000u; /* 480 MB */
@@ -107,21 +127,39 @@ void RenderView::update() {
 void RenderView::update_gpu_view(RenderGraph& render_graph, const Camera& camera, const Transform& transform) {
     const float aspect_ratio = (float)gpu_view.resolution.x / (float)gpu_view.resolution.y;
 
+    /* Calculate camera jitter */
+    const glm::vec2 r2 = r2_sequence(frame_counter);  // [0, 1) range
+    // offset is in [-0.5, 0.5)
+    glm::vec2 pixel_offset = { (r2.x - 0.5f) / (float)gpu_view.resolution.x, (r2.y - 0.5f) / (float)gpu_view.resolution.y };
+    // scale to ndc [-1, 1]
+    pixel_offset *= 2.0f;
+
     /* Iterate over all cameras to find an active one to use as render view */
     glm::mat4 p = glm::perspective(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
     const glm::mat4 world = transform.get_world_matrix();
+    // apply jitter
+    if (engine.renderer.enable_taa) {
+        p[2][0] += pixel_offset.x;
+        p[2][1] += pixel_offset.y;
+    }
     p[1][1] *= -1.0f;
     gpu_view.world_to_clip = p * glm::inverse(world);  // p * v
+    gpu_view.prev_world_to_clip = prev_world_to_clip;
     gpu_view.clip_to_world = glm::inverse(gpu_view.world_to_clip);
     gpu_view.origin = glm::vec4(transform.get_world_position(), 0.0f);
     gpu_view.frame_index = frame_counter;
     gpu_view.dt = engine.frame_data().delta_time;
     gpu_view.shading_rate_di = (uint32_t)shading_rate_di;
     gpu_view.shading_rate_gi = (uint32_t)shading_rate_gi;
+    gpu_view.jitter = pixel_offset;
+    gpu_view.prev_jitter = prev_jitter;
 
     /* Upload the active render view */
     render_graph.upload_buffer(render_view_buffer, &gpu_view, 0u, sizeof(GpuView));
     frame_counter++; /* Update frame counter */
+
+    prev_world_to_clip = gpu_view.world_to_clip;
+    prev_jitter = gpu_view.jitter;
 }
 
 void RenderView::deinit() {
@@ -145,6 +183,12 @@ void RenderView::deinit() {
     bank.destroy(lbuffer.texture);
     bank.destroy(nbuffer.image);
     bank.destroy(nbuffer.texture);
+    bank.destroy(hbuffer1.image);
+    bank.destroy(hbuffer1.texture);
+    bank.destroy(hbuffer2.image);
+    bank.destroy(hbuffer2.texture);
+    bank.destroy(mbuffer.image);
+    bank.destroy(mbuffer.texture);
     bank.destroy(viewport.texture);
     bank.destroy(viewport.image);
 
@@ -207,6 +251,9 @@ void RenderView::resize_textures() {
     bank.resize_texture(dbuffer.texture, view_size).expect("failed to resize depth buffer texture.");
     bank.resize_texture(lbuffer.texture, render_size).expect("failed to resize lbuffer texture.");
     bank.resize_texture(nbuffer.texture, render_size).expect("failed to resize nbuffer texture.");
+    bank.resize_texture(hbuffer1.texture, view_size).expect("failed to resize hbuffer texture.");
+    bank.resize_texture(hbuffer2.texture, view_size).expect("failed to resize hbuffer texture.");
+    bank.resize_texture(mbuffer.texture, view_size).expect("failed to resize mbuffer texture.");
 }
 
 }  // namespace tmt
