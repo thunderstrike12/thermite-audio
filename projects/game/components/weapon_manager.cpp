@@ -146,4 +146,5 @@ void game::WeaponManager::unsubscribe_weapon(WeaponType slot) {
     }
     tmt::Log::info("[WeaponManager] Unsubscribed {} (entity: {})", magic_enum::enum_name(slot), static_cast<uint32_t>(e));
     tmt::engine.ecs.get_dispatcher().sink<ShootEvent>().disconnect<&Weapon::on_shoot>(weapon);
+    tmt::engine.ecs.get_dispatcher().trigger(ReleaseShootEvent { shooting_entity });
 }

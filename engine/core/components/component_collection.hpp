@@ -233,25 +233,25 @@ struct EcsComponentTraits<T, std::enable_if_t<std::is_base_of_v<IGameComponent, 
             if (!component) continue;
 
             Entity e = static_cast<T*>(component.get())->entity;
-            if (!registry.all_of<ComponentCollection>(e)) continue;
-            auto& collection = registry.get<ComponentCollection>(e);
+            if (!registry.template all_of<ComponentCollection>(e)) continue;
+            auto& collection = registry.template get<ComponentCollection>(e);
 
             // Check includes
-            if (!(collection.has_component<Rest>() && ...)) continue;
+            if (!(collection.template has_component<Rest>() && ...)) continue;
 
             // Check excludes - game components via collection, native via registry
             bool excluded = false;
             auto check_exclude = [&]<typename E>() {
                 if constexpr (EcsComponentTraits<E>::IS_GAME_COMPONENT) {
-                    if (collection.has_component<E>()) excluded = true;
+                    if (collection.template has_component<E>()) excluded = true;
                 } else {
-                    if (registry.all_of<E>(e)) excluded = true;
+                    if (registry.template all_of<E>(e)) excluded = true;
                 }
             };
             (check_exclude.template operator()<Excludes>(), ...);
             if (excluded) continue;
 
-            result.emplace_back(e, static_cast<T&>(*component), collection.get_component<Rest>()...);
+            result.emplace_back(e, static_cast<T&>(*component), collection.template get_component<Rest>()...);
         }
         return result;
     }
