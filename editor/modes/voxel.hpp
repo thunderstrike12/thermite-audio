@@ -28,6 +28,7 @@ class VoxelMode : public IEditorMode {
     DisplayMode cached_display_mode;
 
     std::vector<char> edit_data;
+    std::map<UUID, Entity> old_entity_mapping;
 };
 
 }  // namespace tmt

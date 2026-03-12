@@ -84,72 +84,101 @@ void VoxelEditDiff::redo() {
 }
 
 VoxelNodeDiff::VoxelNodeDiff(const Entity node_entity, const bool is_add) : is_add { is_add } {
-    recurse_parse_node_data(node_entity);
+    UUID parent_uuid = NULL_UUID;
 
-    entity_json = Serializer::serialize(node_entity, engine.ecs);
+    const Entity parent_node = engine.ecs.get_component<Transform>(node_entity).get_parent();
+    if (parent_node != entt::null) parent_uuid = engine.ecs.get_component<NodeHierarchy::NodeUUID>(parent_node).uuid;
 
-    for (const NodeData& data : node_data) {
-        if (data.model) engine.ecs.add_component<VoxelRenderer>(data.entity_id).resource = data.model;
+    top_nodes_data.push_back(recurse_parse_node_data(node_entity, parent_uuid));
+}
+
+VoxelNodeDiff::VoxelNodeDiff(const std::span<const Entity>& node_entities, const bool is_add) : is_add { is_add } {
+    for (const Entity node_entity : node_entities) {
+        UUID parent_uuid = NULL_UUID;
+
+        const Entity parent_node = engine.ecs.get_component<Transform>(node_entity).get_parent();
+        if (parent_node != entt::null) parent_uuid = engine.ecs.get_component<NodeHierarchy::NodeUUID>(parent_node).uuid;
+
+        top_nodes_data.push_back(recurse_parse_node_data(node_entity, parent_uuid));
     }
 }
 
 void VoxelNodeDiff::undo() {
+    std::vector<Entity>& root_entities = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().root_entities;
+
     if (is_add) {
-        engine.ecs.destroy_entity(node_data[0].entity_id);
+        for (const NodeData& top_node_data : top_nodes_data) {
+            const Entity entity = get_node_from_uuid(top_node_data.uuid);
+            std::erase(root_entities, entity);  // Also erase the entity from the vector if it's a root entity, since we are deleting it.
+
+            engine.ecs.destroy_entity(entity);
+        }
     } else {
-        Entity root_entity;
-        Serializer::deserialize(entity_json, root_entity, engine.ecs);
-
-        const Transform& transform = engine.ecs.get_component<Transform>(root_entity);
-        if (!transform.has_parent()) editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().root_entities.push_back(root_entity);
-
-        for (const NodeData& data : node_data) {
-            engine.ecs.add_component<NodeHierarchy::NodeUUID>(data.entity_id).uuid = data.uuid;
-
-            if (data.model) {
-                VoxelRenderer& renderer = engine.ecs.add_component<VoxelRenderer>(data.entity_id);
-                renderer.resource = data.model;
-            }
+        for (const NodeData& top_node_data : top_nodes_data) {
+            recurse_build_node_entities(top_node_data, root_entities);
         }
     }
 }
 
 void VoxelNodeDiff::redo() {
+    std::vector<Entity>& root_entities = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().root_entities;
+
     if (!is_add) {
-        engine.ecs.destroy_entity(node_data[0].entity_id);
+        for (const NodeData& top_node_data : top_nodes_data) {
+            const Entity entity = get_node_from_uuid(top_node_data.uuid);
+            std::erase(root_entities, entity);  // Also erase the entity from the vector if it's a root entity, since we are deleting it.
+
+            engine.ecs.destroy_entity(entity);
+        }
     } else {
-        Entity root_entity;
-        Serializer::deserialize(entity_json, root_entity, engine.ecs);
-
-        const Transform& transform = engine.ecs.get_component<Transform>(root_entity);
-        if (!transform.has_parent()) editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().root_entities.push_back(root_entity);
-
-        for (const NodeData& data : node_data) {
-            engine.ecs.add_component<NodeHierarchy::NodeUUID>(data.entity_id).uuid = data.uuid;
-
-            if (data.model) {
-                VoxelRenderer& renderer = engine.ecs.add_component<VoxelRenderer>(data.entity_id);
-                renderer.resource = data.model;
-            }
+        for (const NodeData& top_node_data : top_nodes_data) {
+            recurse_build_node_entities(top_node_data, root_entities);
         }
     }
 }
 
-void VoxelNodeDiff::recurse_parse_node_data(Entity entity) {
-    const auto& node_uuid = engine.ecs.get_component<NodeHierarchy::NodeUUID>(entity);
+void VoxelNodeDiff::recurse_build_node_entities(const NodeData& data, std::vector<Entity>& root_entities) {
+    const Entity entity = engine.ecs.create_entity(data.name, data.old_id);
+
+    auto&& [transform, uuid] = engine.ecs.add_or_get_component<Transform, NodeHierarchy::NodeUUID>(entity);
+    uuid.uuid = data.uuid;
+
+    if (data.parent_uuid == NULL_UUID)
+        root_entities.push_back(entity);  // If the entity doesn't have parents it's a root entity, and we have to add it to the vector.
+    else
+        transform.set_parent(get_node_from_uuid(data.parent_uuid));
+
+    transform.set_world_matrix(data.world_matrix);
+
+    if (data.model) {
+        VoxelRenderer& renderer = engine.ecs.add_component<VoxelRenderer>(entity);
+        renderer.resource = data.model;
+    }
+
+    for (const NodeData& child_node : data.child_nodes) {
+        recurse_build_node_entities(child_node, root_entities);
+    }
+}
+
+VoxelNodeDiff::NodeData VoxelNodeDiff::recurse_parse_node_data(const Entity entity, const UUID& parent_uuid) {
+    auto&& [name, transform, uuid] = engine.ecs.get_component<Name, Transform, NodeHierarchy::NodeUUID>(entity);
+
+    NodeData data {
+        .old_id = entity,
+        .name = name.name,
+        .uuid = uuid.uuid,
+        .world_matrix = transform.get_world_matrix(),
+        .parent_uuid = parent_uuid,
+    };
+
     const VoxelRenderer* renderer = engine.ecs.try_get_component<VoxelRenderer>(entity);
+    if (renderer != nullptr) data.model = renderer->resource;
 
-    if (renderer != nullptr) {
-        node_data.emplace_back(entity, node_uuid.uuid, renderer->resource);
-        engine.ecs.remove_component<VoxelRenderer>(entity);  // We remove the renderer component here only to add it back later (so it won't be serialized).
-    } else {
-        node_data.emplace_back(entity, node_uuid.uuid);
-    }
-
-    const Transform& transform = engine.ecs.get_component<Transform>(entity);
     for (const Entity child : transform.get_children()) {
-        recurse_parse_node_data(child);
+        data.child_nodes.push_back(recurse_parse_node_data(child, uuid.uuid));
     }
+
+    return data;
 }
 
 void GridResizeDiff::undo() {

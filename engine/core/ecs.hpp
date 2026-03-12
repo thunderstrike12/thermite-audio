@@ -211,7 +211,7 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
         if constexpr (COUNT == 1) {
             return EcsComponentTraits<Component...>::add_or_get(registry, entity);
         } else {
-            return std::make_tuple(add_or_get_component<Component>(entity)...);
+            return std::forward_as_tuple(add_or_get_component<Component>(entity)...);
         }
     }
 

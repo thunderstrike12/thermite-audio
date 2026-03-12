@@ -44,6 +44,7 @@ class VoxelEditDiff : public IUndoRedo {
 class VoxelNodeDiff : public IUndoRedo {
    public:
     VoxelNodeDiff(Entity node_entity, bool is_add);
+    VoxelNodeDiff(const std::span<const Entity>& node_entities, bool is_add);
 
     // Inherited via IUndoRedo
     void undo() override;
@@ -52,17 +53,23 @@ class VoxelNodeDiff : public IUndoRedo {
 
    private:
     struct NodeData {
-        Entity entity_id;
+        Entity old_id { entt::null };
+
+        std::string name;
         UUID uuid { NULL_UUID };
+        glm::mat4 world_matrix {};
+        UUID parent_uuid { NULL_UUID };
+
         ResourceRef<VoxelVolume> model { {}, nullptr };
+        std::vector<NodeData> child_nodes;
     };
 
-    void recurse_parse_node_data(Entity entity);
+    static void recurse_build_node_entities(const NodeData& data, std::vector<Entity>& root_entities);
+    static NodeData recurse_parse_node_data(Entity entity, const UUID& parent_uuid);
 
     bool is_add { false };
 
-    json entity_json;
-    std::vector<NodeData> node_data;
+    std::vector<NodeData> top_nodes_data;
 };
 
 class GridResizeDiff : public IUndoRedo {

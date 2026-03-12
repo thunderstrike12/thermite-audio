@@ -55,7 +55,10 @@ void VoxelMode::on_switch_to(const std::any& meta_data) {
     } else if (!edit_data.empty()) {
         std::vector<VoxelSceneNode> root_nodes = decode_svh(edit_data);
 
-        editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().build_scene(root_nodes);
+        // Use the old entity IDs for the voxel nodes to build the scene if there was a file open in the voxel editor previously, this is to avoid issues with the undo/redo system not finding
+        // the correct entities.
+        editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().build_scene(root_nodes, false, old_entity_mapping);
+        old_entity_mapping.clear();
 
         engine.renderer.get_debug_camera() = cached_editor_camera;
         engine.renderer.get_debug_transform() = cached_editor_transform;
@@ -71,6 +74,12 @@ void VoxelMode::on_switch_to(const std::any& meta_data) {
 void VoxelMode::on_switch_away() {
     NodeHierarchy& node_hierarchy = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>();
     edit_data = node_hierarchy.encode_voxel_scene();
+
+    // Save the old entity IDs of the nodes, this way we can restore them later and avoid issues with the undo/redo system not finding the right entities.
+    const entt::basic_group node_group = engine.ecs.group<NodeHierarchy::NodeUUID>();
+    for (const auto&& [entity, uuid] : node_group.each()) {
+        old_entity_mapping.emplace(uuid.uuid, entity);
+    }
 
     cached_editor_camera = engine.renderer.get_debug_camera();
     cached_editor_transform = engine.renderer.get_debug_transform();
