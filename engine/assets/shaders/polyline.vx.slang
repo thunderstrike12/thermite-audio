@@ -101,7 +101,7 @@ VertexOut main(VertexIn input, uint vertex_id: SV_VertexID) {
 
     /* Transform the vertex back into clip-space */
     const float2 point_uv = point_pixel / resolution;
-    const float2 point_ndc = point_uv * 2.0f - 1.0f;
+    const float2 point_ndc = (point_uv * 2.0f - 1.0f) - render_view.jitter;
     const float4 point_clip = float4(clip_zw.y * point_ndc, line_depth, clip_zw.y);
     return VertexOut(point_clip, line_color);
 }

@@ -138,10 +138,11 @@ void RenderView::update_gpu_view(RenderGraph& render_graph, const Camera& camera
     glm::mat4 p = glm::perspective(glm::radians(camera.fov), aspect_ratio, 0.05f, 1000.0f);
     const glm::mat4 world = transform.get_world_matrix();
     // apply jitter
-    if (engine.renderer.enable_taa) {
-        p[2][0] += pixel_offset.x;
-        p[2][1] += pixel_offset.y;
+    if (!engine.renderer.enable_taa) {
+        pixel_offset = { 0.0f, 0.0f };
     }
+    p[2][0] += pixel_offset.x;
+    p[2][1] += pixel_offset.y;
     p[1][1] *= -1.0f;
     gpu_view.world_to_clip = p * glm::inverse(world);  // p * v
     gpu_view.prev_world_to_clip = prev_world_to_clip;
