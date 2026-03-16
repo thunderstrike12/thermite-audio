@@ -1,15 +1,17 @@
 ﻿#pragma once
 #include <random>
-#include "glm/fwd.hpp"
-
+#include "glm/glm.hpp"
+#include "glm/gtc/constants.hpp"
 class Random {
    public:
-    static void set_seed(uint32_t seed) { rng() = std::mt19937(seed); }
+    static void set_seed(uint32_t seed) { rng().seed(seed); }
 
     static int rand_range(int min, int max) {
         std::uniform_int_distribution<int> dist(min, max);
         return dist(rng());
     }
+
+    static int irand() { return rng()(); }
 
     static float rand_range(float min, float max) {
         std::uniform_real_distribution<float> dist(min, max);

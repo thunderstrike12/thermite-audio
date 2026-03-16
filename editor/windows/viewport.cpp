@@ -85,7 +85,7 @@ void tmt::Viewport::on_inspect() {
     width = size.x;
     height = size.y;
 
-    const ImVec2 image_pos = ImGui::GetCursorScreenPos();
+    viewport_pos = { ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y };
     is_focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
 
     if (height <= 0.f) return;
@@ -97,8 +97,9 @@ void tmt::Viewport::on_inspect() {
     ImGui::Image((ImTextureRef)engine.renderer.render_view.imgui_viewport, size);
     is_hovered = ImGui::IsItemHovered();
     auto imgui_mouse_pos = ImGui::GetMousePos();
-    mouse_pos.x = imgui_mouse_pos.x - image_pos.x;
-    mouse_pos.y = imgui_mouse_pos.y - image_pos.y;
+    mouse_pos.x = imgui_mouse_pos.x - viewport_pos.x;
+    mouse_pos.y = imgui_mouse_pos.y - viewport_pos.y;
+    viewport_drawlist = ImGui::GetWindowDrawList();
 
     const std::vector<Entity>& selected_entities = editor.systems[editor.editor_mode].get<Hierarchy>().get_selected_entities();
 
@@ -147,10 +148,10 @@ void tmt::Viewport::on_inspect() {
     modifiers.uniform_scale = shift_held;    // Shift: maintain aspect ratio
     modifiers.scale_from_center = alt_held;  // Alt: keep center fixed
 
-    const bool gizmo_changed = editor.gizmo.manip(image_pos.x, image_pos.y, width, height, selected_entities, snap_value, modifiers);
+    const bool gizmo_changed = editor.gizmo.manip(viewport_pos.x, viewport_pos.y, width, height, selected_entities, snap_value, modifiers);
     if (gizmo_changed) OnSceneModified::dispatch();
 
-    selection_logic(imgui_mouse_pos, image_pos, false);
+    if (allow_selection) selection_logic(imgui_mouse_pos, viewport_pos, false);
 
     ImGui::EndChild();
 
@@ -335,7 +336,7 @@ void tmt::Viewport::toolbar() {
     ImGui::EndMenuBar();
 }
 
-void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const ImVec2& image_pos, bool toolbar_buttons_hovered) {
+void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const glm::vec2& image_pos, bool toolbar_buttons_hovered) {
     if (!is_hovered || engine.game_controller.is_running()) return;
 
     auto& hierarchy = editor.systems[Editor::Mode::SCENE].get<Hierarchy>();
@@ -355,11 +356,11 @@ void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const ImVec2&
         ImVec2 delta = imgui_io.MousePos - first_click_pos;
 
         // if delta has moved by 5 pixels, start rectangle logic
-        if (abs(delta.x) + abs(delta.y) > 5) {
+        if (abs(delta.x) + abs(delta.y) > 5 && allow_rectangle_select) {
             using_rect = true;
 
-            ImGui::GetWindowDrawList()->AddRectFilled(first_click_pos, imgui_io.MousePos, ImColor(1.f, 1.f, 1.f, 0.2f));
-            ImGui::GetWindowDrawList()->AddRect(first_click_pos, imgui_io.MousePos, ImColor(1.f, 1.f, 1.f, 0.6f));
+            viewport_drawlist->AddRectFilled(first_click_pos, imgui_io.MousePos, ImColor(1.f, 1.f, 1.f, 0.2f));
+            viewport_drawlist->AddRect(first_click_pos, imgui_io.MousePos, ImColor(1.f, 1.f, 1.f, 0.6f));
 
             glm::ivec2 a = { first_click_pos.x - image_pos.x, first_click_pos.y - image_pos.y };
             glm::ivec2 b = { imgui_mouse_pos.x - image_pos.x, imgui_mouse_pos.y - image_pos.y };
