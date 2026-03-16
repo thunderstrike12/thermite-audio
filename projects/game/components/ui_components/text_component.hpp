@@ -1,5 +1,5 @@
 #pragma once
-#include "debug_line_helper.hpp"
+#include "projects/game/components/development_tools/debug_line_helper.hpp"
 #include "engine/systems/gameplay/game_component.hpp"
 
 namespace game {

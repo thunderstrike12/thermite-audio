@@ -1,6 +1,6 @@
 #pragma once
 #include "debug_line_helper.hpp"
-#include "events.hpp"
+#include "projects/game/data_headers/events.hpp"
 #include "engine/systems/gameplay/game_component.hpp"
 #include "engine/core/resources/stencil.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 #include <ImReflect.hpp>
-#include "projects/game/components/asteroid_field_component.hpp"
+#include "projects/game/components/world_gen/asteroid_field_component.hpp"
 
 inline void tag_invoke(ImReflect::ImInput_t, const char* name, game::AsteroidFieldComponent& value, ImSettings& settings, ImResponse& response) {
     using namespace game;

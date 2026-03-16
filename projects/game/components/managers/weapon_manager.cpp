@@ -1,6 +1,6 @@
 #include "weapon_manager.hpp"
-#include "game_input.hpp"
-#include "weapon.hpp"
+#include "projects/game/data_headers/game_input.hpp"
+#include "projects/game/components/gameplay_functionality_components/weapon_and_tool_components/weapon.hpp"
 #include "engine/core/input/input.hpp"
 #include "engine/core/logger.hpp"
 

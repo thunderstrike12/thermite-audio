@@ -4,7 +4,7 @@
 
 #include "engine/core/components/voxel_renderer.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"
-#include "projects/game/components/player.hpp"
+#include "projects/game/components/gameplay_functionality_components/player.hpp"
 
 namespace game {
 

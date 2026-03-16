@@ -1,9 +1,8 @@
 #pragma once
 
 #include "engine/systems/gameplay/game_component.hpp"
-
-#include "events.hpp"
-#include "debug_line_helper.hpp"
+#include "projects/game/data_headers/events.hpp"
+#include "projects/game/components/development_tools/debug_line_helper.hpp"
 namespace game {
 
 class MoverComponent : public tmt::GameComponent<MoverComponent> {

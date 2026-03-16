@@ -1,5 +1,5 @@
 #pragma once
-#include "collision_shapes.hpp"
+#include "projects/game/data_headers/collision_shapes.hpp"
 #include "debug_line_helper.hpp"
 #include "engine/systems/gameplay/game_component.hpp"
 #include "engine/shared/aabb.hpp"

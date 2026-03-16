@@ -5,7 +5,7 @@
 #include "engine/core/logger.hpp"
 #include "engine/core/polyline.hpp"
 #include "engine/systems/physics/physics_system.hpp"
-#include "gameplay_functionality_components/managers/ore_manager.hpp"
+#include "projects/game/components/managers/ore_manager.hpp"
 
 #include <engine/tools/fmt/glm.hpp>
 #include <glm/detail/_noise.hpp>

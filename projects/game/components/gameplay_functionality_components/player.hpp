@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/systems/gameplay/game_component.hpp"
 #include "engine/core/components/camera.hpp"
-#include "events.hpp"
+#include "projects/game/data_headers/events.hpp"
 
 namespace game {
 

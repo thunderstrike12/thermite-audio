@@ -1,6 +1,5 @@
 #include "mover_component.hpp"
 
-#include "events.hpp"
 #include "engine/core/polyline.hpp"
 
 void game::MoverComponent::draw_debug_lines() const {

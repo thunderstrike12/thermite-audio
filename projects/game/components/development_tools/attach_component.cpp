@@ -2,7 +2,7 @@
 
 #include "engine/core/polyline.hpp"
 #include "glm/gtx/norm.inl"
-#include "player.hpp"
+#include "projects/game/components/gameplay_functionality_components/player.hpp"
 
 namespace {
 

@@ -1,7 +1,7 @@
 #pragma once
-#include "events.hpp"
+#include "projects/game/data_headers/events.hpp"
 #include "engine/systems/gameplay/game_component.hpp"
-#include "weapon_manager.hpp"
+#include "projects/game/components/managers/weapon_manager.hpp"
 namespace game {
 
 struct FireRate {

@@ -1,7 +1,7 @@
 #include "menu_controller.hpp"
 #include "engine/core/input/input.hpp"
-#include "game_input.hpp"
-#include "player.hpp"
+#include "projects/game/data_headers/game_input.hpp"
+#include "projects/game/components/gameplay_functionality_components/player.hpp"
 
 namespace game {
 

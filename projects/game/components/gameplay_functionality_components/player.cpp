@@ -1,6 +1,6 @@
 #include "player.hpp"
 
-#include "events.hpp"
+#include "projects/game/data_headers/events.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
@@ -11,7 +11,7 @@
 
 #include "engine/core/window.hpp"
 #include "engine/core/input/input_map.hpp"
-#include "game_input.hpp"
+#include "projects/game/data_headers/game_input.hpp"
 #include "engine/core/components/ui_component.hpp"
 
 // TODO before we have a serializer for input, you can add all the needed keybindings here.

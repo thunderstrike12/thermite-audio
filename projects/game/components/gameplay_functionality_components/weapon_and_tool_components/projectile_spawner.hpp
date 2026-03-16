@@ -1,5 +1,5 @@
 #pragma once
-#include "events.hpp"
+#include "projects/game/data_headers/events.hpp"
 #include "engine/systems/gameplay/game_component.hpp"
 
 namespace game {

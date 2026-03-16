@@ -1,6 +1,6 @@
 #include "collision_trigger.hpp"
 
-#include "events.hpp"
+#include "projects/game/data_headers/events.hpp"
 #include "engine/core/polyline.hpp"
 #include "engine/systems/physics/physics_system.hpp"
 

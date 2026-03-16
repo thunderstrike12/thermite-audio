@@ -1,7 +1,6 @@
 #include "ore_collector.hpp"
 
-#include "events.hpp"
-#include "collision_trigger.hpp"
+#include "projects/game/components/development_tools/collision_trigger.hpp"
 #include "engine/core/polyline.hpp"
 void game::OreCollector::start() {
     tmt::engine.ecs.get_dispatcher().sink<TriggerCollisionEvent>().connect<&OreCollector::on_collision_trigger>(this);
