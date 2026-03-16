@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine\core\entity.hpp"
-
+#include <glm/glm.hpp>
 namespace tmt {
 
 /* Ray definition. */

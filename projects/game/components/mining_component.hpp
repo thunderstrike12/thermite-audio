@@ -5,6 +5,7 @@
 #include "engine/systems/gameplay/game_component.hpp"
 #include "engine/core/resources/stencil.hpp"
 #include "engine/shared/ray.hpp"
+#include "gameplay_functionality_components/managers/ore_manager.hpp"
 
 namespace game {
 
@@ -71,6 +72,9 @@ class MiningComponent : public tmt::GameComponent<MiningComponent> {
     using UniqueVoxelsSet = std::unordered_set<VoxelID, VoxelIDHash>;
     VoxelMap mining_voxels {};
     bool stopped_mining = false;
+
+    // Ore manager for custom behaviour of mined ore
+    OreManager* ore_manager = nullptr;
 };
 
 }  // namespace game
