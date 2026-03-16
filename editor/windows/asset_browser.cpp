@@ -556,6 +556,8 @@ void AssetBrowser::display_viewing_location() {
     ImGuiMultiSelectIO* select_io = ImGui::BeginMultiSelect(flags, static_cast<int>(selected_locations.size()), static_cast<int>(viewing_locations.size()));
     apply_requests(select_io, selected_locations, viewing_locations);
 
+    const bool is_playing = engine.game_controller.is_playing();
+
     ImS64 i = 0;
     for (const IO::FileLocation& location : viewing_locations) {
         const bool location_is_directory = is_directory(location.get_relative_path());
@@ -575,9 +577,9 @@ void AssetBrowser::display_viewing_location() {
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
             if (location_is_directory) {
                 pending_viewing_location = location;
-            } else if (location.get_relative_path().extension() == PrefabHelper::Config::PREFAB_EXTENSION) {
+            } else if (is_playing == false && location.get_relative_path().extension() == PrefabHelper::Config::PREFAB_EXTENSION) {
                 editor.switch_mode(Editor::Mode::PREFAB, location);
-            } else if (location.get_relative_path().extension() == ".svh") {
+            } else if (is_playing == false && location.get_relative_path().extension() == ".svh") {
                 editor.switch_mode(Editor::Mode::VOXEL, location);
             } else {
                 const std::string open_file_command = std::format(R"(start "" "{}")", location.get_relative_path().generic_string());
