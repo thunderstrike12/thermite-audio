@@ -8,7 +8,7 @@
 
 using namespace tmt;
 
-void Console::display() {
+void Console::on_inspect() {
     console.DrawContent();
 }
 

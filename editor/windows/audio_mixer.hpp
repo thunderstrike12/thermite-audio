@@ -17,7 +17,7 @@ class AudioMixer : public IWindow, public OnGameEnd {
     AudioMixer() = default;
     ~AudioMixer() override = default;
 
-    void display() override;
+    void on_inspect() override;
 
     [[nodiscard]] constexpr std::string get_title() const override { return ICON_MS_AUDIOTRACK " Audio Mixer"; }
 

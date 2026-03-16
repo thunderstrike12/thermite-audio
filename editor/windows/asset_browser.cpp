@@ -178,7 +178,7 @@ bool AssetBrowser::location_is_bookmarked(const IO::FileLocation& location) {
     return bookmark_iterator != bookmarks.end();
 }
 
-void AssetBrowser::display() {
+void AssetBrowser::on_inspect() {
     // If we are dragging a file in from another program we manually create a drag and drop source to use in ImGui.
     if (file_drop_state.is_dropping) {
         ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceExtern);  // ImGuiDragDropFlags_SourceExtern means it'll always return true.
@@ -193,26 +193,29 @@ void AssetBrowser::display() {
     const bool menu_bar_open = ImGui::BeginMenuBar();
     ImGui::PopStyleVar();
     if (menu_bar_open) {
-        if (ImGui::Button(ICON_MS_ARROW_DOWNWARD_ALT " Import...")) import_assets_dialog();
-
-        ImGui::Separator();
-
+        /* Navigation buttons */
         ImGui::BeginDisabled(undo_viewing_locations.empty());
-        if (ImGui::MenuItem(ICON_MS_ARROW_BACK)) move_location_stacks(undo_viewing_locations, redo_viewing_locations);
+        if (ImGui::Button(ICON_MS_ARROW_BACK)) move_location_stacks(undo_viewing_locations, redo_viewing_locations);
         ImGui::EndDisabled();
 
         ImGui::BeginDisabled(redo_viewing_locations.empty());
-        if (ImGui::MenuItem(ICON_MS_ARROW_FORWARD)) move_location_stacks(redo_viewing_locations, undo_viewing_locations);
+        if (ImGui::Button(ICON_MS_ARROW_FORWARD)) move_location_stacks(redo_viewing_locations, undo_viewing_locations);
         ImGui::EndDisabled();
 
         const std::filesystem::path& current_path = viewing_location.relative_path;
         ImGui::BeginDisabled(current_path.empty());
-        if (ImGui::MenuItem(ICON_MS_ARROW_UPWARD_ALT)) pending_viewing_location = { viewing_location.sub_location, current_path.parent_path() };
+        if (ImGui::Button(ICON_MS_ARROW_UPWARD)) pending_viewing_location = { viewing_location.sub_location, current_path.parent_path() };
         ImGui::EndDisabled();
 
-        if (ImGui::MenuItem(ICON_MS_AUTORENEW)) pending_viewing_location = viewing_location;
+        if (ImGui::Button(ICON_MS_REFRESH)) pending_viewing_location = viewing_location;
 
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+
+        /* Breadcrumb navigation */
         display_directory_bar();
+
+        /* Right-aligned items */
+        ImGui::Spacing();
 
         ImGui::BeginDisabled(location_is_bookmarked(viewing_location));
         if (ImGui::Button(ICON_MS_BOOKMARK_ADD)) {
@@ -223,10 +226,6 @@ void AssetBrowser::display() {
 
         ImGui::EndMenuBar();
     }
-
-    // Adds a line under the MenuBar to make it look *slightly* nicer.
-    ImGui::SetCursorScreenPos(ImVec2 { ImGui::GetCursorScreenPos().x, ImGui::GetItemRectMax().y });
-    ImGui::Separator();
 
     if (!ImGui::BeginTable("AssetBrowserTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable)) return;
 

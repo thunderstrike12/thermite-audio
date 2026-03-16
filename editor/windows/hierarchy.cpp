@@ -27,6 +27,7 @@
 
 #include "editor/shared/colors.hpp"
 #include "editor/shared/icons.hpp"
+#include "editor/shared/theme.hpp"
 
 #include "editor/core/systems/undo_redo/entity_diff.hpp"
 #include "editor/core/systems/undo_redo/component_diff.hpp"
@@ -99,7 +100,7 @@ void Hierarchy::before_begin() {
     }
 }
 
-void Hierarchy::display() {
+void Hierarchy::on_inspect() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
     top_bar();
     render_hierarchy();
@@ -348,7 +349,7 @@ void Hierarchy::on_editor_update(const FrameData&) {
     }
 
     const bool is_playing = engine.game_controller.is_running();
-    const bool using_debug_cam = editor.windows[editor.editor_mode].get<Viewport>().is_using_debug_camera();
+    const bool using_debug_cam = editor.systems[editor.editor_mode].get<Viewport>().is_using_debug_camera();
     const bool wants_keyboard = ImGui::GetIO().WantCaptureKeyboard;
     const bool has_selection = !selected_entities.empty();
 
@@ -425,7 +426,7 @@ void Hierarchy::top_bar() {
     }
 }
 
-bool Hierarchy::display_entity(const HierarchyState& state) {
+bool Hierarchy::display_entity(const HierarchyState& state, uint32_t& row) {
     const auto scope_id = ImReflect::Detail::scope_id((int)state.entity);
 
     const bool disabled = engine.ecs.is_disabled(state.entity);
@@ -472,6 +473,15 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
     }
 
     const ImGuiID tree_node_id = ImGui::GetID(name.c_str());
+
+    /* Draw alternating row background for odd rows */
+    if (row % 2 != 0) {
+        const ImVec2 row_min = ImVec2(ImGui::GetWindowPos().x, ImGui::GetCursorScreenPos().y);
+        const ImVec2 row_max = ImVec2(row_min.x + ImGui::GetWindowWidth(), row_min.y + ImGui::GetFrameHeight());
+        const ImU32 alt_row_color = ImGui::ColorConvertFloat4ToU32(tmt::theme::TABLE_ROW_BG_ALT);
+        ImGui::GetWindowDrawList()->AddRectFilled(row_min, row_max, alt_row_color);
+    }
+    row++;
 
     if (is_prefab) ImGui::PushStyleColor(ImGuiCol_Text, tmt::colors::to_u32(tmt::colors::PREFAB));
     bool open_node = ImGui::TreeNodeBehavior(tree_node_id, flags, name.c_str(), NULL);
@@ -589,7 +599,7 @@ bool Hierarchy::display_entity(const HierarchyState& state) {
             child_state.position.x = state.depth() + 1;
             child_state.position.y = level_index;
 
-            const bool displayed = display_entity(child_state);
+            const bool displayed = display_entity(child_state, row);
             if (displayed) level_index++;
         }
     }

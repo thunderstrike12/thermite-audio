@@ -26,7 +26,7 @@ void audio_drag_source(const std::string& type_name, const Type& value) {
 
 namespace tmt {
 
-void AudioMixer::display() {
+void AudioMixer::on_inspect() {
     display_menu_bar();
 
     if (selection.index() == 0 && std::get<std::weak_ptr<AudioBank>>(selection).expired()) invalidate_selection();

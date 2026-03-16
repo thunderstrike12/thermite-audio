@@ -16,7 +16,7 @@ class AssetBrowser : public internal::OnSdlEvent, public IWindow {
     constexpr int get_window_flags() const override { return ImGuiWindowFlags_MenuBar; }
     constexpr bool default_open() const override { return true; }
 
-    void display() override;
+    void on_inspect() override;
 
     void on_editor_start() override;
     void on_editor_update(const FrameData&) override;

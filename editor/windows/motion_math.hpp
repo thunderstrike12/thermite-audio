@@ -7,7 +7,7 @@ class MotionMathPreview : public IWindow {
     MotionMathPreview() = default;
     ~MotionMathPreview() override = default;
 
-    void display() override;
+    void on_inspect() override;
 
     [[nodiscard]] constexpr std::string get_title() const override { return "Motion Math Preview"; }
 

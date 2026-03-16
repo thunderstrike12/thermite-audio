@@ -97,7 +97,7 @@ void BuildPackager::play_build() {
     system(cmd.c_str());
 }
 
-void BuildPackager::display() {
+void BuildPackager::on_inspect() {
     // Keep this here, we might need to select a default scene
     // const auto& scenes = tmt::engine.scenes.get_registered_scenes();
 

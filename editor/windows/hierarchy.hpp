@@ -21,10 +21,10 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
     Hierarchy() = default;
     ~Hierarchy() = default;
 
-    void display() override;
+    void on_inspect() override;
 
     virtual int get_window_flags() const override;
-    constexpr std::string get_title() const override { return ICON_MS_FLOWCHART " Hierarchy"; };
+    constexpr std::string get_title() const override { return ICON_MS_ACCOUNT_TREE " Hierarchy"; };
     constexpr bool default_open() const override { return true; }
 
     void on_editor_start() override {};
@@ -39,11 +39,12 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
         start_section();
 
         uint32_t index = 0;
+        uint32_t row = 0;
         for (auto [entity, transform, name] : view.each()) {
             HierarchyState state(entity, transform, name);
             state.position = { 0, index };
 
-            const bool displayed = display_entity(state);
+            const bool displayed = display_entity(state, row);
 
             if (displayed) index++;
         }
@@ -126,7 +127,7 @@ class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
     void top_bar();
 
     void start_section();
-    bool display_entity(const HierarchyState& state);
+    bool display_entity(const HierarchyState& state, uint32_t& row);
     void end_section();
 
     void context_menu(const Entity hovered_entity);

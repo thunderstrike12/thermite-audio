@@ -6,7 +6,7 @@ namespace tmt {
 
 class DebugLines : public IWindow {
    public:
-    void display() override;
+    void on_inspect() override;
 
     virtual void on_editor_update(const tmt::FrameData& time) override;
 

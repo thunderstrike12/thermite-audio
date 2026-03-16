@@ -5,7 +5,7 @@
 
 namespace tmt {
 
-class ScenesWindow : public IWindow, OnSceneModified, OnSceneSerialized, OnPostLoadScene {
+class ScenesWindow : public IEditorSystem, OnSceneModified, OnSceneSerialized, OnPostLoadScene {
    public:
     ScenesWindow() = default;
     ~ScenesWindow() = default;
@@ -15,14 +15,10 @@ class ScenesWindow : public IWindow, OnSceneModified, OnSceneSerialized, OnPostL
    private:
     bool dirty_scene = false;
 
-    // Inherited via IWindow
-    void display() override;
-
+    // Inherited via IEditorSystem
     void on_editor_start() override;
     void on_editor_update(const FrameData& time) override;
     void on_editor_end() override;
-
-    std::string get_title() const override { return "Scenes"; };
 
     // Inherited via OnSceneModified
     void on_scene_modified() override;

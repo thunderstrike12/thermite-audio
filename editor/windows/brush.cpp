@@ -38,7 +38,7 @@ const std::vector<std::pair<Brush::Mode, ButtonInfo>> MODE_INFOS {
 
 }  // namespace
 
-void Brush::display() {
+void Brush::on_inspect() {
     for (const auto [tool, info] : TOOL_INFOS) {
         // Keep everything on the same line (skip ImGui::SameLine on the first element).
         if (tool != TOOL_INFOS.begin()->first) ImGui::SameLine();
@@ -55,7 +55,7 @@ void Brush::display() {
 
     switch (state.tool) {
         case Tool::GIZMO: {
-            const Entity selected_node = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().get_first_selected_entity();
+            const Entity selected_node = editor.systems[Editor::Mode::VOXEL].get<NodeHierarchy>().get_first_selected_entity();
             if (!engine.ecs.valid(selected_node)) break;
 
             const auto&& [name, transform] = engine.ecs.get_component<Name, Transform>(selected_node);

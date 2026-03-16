@@ -15,6 +15,7 @@
 #include "implot.h"
 #include "editor/editor.hpp"
 #include "editor/windows/viewport.hpp"
+#include "editor/shared/theme.hpp"
 
 namespace tmt {
 
@@ -34,6 +35,9 @@ void ImGuiManager::init() {
     auto& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigWindowsMoveFromTitleBarOnly = true;
+
+    /* Apply custom dark theme */
+    theme::apply_dark_theme();
 
     const auto ini_location = IO::FileLocation(IO::Location::EDITOR, "save_data/imgui.ini");
     /* Needs static storage duration */

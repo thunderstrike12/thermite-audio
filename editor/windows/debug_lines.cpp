@@ -13,7 +13,7 @@
 
 namespace tmt {
 
-void DebugLines::display() {
+void DebugLines::on_inspect() {
     // Todo move this to menu bar at some point
     auto& enabled_debug_renderers = editor.save_data.enabled_debug_renderers;
     if (ImGui::Button("Toggle All")) {

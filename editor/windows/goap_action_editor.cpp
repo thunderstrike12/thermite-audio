@@ -50,7 +50,7 @@ void GoapActionEditor::on_editor_end() {
  *   - Effects editor
  * All of these can also be reset to their origional value
  */
-void GoapActionEditor::display() {
+void GoapActionEditor::on_inspect() {
     Goap* goap = engine.ecs.systems.try_get<Goap>();
 
     if (!goap) {

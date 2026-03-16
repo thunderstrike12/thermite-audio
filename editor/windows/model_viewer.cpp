@@ -325,7 +325,7 @@ void handle_brush(const Brush::State brush_state, const ResourceRef<VoxelVolume>
             const Material* picked_material = model->blas->get_voxel(hit.coord.x, hit.coord.y, hit.coord.z);
             if (picked_material == nullptr) break;
 
-            Palette& palette = editor.windows[Editor::Mode::VOXEL].get<Palette>();
+            Palette& palette = editor.systems[Editor::Mode::VOXEL].get<Palette>();
             palette.set_selected_material_index(model->blas->palette.material_to_index(picked_material));
             break;
         }
@@ -418,7 +418,7 @@ void use_gizmo(const NodeHierarchy& hierarchy, const ImVec2& window_pos, const I
         }
     }
 
-    const bool is_using_camera = editor.windows[Editor::Mode::SCENE].get<Viewport>().is_using_debug_camera();
+    const bool is_using_camera = editor.systems[Editor::Mode::SCENE].get<Viewport>().is_using_debug_camera();
     const bool wants_to_capture_keyboard = ImGui::GetIO().WantCaptureKeyboard;
     if (wants_to_capture_keyboard == false && !is_using_camera) {
         if (ImGui::IsKeyPressed(ImGuiKey_W, false)) {
@@ -442,7 +442,7 @@ void use_gizmo(const NodeHierarchy& hierarchy, const ImVec2& window_pos, const I
 
 }  // namespace
 
-void ModelViewer::display() {
+void ModelViewer::on_inspect() {
     const ImVec2 content_start { 0.0f, ImGui::GetFrameHeight() };
     ImGui::SetCursorPos(content_start);
 
@@ -454,10 +454,10 @@ void ModelViewer::display() {
     engine.renderer.render_view.set_viewport_size(static_cast<uint32_t>(size.x), static_cast<uint32_t>(size.y));
     ImGui::Image(engine.renderer.render_view.imgui_viewport, size);
 
-    const Brush::State brush_state = editor.windows[Editor::Mode::VOXEL].get<Brush>().get_brush_state();
+    const Brush::State brush_state = editor.systems[Editor::Mode::VOXEL].get<Brush>().get_brush_state();
     const bool is_tool_gizmo = brush_state.tool == Brush::Tool::GIZMO;
     if (is_tool_gizmo) {
-        NodeHierarchy& hierarchy = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>();
+        NodeHierarchy& hierarchy = editor.systems[Editor::Mode::VOXEL].get<NodeHierarchy>();
 
         use_gizmo(hierarchy, window_pos, size);
 
@@ -473,22 +473,22 @@ void ModelViewer::display() {
                     hierarchy.set_selected_entity(hit.entity);
             } else {
                 if (!hierarchy.is_entity_selected(hit.entity))
-                    editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().add_selected_entity(hit.entity);
+                    editor.systems[Editor::Mode::VOXEL].get<NodeHierarchy>().add_selected_entity(hit.entity);
                 else
-                    editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().remove_selected_entity(hit.entity);
+                    editor.systems[Editor::Mode::VOXEL].get<NodeHierarchy>().remove_selected_entity(hit.entity);
             }
         }
     }
 
     // Set up the window and mouse variables in the viewport to update the camera movement in the update function later.
-    Viewport& viewport = editor.windows[Editor::Mode::SCENE].get<Viewport>();
+    Viewport& viewport = editor.systems[Editor::Mode::SCENE].get<Viewport>();
     viewport.is_hovered = ImGui::IsItemHovered();
     const ImVec2 mouse_pos = ImGui::GetMousePos() - ImGui::GetWindowPos();
     mouse_position.x = viewport.mouse_pos.x = mouse_pos.x - content_start.x;
     mouse_position.y = viewport.mouse_pos.y = mouse_pos.y - content_start.y;
 
     // Get the selected entity in the hierarchy and return early if it's invalid.
-    NodeHierarchy& node_hierarchy = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>();
+    NodeHierarchy& node_hierarchy = editor.systems[Editor::Mode::VOXEL].get<NodeHierarchy>();
     const Entity selected_entity = node_hierarchy.get_first_selected_entity();
 
     if (!engine.ecs.valid(selected_entity) || !engine.ecs.has_component<VoxelRenderer>(selected_entity)) return;
@@ -511,7 +511,7 @@ void ModelViewer::display() {
     // Return early if no valid voxel was selected.
     if (!handle_selection(valid_faces, brush_state, mouse_ray, hit, selected_entity, transform, half_extent)) return;
 
-    const MaterialIndex material_index = editor.windows[Editor::Mode::VOXEL].get<Palette>().get_selected_material_index();
+    const MaterialIndex material_index = editor.systems[Editor::Mode::VOXEL].get<Palette>().get_selected_material_index();
     const Material& material = resource->blas->palette.entries[material_index];
     draw_selection(hit, half_extent, transform, material.albedo.unpack());
 
@@ -519,7 +519,7 @@ void ModelViewer::display() {
 }
 
 void ModelViewer::on_editor_update(const FrameData& time) {
-    editor.windows[Editor::Mode::SCENE].get<Viewport>().update_debug_camera(time);
+    editor.systems[Editor::Mode::SCENE].get<Viewport>().update_debug_camera(time);
 }
 
 }  // namespace tmt

@@ -501,7 +501,7 @@ void NodeHierarchy::clear_hierarchy() {
     engine.ecs.clear();
 
     // Clear the undo/redo stack so the user doesn't try to undo changes to an old file in the newly loaded one.
-    editor.windows[Editor::Mode::VOXEL].get<UndoRedoManager>().clear();
+    editor.systems[Editor::Mode::VOXEL].get<UndoRedoManager>().clear();
 }
 
 void NodeHierarchy::drop_hierarchy() {
@@ -815,7 +815,7 @@ void NodeHierarchy::node_context_menu(const Entity node_entity) {
     ImGui::EndPopup();
 }
 
-void NodeHierarchy::display() {
+void NodeHierarchy::on_inspect() {
     model_load_atomic.wait(false);
 
     popup_create_node();

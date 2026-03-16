@@ -20,7 +20,7 @@ class Palette : public IWindow {
 
     void before_begin() override;
     void end_display() override;
-    void display() override;
+    void on_inspect() override;
 
     void on_editor_start() override {}
     void on_editor_update(const FrameData&) override {}

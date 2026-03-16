@@ -41,8 +41,8 @@ void Palette::end_display() {
     ImGui::PopStyleVar();
 }
 
-void Palette::display() {
-    const auto selected_entity = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().get_first_selected_entity();
+void Palette::on_inspect() {
+    const auto selected_entity = editor.systems[Editor::Mode::VOXEL].get<NodeHierarchy>().get_first_selected_entity();
     if (selected_entity == entt::null) return;
 
     const VoxelRenderer* renderer = engine.ecs.try_get_component<VoxelRenderer>(selected_entity);

@@ -68,7 +68,7 @@ class UndoRedoManager : public IWindow, public OnEngineEnd {
     // Inherited via OnEngineEnd
     void on_engine_end() override { clear(); }
 
-    void display() override;
+    void on_inspect() override;
 
     void on_editor_start() override;
     void on_editor_update(const tmt::FrameData& time) override;

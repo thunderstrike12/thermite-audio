@@ -19,7 +19,7 @@ class Viewport : public IWindow, public OnRetrieveMouseState, public OnBlockInpu
     void on_editor_end() override;
 
     void before_begin() override;
-    void display() override;
+    void on_inspect() override;
     void snap_to_entity();
     void end_display() override;
 
@@ -27,6 +27,12 @@ class Viewport : public IWindow, public OnRetrieveMouseState, public OnBlockInpu
     int get_window_flags() const override;
     constexpr bool is_closable() const override { return false; };
     constexpr bool default_open() const override { return true; }
+
+    // Game flow controls (shared with GameFlow window)
+    void start_game();
+    void end_game();
+    void pause_game();
+    void resume_game();
 
     bool get_is_hovered() const { return is_hovered; }
     bool get_is_focused() const { return is_focused; }
@@ -36,7 +42,7 @@ class Viewport : public IWindow, public OnRetrieveMouseState, public OnBlockInpu
     friend class ModelViewer;
 
     void update_debug_camera(const tmt::FrameData& frame_data);
-    bool toolbar(const ImVec2& image_pos);
+    void toolbar();
     void selection_logic(const ImVec2& imgui_mouse_pos, const ImVec2& image_pos, bool toolbar_buttons_hovered);
 
     float width = -1;
@@ -48,6 +54,8 @@ class Viewport : public IWindow, public OnRetrieveMouseState, public OnBlockInpu
 
     float camera_speed = 4.0f;
     bool using_debug_camera = false;
+
+    float y_frame_padding = 0.0f;
 
     struct Config {
         constexpr static float SPEED_CHANGE_FACTOR = 0.5f;

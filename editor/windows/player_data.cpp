@@ -5,7 +5,7 @@
 
 namespace tmt {
 
-void PlayerDataWindow::display() {
+void PlayerDataWindow::on_inspect() {
     ImGui::Text("This window contains all player data that has been accesed this session.");
 
     if (ImGui::Button("Clear Player Data")) {

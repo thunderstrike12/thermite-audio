@@ -1,7 +1,10 @@
 #include "inspector.hpp"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <ImReflect.hpp>
+
+#include "editor/shared/theme.hpp"
 
 #include "engine/engine.hpp"
 
@@ -24,6 +27,8 @@
 #include "editor/events/scene.hpp"
 #include "editor/core/systems/undo_redo/component_diff.hpp"
 
+#include "editor/imgui/tools/center.hpp"
+
 namespace tmt {
 
 void Inspector::on_editor_start() {}
@@ -32,8 +37,8 @@ void Inspector::on_editor_update(const tmt::FrameData&) {}
 
 void Inspector::on_editor_end() {}
 
-void Inspector::display() {
-    const auto& hierarchy = editor.windows[editor.editor_mode].get<Hierarchy>();
+void Inspector::on_inspect() {
+    const auto& hierarchy = editor.systems[editor.editor_mode].get<Hierarchy>();
 
     const MenuContext menu_context {
         .primary_entity = hierarchy.get_first_selected_entity(),
@@ -141,6 +146,8 @@ void Inspector::display_compile_time_components(const tmt::Inspector::MenuContex
 
         if (header_response.open == false) return;
 
+        component_body_begin();
+
         const json before = tmt::Serializer::serialize(component_instance);
 
         const ImResponse response = ImReflect::Input("", component_instance);
@@ -190,6 +197,8 @@ void Inspector::display_compile_time_components(const tmt::Inspector::MenuContex
                 component_diff.at(entity).before();
             }
         }
+
+        component_body_end();
     });
 }
 
@@ -252,38 +261,41 @@ void Inspector::display_runtime_components(const MenuContext& menu_context) {
 
         if (header_response.open == false) continue;
 
+        component_body_begin();
+
         const json before = tmt::Serializer::serialize(component_instance);
         const ImResponse response = ImReflect::Input("", component_instance);
         const bool changed = response.get<IGameComponent>().is_changed();
 
-        if (changed == false) continue;
-        if (menu_context.selected_entities.size() <= 1) continue;
+        if (changed && menu_context.selected_entities.size() > 1) {
+            auto after = tmt::Serializer::serialize(component_instance);
+            const json diff = nlohmann::json::diff(before, after);
 
-        auto after = tmt::Serializer::serialize(component_instance);
-        const json diff = nlohmann::json::diff(before, after);
+            for (const Entity& entity : menu_context.selected_entities) {
+                if (entity == menu_context.primary_entity) continue;
 
-        for (const Entity& entity : menu_context.selected_entities) {
-            if (entity == menu_context.primary_entity) continue;
+                const bool has_collection_2 = engine.ecs.has_component<ComponentCollection>(entity);
+                if (has_collection_2 == false) continue;
 
-            const bool has_collection_2 = engine.ecs.has_component<ComponentCollection>(entity);
-            if (has_collection_2 == false) continue;
+                auto& other_component_collection = engine.ecs.get_component<ComponentCollection>(entity);
+                const bool has_component_2 = other_component_collection.has_component(component_index);
+                if (has_component_2 == false) continue;
 
-            auto& other_component_collection = engine.ecs.get_component<ComponentCollection>(entity);
-            const bool has_component_2 = other_component_collection.has_component(component_index);
-            if (has_component_2 == false) continue;
-
-            IGameComponent& other_instance = other_component_collection.get_component(component_index);
-            json other_json = tmt::Serializer::serialize(other_instance);
-            other_json.patch_inplace(diff);
-            tmt::Serializer::deserialize(other_json, other_instance);
+                IGameComponent& other_instance = other_component_collection.get_component(component_index);
+                json other_json = tmt::Serializer::serialize(other_instance);
+                other_json.patch_inplace(diff);
+                tmt::Serializer::deserialize(other_json, other_instance);
+            }
         }
+
+        component_body_end();
     }
 }
 
 void Inspector::add_component(const MenuContext& menu_context) {
     if (menu_context.primary_entity == entt::null) return;
 
-    if (ImGui::Button("Add Component")) {
+    if (IMGUI_CENTER(ImGui::Button("Add Component"), 20.0f)) {
         ImGui::OpenPopup("AddComponentPopup");
     }
 
@@ -347,9 +359,50 @@ void Inspector::add_runtime_component(const tmt::Inspector::MenuContext& menu_co
 }
 
 Inspector::HeaderResponse Inspector::component_header(const std::string name) {
-    const bool open = ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+    ImGui::Spacing();
+
+    ImGuiTreeNodeFlags flags =
+        ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowOverlap | ImGuiTreeNodeFlags_FramePadding;
+
+    const bool open = ImGui::CollapsingHeader(name.c_str(), flags);
     const bool right_clicked = ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right);
+
+    /* Capture the header rect so the body panel aligns exactly with it */
+    component_body_x_min = ImGui::GetItemRectMin().x;
+    component_body_x_max = ImGui::GetItemRectMax().x;
+    component_body_start_y = ImGui::GetItemRectMax().y;
+
     return { open, right_clicked };
+}
+
+void Inspector::component_body_begin() {
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->ChannelsSplit(2);
+    draw_list->ChannelsSetCurrent(1); /* content draws on front channel */
+    ImGui::Indent();
+}
+
+void Inspector::component_body_end() {
+    ImGui::Unindent();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    const float end_y = ImGui::GetCursorScreenPos().y;
+    if (end_y > component_body_start_y) {
+        const ImGuiStyle& style = ImGui::GetStyle();
+
+        const float rounding = style.FrameRounding;
+        const ImVec2 rect_min = ImVec2(component_body_x_min, component_body_start_y - rounding);
+        const ImVec2 rect_max = ImVec2(component_body_x_max, end_y);
+
+        const ImU32 body_bg_color = ImGui::GetColorU32(ImGuiCol_Header);
+
+        draw_list->ChannelsSetCurrent(0); /* background channel */
+        draw_list->AddRectFilled(rect_min, rect_max, body_bg_color, rounding, ImDrawFlags_RoundCornersBottom);
+    }
+
+    draw_list->ChannelsMerge();
+    const float item_spacing_y = ImGui::GetStyle().ItemSpacing.y;
+    ImGui::Dummy(ImVec2(0.0f, item_spacing_y * 0.5f));
 }
 
 Inspector::ContextMenuResponse Inspector::context_menu(const std::string& name, const bool open) {

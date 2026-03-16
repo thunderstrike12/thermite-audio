@@ -56,7 +56,7 @@ class NodeHierarchy : public IWindow {
     void popup_resize_node();
     void node_context_menu(Entity node_entity);
 
-    void display() override;
+    void on_inspect() override;
 
     void on_editor_start() override {}
     void on_editor_update(const FrameData&) override;

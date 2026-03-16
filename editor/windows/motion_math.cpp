@@ -6,7 +6,7 @@
 
 #include "implot.h"
 
-void tmt::MotionMathPreview::display() {
+void tmt::MotionMathPreview::on_inspect() {
     recompute |= ImGui::SliderFloat("Frequency", &frequency, 0.f, 10.f);
     recompute |= ImGui::SliderFloat("Damping", &damping, 0.f, 10.f);
     recompute |= ImGui::SliderFloat("Initial response", &initial_response, -10.f, 10.f);

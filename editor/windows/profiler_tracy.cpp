@@ -149,7 +149,7 @@ void Profiler::on_editor_end() {
     tmt::IO::write_text_file(Config::FILE_LOCATION, json.dump());
 }
 
-void Profiler::display() {
+void Profiler::on_inspect() {
     InputTextString("Address", settings.address);
     ImGui::InputInt("Port", &settings.port);
 

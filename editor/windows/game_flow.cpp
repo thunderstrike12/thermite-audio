@@ -9,35 +9,51 @@
 
 namespace tmt {
 
-void GameFlow::display() {
+void GameFlow::on_inspect() {
     if (engine.game_controller.is_playing()) {
         if (ImGui::Button("End")) {
-            engine.game_controller.end_game();
-            has_ended = true;
+            end_game();
         }
     } else {
         if (ImGui::Button("Start")) {
-            working_scene = engine.scenes.get_active_scene_type();
-            cached_scene = Serializer::serialize(engine.ecs);
-
-            engine.game_controller.start_game();
+            start_game();
         }
     }
     ImGui::SameLine();
     if (engine.game_controller.is_paused()) {
         if (ImGui::Button("Resume")) {
-            engine.game_controller.resume_game();
-            if (was_mouse_locked) {
-                lock_mouse();
-            }
+            resume_game();
         }
     } else {
         if (ImGui::Button("Pause")) {
-            engine.game_controller.pause_game();
-            was_mouse_locked = engine.input.is_mouse_locked();
-            unlock_mouse();
+            pause_game();
         }
     }
+}
+
+void GameFlow::pause_game() {
+    engine.game_controller.pause_game();
+    was_mouse_locked = engine.input.is_mouse_locked();
+    unlock_mouse();
+}
+
+void GameFlow::resume_game() {
+    engine.game_controller.resume_game();
+    if (was_mouse_locked) {
+        lock_mouse();
+    }
+}
+
+void GameFlow::start_game() {
+    working_scene = engine.scenes.get_active_scene_type();
+    cached_scene = Serializer::serialize(engine.ecs);
+
+    engine.game_controller.start_game();
+}
+
+void GameFlow::end_game() {
+    engine.game_controller.end_game();
+    has_ended = true;
 }
 
 void GameFlow::on_editor_start() {}

@@ -60,7 +60,7 @@ struct AgentTypeEditorState {
  *   - Left panel: list of existing agent types, add/delete functionality
  *   - Right panel: node editor for editing the selected agent type
  */
-void GoapAgentEditor::display() {
+void GoapAgentEditor::on_inspect() {
     static AgentTypeEditorState state;
 
     auto* goap = engine.ecs.systems.try_get<Goap>();

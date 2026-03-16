@@ -45,7 +45,7 @@ void GoapDebugger::on_editor_end() {
  *       - Available goals and actions
  *   - Render a visual graph of the agent's plan and available actions/goals.
  */
-void GoapDebugger::display() {
+void GoapDebugger::on_inspect() {
     auto& ecs = engine.ecs.get_registry();
     static Entity selected_agent = entt::null;
 

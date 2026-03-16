@@ -5,7 +5,7 @@
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
 
-void tmt::EcsInspector::display() {
+void tmt::EcsInspector::on_inspect() {
     ImGui::BeginChild("ECS Inspector Child", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
     const size_t entity_count = tmt::engine.ecs.get_registry().view<entt::entity>().size();
     ImGui::Text("Entities: %zu", entity_count);

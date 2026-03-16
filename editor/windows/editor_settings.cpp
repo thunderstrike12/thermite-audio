@@ -6,7 +6,7 @@
 
 namespace tmt {
 
-void EditorSettingsWindow::display() {
+void EditorSettingsWindow::on_inspect() {
     //
     ImReflect::Input("Editor Settings", editor.save_data);
 }

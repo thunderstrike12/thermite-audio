@@ -104,7 +104,7 @@ VoxelNodeDiff::VoxelNodeDiff(const std::span<const Entity>& node_entities, const
 }
 
 void VoxelNodeDiff::undo() {
-    std::vector<Entity>& root_entities = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().root_entities;
+    std::vector<Entity>& root_entities = editor.systems[Editor::Mode::VOXEL].get<NodeHierarchy>().root_entities;
 
     if (is_add) {
         for (const NodeData& top_node_data : top_nodes_data) {
@@ -121,7 +121,7 @@ void VoxelNodeDiff::undo() {
 }
 
 void VoxelNodeDiff::redo() {
-    std::vector<Entity>& root_entities = editor.windows[Editor::Mode::VOXEL].get<NodeHierarchy>().root_entities;
+    std::vector<Entity>& root_entities = editor.systems[Editor::Mode::VOXEL].get<NodeHierarchy>().root_entities;
 
     if (!is_add) {
         for (const NodeData& top_node_data : top_nodes_data) {

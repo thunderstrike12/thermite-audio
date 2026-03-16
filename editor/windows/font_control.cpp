@@ -27,7 +27,7 @@ void tmt::FontControl::on_editor_update(const FrameData&) {}
 
 void tmt::FontControl::on_editor_end() {}
 
-void tmt::FontControl::display() {
+void tmt::FontControl::on_inspect() {
     auto& fonts = editor.imgui_manager.font_manager.m_fonts;
 
     if (ImGui::Button("Reload")) {

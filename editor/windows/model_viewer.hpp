@@ -18,7 +18,7 @@ class ModelViewer : public IWindow {
     constexpr int get_window_flags() const override { return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse; }
     constexpr bool default_open() const override { return true; }
 
-    void display() override;
+    void on_inspect() override;
 
     void on_editor_start() override {}
     void on_editor_update(const FrameData& time) override;

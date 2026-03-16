@@ -10,7 +10,7 @@
 namespace tmt {
 
 UndoRedoManager& IUndoRedo::get_manager() {
-    auto* result = editor.windows[editor.editor_mode].try_get<UndoRedoManager>();
+    auto* result = editor.systems[editor.editor_mode].try_get<UndoRedoManager>();
     if (result == nullptr) {
         throw std::runtime_error("UndoRedoManager not found in current editor mode");
     }
@@ -43,7 +43,7 @@ void UndoRedoManager::commit_action(const std::shared_ptr<IUndoRedo>& action, co
     redo_stack.clear();
 }
 
-void UndoRedoManager::display() {
+void UndoRedoManager::on_inspect() {
     if (ImGui::Button("Undo")) {
         undo();
     }

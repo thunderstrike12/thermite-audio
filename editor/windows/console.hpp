@@ -52,7 +52,7 @@ using ConsoleSink_st = ConsoleSink<spdlog::details::null_mutex>;
 
 class Console : public IWindow {
    public:
-    void display() override;
+    void on_inspect() override;
 
     constexpr std::string get_title() const override { return ICON_MS_TERMINAL " Console"; }
 

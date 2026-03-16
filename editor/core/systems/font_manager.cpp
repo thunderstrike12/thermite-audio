@@ -6,14 +6,14 @@
 
 void tmt::FontManager::init() {
     /* Rubrik */
-    load("Rubik", { IO::Location::EDITOR, "fonts/Rubik-Regular.ttf" }, 22.f);
+    load("Rubik", { IO::Location::EDITOR, "fonts/Rubik-Regular.ttf" }, 18.f);
 
     /* Icons */
     const uint16_t glyph_ranges[] = { ICON_MIN_MS, ICON_MAX_MS, 0 };
     ImFontConfig config {};
     config.MergeMode = true;
-    config.GlyphOffset.y = 7.f;
-    load("MaterialSymbols", { IO::Location::EDITOR, "fonts/MaterialSymbolsRounded.ttf" }, 32.f, config, glyph_ranges);
+    config.GlyphOffset.y = 4.5f;
+    load("MaterialSymbols", { IO::Location::EDITOR, "fonts/MaterialSymbolsRounded.ttf" }, 24.f, config, glyph_ranges);
 }
 
 void tmt::FontManager::load(const std::string& name, const IO::FileLocation& location, const float size, const ImFontConfig& config, const uint16_t* glyph_ranges) {

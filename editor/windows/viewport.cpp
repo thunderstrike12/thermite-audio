@@ -1,5 +1,6 @@
 #include "viewport.hpp"
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <ImGuizmo.h>
 #include "editor/editor.hpp"
 #include "editor/gizmo.hpp"
@@ -17,6 +18,9 @@
 #include "editor/events/scene.hpp"
 #include "editor/windows/scenes.hpp"
 #include "engine/core/components/ui_component.hpp"
+#include "game_flow.hpp"
+
+#include "editor/imgui/tools/buttons.hpp"
 
 void tmt::Viewport::on_editor_start() {}
 
@@ -32,10 +36,13 @@ void tmt::Viewport::before_begin() {
 
     /* Zero margin */
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+
+    y_frame_padding = ImGui::GetStyle().FramePadding.y;
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(ImGui::GetStyle().FramePadding.x, 8.0f));
 }
 
 void tmt::Viewport::end_display() {
-    ImGui::PopStyleVar();
+    ImGui::PopStyleVar(2);
 }
 
 std::string tmt::Viewport::get_title() const {
@@ -44,13 +51,35 @@ std::string tmt::Viewport::get_title() const {
     return scene_name + window_id;
 }
 int tmt::Viewport::get_window_flags() const {
-    if (engine.game_controller.is_running()) return ImGuiWindowFlags_None;
+    int flags = ImGuiWindowFlags_MenuBar;
 
-    const bool is_scene_dirty = editor.windows[editor.editor_mode].get<ScenesWindow>().is_scene_dirty();
-    return is_scene_dirty ? ImGuiWindowFlags_UnsavedDocument : 0;
-};
+    if (!engine.game_controller.is_running()) {
+        const bool is_scene_dirty = editor.systems[editor.editor_mode].get<ScenesWindow>().is_scene_dirty();
+        if (is_scene_dirty) flags |= ImGuiWindowFlags_UnsavedDocument;
+    }
 
-void tmt::Viewport::display() {
+    return flags;
+}
+
+void tmt::Viewport::start_game() {
+    engine.game_controller.start_game();
+}
+
+void tmt::Viewport::end_game() {
+    engine.game_controller.end_game();
+}
+
+void tmt::Viewport::pause_game() {
+    engine.game_controller.pause_game();
+}
+
+void tmt::Viewport::resume_game() {
+    engine.game_controller.resume_game();
+}
+
+void tmt::Viewport::on_inspect() {
+    toolbar();
+
     auto size = ImGui::GetContentRegionAvail();
     size = ImVec2(std::max(size.x, 1.0f), std::max(size.y, 1.0f));
     width = size.x;
@@ -71,7 +100,7 @@ void tmt::Viewport::display() {
     mouse_pos.x = imgui_mouse_pos.x - image_pos.x;
     mouse_pos.y = imgui_mouse_pos.y - image_pos.y;
 
-    const std::vector<Entity>& selected_entities = editor.windows[editor.editor_mode].get<Hierarchy>().get_selected_entities();
+    const std::vector<Entity>& selected_entities = editor.systems[editor.editor_mode].get<Hierarchy>().get_selected_entities();
 
     float snap_value = 0.0f;
     const bool ctrl_held = ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
@@ -121,9 +150,7 @@ void tmt::Viewport::display() {
     const bool gizmo_changed = editor.gizmo.manip(image_pos.x, image_pos.y, width, height, selected_entities, snap_value, modifiers);
     if (gizmo_changed) OnSceneModified::dispatch();
 
-    const bool toolbar_buttons_hovered = toolbar(image_pos);
-
-    selection_logic(imgui_mouse_pos, image_pos, toolbar_buttons_hovered);
+    selection_logic(imgui_mouse_pos, image_pos, false);
 
     ImGui::EndChild();
 
@@ -138,7 +165,7 @@ void tmt::Viewport::display() {
 }
 
 void tmt::Viewport::snap_to_entity() {
-    const auto* hierarchy = editor.windows[editor.editor_mode].try_get<Hierarchy>();
+    const auto* hierarchy = editor.systems[editor.editor_mode].try_get<Hierarchy>();
     Entity selected_entity = hierarchy->get_first_selected_entity();
     if (hierarchy == nullptr || !engine.ecs.valid(selected_entity)) return;
 
@@ -187,48 +214,131 @@ void tmt::Viewport::snap_to_entity() {
     camera.pitch = glm::degrees(asin(dir.y));
 }
 
-bool tmt::Viewport::toolbar(const ImVec2& image_pos) {
+void tmt::Viewport::toolbar() {
+    if (!ImGui::BeginMenuBar()) return;
+
     ImGuiStyle& style = ImGui::GetStyle();
 
-    float btn_w = ImGui::CalcTextSize(ICON_MS_LANGUAGE).x + style.FramePadding.x * 2.0f;
-    float btn_h = ImGui::GetFrameHeight();
-    float total_w = btn_w * 3.0f + style.ItemSpacing.x;
+    // Override button padding back to normal
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, y_frame_padding));
 
-    // Small padding from the image border
-    float pad = 4.0f;
-    ImVec2 btn_pos = ImVec2(image_pos.x + width - total_w - pad, image_pos.y + pad);
+    // Vertically center buttons within the (now taller) bar
+    // float bar_height = ImGui::GetCurrentWindow()->MenuBarHeight;
+    // float btn_height = ImGui::GetFrameHeightWithSpacing();  // height with the new smaller padding
+    // float center_y = ImGui::GetCursorPosY() + (bar_height - btn_height) * 0.5f - style.FramePadding.y;
+    // ImGui::SetCursorPosY(center_y);
 
-    bool any_button_hovered = false;
+    /* ===== Left side: Gizmo controls ===== */
 
-    ImGui::SetCursorScreenPos(btn_pos);
-    const char* space_button_icon = editor.gizmo.space ? ICON_MS_LANGUAGE : ICON_MS_VIEW_IN_AR;
-    if (ImGui::Button(space_button_icon, ImVec2(btn_w, btn_h))) {
+    /* Gizmo Space Toggle (Global/Local) */
+    const char* space_label = editor.gizmo.space ? ICON_MS_LANGUAGE " Global" : ICON_MS_VIEW_IN_AR " Local";
+    if (ImGui::Button(space_label)) {
         editor.gizmo.space = static_cast<uint8_t>(!editor.gizmo.space);
     }
-    any_button_hovered |= ImGui::IsItemHovered();
 
-    ImGui::SameLine();
-    const char* mode_button_icon = Gizmo::gizmo_op_icons[editor.gizmo.operation];
-    if (ImGui::Button(mode_button_icon, ImVec2(btn_w, btn_h))) {
-        ++editor.gizmo.operation;
-        if (editor.gizmo.operation == Gizmo::GIZMO_OP_COUNT) editor.gizmo.operation = 0;
+    ImGui::Spacing();
+
+    /* Gizmo Operation Buttons (Translate/Rotate/Scale) */
+    const bool translate_active = (editor.gizmo.operation == 0);
+    const bool rotate_active = (editor.gizmo.operation == 1);
+    const bool scale_active = (editor.gizmo.operation == 2);
+    const bool rect_active = (editor.gizmo.operation == 3);
+
+    if (translate_active) ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[ImGuiCol_ButtonActive]);
+    if (ImGui::Button(ICON_MS_DRAG_PAN "##Translate")) {
+        editor.gizmo.operation = 0;
     }
-    any_button_hovered |= ImGui::IsItemHovered();
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Translate (W)");
+    if (translate_active) ImGui::PopStyleColor();
 
-    ImGui::SameLine();
-    const char* multi_button_icon = editor.gizmo.multiselect_mode ? ICON_MS_FILTER_NONE : ICON_MS_FILTER_1;
-    if (ImGui::Button(multi_button_icon, ImVec2(btn_w, btn_h))) {
-        editor.gizmo.multiselect_mode = static_cast<uint8_t>(!editor.gizmo.multiselect_mode);
+    if (rotate_active) ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[ImGuiCol_ButtonActive]);
+    if (ImGui::Button(ICON_MS_ROTATE_RIGHT "##Rotate")) {
+        editor.gizmo.operation = 1;
     }
-    any_button_hovered |= ImGui::IsItemHovered();
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Rotate (E)");
+    if (rotate_active) ImGui::PopStyleColor();
 
-    return any_button_hovered;
+    if (scale_active) ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[ImGuiCol_ButtonActive]);
+    if (ImGui::Button(ICON_MS_ZOOM_OUT_MAP "##Scale")) {
+        editor.gizmo.operation = 2;
+    }
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Scale (R)");
+    if (scale_active) ImGui::PopStyleColor();
+
+    if (rect_active) ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[ImGuiCol_ButtonActive]);
+    if (ImGui::Button(ICON_MS_ACTIVITY_ZONE "##Bounds")) {
+        editor.gizmo.operation = 3;
+    }
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Bounds (T, UI only)");
+    if (rect_active) ImGui::PopStyleColor();
+
+    ImGui::Spacing();
+
+    /* ===== Center: Game Flow Controls (icon-only) ===== */
+    float icon_btn_width = ImGui::GetFrameHeight();                    // Square buttons
+    float game_flow_width = icon_btn_width * 2 + style.ItemSpacing.x;  // Play + Pause buttons
+
+    float left_cursor = ImGui::GetCursorPosX();
+    float menu_bar_width = ImGui::GetWindowWidth();
+    float center_pos = (menu_bar_width - game_flow_width) * 0.5f;
+
+    // Only center if there's enough space
+    if (center_pos > left_cursor) {
+        ImGui::SetCursorPosX(center_pos);
+    }
+
+    // Play/Stop button
+    if (engine.game_controller.is_playing()) {
+        if (ImGui::Button(ICON_MS_STOP "##Stop")) {
+            // end_game();
+            editor.systems[editor.editor_mode].get<GameFlow>().end_game();
+        }
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Stop");
+    } else {
+        if (ImGui::Button(ICON_MS_PLAY_ARROW "##Play")) {
+            editor.systems[editor.editor_mode].get<GameFlow>().start_game();
+        }
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Start");
+    }
+
+    // Pause/Resume button (only shown when playing)
+    const bool can_interact = engine.game_controller.is_playing();
+
+    if (can_interact == false) ImGui::BeginDisabled();
+    if (engine.game_controller.is_paused()) {
+        if (ImGui::Button(ICON_MS_PLAY_ARROW "##Resume")) {
+            editor.systems[editor.editor_mode].get<GameFlow>().resume_game();
+        }
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Resume");
+    } else {
+        if (ImGui::Button(ICON_MS_PAUSE "##Pause")) {
+            editor.systems[editor.editor_mode].get<GameFlow>().pause_game();
+        }
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Pause");
+    }
+    if (can_interact == false) ImGui::EndDisabled();
+
+    /* ===== Right side: Display info ===== */
+    float right_width = ImGui::CalcTextSize(ICON_MS_ASPECT_RATIO " 0000x0000").x + style.ItemSpacing.x + style.FramePadding.x;
+
+    float avail = ImGui::GetContentRegionAvail().x;
+    if (avail > right_width) {
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + avail - right_width);
+    }
+
+    /* Resolution display */
+    char res_text[32];
+    snprintf(res_text, sizeof(res_text), ICON_MS_ASPECT_RATIO " %dx%d", static_cast<int>(width), static_cast<int>(height));
+    ImGui::Text("%s", res_text);
+
+    ImGui::PopStyleVar();  // Pop the FramePadding override
+    ImGui::EndMenuBar();
 }
 
 void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const ImVec2& image_pos, bool toolbar_buttons_hovered) {
     if (!is_hovered || engine.game_controller.is_running()) return;
 
-    auto& hierarchy = editor.windows[Editor::Mode::SCENE].get<Hierarchy>();
+    auto& hierarchy = editor.systems[Editor::Mode::SCENE].get<Hierarchy>();
     const std::vector<Entity>& selected_entities = hierarchy.get_selected_entities();
     auto& imgui_io = ImGui::GetIO();
 
@@ -323,7 +433,7 @@ void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const ImVec2&
 }
 
 void tmt::Viewport::force_open_recurse_upwards(Entity entity) {
-    auto& hierarchy = editor.windows[Editor::Mode::SCENE].get<Hierarchy>();
+    auto& hierarchy = editor.systems[Editor::Mode::SCENE].get<Hierarchy>();
 
     hierarchy.add_entity_to_forced_open(entity);
 

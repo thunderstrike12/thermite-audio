@@ -1,23 +1,26 @@
 #pragma once
-#include "editor/events/editor.hpp"
+#include "editor/core/system.hpp"
 #include <string>
 namespace tmt {
 
-class IWindow : public IEditorEvents {
+/**
+ * @brief Interface for editor systems that have a visible inspector window.
+ *
+ * Inherits from IEditorSystem for lifecycle callbacks and adds window-specific
+ * functionality like display(), get_title(), and window flags.
+ *
+ * If your system doesn't need an inspector window, use IEditorSystem directly instead.
+ */
+class IWindow : public IEditorSystem {
    public:
     virtual ~IWindow() = default;
 
     /* [Required] */
-    virtual void display() = 0;
+    virtual void on_inspect() = 0;
 
     /* [Optional] */
     virtual void before_begin() {};
     virtual void end_display() {};
-
-    /* IEditorEvents made optional */
-    virtual void on_editor_start() {};
-    virtual void on_editor_update(const tmt::FrameData& time) { (void)time; };
-    virtual void on_editor_end() {};
 
     /* [Required] */
     constexpr virtual std::string get_title() const = 0;
