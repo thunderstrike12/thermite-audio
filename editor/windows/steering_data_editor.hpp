@@ -13,7 +13,7 @@ namespace tmt {
  *
  * Integrates with SteeringParamsOverrides.
  */
-class SteeringDataEditor : public IWindow {
+class SteeringDataEditor : public IWindow<> {
    public:
     constexpr std::string get_title() const override { return "Steering data"; }
 
