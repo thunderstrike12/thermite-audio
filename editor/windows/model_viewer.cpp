@@ -15,6 +15,7 @@
 #include "editor/windows/palette.hpp"
 #include "editor/windows/node_hierarchy.hpp"
 #include "editor/windows/brush.hpp"
+#include "editor/shared/colors.hpp"
 
 namespace tmt {
 
@@ -83,7 +84,7 @@ FaceData calculate_face_info(const int32_t face_index, const Transform& transfor
 }
 
 // Draw a single face of a voxel grid bounding box.
-bool draw_face(const FaceData& info, const Transform& transform, const glm::vec3& half_extent) {
+bool draw_face(const FaceData& info, const Transform& transform, const glm::vec3& half_extent, const glm::vec3 color = glm::vec3(1.0f)) {
     const glm::vec3 camera_position = engine.renderer.get_debug_transform().get_world_position();
     if (glm::dot(info.world_normal, camera_position - info.face_center) >= 0.0f) return false;
 
@@ -117,7 +118,7 @@ bool draw_face(const FaceData& info, const Transform& transform, const glm::vec3
 
     // Draw the lines between the points to make the grid face.
     engine.polyline.use_line_width(2.0f, true);
-    engine.polyline.use_color(glm::vec4 { 0.8f, 0.8f, 0.8f, 1.0f });
+    engine.polyline.use_color(color);
 
     engine.polyline.draw_line(p0, p1);
     engine.polyline.draw_line(p1, p2);
@@ -170,13 +171,13 @@ void draw_selection(const Hit& hit, const glm::vec3& half_extent, const Transfor
     engine.polyline.draw_obb(world_voxel_pos, VOXEL_SIZE_HALF * local_scale, transform.get_world_rotation());
 }
 
-std::vector<FaceData> draw_valid_faces(const Transform& transform, const glm::vec3& half_extent) {
+std::vector<FaceData> draw_valid_faces(const Transform& transform, const glm::vec3& half_extent, const glm::vec3 color = glm::vec3(1.0f)) {
     std::vector<FaceData> valid_faces;
 
     for (int32_t i = 0; i < 6; i++) {
         FaceData face = calculate_face_info(i, transform, half_extent);
 
-        if (draw_face(face, transform, half_extent)) valid_faces.push_back(face);  // Don't add the face to the vector if `draw_face` returned false aka we can't see it.
+        if (draw_face(face, transform, half_extent, color)) valid_faces.push_back(face);  // Don't add the face to the vector if `draw_face` returned false aka we can't see it.
     }
 
     return valid_faces;
@@ -494,6 +495,16 @@ void ModelViewer::on_inspect() {
     NodeHierarchy& node_hierarchy = editor.systems[Editor::Mode::VOXEL].get<NodeHierarchy>();
     const Entity selected_entity = node_hierarchy.get_first_selected_entity();
 
+    // Draw bounding boxes of all selected entities.
+    for (const Entity e : node_hierarchy.get_selected_entities()) {
+        if (e == selected_entity || !engine.ecs.has_component<VoxelRenderer>(e)) continue;
+
+        const Transform& transform = engine.ecs.get_component<Transform>(e);
+        const ResourceRef<VoxelVolume>& resource = engine.ecs.get_component<VoxelRenderer>(e).resource;
+        const glm::vec3 half_extent = glm::vec3 { resource->size } * VOXEL_SIZE_HALF;
+        draw_valid_faces(transform, half_extent, colors::SELECTED);
+    }
+
     if (!engine.ecs.valid(selected_entity) || !engine.ecs.has_component<VoxelRenderer>(selected_entity)) return;
 
     // Get the necessary values for handling selection (entity transform, voxel resource, ray cast for selection, etc).
@@ -506,7 +517,7 @@ void ModelViewer::on_inspect() {
 
     if (glm::any(glm::greaterThanEqual(hit.coord, resource->size))) hit.entity = entt::null;
 
-    const std::vector<FaceData> valid_faces = draw_valid_faces(transform, half_extent);
+    const std::vector<FaceData> valid_faces = draw_valid_faces(transform, half_extent, colors::SELECTED);
 
     // Don't calculate voxel hits when the cursor isn't over the window or using gizmo.
     if (!ImGui::IsWindowHovered() || is_tool_gizmo) return;
