@@ -210,15 +210,17 @@ void Physics::on_fixed_update(const FrameData&) {
     // Build physics BVH
     const entt::basic_group group = engine.ecs.group<VoxelBody>(entt::get<Transform, VoxelRenderer>);
     std::vector<VoxelObject> objects {};
-    objects.reserve(group.size());
+    objects.reserve(group.size() + 1ull);
+    objects.push_back(VoxelObject()); /* Element 0 is unused */
     entities = std::vector<Entity>();
-    entities.reserve(group.size());
+    entities.reserve(group.size() + 1ull);
+    entities.push_back(Entity());     /* Element 0 is unused */
     {
         TMT_ZONE_SCOPED_N("Build BVH")
         for (auto&& [entity, vb, transform, renderer] : group.each()) {
             // TODO: THIS CAN CAUSE ISSUES WITH MISSING RESOURCES!!!!
-
             // if (vb.resource == nullptr) continue;
+
             /* Convert the entity to a voxel object */
             VoxelObject object {};
             object.local_to_world = transform.get_world_matrix();
@@ -227,8 +229,9 @@ void Physics::on_fixed_update(const FrameData&) {
             object.mask = (1u << vb.layer);
             object.volume = renderer.resource.resource.get();
             object.rcp_tree_width = 1.0f / powf(4.0f, (float)renderer.resource->blas->depth);
+            object.uuid = (uint32_t)objects.size() + 1u; /* Element 0 is unused */
             objects.push_back(std::move(object));
-            
+
             /* Save the entity id */
             /* QUICK FIX: This is to get the entity ID from a raycast() */
             entities.push_back(entity);
@@ -288,7 +291,7 @@ void Physics::generate_constraint(int index, const PhysicsGroup& group) {
     std::vector<uint32_t> hits = bvh.overlap(current_aabb);
 
     for (uint32_t hit : hits) {
-        Entity other_entity = group[hit];
+        Entity other_entity = entities[hit];  // group[hit];
         if (other_entity == entity) continue;
 
         VoxelBody& other_vb = group.get<VoxelBody>(other_entity);

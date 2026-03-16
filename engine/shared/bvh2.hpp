@@ -55,6 +55,7 @@ class Bvh2 {
     /* Nodes & primitive indices */
     Bvh2Node* nodes = nullptr;
     uint32_t* indices = nullptr;
+    uint32_t index_count = 0u;
     uint32_t node_count = 0u;
 
     /* Nodes optimized for gpu traversal */

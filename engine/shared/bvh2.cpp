@@ -34,6 +34,17 @@ void Bvh2<T>::build(const T* input_prims, const uint32_t input_count) {
         node_count = 0u;
     }
 
+    /* Find the number of primitives in the input */
+    index_count = 0u;
+    indices = new uint32_t[input_count] {};
+    for (uint32_t i = 0u; i < input_count; ++i) {
+        /* Initialize primitive indices */
+        if (input_prims[i].uuid != 0u) {
+            indices[index_count] = i;
+            index_count++;
+        }
+    }
+
     /* Allocate space for nodes */
     prim_count = input_count;
     const uint32_t nodes_required = prim_count * 2u + 1u;
@@ -41,22 +52,19 @@ void Bvh2<T>::build(const T* input_prims, const uint32_t input_count) {
     node_count = 2u; /* Skip the 2nd node for better cache-line alignment */
 
     /* Copy the input primitives */
-    prims = new T[prim_count] {};
-    bounds = new Aabb[prim_count] {};
+    prims = new T[input_count] {};
+    bounds = new Aabb[input_count] {};
     memcpy(prims, input_prims, prim_count * sizeof(T));
-
-    /* Initialize primitive indices */
-    indices = new uint32_t[prim_count] {};
-    for (uint32_t i = 0u; i < prim_count; ++i) indices[i] = i;
 
     /* Setup the root node for the BVH */
     Bvh2Node& root = nodes[0];
     root.left_first = 0u;
-    root.prim_count = prim_count;
+    root.prim_count = index_count;
     root.min_bounds = glm::vec3(BIG_F32);
     root.max_bounds = glm::vec3(-BIG_F32);
     /* Generate all primitive AABBs, and find the root AABB */
-    for (uint32_t i = 0u; i < prim_count; ++i) {
+    for (uint32_t i = 0u; i < input_count; ++i) {
+        if (prims[i].uuid == 0u) continue;
         bounds[i] = prims[i].aabb();
         root.min_bounds.x = fminf(root.min_bounds.x, bounds[i].min.x);
         root.min_bounds.y = fminf(root.min_bounds.y, bounds[i].min.y);
@@ -67,7 +75,7 @@ void Bvh2<T>::build(const T* input_prims, const uint32_t input_count) {
     }
 
     /* If there are no primitives, set root bounds to zero */
-    if (prim_count == 0u) {
+    if (index_count == 0u) {
         root.min_bounds = glm::vec3(0.0f);
         root.max_bounds = glm::vec3(0.0f);
     }
