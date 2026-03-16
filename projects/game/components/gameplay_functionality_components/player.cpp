@@ -168,11 +168,20 @@ void Player::update(const tmt::FrameData& time) {
             look_camera();
             move_player();
 
+            // Handle recharging and draining
+            if (tmt::engine.ecs.valid(barge)) {
+                if (glm::distance(tmt::engine.ecs.get_component<tmt::Transform>(entity).get_world_position(), tmt::engine.ecs.get_component<tmt::Transform>(barge).get_world_position()) >=
+                    recharge_distance) {
+                    drain_energy(time.delta_time);
+                } else {
+                    refill(time.delta_time);
+                }
+            }
             break;
         case game::PlayerState::ATTACHED:
             attempt_attach(input);
             look_camera();
-            refill(tmt::engine.frame_data().delta_time);
+            refill(time.delta_time);
             break;
             // TODO this state might disappear
         case game::PlayerState::PAUSED:
@@ -184,12 +193,21 @@ void Player::update(const tmt::FrameData& time) {
     // triggers the event for shooting
 
     // TODO events, could also use entt on modifcation component for the UI components
-    if (tmt::engine.ecs.valid(hp_bar_max_entity)) {
-        if (auto componenthpmax = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_max_entity)) componenthpmax->size.x = health.max_value + 2.0f;
+
+    if (tmt::engine.ecs.valid(hp_bar_max)) {
+        if (auto componenthpmax = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_max)) componenthpmax->size.x = health.max_value + 2.0f;
     }
 
-    if (tmt::engine.ecs.valid(hp_bar_current_entity)) {
-        if (auto componentcurrhp = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_current_entity)) componentcurrhp->size.x = health.value;
+    if (tmt::engine.ecs.valid(hp_bar_current)) {
+        if (auto componentcurrhp = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_current)) componentcurrhp->size.x = health.value;
+    }
+
+    if (tmt::engine.ecs.valid(energy_bar_max)) {
+        if (auto componenthpmax = tmt::engine.ecs.try_get_component<tmt::UIComponent>(energy_bar_max)) componenthpmax->size.x = energy.max_value + 2.0f;
+    }
+
+    if (tmt::engine.ecs.valid(energy_bar_current)) {
+        if (auto componentcurrhp = tmt::engine.ecs.try_get_component<tmt::UIComponent>(energy_bar_current)) componentcurrhp->size.x = energy.value;
     }
 }
 
@@ -205,6 +223,11 @@ void Player::refill(float delta) {
     health.value = glm::min(health.max_value, health.value + delta * health.increase_multiplier);
     energy.value = glm::min(energy.max_value, energy.value + delta * energy.increase_multiplier);
 }
+
+void Player::drain_energy(float delta) {
+    energy.value = glm::min(energy.max_value, energy.value - delta * energy_drain_per_second);
+}
+
 void Player::on_attach(const AttachEvent& event) {
     if (event.entity != entity) {
         return;

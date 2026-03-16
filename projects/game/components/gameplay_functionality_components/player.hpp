@@ -37,21 +37,34 @@ class Player : public tmt::GameComponent<Player> {
     // Player stats
     PlayerStat health;
     PlayerStat energy;
+    float energy_drain_per_second = 0.5f;
 
     // Helper functions
     tmt::Transform& get_transform() const { return tmt::engine.ecs.get_component<tmt::Transform>(entity); }
     tmt::Camera& get_camera() const { return tmt::engine.ecs.get_component<tmt::Camera>(entity); }
     void set_state(PlayerState new_state) { state = new_state; };
 
-    tmt::Entity hp_bar_max_entity = entt::null;
-    tmt::Entity hp_bar_current_entity = entt::null;
+    // UI
+    tmt::Entity hp_bar_max = entt::null;
+    tmt::Entity hp_bar_current = entt::null;
+
+    tmt::Entity energy_bar_max = entt::null;
+    tmt::Entity energy_bar_current = entt::null;
+
+    // Barge point
+    tmt::Entity barge = entt::null;
+
+    float recharge_distance = 20.0f;
 
    private:
     void refill(float delta);
+    void drain_energy(float delta);
     PlayerState state = PlayerState::FREEMOVING;
     glm::vec3 velocity = { 0.0f, 0.0f, 0.0f };
 };
 
 }  // namespace game
 TMT_OBJECT(game::PlayerStat, (max_value, value, increase_multiplier));
-TMT_OBJECT(game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, health, energy, hp_bar_max_entity, hp_bar_current_entity));
+TMT_OBJECT(
+    game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, health, energy, hp_bar_max, hp_bar_current, energy_bar_max, energy_bar_current, barge, recharge_distance)
+);
