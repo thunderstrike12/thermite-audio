@@ -7,7 +7,7 @@
 
 namespace tmt {
 
-class Rendering : public IEditorSystem, public OnDrawLines {
+class Rendering : public IEditorSystem<>, public OnDrawLines {
    public:
     void on_draw_lines() const override;
     constexpr std::string get_name() const override { return "Rendering"; };

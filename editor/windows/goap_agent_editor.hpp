@@ -15,7 +15,7 @@ namespace tmt {
  *  - Adding or removing worls facts
  *
  */
-class GoapAgentEditor : public IWindow {
+class GoapAgentEditor : public IWindow<> {
    public:
     constexpr std::string get_title() const override { return "GOAP Agents"; }
 

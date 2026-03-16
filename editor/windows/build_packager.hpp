@@ -6,7 +6,7 @@
 #include <typeindex>
 namespace tmt {
 
-class BuildPackager : public IWindow {
+class BuildPackager : public IWindow<> {
    public:
     void on_inspect() override;
     constexpr std::string get_title() const override { return ICON_MS_PACKAGE " Build Packager"; }

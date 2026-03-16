@@ -4,7 +4,7 @@
 
 namespace tmt {
 
-class ImguiDemo : public IWindow {
+class ImguiDemo : public IWindow<> {
    public:
     // Inherited via IWindow
     std::string get_title() const override { return "Dear ImGui Demo"; }

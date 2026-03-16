@@ -4,7 +4,7 @@
 
 namespace tmt {
 
-class FontControl : public IWindow {
+class FontControl : public IWindow<> {
    public:
     // Inherited via IWindow
     void on_editor_start() override;

@@ -4,7 +4,7 @@
 
 namespace tmt {
 
-class EcsInspector : public IWindow {
+class EcsInspector : public IWindow<> {
    public:
     // Inherited via IWindow
     void on_editor_start() override {};

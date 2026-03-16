@@ -1,9 +1,10 @@
 #pragma once
 #include "editor/core/window.hpp"
+#include "engine/core/reflection.hpp"
 
 namespace tmt {
 
-class UIEditor : public IEditorSystem {
+class UIEditor : public IEditorSystem<> {
    public:
     UIEditor() = default;
     ~UIEditor() = default;

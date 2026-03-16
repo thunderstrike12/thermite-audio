@@ -2,7 +2,7 @@
 
 namespace tmt {
 
-class MotionMathPreview : public IWindow {
+class MotionMathPreview : public IWindow<> {
    public:
     MotionMathPreview() = default;
     ~MotionMathPreview() override = default;

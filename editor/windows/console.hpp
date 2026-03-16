@@ -50,7 +50,7 @@ class ConsoleSink : public spdlog::sinks::base_sink<Mutex> {
 
 using ConsoleSink_st = ConsoleSink<spdlog::details::null_mutex>;
 
-class Console : public IWindow {
+class Console : public IWindow<> {
    public:
     void on_inspect() override;
 

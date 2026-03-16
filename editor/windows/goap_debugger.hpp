@@ -17,7 +17,7 @@ namespace tmt {
  *
  * It runs inside the editor's windowing system and updates per frame.
  */
-class GoapDebugger : public IWindow {
+class GoapDebugger : public IWindow<> {
    public:
     constexpr std::string get_title() const override { return "GOAP Debugger"; }
 

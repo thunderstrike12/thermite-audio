@@ -4,7 +4,7 @@
 
 namespace tmt {
 
-class DebugLines : public IWindow {
+class DebugLines : public IWindow<> {
    public:
     void on_inspect() override;
 

@@ -3,17 +3,9 @@
 #include <string>
 namespace tmt {
 
-/**
- * @brief Interface for editor systems that have a visible inspector window.
- *
- * Inherits from IEditorSystem for lifecycle callbacks and adds window-specific
- * functionality like display(), get_title(), and window flags.
- *
- * If your system doesn't need an inspector window, use IEditorSystem directly instead.
- */
-class IWindow : public IEditorSystem {
+class IWindowBase {
    public:
-    virtual ~IWindow() = default;
+    virtual ~IWindowBase() = default;
 
     /* [Required] */
     virtual void on_inspect() = 0;
@@ -31,5 +23,8 @@ class IWindow : public IEditorSystem {
     constexpr virtual bool is_closable() const { return true; }
     constexpr virtual bool default_open() const { return false; }
 };
+
+template <typename Derived = void>
+class IWindow : public IEditorSystem<Derived>, public IWindowBase {};
 
 }  // namespace tmt

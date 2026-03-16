@@ -12,7 +12,7 @@ namespace tmt {
 struct Hit;
 class VoxelVolume;
 
-class ModelViewer : public IWindow {
+class ModelViewer : public IWindow<> {
    public:
     constexpr std::string get_title() const override { return ICON_MS_DEPLOYED_CODE " Model Viewer"; }
     constexpr int get_window_flags() const override { return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse; }

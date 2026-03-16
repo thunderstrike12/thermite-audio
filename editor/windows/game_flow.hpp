@@ -6,7 +6,7 @@
 
 namespace tmt {
 
-class GameFlow : public IWindow, public OnGameEnd, public OnPreLoadScene {
+class GameFlow : public IWindow<>, public OnGameEnd, public OnPreLoadScene {
    public:
     // Inherited via IWindow
     std::string get_title() const override { return ICON_MS_GAMEPAD "  Game Flow"; };

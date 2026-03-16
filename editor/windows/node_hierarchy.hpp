@@ -12,7 +12,7 @@ struct Transform;
 
 class VoxelVolume;
 
-class NodeHierarchy : public IWindow {
+class NodeHierarchy : public IWindow<> {
    public:
     struct NodeUUID {
         UUID uuid { NULL_UUID };

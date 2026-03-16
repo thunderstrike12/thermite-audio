@@ -12,7 +12,7 @@ namespace tmt {
 class AudioEvent;
 class AudioBank;
 
-class AudioMixer : public IWindow, public OnGameEnd {
+class AudioMixer : public IWindow<>, public OnGameEnd {
    public:
     AudioMixer() = default;
     ~AudioMixer() override = default;

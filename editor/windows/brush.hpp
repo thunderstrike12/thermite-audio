@@ -4,7 +4,7 @@
 
 namespace tmt {
 
-class Brush : public IWindow {
+class Brush : public IWindow<> {
    public:
     enum class Tool : uint8_t { GIZMO, COLOR_PICKER, SINGLE, BOX };
     enum class Mode : uint8_t { ATTACH, REMOVE, PAINT };

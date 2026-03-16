@@ -444,22 +444,29 @@ void Inspector::paste_compile_time_component(const json& deserialized, const Men
     const auto name_in_clipboard = deserialized.value("component_type", "");
     SerializeComponents::for_each([&](auto type_tag_inner) {
         using T_inner = typename decltype(type_tag_inner)::type;  // Extract type from tag
-        const auto name_of_type = tmt::Component<T_inner>::get_name();
-        if (name_in_clipboard != name_of_type) return;
 
-        UndoRedoCollection collection;
-        const json data = deserialized.value("data", json::object());
-        for (const Entity& entity : menu_context.selected_entities) {
-            ComponentDiff<T_inner> component_diff(entity);
-            component_diff.before();
+        /* ComponentCollection is handled by paste_runtime_component and has no
+           direct JsonReflect field serializer, so skip it at compile time. */
+        if constexpr (std::is_same_v<T_inner, ComponentCollection>)
+            return;
+        else {
+            const auto name_of_type = tmt::Component<T_inner>::get_name();
+            if (name_in_clipboard != name_of_type) return;
 
-            T_inner& target_instance = tmt::engine.ecs.add_or_get_component<T_inner>(entity);
-            Serializer::deserialize(data, target_instance);
+            UndoRedoCollection collection;
+            const json data = deserialized.value("data", json::object());
+            for (const Entity& entity : menu_context.selected_entities) {
+                ComponentDiff<T_inner> component_diff(entity);
+                component_diff.before();
 
-            component_diff.after();
-            collection.add_action(component_diff);
+                T_inner& target_instance = tmt::engine.ecs.add_or_get_component<T_inner>(entity);
+                Serializer::deserialize(data, target_instance);
+
+                component_diff.after();
+                collection.add_action(component_diff);
+            }
+            collection.commit("Paste Component: " + std::string(name_of_type));
         }
-        collection.commit("Paste Component: " + std::string(name_of_type));
     });
 }
 
@@ -538,22 +545,29 @@ void Inspector::paste_compile_time_values(const json& deserialized, const MenuCo
     const auto name_in_clipboard = deserialized.value("component_type", "");
     SerializeComponents::for_each([&](auto type_tag_inner) {
         using T_inner = typename decltype(type_tag_inner)::type;  // Extract type from tag
-        const auto name_of_type = tmt::Component<T_inner>::get_name();
-        if (name_in_clipboard != name_of_type) return;
 
-        UndoRedoCollection collection;
-        const json data = deserialized.value("data", json::object());
-        for (const Entity& entity : menu_context.selected_entities) {
-            const bool has_comp = tmt::engine.ecs.has_component<T_inner>(entity);
-            if (has_comp == false) continue;
-            T_inner& target_instance = tmt::engine.ecs.get_component<T_inner>(entity);
-            ComponentDiff<T_inner> component_diff(entity);
-            component_diff.before();
-            Serializer::deserialize(data, target_instance);
-            component_diff.after();
-            collection.add_action(component_diff);
+        /* ComponentCollection is handled by paste_runtime_values and has no
+           direct JsonReflect field serializer, so skip it at compile time. */
+        if constexpr (std::is_same_v<T_inner, ComponentCollection>)
+            return;
+        else {
+            const auto name_of_type = tmt::Component<T_inner>::get_name();
+            if (name_in_clipboard != name_of_type) return;
+
+            UndoRedoCollection collection;
+            const json data = deserialized.value("data", json::object());
+            for (const Entity& entity : menu_context.selected_entities) {
+                const bool has_comp = tmt::engine.ecs.has_component<T_inner>(entity);
+                if (has_comp == false) continue;
+                T_inner& target_instance = tmt::engine.ecs.get_component<T_inner>(entity);
+                ComponentDiff<T_inner> component_diff(entity);
+                component_diff.before();
+                Serializer::deserialize(data, target_instance);
+                component_diff.after();
+                collection.add_action(component_diff);
+            }
+            collection.commit("Paste Values: " + std::string(name_of_type));
         }
-        collection.commit("Paste Values: " + std::string(name_of_type));
     });
 }
 

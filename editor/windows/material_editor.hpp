@@ -4,7 +4,7 @@
 
 namespace tmt {
 
-class MaterialEditor : public IWindow {
+class MaterialEditor : public IWindow<> {
    public:
     constexpr std::string get_title() const override { return ICON_MS_EDIT " Material Editor"; }
     constexpr bool default_open() const override { return true; }

@@ -49,7 +49,7 @@ class UndoRedoCollection : public IUndoRedo {
     std::vector<std::shared_ptr<IUndoRedo>> actions;
 };
 
-class UndoRedoManager : public IWindow, public OnEngineEnd {
+class UndoRedoManager : public IWindow<>, public OnEngineEnd {
    public:
     UndoRedoManager() = default;
     ~UndoRedoManager() override = default;

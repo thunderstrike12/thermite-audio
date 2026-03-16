@@ -3,7 +3,7 @@
 
 namespace tmt {
 
-class EditorSettingsWindow : public IWindow {
+class EditorSettingsWindow : public IWindow<> {
    public:
     virtual void on_inspect() override;
 

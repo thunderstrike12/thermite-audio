@@ -1,5 +1,14 @@
 #include "entt.hpp"
 
+#include "engine/engine.hpp"
+#include "engine/core/ecs.hpp"
+#include "engine/core/logger.hpp"
+#include "engine/core/components/name.hpp"
+#include "engine/core/components/transform.hpp"
+
+#include "editor/font/icon_lookups.hpp"
+#include "editor/windows/hierarchy.hpp"
+
 /* Check if entity or any of its descendants match the search filter */
 bool entity_matches_search(entt::entity entity, const std::string& filter) {
     if (!tmt::engine.ecs.valid(entity)) return false;

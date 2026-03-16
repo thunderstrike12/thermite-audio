@@ -5,7 +5,7 @@
 
 namespace tmt {
 
-class ScenesWindow : public IEditorSystem, OnSceneModified, OnSceneSerialized, OnPostLoadScene {
+class ScenesWindow : public IEditorSystem<>, OnSceneModified, OnSceneSerialized, OnPostLoadScene {
    public:
     ScenesWindow() = default;
     ~ScenesWindow() = default;

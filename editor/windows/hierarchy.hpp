@@ -16,7 +16,7 @@
 
 namespace tmt {
 
-class Hierarchy : public IWindow, public OnGameEnd, public OnPreUnloadScene {
+class Hierarchy : public IWindow<>, public OnGameEnd, public OnPreUnloadScene {
    public:
     Hierarchy() = default;
     ~Hierarchy() = default;

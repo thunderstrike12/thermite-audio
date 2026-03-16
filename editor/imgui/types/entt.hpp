@@ -7,15 +7,6 @@
 #include <algorithm>
 #include <cctype>
 
-#include "engine/engine.hpp"
-#include "engine/core/ecs.hpp"
-#include "engine/core/logger.hpp"
-#include "engine/core/components/name.hpp"
-#include "engine/core/components/transform.hpp"
-
-#include "editor/font/icon_lookups.hpp"
-#include "editor/windows/hierarchy.hpp"
-
 /* Custom response type for entity */
 template <>
 struct ImReflect::type_response<entt::entity> : ImReflect::Detail::required_response<entt::entity> {

@@ -19,7 +19,7 @@ namespace tmt {
  * Notes:
  *   - Removing a layer clears its name and disables collisions but preserves its index to maintain consistency with in-game references.
  */
-class PhysicsLayersEditor : public IWindow {
+class PhysicsLayersEditor : public IWindow<> {
    public:
     constexpr std::string get_title() const override { return "Physics Layers"; }
 
