@@ -54,19 +54,21 @@ void UndoRedoManager::on_inspect() {
     ImGui::SameLine();
     if (ImGui::Button("Clear")) clear();
 
-    ImGui::BeginChild("UndoRedoManager_UndoStack", ImVec2(0, 200), true);
-    ImGui::Text("Undo Stack:");
-    for (int i = static_cast<int>(undo_stack.size()) - 1; i >= 0; i--) {
-        const auto& entry = undo_stack[i];
-        ImGui::BulletText("%s", entry.message.c_str());
+    if (ImGui::BeginChild("UndoRedoManager_UndoStack", ImVec2(0, 200), true)) {
+        ImGui::Text("Undo Stack:");
+        for (int i = static_cast<int>(undo_stack.size()) - 1; i >= 0; i--) {
+            const auto& entry = undo_stack[i];
+            ImGui::BulletText("%s", entry.message.c_str());
+        }
     }
     ImGui::EndChild();
 
-    ImGui::BeginChild("UndoRedoManager_RedoStack", ImVec2(0, 200), true);
-    ImGui::Text("Redo Stack:");
-    for (int i = static_cast<int>(redo_stack.size()) - 1; i >= 0; i--) {
-        const auto& entry = redo_stack[i];
-        ImGui::BulletText("%s", entry.message.c_str());
+    if (ImGui::BeginChild("UndoRedoManager_RedoStack", ImVec2(0, 200), true)) {
+        ImGui::Text("Redo Stack:");
+        for (int i = static_cast<int>(redo_stack.size()) - 1; i >= 0; i--) {
+            const auto& entry = redo_stack[i];
+            ImGui::BulletText("%s", entry.message.c_str());
+        }
     }
     ImGui::EndChild();
 }

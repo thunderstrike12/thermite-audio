@@ -847,7 +847,7 @@ void NodeHierarchy::on_inspect() {
     diff.before();
 
     // Handle the selection event request after all the items have been displayed.
-    multi_select_io = multi_select_io = ImGui::EndMultiSelect();
+    multi_select_io = ImGui::EndMultiSelect();
     apply_requests(multi_select_io, selected_entities, all_entities);
     if (set_all) selected_entities = all_entities;
 

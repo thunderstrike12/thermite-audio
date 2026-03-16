@@ -176,8 +176,9 @@ void Editor::on_engine_update(const FrameData& time) {
 
         if (open) {
             window->before_begin();
-            ImGui::Begin(name.c_str(), window->is_closable() ? &open : nullptr, flags);
-            window->on_inspect();
+            if (ImGui::Begin(name.c_str(), window->is_closable() ? &open : nullptr, flags)) {
+                window->on_inspect();
+            }
             ImGui::End();
             window->end_display();
         }

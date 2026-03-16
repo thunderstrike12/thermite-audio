@@ -14,6 +14,9 @@ class MaterialEditor : public IWindow<> {
     void on_editor_start() override {}
     void on_editor_update(const FrameData&) override {}
     void on_editor_end() override {}
+
+   private:
+    bool edit_all_palettes { true };
 };
 
 }  // namespace tmt
