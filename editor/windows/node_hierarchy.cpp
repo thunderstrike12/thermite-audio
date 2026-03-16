@@ -136,8 +136,8 @@ tmt::Entity recurse_build_scene(
     entity = tmt::engine.ecs.create_entity(node.name, entity);
 
     tmt::Transform& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
-    transform.set_world_matrix(parent_matrix * node.transform);
     transform.set_parent(parent_entity);
+    transform.set_world_matrix(parent_matrix * node.transform);
 
     tmt::NodeHierarchy::NodeUUID& uuid_component = tmt::engine.ecs.add_component<tmt::NodeHierarchy::NodeUUID>(entity);
     uuid_component.uuid = uuid;
@@ -505,7 +505,10 @@ void NodeHierarchy::clear_hierarchy() {
 }
 
 void NodeHierarchy::drop_hierarchy() {
-    const ImRect window_rect { ImGui::GetWindowContentRegionMin(), ImGui::GetWindowContentRegionMax() };
+    const ImVec2 min = ImGui::GetWindowPos() + ImGui::GetStyle().WindowPadding;
+    const ImVec2 max = min + ImGui::GetWindowSize() - ImGui::GetStyle().WindowPadding;
+    const ImRect window_rect { min, max };
+
     if (!ImGui::BeginDragDropTargetCustom(window_rect, ImGui::GetID("NodeEmptyDropArea"))) return;
 
     const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("VoxelNode");
