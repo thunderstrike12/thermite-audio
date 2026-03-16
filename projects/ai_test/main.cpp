@@ -128,49 +128,6 @@ void AIScene::on_start() {
         transform.set_world_position(glm::vec3(0.0f, 0.0f, -2.0f));
     }
 
-#if 0
-    { // --- Old example of angent type creation ---
-        // --- Register Agent Types ---
-
-        tmt::GoapAgentType enemy1;
-        enemy1.id = "Enemy 1";
-
-        enemy1.action_ids = {"a_PatrolArea", "a_ChasePlayer", "a_KillPlayer"};
-
-        enemy1.goal_ids = {"g_PatrolArea", "g_KillPlayer"};
-
-        // NOTE: You really shouldn't convert a 64bit hash to 32bits!!!!
-        enemy1.default_world_state = { { (uint32_t)std::hash<std::string>()("player_visible"), true },
-                                       { (uint32_t)std::hash<std::string>()("player_in_range"), false },
-                                       { (uint32_t)std::hash<std::string>()("player_alive"), true },
-                                       { (uint32_t)std::hash<std::string>()("area_secure"), false } };
-
-        type_reg.register_type(enemy1);
-
-        tmt::GoapAgentType enemy2;
-        enemy2.id = "Enemy 2";
-
-        enemy2.action_ids = {"a_PatrolArea"};
-
-        enemy2.goal_ids = {"g_PatrolArea"};
-
-        enemy2.default_world_state = { { (uint32_t)std::hash<std::string>()("area_secure"), false } };
-
-        type_reg.register_type(enemy2);
-
-        // Spawn agents from type registry via factory
-        tmt::Entity ai1 = tmt::engine.ecs.create_entity("AI Agent 1");
-        tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 1", ai1);
-        tmt::Entity ai2 = tmt::engine.ecs.create_entity("AI Agent 2");
-        tmt::GoapAgentFactory::spawn_agent_from_type("Enemy 2", ai2);
-
-        // Set unique positions
-        ecs.get_component<tmt::Transform>(ai1).set_world_position({ 0.f, 0.f, 0.f });
-        ecs.get_component<tmt::Transform>(ai2).set_world_position({ 5.f, 0.f, 0.f });
-    }
-#else
-#endif
-
     { /* Camera entity */
         tmt::Entity entity = tmt::engine.ecs.create_entity("Camera");
         auto& camera = tmt::engine.ecs.add_component<tmt::Camera>(entity);

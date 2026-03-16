@@ -13,6 +13,8 @@ namespace tmt {
 
 void SteeringSystem::on_start() {
     Log::info("Steering on_start");
+    
+    overrides().load();
 }
 
 /**
@@ -34,26 +36,26 @@ void SteeringSystem::on_fixed_update(const FrameData& time) {
 
         if (request.mode == SteeringMode::NONE) continue;
 
-        // -------- Overshoot prevention --------
-        glm::vec3 position = transform.get_world_position();
+        //// -------- Overshoot prevention --------
+        //glm::vec3 position = transform.get_world_position();
 
-        if (request.mode == SteeringMode::ARRIVE) {
-            glm::vec3 to_target = request.target_position - position;
+        //if (request.mode == SteeringMode::ARRIVE) {
+        //    glm::vec3 to_target = request.target_position - position;
 
-            float dist = glm::length(to_target);
-            float move_this_frame = glm::length(body.velocity) * time.delta_time;
+        //    float dist = glm::length(to_target);
+        //    float move_this_frame = glm::length(body.velocity) * time.delta_time;
 
-            if (move_this_frame >= dist) {
-                body.velocity = glm::vec3(0);
-                body.angular_velocity = glm::vec3(0);
+        //    if (move_this_frame >= dist) {
+        //        body.velocity = glm::vec3(0);
+        //        body.angular_velocity = glm::vec3(0);
 
-                request.completed = true;
-                request.mode = SteeringMode::NONE;
+        //        request.completed = true;
+        //        request.mode = SteeringMode::NONE;
 
-                continue;
-            }
-        }
-        // --------------------------------------
+        //        continue;
+        //    }
+        //}
+        //// --------------------------------------
 
         glm::vec3 steering = calculate_force(agent, request, transform, body, time.delta_time);
 
@@ -68,7 +70,7 @@ void SteeringSystem::on_fixed_update(const FrameData& time) {
         float speed = glm::length(body.velocity);
         if (speed > agent.max_speed) body.velocity = (body.velocity / speed) * agent.max_speed;
 
-        check_completion(entity, request, transform, body);
+        check_completion(request, transform, body);
     }
 }
 
@@ -147,7 +149,7 @@ glm::vec3 SteeringSystem::wander(const SteeringAgent& agent, const glm::vec3& po
  *  - Query the Physics system to detect hits, ignoring the enemy layer.
  *  - For each hit within avoidDistance, accumulate a repelling force proportional to proximity.
  */
-glm::vec3 SteeringSystem::collision_avoidance(Entity /* entity */, const SteeringAgent& agent, const glm::vec3& position, const VoxelBody& body) {
+glm::vec3 SteeringSystem::collision_avoidance(const SteeringAgent& agent, const glm::vec3& position, const VoxelBody& body) {
     if (glm::length2(body.velocity) < 0.0001f) return glm::vec3(0);
 
     glm::vec3 forward = glm::normalize(body.velocity);
@@ -157,7 +159,7 @@ glm::vec3 SteeringSystem::collision_avoidance(Entity /* entity */, const Steerin
     auto* physics = engine.ecs.systems.try_get<Physics>();
     if (!physics) return glm::vec3(0);
 
-    uint32_t layer_mask = 0xFFFFFFFF & ~(1 << 2);  // ignore enemies
+    uint32_t layer_mask = 0xFFFFFFFF & ~(1 << 2) & ~(1 << 1);  // ignore enemies and player
     float avoid_distance = 80.0f;
 
     glm::vec3 total_avoid(0.0f);
@@ -203,7 +205,7 @@ glm::vec3 SteeringSystem::calculate_force(const SteeringAgent& agent, const Stee
             break;
 
         case SteeringMode::ARRIVE:
-            force += arrive(agent, position, request.target_position, request.arrive_radius, body.velocity);
+            force += arrive(agent, position, request.target_position, overrides().params.arrive_radius, body.velocity);
             break;
 
         case SteeringMode::FLEE:
@@ -211,7 +213,8 @@ glm::vec3 SteeringSystem::calculate_force(const SteeringAgent& agent, const Stee
             break;
 
         case SteeringMode::WANDER:
-            force += wander(agent, position, body, request.wander_data, dt);
+            //force += wander(agent, position, body, request.wander_data, dt);
+            dt;
             break;
 
         default:
@@ -219,7 +222,7 @@ glm::vec3 SteeringSystem::calculate_force(const SteeringAgent& agent, const Stee
     }
 
     // Add avoidance on top
-    force += collision_avoidance(entt::null, agent, position, body);
+    force += collision_avoidance(agent, position, body);
 
     return force;
 }
@@ -228,21 +231,18 @@ glm::vec3 SteeringSystem::calculate_force(const SteeringAgent& agent, const Stee
  * For ARRIVE requests, checks if the agent is within arrive_radius and moving slowly enough.
  * Stops the agent and marks the request as completed.
  */
-void SteeringSystem::check_completion(Entity /* entity */, SteeringRequest& request, const Transform& transform, VoxelBody& body) {
+void SteeringSystem::check_completion(SteeringRequest& request, const Transform& transform, VoxelBody& body) {
     if (request.mode != SteeringMode::ARRIVE) return;
 
     float dist = glm::distance(transform.get_world_position(), request.target_position);
 
-    float speed = glm::length(body.velocity);
-
-    // Consider both distance & speed
-    if (dist < request.arrive_radius && speed < 0.1f) {
-        request.completed = true;
-        request.mode = SteeringMode::NONE;
-
-        // stop the body
+    // stop movement if close enough
+    if (dist <= overrides().params.min_explosion_range) {
         body.velocity = glm::vec3(0);
         body.angular_velocity = glm::vec3(0);
+
+        request.completed = true;           // mark as completed
+        request.mode = SteeringMode::NONE;  // stop steering, but keep the component
     }
 }
 

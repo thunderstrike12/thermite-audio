@@ -58,6 +58,9 @@ class Goap : public ISystem {
     // Selects or updates the active goal for an agent.
     void update_goal(Entity entity, GoapAgent& agent, WorldState& ws);
 
+    // validates the plan of the goal
+    bool goal_has_valid_plan(const GoapGoal& goal, GoapAgent& agent, const WorldState& ws);
+
     // Builds a plan toward the current goal (A*).
     void update_plan(Entity entity, GoapAgent& agent, WorldState& ws);
 
@@ -72,7 +75,7 @@ class Goap : public ISystem {
     GoapAgentTypeRegistry agent_type_registry;
 
     // Set to true if you want more logging to see whats happening internally
-    bool show_logging = false;
+    bool show_logging = true;
 };
 
 /**

@@ -80,13 +80,11 @@ class GoapAction {
 
     /**
      * For an implementation of this class, add:
-     * GoapActionRegistry::instance().register_action(this);
-     * Which is in:
-     * #include "engine/systems/ai/goap/components/goap_action_registry.hpp"
-     * Use ths to register the actions for use in ImGui, registering this function
-     * will make it be able to get edited in the editor, then use the clone for the agents.
-     * Add this before creating agents:
-     * tmt::GoapActionRegistry::instance().register_action(new tmt::PatrolArea());
+     * auto& action_reg = goap.actions();
+     * action_reg.register_action(std::make_unique<game::SteerToPlayer>());
+     *
+     * to register actions in the goap system, this way they can be used
+     * in the agent editor.
      */
 };
 

@@ -67,6 +67,7 @@ class NavMesh {
 
     NavMeshGenerationState generation_state = NavMeshGenerationState::UNINITIALISED;
     std::vector<NavNode>* nodes_mesh;
+    std::vector<NavNode>* generating_nodes = nullptr;
     std::vector<int> path;
 
     tmt::ResourceRef<tmt::VoxelVolume> voxel_volume;
@@ -96,8 +97,6 @@ class NavMesh {
     }
     std::vector<NavNode>* buffer_a = nullptr;
     std::vector<NavNode>* buffer_b = nullptr;
-
-    std::vector<NavNode>* generating_nodes = nullptr;
 
    public:
     glm::mat4 world_matrix = glm::mat4(1.f);

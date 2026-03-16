@@ -135,7 +135,7 @@ void NavMesh::average_neighbor_normals(int iterations) {
 }
 
 void NavMesh::generate_mesh_over_time() {
-    int iterations = 50;
+    int iterations = 100;
     switch (generation_state) {
         case NavMeshGenerationState::UNINITIALISED: {
             generating_lod = 3;
@@ -160,7 +160,7 @@ void NavMesh::generate_mesh_over_time() {
             break;
         }
         case NavMeshGenerationState::FINISHED_LOWER_LOD: {
-            generation_iteration = 0;
+            generation_iteration = -1;
             generation_state = NavMeshGenerationState::GENERATING_NORMALS;
             break;
         }

@@ -48,6 +48,8 @@ void PhysicsLayersEditor::on_inspect() {
 
     ImGui::Begin("Physics Layers");
 
+    if (ImGui::Button("Save Physics Layers")) physics->layers().save();
+
     ImGui::BeginChild("LayerList", ImVec2(250, 0), true);
     draw_layer_list(layers);
     ImGui::EndChild();

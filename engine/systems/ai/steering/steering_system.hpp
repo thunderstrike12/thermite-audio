@@ -5,9 +5,11 @@
 #include "engine/core/system.hpp"
 #include "engine/core/ecs.hpp"
 
-#include "systems/physics/components/voxel_body.hpp"
+#include "engine/systems/physics/components/voxel_body.hpp"
 #include "components/steering_agent.hpp"
 #include "components/steering_mode.hpp"
+
+#include "components/steering_params_overrides.hpp"
 
 namespace tmt {
 
@@ -29,6 +31,9 @@ class SteeringSystem : public ISystem {
     void on_fixed_update(const FrameData& time) override;
     void on_end() override {}
 
+    SteeringOverrides& overrides() { return steering_overrides; }
+    const SteeringOverrides& overrides() const { return steering_overrides; }
+
     /**
      * Calculate SEEK force toward a target.
      */
@@ -48,7 +53,7 @@ class SteeringSystem : public ISystem {
      * Calculate collision avoidance force using forward and side rays.
      * Ignores entities on the enemy layer.
      */
-    glm::vec3 collision_avoidance(Entity entity, const SteeringAgent& agent, const glm::vec3& position, const VoxelBody& body);
+    glm::vec3 collision_avoidance(const SteeringAgent& agent, const glm::vec3& position, const VoxelBody& body);
 
     /**
      * Calculate total steering force based on current request and obstacle avoidance.
@@ -58,7 +63,10 @@ class SteeringSystem : public ISystem {
     /**
      * Check if an ARRIVE request is complete and stop the agent.
      */
-    void check_completion(Entity entity, SteeringRequest& request, const Transform& transform, VoxelBody& body);
+    void check_completion(SteeringRequest& request, const Transform& transform, VoxelBody& body);
+
+   private:
+    SteeringOverrides steering_overrides;
 };
 
 }  // namespace tmt
