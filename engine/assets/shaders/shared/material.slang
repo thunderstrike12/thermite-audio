@@ -31,6 +31,8 @@ public struct Material {
     public [ForceInline] float3 albedo() { return decode_rgb10(packed_albedo); };
     /* Material index of refraction [1,3] */
     public [ForceInline] float ior() { return unpackHalf2x16ToFloat(ior_emission).x; };
+    /* Material emission factor [0,INF] */
+    public [ForceInline] float emission() { return unpackHalf2x16ToFloat(ior_emission).y; };
     /* Material microfacet roughness [0,1] */
     public [ForceInline] float roughness() { return float(roughness_metallic_transmission & 0xFFu) * (1.0f / 0xFFu); };
 };

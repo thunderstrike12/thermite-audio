@@ -58,7 +58,7 @@ inline PickedLight pick_light(const float3 point, const float3 normal, inout uin
 }
 
 inline float3 direct_illuminance(const float3 point, const float3 normal, const float3 view_dir, const Material mat, inout uint seed, const float2 noise) {
-    float3 illuminance = 0.0f;
+    float3 illuminance = mat.albedo() * mat.emission();
 
     /* Handle the sun light source */
     if (any(scene_view.sun_luminance > 0.0f)) {
