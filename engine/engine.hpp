@@ -65,6 +65,7 @@ class Engine {
 
     struct Config {
         constexpr static float FIXED_TIME_STEP = 1.0f / 60.0f;
+        constexpr static uint32_t MAX_FIXED_UPDATES_PER_FRAME = 3;
     };
 
     const FrameData& frame_data() const;
