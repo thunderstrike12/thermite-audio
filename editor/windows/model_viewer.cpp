@@ -200,7 +200,7 @@ bool handle_selection(
     if (!is_face_hit) {
         if (brush_state.tool != Brush::Tool::COLOR_PICKER && brush_state.mode == Brush::Mode::ATTACH) {
             // If we can hit a face, that means we want to work on top of the voxel the mouse is pointing at, we get the voxel coord by adjusting it here.
-            const glm::vec3 local_normal = world_to_local_matrix * glm::vec4 { hit.normal, 0.0f };
+            const glm::vec3 local_normal = glm::normalize(glm::vec3(world_to_local_matrix * glm::vec4 { hit.normal, 0.0f }));
             const glm::uvec3 voxel_grid_normal { glm::round(local_normal) };
             hit.coord += voxel_grid_normal;
         }
@@ -360,28 +360,31 @@ void handle_brush(const Brush::State brush_state, const ResourceRef<VoxelVolume>
 
             static glm::uvec3 start_coord { std::numeric_limits<uint32_t>::max() };
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) start_coord = hit.coord;
-
             const glm::uvec3& end_coord = hit.coord;
 
-            // Calculate the middle point of the selected volume of voxels.
-            const glm::vec3 selection_middle = glm::vec3 { start_coord + end_coord + 1u } * VOXEL_SIZE_HALF;
+            // Find the bounded start and end coordinates.
+            const glm::uvec3 start_bounded = glm::min(start_coord, model->size - 1u);
+            const glm::uvec3 end_bounded = glm::min(end_coord, model->size - 1u);
 
             // Calculate the half extent of the selected volume of voxels (requires min and max to correctly account for the start and end voxels).
-            const glm::uvec3 min = glm::min(start_coord, end_coord);
-            const glm::uvec3 max = glm::max(start_coord, end_coord);
-            const glm::vec3 select_half_extent = (glm::vec3 { min } - glm::vec3 { max } - 1.0f) * VOXEL_SIZE_HALF;
+            const glm::uvec3 min = glm::min(start_bounded, end_bounded);
+            const glm::uvec3 max = glm::max(start_bounded, end_bounded);
 
             const Transform& transform = engine.ecs.get_component<Transform>(hit.entity);
             const glm::vec3 half_extent = glm::vec3 { model->size } * VOXEL_SIZE_HALF;
-            const glm::vec3 world_position = transform.get_world_matrix() * glm::vec4 { selection_middle - half_extent, 1.0f };
 
-            engine.polyline.draw_obb(world_position, select_half_extent, transform.get_world_rotation());
+            // Find the world min and max position, use those to find the center and half extent.
+            const glm::vec3 world_min = transform.get_world_matrix() * glm::vec4 { glm::vec3(min) * UNITS_PER_VOXEL - half_extent, 1.0f };
+            const glm::vec3 world_max = transform.get_world_matrix() * glm::vec4 { glm::vec3(max + 1u) * UNITS_PER_VOXEL - half_extent, 1.0f };
+            const glm::vec3 select_half_extent = glm::vec3(max - min + 1u) * VOXEL_SIZE_HALF * transform.get_world_scale();
+            const glm::vec3 select_center = (world_min + world_max) * 0.5f;
+
+            engine.polyline.draw_obb(select_center, select_half_extent, transform.get_world_rotation());
 
             // Releasing the mouse button to modify the area.
             if (!ImGui::IsMouseReleased(ImGuiMouseButton_Left)) break;
 
             modify_voxel_volume(model, brush_state.mode, min, max, material_index);
-
             break;
         }
 
