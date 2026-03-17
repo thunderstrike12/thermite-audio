@@ -10,7 +10,6 @@
 #include "engine/core/polyline.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
 
-
 #include <cstdlib>
 
 void Wander::on_start(tmt::Entity enemy_entity) {

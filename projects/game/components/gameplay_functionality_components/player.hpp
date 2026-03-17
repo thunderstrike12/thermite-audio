@@ -66,5 +66,6 @@ class Player : public tmt::GameComponent<Player> {
 }  // namespace game
 TMT_OBJECT(game::PlayerStat, (max_value, value, increase_multiplier));
 TMT_OBJECT(
-    game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, health, energy, hp_bar_max, hp_bar_current, energy_bar_max, energy_bar_current, barge, recharge_distance)
+    game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, health, energy, energy_drain_per_second, hp_bar_max, hp_bar_current, energy_bar_max, energy_bar_current,
+                   barge, recharge_distance)
 );

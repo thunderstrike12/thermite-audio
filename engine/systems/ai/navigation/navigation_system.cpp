@@ -19,7 +19,7 @@ void tmt::NavigationSystem::on_update(const FrameData&) {
             auto& bvh = tmt::engine.renderer.scene_view.bvh;
 
             if (bvh.nodes[0].left_first == 0u && bvh.nodes[0].prim_count == 0u) continue;
-            
+
             for (auto& node : *nav_mesh.generating_nodes) {
                 node.world_pos = glm::vec3(world_matrix * glm::vec4(node.local_pos, 1.0f));
             }

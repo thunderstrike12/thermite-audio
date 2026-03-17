@@ -42,10 +42,10 @@ void SteeringSystem::on_fixed_update(const FrameData& time) {
         if (request.mode == SteeringMode::NONE) continue;
 
         //// -------- Overshoot prevention --------
-        //glm::vec3 position = transform.get_world_position();
+        // glm::vec3 position = transform.get_world_position();
 
-        //if (request.mode == SteeringMode::ARRIVE) {
-        //    glm::vec3 to_target = request.target_position - position;
+        // if (request.mode == SteeringMode::ARRIVE) {
+        //     glm::vec3 to_target = request.target_position - position;
 
         //    float dist = glm::length(to_target);
         //    float move_this_frame = glm::length(body.velocity) * time.delta_time;
