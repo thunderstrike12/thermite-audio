@@ -4,6 +4,7 @@
 #include "editor/core/systems/undo_redo/component_diff.hpp"
 #include "editor/core/systems/undo_redo/voxel_edit_diff.hpp"
 #include "editor/core/systems/undo_redo/undo_redo_manager.hpp"
+#include "editor/core/systems/undo_redo/entity_diff.hpp"
 
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
@@ -779,7 +780,7 @@ void NodeHierarchy::node_context_menu(const Entity node_entity) {
         node_creation_info->parent = node_entity;
         ImGui::OpenPopupEx(creation_popup_id);
     }
-    if (ImGui::MenuItem(ICON_MS_REMOVE " Delete Node")) {
+    if (ImGui::MenuItem(ICON_MS_REMOVE " Delete Node", "Delete")) {
         NodeVectorDiff selection_diff { selected_entities };
         selection_diff.before();
         selected_entities.clear();
@@ -794,7 +795,7 @@ void NodeHierarchy::node_context_menu(const Entity node_entity) {
         diff_collection.commit("Deleted Voxel Node");
     }
 
-    if (ImGui::MenuItem(ICON_MS_COPY_ALL " Duplicate Node")) {
+    if (ImGui::MenuItem(ICON_MS_COPY_ALL " Duplicate Node", "Ctrl D")) {
         const Entity parent = engine.ecs.get_component<Transform>(node_entity).get_parent();
         const Entity new_entity = recurse_duplicate_node(node_entity, parent);
         if (parent == entt::null) root_entities.push_back(new_entity);
@@ -805,7 +806,7 @@ void NodeHierarchy::node_context_menu(const Entity node_entity) {
 
     ImGui::Separator();
 
-    if (ImGui::MenuItem(ICON_MS_ZOOM_OUT_MAP " Resize Grid")) {
+    if (ImGui::MenuItem(ICON_MS_ZOOM_OUT_MAP " Resize Grid", "C")) {
         node_resize_info = std::make_unique<NodeResizeData>();
         node_resize_info->entity = node_entity;
 
@@ -823,6 +824,50 @@ void NodeHierarchy::on_inspect() {
 
     popup_create_node();
     popup_resize_node();
+
+    // Keyboard shortcuts
+    if (ImGui::GetIO().WantCaptureKeyboard == false && selected_entities.empty() == false) {
+        const Entity first_entity = selected_entities[0];
+
+        // Delete shortcut
+        if (ImGui::IsKeyPressed(ImGuiKey_Delete)) {
+            NodeVectorDiff selection_diff { selected_entities };
+            selection_diff.before();
+            selected_entities.clear();
+            selection_diff.after();
+
+            VoxelNodeDiff node_diff { first_entity, false };
+            engine.ecs.destroy_entity(first_entity);
+
+            UndoRedoCollection diff_collection;
+            diff_collection.add_action(std::move(node_diff));
+            diff_collection.add_action(std::move(selection_diff));
+            diff_collection.commit("Deleted Voxel Node");
+        }
+
+        // Duplicate shortcut
+        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_D)) {
+            const Entity parent = engine.ecs.get_component<Transform>(first_entity).get_parent();
+            const Entity new_entity = recurse_duplicate_node(first_entity, parent);
+            selected_entities.clear();
+            add_selected_entity(new_entity);
+            if (parent == entt::null) root_entities.push_back(new_entity);
+
+            VoxelNodeDiff diff { new_entity, true };
+            VoxelNodeDiff::send_to_manager(std::move(diff), "Duplicate Voxel Node");
+        }
+
+        // Resize shortcut
+        if (ImGui::IsKeyDown(ImGuiKey_C)) {
+            node_resize_info = std::make_unique<NodeResizeData>();
+            node_resize_info->entity = first_entity;
+
+            const VoxelRenderer* renderer = engine.ecs.try_get_component<VoxelRenderer>(first_entity);
+            if (renderer != nullptr) node_resize_info->size = renderer->resource->size;
+
+            ImGui::OpenPopupEx(resize_popup_id);
+        }
+    }
 
     constexpr ImGuiMultiSelectFlags multiselect_flags =
         ImGuiMultiSelectFlags_ClearOnEscape | ImGuiMultiSelectFlags_ClearOnClickVoid | ImGuiMultiSelectFlags_BoxSelect1d | ImGuiMultiSelectFlags_SelectOnClickRelease;
