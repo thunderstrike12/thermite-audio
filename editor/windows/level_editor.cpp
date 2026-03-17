@@ -3,6 +3,7 @@
 #include "editor/editor.hpp"
 #include "editor/windows/viewport.hpp"
 #include "engine/core/renderer/renderer.hpp"
+#include "engine/core/components/cell_grouper_tag.hpp"
 #include "engine/engine.hpp"
 #include "imgui.h"
 #include "engine/core/polyline.hpp"

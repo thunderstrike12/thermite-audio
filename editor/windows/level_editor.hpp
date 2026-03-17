@@ -55,8 +55,6 @@ class LevelEditor : public IWindow<LevelEditor> {
         glm::mat4 view_project;
     } viewport_context;
 
-    struct LevelCellGrouperTag {};
-
     std::unordered_map<std::string, std::vector<CellTemplate>> scene_pickable_cell_templates;
     int selected_template = -1;
 

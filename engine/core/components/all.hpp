@@ -17,6 +17,7 @@
 #include "engine/core/components/prefab.hpp"
 #include "engine/core/components/light.hpp"
 #include "engine/core/components/emitter.hpp"
+#include "engine/core/components/cell_grouper_tag.hpp"
 #include "engine/core/components/ui_component.hpp"
 #include "engine/core/components/image_renderer.hpp"
 #include "engine/core/components/button.hpp"
@@ -35,9 +36,10 @@ namespace tmt {
 using SerializeComponents = ComponentRegistry<
 	/* Order in which components are serialized */
 	Prefab,
-	Name, 
+	Name,
 	Transform, 
 	DisableFlag,
+	tmt::LevelCellGrouperTag,
 	VoxelRenderer, 
 	Environment,
 	Camera,
