@@ -66,9 +66,9 @@ void VoxelMode::on_switch_to(const std::any& meta_data) {
 
     edit_data.clear();
 
-    /* Switch to the albedo display mode, and cache the previous display mode */
-    cached_display_mode = engine.renderer.display_mode;
+    /* Switch to the albedo display mode, and disable TAA */
     engine.renderer.display_mode = DisplayMode::ALBEDO;
+    engine.renderer.enable_taa = false;
 }
 
 void VoxelMode::on_switch_away() {
@@ -84,11 +84,12 @@ void VoxelMode::on_switch_away() {
     cached_editor_camera = engine.renderer.get_debug_camera();
     cached_editor_transform = engine.renderer.get_debug_transform();
 
-    /* Switch back to the previously cached display mode */
-    engine.renderer.display_mode = cached_display_mode;
-
     node_hierarchy.clear_root_entities();
     node_hierarchy.clear_selected_entities();
+
+    /* Switch back to the default display mode, and re-enable TAA */
+    engine.renderer.display_mode = DisplayMode::DEFAULT;
+    engine.renderer.enable_taa = true;
 }
 
 }  // namespace tmt
