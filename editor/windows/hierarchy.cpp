@@ -419,8 +419,7 @@ void Hierarchy::top_bar() {
             ImGui::EndMenu();
         }
 
-        ImGui::Text(ICON_MS_FILTER_ALT);
-        ImGui::InputText("##" ICON_MS_FILTER_ALT, &filter);
+        ImGui::InputTextWithHint("##EntitySearch", ICON_MS_SEARCH " Search entities...", &filter);
 
         ImGui::EndMenuBar();
     }
@@ -437,7 +436,12 @@ bool Hierarchy::display_entity(const HierarchyState& state, uint32_t& row) {
 
     const bool filtering = filter.empty() == false;
     if (filtering) {
-        if (state.name.name.find(filter) == std::string::npos) {
+        /* Lower case everything */
+        std::string name_lower = state.name.name;
+        std::string filter_lower = filter;
+        std::transform(name_lower.begin(), name_lower.end(), name_lower.begin(), ::tolower);
+        std::transform(filter_lower.begin(), filter_lower.end(), filter_lower.begin(), ::tolower);
+        if (name_lower.find(filter_lower) == std::string::npos) {
             return false;
         }
     } else {
