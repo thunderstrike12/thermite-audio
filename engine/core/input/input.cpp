@@ -147,6 +147,9 @@ void Input::update(const FrameData& time) {
         // If input was blocked by an event, we skip processing the rest of the input for this frame
         can_use_mouse_input = false;
         can_use_keyboard_input = false;
+        mouse_buttons = 0;
+        prev_mouse_buttons = 0;
+
         return;
     } else {
         can_use_mouse_input = true;
@@ -505,6 +508,12 @@ void Input::clear_input_state() {
     mouse_buttons = 0;
     mouse_dx = 0.0f;
     mouse_dy = 0.0f;
+
+    SDL_PumpEvents();
+    SDL_FlushEvent(SDL_EventType::SDL_EVENT_MOUSE_BUTTON_DOWN);
+    SDL_FlushEvent(SDL_EventType::SDL_EVENT_MOUSE_BUTTON_UP);
+    SDL_FlushEvent(SDL_EventType::SDL_EVENT_KEY_DOWN);
+    SDL_FlushEvent(SDL_EventType::SDL_EVENT_KEY_UP);
 }
 float Input::get_axis(const std::string& negative_action, const std::string& positive_action) {
     return get_action_strength(positive_action) - get_action_strength(negative_action);
