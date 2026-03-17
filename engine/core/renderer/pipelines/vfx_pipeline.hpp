@@ -139,6 +139,8 @@ class VfxPipeline {
     Buffer particle_effects_buffer {};
     Buffer billboard_vertices {};
 
+    ResourceRef<Texture2D> fallback_texture {};
+
     Sampler point_sampler {};
 };
 

@@ -6,11 +6,12 @@
 #include <graphite/nodes/raster_node.hh>
 #include <graphite/nodes/compute_node.hh>
 
-#include "engine.hpp"
-#include "core/ecs.hpp"
-#include "core/logger.hpp"
-#include "core/renderer/renderer.hpp"
-#include "core/components/emitter.hpp"
+#include "engine/engine.hpp"
+#include "engine/core/ecs.hpp"
+#include "engine/core/logger.hpp"
+#include "engine/core/renderer/renderer.hpp"
+#include "engine/core/components/emitter.hpp"
+#include "engine/core/resources.hpp"
 
 namespace tmt {
 
@@ -120,6 +121,9 @@ void VfxPipeline::init(GPUAdapter& gpu) {
 
     /* Initialize the Sampler */
     point_sampler = bank.create_sampler("[Particles] Linear Sampler", Filter::Nearest).expect("failed to initialize linear sampler.");
+
+    /* Fallback texture */
+    fallback_texture = engine.resources.load_resource<Texture2D>({ tmt::IO::Location::ENGINE, "missing.png" });
 }
 
 void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
@@ -147,6 +151,9 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
 
         for (auto& effect : emitter.effects) {
             if (!effect.active && !effect.should_burst) continue;
+            
+            /* Use fallback texture if texture is missing */
+            if (!effect.texture) effect.texture = fallback_texture;
 
             effect.should_burst = !effect.should_burst;
 
