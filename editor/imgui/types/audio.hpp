@@ -1,13 +1,7 @@
 #pragma once
 
 #include <ImReflect.hpp>
-
-namespace tmt {
-
-class AudioEvent;
-class VolumeControl;
-
-}  // namespace tmt
+#include "engine/core/audio.hpp"
 
 void tag_invoke(ImReflect::ImInput_t, const char* label, tmt::AudioEvent& value, ImSettings& settings, ImResponse& response);
 
