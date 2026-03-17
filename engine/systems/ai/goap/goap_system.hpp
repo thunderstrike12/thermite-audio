@@ -55,6 +55,8 @@ class Goap : public ISystem {
      */
     void process_agent(Entity entity, WorldState& ws, float dt);
 
+    void try_plan_goals(Entity entity, GoapAgent& agent, WorldState& ws);
+
     // Selects or updates the active goal for an agent.
     void update_goal(Entity entity, GoapAgent& agent, WorldState& ws);
 
@@ -62,7 +64,7 @@ class Goap : public ISystem {
     bool goal_has_valid_plan(const GoapGoal& goal, GoapAgent& agent, const WorldState& ws);
 
     // Builds a plan toward the current goal (A*).
-    void update_plan(Entity entity, GoapAgent& agent, WorldState& ws);
+    bool update_plan(Entity entity, GoapAgent& agent, WorldState& ws);
 
     // Starts & validates the current action, actual running of the action happens
     // in on_update() and on_fixed_update().

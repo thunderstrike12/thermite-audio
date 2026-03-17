@@ -1,15 +1,14 @@
 #pragma once
 
 #include "engine/systems/ai/goap/components/goap_action.hpp"
-#include "engine/systems/ai/steering/components/steering_mode.hpp"
 
 namespace game {
 
 class Explode : public tmt::GoapAction {
    public:
     Explode() {
-        preconditions["ready_to_explode"] = true;
-        effects["exploded"] = true;
+        preconditions["s_ready_to_explode"] = true;
+        effects["s_exploded"] = true;
         cost = 5.f;
     }
 

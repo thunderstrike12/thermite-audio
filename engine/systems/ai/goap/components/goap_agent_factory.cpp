@@ -65,7 +65,8 @@ void GoapAgentFactory::spawn_agent_from_type(const std::string& type_id, Entity 
     ws.facts.clear();
     for (const auto& [fact_name, value] : type->default_world_state) {
         // Convert string to uint32 hash
-        uint32_t id = static_cast<uint32_t>(std::hash<std::string> {}(fact_name));
+        // uint32_t id = static_cast<uint32_t>(std::hash<std::string> {}(fact_name));
+        uint32_t id = tmt::FactId(fact_name).id;
         ws.facts[id] = value;
     }
 

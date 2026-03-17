@@ -47,6 +47,8 @@ void SteeringDataEditor::on_inspect() {
 
     ImGui::SeparatorText("Steering Parameters");
 
+    ImGui::DragFloat("Max Speed", &params.max_speed, 0.1f, 0.f, 50.f);
+    ImGui::DragFloat("Max Force", &params.max_force, 0.1f, 0.f, 100.f);
     ImGui::DragFloat("Arrive Radius", &params.arrive_radius, 0.1f, 0.f, 50.f);
     ImGui::DragFloat("Activation Range", &params.activation_range, 0.5f, 0.f, 100.f);
     ImGui::DragFloat("Min Explosion Range", &params.min_explosion_range, 0.1f, 0.f, 50.f);
@@ -54,6 +56,12 @@ void SteeringDataEditor::on_inspect() {
 
     if (ImGui::Button("Reset Defaults")) {
         params = SteeringParams {};
+    }
+
+    // --- Save button ---
+    if (ImGui::Button("Save Steering Paramaters")) {
+        steering->overrides().save();
+        Log::info("Steering override params saved");
     }
 }
 

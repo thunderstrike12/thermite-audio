@@ -15,13 +15,13 @@
 #include "engine/systems/ai/goap/components/goap_goal_registry.hpp"
 #include "engine/systems/ai/goap/components/goap_goal.hpp"
 
-//AI actions
+// AI actions
 #include "ai_actions/chase_player.hpp"
 #include "ai_actions/wander.hpp"
 #include "ai_actions/fire_missiles.hpp"
 #include "ai_actions/fire_laser.hpp"
 
-//Enemies
+// Enemies
 #include "components/gameplay_functionality_components/enemy_components/medium_enemy.hpp"
 
 // Animation
@@ -68,8 +68,7 @@ class Game : public tmt::Application {
    public:
     Game(const tmt::ApplicationSpecs& specs) : Application(specs) {}
 
-    void on_start() override {  
-    };
+    void on_start() override {};
     void on_update(const tmt::FrameData& time) override {};
     void on_end() override {};
 };
@@ -82,7 +81,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
         .log_file = "mining_game_logs.txt"
     };
     // clang-format on
-    
+
     /* Register Scenes */
     tmt::engine.scenes.register_scene<MainMenuScene>();
     tmt::engine.scenes.register_scene<MainGameScene>();
@@ -132,7 +131,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
 
         auto& ecs = tmt::engine.ecs;
         auto& goap = ecs.systems.get<tmt::Goap>();
-        
+
         auto& action_reg = goap.actions();
         auto& goal_reg = goap.goals();
         auto& type_reg = goap.agent_types();
@@ -149,7 +148,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
         {
             tmt::GoapGoal wander_steering;
             wander_steering.name = "g_WanderSteering";
-            wander_steering.desired_state = { { tmt::FactId("wandering"), true } };
+            wander_steering.desired_state = { { tmt::FactId("s_wandering"), true } };
             wander_steering.priority = 1;
             wander_steering.valid = true;
             goal_reg.register_goal("g_WanderSteering", wander_steering);
@@ -158,7 +157,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
         {
             tmt::GoapGoal steer_to_player;
             steer_to_player.name = "g_SteerToPlayer";
-            steer_to_player.desired_state = { { tmt::FactId("player_in_explosion_zone"), true } };
+            steer_to_player.desired_state = { { tmt::FactId("s_player_in_explosion_zone"), true } };
             steer_to_player.priority = 5;
             steer_to_player.valid = true;
             goal_reg.register_goal("g_ReachTarget", steer_to_player);
@@ -167,13 +166,13 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
         {
             tmt::GoapGoal explode;
             explode.name = "g_Explode";
-            explode.desired_state = { { tmt::FactId("exploded"), true } };
+            explode.desired_state = { { tmt::FactId("s_exploded"), true } };
             explode.priority = 10;
             explode.valid = true;
             goal_reg.register_goal("g_Explode", explode);
         }
 
-        //Medium enemy
+        // Medium enemy
         action_reg.register_action(std::make_unique<ChasePlayer>());
         action_reg.register_action(std::make_unique<Wander>());
         action_reg.register_action(std::make_unique<FireMissiles>());

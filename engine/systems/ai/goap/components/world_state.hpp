@@ -103,17 +103,33 @@ struct FactPair {
 struct WorldState {
     std::unordered_map<uint32_t, bool> facts;
 
+    // flag to trigger replanning
+    bool needs_replan = false;
+
     /**
      * Applies a list of fact assignments (effects) to the world state.
      *
      * If a fact does not exist yet, it will be created.
      * Existing facts are overwritten.
+     *
+     * Sets needs_replan to true.
      */
     void apply(const std::vector<FactPair>& effects) {
+        bool changed = false;
         for (const auto& e : effects) {
-            facts[e.id.id] = e.value;
+            auto it = facts.find(e.id.id);
+            if (it == facts.end() || it->second != e.value) {
+                facts[e.id.id] = e.value;
+                changed = true;
+            }
+        }
+        if (changed) {
+            needs_replan = true;
         }
     }
+
+    // Single fact setter helper
+    void set_fact(const FactId& id, bool value) { apply({ { id, value } }); }
 
     /**
      * Checks whether all provided conditions are satisfied.

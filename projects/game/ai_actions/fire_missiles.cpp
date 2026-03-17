@@ -18,7 +18,6 @@ void FireMissiles::on_start(tmt::Entity enemy_entity) {
     }
     auto& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
     missiles = enemy.missile_burst;
-
 }
 
 void FireMissiles::on_tick(tmt::Entity enemy_entity, float dt) {
@@ -48,7 +47,7 @@ void FireMissiles::on_tick(tmt::Entity enemy_entity, float dt) {
         missile = enemy;
         missile.position = enemy_entity_pos;
 
-        //set random offset
+        // set random offset
         missile.offset = glm::vec3(
             (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.missile_max_randomness, (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.missile_max_randomness,
             (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.missile_max_randomness
@@ -56,15 +55,15 @@ void FireMissiles::on_tick(tmt::Entity enemy_entity, float dt) {
 
         enemy.missiles.emplace_back(missile);
         missiles--;
-        
     }
-    
+
     if (missiles == 0) {
         auto& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
         enemy.missile_timer = interval_timer * enemy.missile_burst;
         auto ws = tmt::engine.ecs.try_get_component<tmt::WorldState>(enemy_entity);
         if (!ws) return;
-        ws->facts[std::hash<std::string>()("m_missiles_ready")] = false;
+        // ws->facts[std::hash<std::string>()("m_missiles_ready")] = false;
+        ws->set_fact(tmt::FactId("m_missiles_ready"), false);
     }
 }
 

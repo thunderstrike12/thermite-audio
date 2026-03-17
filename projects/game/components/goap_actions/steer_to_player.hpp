@@ -1,15 +1,14 @@
 #pragma once
 
 #include "engine/systems/ai/goap/components/goap_action.hpp"
-#include "engine/systems/ai/steering/components/steering_mode.hpp"
 
 namespace game {
 
 class SteerToPlayer : public tmt::GoapAction {
    public:
     SteerToPlayer() {
-        preconditions["player_in_range"] = true;
-        effects["player_in_explosion_zone"] = true;
+        preconditions["s_player_in_range"] = true;
+        effects["s_player_in_explosion_zone"] = true;
         cost = 2.f;
 
         wants_fixed_update = true;
@@ -26,7 +25,6 @@ class SteerToPlayer : public tmt::GoapAction {
 
    private:
     tmt::Entity player_entity = entt::null;
-    //bool done = false;
 };
 
 }  // namespace game

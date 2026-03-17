@@ -101,6 +101,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     systems[Mode::SCENE].add<GoapActionEditor>();
     systems[Mode::SCENE].add<GoapAgentEditor>();
     systems[Mode::SCENE].add<PhysicsLayersEditor>();
+    systems[Mode::SCENE].add<SteeringDataEditor>();
     systems[Mode::SCENE].add<FontControl>();
     systems[Mode::SCENE].add<AudioMixer>();
     systems[Mode::SCENE].add<ScenesWindow>();

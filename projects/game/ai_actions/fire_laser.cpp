@@ -23,17 +23,16 @@ void FireLaser::on_start(tmt::Entity enemy_entity) {
     const auto& enemy_entity_pos = enemy_transform.get_world_position();
     const auto& player_pos = tmt::engine.ecs.get_component<tmt::Transform>(player).get_world_position();
 
-    direction = player_pos - enemy_entity_pos + glm::vec3(
-                    (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.laser_max_randomness,
-                    (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.laser_max_randomness,
+    direction = player_pos - enemy_entity_pos +
+                glm::vec3(
+                    (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.laser_max_randomness, (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.laser_max_randomness,
                     (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.laser_max_randomness
                 );
     direction = glm::normalize(direction);
     target_pos = player_pos + glm::vec3(
-                     (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.laser_max_randomness,
-                     (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.laser_max_randomness,
-                     (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.laser_max_randomness
-                 );
+                                  (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.laser_max_randomness, (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.laser_max_randomness,
+                                  (static_cast<float>(rand()) / RAND_MAX - 0.5f) * enemy.laser_max_randomness
+                              );
 }
 
 void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
@@ -75,11 +74,12 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
         enemy.laser_timer = 0.0f;
         auto ws = tmt::engine.ecs.try_get_component<tmt::WorldState>(enemy_entity);
         if (!ws) return;
-        ws->facts[std::hash<std::string>()("m_laser_ready")] = false;
+        // ws->facts[std::hash<std::string>()("m_laser_ready")] = false;
+        ws->set_fact(tmt::FactId("m_laser_ready"), false);
     }
 
     tmt::engine.polyline.use_line_width(10.0f);
-    //tmt::engine.polyline.draw_line(enemy_entity_pos, enemy_entity_pos + direction * 50.0f);
+    // tmt::engine.polyline.draw_line(enemy_entity_pos, enemy_entity_pos + direction * 50.0f);
     // draw spheres along the line for better visibility
     for (float i = 0; i < 50.0f; i += 0.1f) {
         tmt::engine.polyline.draw_sphere(enemy_entity_pos + direction * i, .01f);

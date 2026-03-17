@@ -27,9 +27,13 @@ void SteeringOverrides::load() {
     Serializer::deserialize(j, *this);
 }
 
+
 void SteeringOverrides::save() const {
     tmt::json j = Serializer::serialize(*this);
-    IO::write_text_file({ IO::Location::PROJECT, "ai/steering_params.json" }, j.dump(4));
+    bool success = IO::write_text_file({ IO::Location::PROJECT, "ai/steering_params.json" }, j.dump(4));
+    if (!success) {
+        tmt::Log::error(tmt::Log::Scope::ENGINE, "Failed to save steering parameters");
+    }
 }
 
 }  // namespace tmt

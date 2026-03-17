@@ -21,8 +21,8 @@ class SensorsSystem : public tmt::ISystem {
     // Inherited via ISystem
     std::string get_name() override { return "Sensor System"; }
     void on_start() override;
-    void on_update(const tmt::FrameData& time) override;
-    void on_fixed_update(const tmt::FrameData& time) override {}
+    void on_update(const tmt::FrameData& /*time*/) override;
+    void on_fixed_update(const tmt::FrameData& /*time*/) override {}
     void on_end() override;
 
    private:
