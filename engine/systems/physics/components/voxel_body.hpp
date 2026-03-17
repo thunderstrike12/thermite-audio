@@ -21,6 +21,8 @@ struct VoxelBody {
         glm::vec3 axis[3] {};
     };
 
+    bool initialized = false;
+
     // RigidBody properties
     float accumulated_forces = 1000.0f;
     glm::vec3 stored_velocity = glm::vec3(0);

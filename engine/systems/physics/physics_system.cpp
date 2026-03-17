@@ -107,57 +107,83 @@ void draw_solids(
 
 void Physics::on_update(const FrameData&) {
     engine.polyline.use_line_width(0.25f);
-    for (const auto& [entity, vb, transform] : engine.ecs.view<VoxelBody, Transform>().each()) {
-        // auto* tree_a = vb.resource->blas.get();
-        // const float half_extent_a = powf(4.0f, (float)tree_a->depth) * 0.5f * UNITS_PER_VOXEL;
-        // const glm::vec3 extents_diff_a = half_extent_a - ((glm::vec3)vb.resource->size * 0.5f * UNITS_PER_VOXEL);
-        // const glm::vec3 root_center_a = vb.position + (vb.rotation * extents_diff_a);
 
-        // draw_solids(tree_a, 0u, 0u, half_extent_a, root_center_a + glm::vec3(10, 0, 0), extents_diff_a, vb.rotation);
+    for (const auto& [entity, vb, transform, vr] : engine.ecs.view<VoxelBody, Transform, VoxelRenderer>().each()) {
+        // if (!transform.is_enabled()) continue;
 
-        // auto edges = vb.get_world_edges();
-        // engine.polyline.use_color(vb.type == VoxelBody::DYNAMIC ? glm::vec4(0, 1, 0, 1) : glm::vec4(1, 0, 0, 1));
-        // for (size_t i = 0; i < edges.size(); i++) {
-        //     engine.polyline.draw_line(edges[i].start, edges[i].end);
-        // }
+        if (vb.initialized == false) {
+            vb.position = transform.get_world_position();
+            vb.rotation = transform.get_world_rotation();
 
-        // engine.polyline.use_depth_testing(false);
-        // engine.polyline.use_line_width(0.5f);
-        // engine.polyline.use_color(1.0f, 0.0f, 0.0f);
-        // engine.polyline.draw_circle(vb.center_of_mass, 0.2f);  // glm::vec3(1.0f, 0.0f, 1.0f), 0.2f);
-        // engine.polyline.use_color(0.0f, 1.0f, 0.0f);
-        // engine.polyline.draw_circle(vb.position, 0.2f);
-        // engine.polyline.use_color(0.0f, 0.0f, 1.0f);
-        // engine.polyline.draw_circle(vb.position + vb.rotation * vb.com_local_offset, 0.2f);
-        /* engine.renderer.draw_cross(vb.position, glm::vec3(1.0f, 0.0f, 0.0f), 0.2f);
-         engine.renderer.draw_cross(vb.position + vb.rotation * vb.com_local_offset, glm::vec3(0.0f, 0.0f, 1.0f), 0.2f);*/
+            if (vb.type == VoxelBody::DYNAMIC) {
+                initialize_voxel_body(vb, *vr.resource.resource);
+                if (vb.gravity <= 0.0f) {
+                    vb.type = VoxelBody::SLEEPING;
+                    vb.accumulated_forces = 0.0f;
+                }
+            } else {
+                glm::uvec3 size = vr.resource->size;
+                vb.width = (float)size.x * UNITS_PER_VOXEL;
+                vb.height = (float)size.y * UNITS_PER_VOXEL;
+                vb.depth = (float)size.z * UNITS_PER_VOXEL;
+                vb.center_of_mass = vb.position + (vb.rotation * vb.com_local_offset);
+            }
 
-        //// Draw voxel normals
-        // engine.polyline.use_depth_testing(false);
-        // engine.polyline.use_color(1.0f, 0.0f, 0.0f);
-        //
-        // glm::uvec3 size = vb.resource->size;
-        // auto* tree = vb.resource->blas.get();
-        // for (size_t z = 0; z < size.z; z++) {
-        //     for (size_t y = 0; y < size.y; y++) {
-        //         for (size_t x = 0; x < size.x; x++) {
-        //             const tmt::PhysicsVoxel* voxel = tree->get_physics_voxel(x, y, z);
-        //             if (voxel == nullptr || voxel->normal_index == 0 || voxel->normal_index == 28) continue;
-
-        //            glm::ivec3 local_normal = voxel->get_normal();
-        //            glm::vec3 normal = vb.rotation * glm::vec3((float)local_normal.x, (float)local_normal.y, (float)local_normal.z);
-        //            glm::vec3 local_pos = glm::vec3(
-        //                ((float)x + 0.5f - (size.x * 0.5f)) * UNITS_PER_VOXEL, ((float)y + 0.5f - (size.y * 0.5f)) * UNITS_PER_VOXEL, ((float)z + 0.5f - (size.z * 0.5f)) * UNITS_PER_VOXEL
-        //            );
-        //            glm::vec3 world_pos = vb.position + (vb.rotation * local_pos);
-
-        //            engine.polyline.draw_line(world_pos, world_pos + normal * 0.05f);
-        //            // engine.polyline.draw_arrow(world_pos, normal * 0.1f, 0.15f);
-        //            // tmt::engine.renderer.draw_arrow(world_pos, normal, glm::vec3(0.0f, 0.6f, 0.0f), 0.15f, 0.05f);
-        //        }
-        //    }
-        //}
+            vb.initialized = true;
+        }
     }
+
+    //for (const auto& [entity, vb, transform] : engine.ecs.view<VoxelBody, Transform>().each()) {
+    //    // auto* tree_a = vb.resource->blas.get();
+    //    // const float half_extent_a = powf(4.0f, (float)tree_a->depth) * 0.5f * UNITS_PER_VOXEL;
+    //    // const glm::vec3 extents_diff_a = half_extent_a - ((glm::vec3)vb.resource->size * 0.5f * UNITS_PER_VOXEL);
+    //    // const glm::vec3 root_center_a = vb.position + (vb.rotation * extents_diff_a);
+
+    //    // draw_solids(tree_a, 0u, 0u, half_extent_a, root_center_a + glm::vec3(10, 0, 0), extents_diff_a, vb.rotation);
+
+    //    // auto edges = vb.get_world_edges();
+    //    // engine.polyline.use_color(vb.type == VoxelBody::DYNAMIC ? glm::vec4(0, 1, 0, 1) : glm::vec4(1, 0, 0, 1));
+    //    // for (size_t i = 0; i < edges.size(); i++) {
+    //    //     engine.polyline.draw_line(edges[i].start, edges[i].end);
+    //    // }
+
+    //    // engine.polyline.use_depth_testing(false);
+    //    // engine.polyline.use_line_width(0.5f);
+    //    // engine.polyline.use_color(1.0f, 0.0f, 0.0f);
+    //    // engine.polyline.draw_circle(vb.center_of_mass, 0.2f);  // glm::vec3(1.0f, 0.0f, 1.0f), 0.2f);
+    //    // engine.polyline.use_color(0.0f, 1.0f, 0.0f);
+    //    // engine.polyline.draw_circle(vb.position, 0.2f);
+    //    // engine.polyline.use_color(0.0f, 0.0f, 1.0f);
+    //    // engine.polyline.draw_circle(vb.position + vb.rotation * vb.com_local_offset, 0.2f);
+    //    /* engine.renderer.draw_cross(vb.position, glm::vec3(1.0f, 0.0f, 0.0f), 0.2f);
+    //     engine.renderer.draw_cross(vb.position + vb.rotation * vb.com_local_offset, glm::vec3(0.0f, 0.0f, 1.0f), 0.2f);*/
+
+    //    //// Draw voxel normals
+    //    // engine.polyline.use_depth_testing(false);
+    //    // engine.polyline.use_color(1.0f, 0.0f, 0.0f);
+    //    //
+    //    // glm::uvec3 size = vb.resource->size;
+    //    // auto* tree = vb.resource->blas.get();
+    //    // for (size_t z = 0; z < size.z; z++) {
+    //    //     for (size_t y = 0; y < size.y; y++) {
+    //    //         for (size_t x = 0; x < size.x; x++) {
+    //    //             const tmt::PhysicsVoxel* voxel = tree->get_physics_voxel(x, y, z);
+    //    //             if (voxel == nullptr || voxel->normal_index == 0 || voxel->normal_index == 28) continue;
+
+    //    //            glm::ivec3 local_normal = voxel->get_normal();
+    //    //            glm::vec3 normal = vb.rotation * glm::vec3((float)local_normal.x, (float)local_normal.y, (float)local_normal.z);
+    //    //            glm::vec3 local_pos = glm::vec3(
+    //    //                ((float)x + 0.5f - (size.x * 0.5f)) * UNITS_PER_VOXEL, ((float)y + 0.5f - (size.y * 0.5f)) * UNITS_PER_VOXEL, ((float)z + 0.5f - (size.z * 0.5f)) * UNITS_PER_VOXEL
+    //    //            );
+    //    //            glm::vec3 world_pos = vb.position + (vb.rotation * local_pos);
+
+    //    //            engine.polyline.draw_line(world_pos, world_pos + normal * 0.05f);
+    //    //            // engine.polyline.draw_arrow(world_pos, normal * 0.1f, 0.15f);
+    //    //            // tmt::engine.renderer.draw_arrow(world_pos, normal, glm::vec3(0.0f, 0.6f, 0.0f), 0.15f, 0.05f);
+    //    //        }
+    //    //    }
+    //    //}
+    //}
 
     // if (bvh.nodes) draw_node(bvh, 0u);
     //  draw_node(bvh, bvh.nodes[0].left_first + 1u);
@@ -168,8 +194,6 @@ void Physics::on_fixed_update(const FrameData&) {
 
     // Update Forces
     for (const auto& [entity, vb, transform] : engine.ecs.view<VoxelBody, Transform>().each()) {
-        // if (!transform.is_enabled()) continue;
-
         // Add stored forces
         vb.velocity += vb.stored_velocity;
         vb.stored_velocity = glm::vec3(0);
