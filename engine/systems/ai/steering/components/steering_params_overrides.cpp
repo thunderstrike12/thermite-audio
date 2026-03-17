@@ -27,7 +27,6 @@ void SteeringOverrides::load() {
     Serializer::deserialize(j, *this);
 }
 
-
 void SteeringOverrides::save() const {
     tmt::json j = Serializer::serialize(*this);
     bool success = IO::write_text_file({ IO::Location::PROJECT, "ai/steering_params.json" }, j.dump(4));

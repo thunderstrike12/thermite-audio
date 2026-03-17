@@ -11,6 +11,12 @@ class MainGameScene : public tmt::Scene<MainGameScene> {
    public:
     static constexpr std::string_view scene_name() { return "MainGameScene"; }
 };
+
+class HubScene : public tmt::Scene<MainGameScene> {
+   public:
+    static constexpr std::string_view scene_name() { return "HubScene"; }
+};
+
 class Zoo : public tmt::Scene<Zoo> {
    public:
     static constexpr std::string_view scene_name() { return "Zoo"; }

@@ -28,7 +28,7 @@ class Player : public tmt::GameComponent<Player> {
     static std::string_view get_name() { return "Player"; }
 
     void start() override;
-    void look_camera() const;
+    void look_camera();
     tmt::Hit check_collision() const;
     void apply_impulse(const glm::vec3& direction, float force);
     void resolve_penetration();

@@ -84,29 +84,38 @@ void Player::end() {
     tmt::engine.ecs.get_dispatcher().sink<AttachEvent>().disconnect<&Player::on_attach>(this);
 }
 
-void Player::look_camera() const {
+void Player::look_camera() {
     auto& input = tmt::engine.input;
 
+    // Guard for camera existence
+    auto camera = tmt::engine.ecs.try_get_component<tmt::Camera>(entity);
+    if (!camera) {
+        state = PlayerState::PAUSED;
+        if (input.is_mouse_locked()) {
+            input.lock_mouse(false);
+            input.set_mouse_relative_to_window(false);
+        }
+        return;
+    }
     const bool mouse_locked = input.is_mouse_locked();
     if (!mouse_locked) return;
 
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
-    auto& camera = tmt::engine.ecs.get_component<tmt::Camera>(entity);
+
+    // Mouse look
     const float dx = input.get_mouse_delta_x();
     const float dy = input.get_mouse_delta_y();
 
-    // Mouse Look (unchanged)
+    camera->yaw -= dx * camera_sensitivity;
+    camera->pitch -= dy * camera_sensitivity;
 
-    camera.yaw -= dx * camera_sensitivity;
-    camera.pitch -= dy * camera_sensitivity;
-
-    camera.pitch = glm::clamp(camera.pitch, -89.0f, 89.0f);
+    camera->pitch = glm::clamp(camera->pitch, -89.0f, 89.0f);
 
     glm::vec3 front = {};
 
-    front.x = cos(glm::radians(camera.yaw)) * cos(glm::radians(camera.pitch));
-    front.y = sin(glm::radians(camera.pitch));
-    front.z = sin(glm::radians(camera.yaw)) * cos(glm::radians(camera.pitch));
+    front.x = cos(glm::radians(camera->yaw)) * cos(glm::radians(camera->pitch));
+    front.y = sin(glm::radians(camera->pitch));
+    front.z = sin(glm::radians(camera->yaw)) * cos(glm::radians(camera->pitch));
     front = glm::normalize(front);
     transform.look_at(transform.get_world_position() + front, glm::vec3(0.0f, 1.0f, 0.0f));
 }
