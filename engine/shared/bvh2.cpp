@@ -351,7 +351,7 @@ Hit Bvh2<T>::trace(const Ray& ray) const {
 template <typename T>
 Hit Bvh2<T>::trace(const Ray& ray, uint32_t ray_mask) const {
     /* Avoid an infinite loop when the BVH has nothing inside it */
-    if (nodes[0].left_first == 0u && nodes[0].prim_count == 0u) return Hit();
+    if (nodes == nullptr || (nodes[0].left_first == 0u && nodes[0].prim_count == 0u)) return Hit();
 
     /* Traversal state */
     uint32_t stack[32] {}, stack_ptr = 0u, node_index = 0u;
