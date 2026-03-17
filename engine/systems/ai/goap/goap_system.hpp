@@ -55,10 +55,16 @@ class Goap : public ISystem {
      */
     void process_agent(Entity entity, WorldState& ws, float dt);
 
+    /**
+     * Selects or updates the active goal for an agent.
+     *
+     * Checks:
+     *  - Which goal has the higest priority.
+     *  - If the goal is relevant.
+     *  - If the goal is the same and if we already have a valid plan (skip).
+     *  - If the goal will lead to a valid sequence of actions.
+     */
     void try_plan_goals(Entity entity, GoapAgent& agent, WorldState& ws);
-
-    // Selects or updates the active goal for an agent.
-    void update_goal(Entity entity, GoapAgent& agent, WorldState& ws);
 
     // validates the plan of the goal
     bool goal_has_valid_plan(const GoapGoal& goal, GoapAgent& agent, const WorldState& ws);

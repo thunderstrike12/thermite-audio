@@ -2,17 +2,17 @@
 #include "engine/systems/ai/goap/components/goap_action.hpp"
 #include "engine/systems/ai/goap/components/goap_action_registry.hpp"
 
-class ChasePlayer : public tmt::GoapAction {
+class GetInLaserRange : public tmt::GoapAction {
    public:
-    ChasePlayer() {
+    GetInLaserRange() {
         preconditions["m_in_aggro_range"] = true;
-        effects["m_get_close_to_player"] = true;
+        effects["m_in_laser_range"] = true;
         cost = 1.f;
     }
 
     tmt::Entity player = entt::null;
 
-    std::string get_id() const override { return "a_ChasePlayer"; };
+    std::string get_id() const override { return "a_GetInLaserRange"; };
 
     void on_start(tmt::Entity) override;
     void on_tick(tmt::Entity agent, float dt) override;

@@ -13,4 +13,8 @@
 struct SteeringAgent {
     const tmt::SteeringParams* params = nullptr;
     bool active = true;  // Whether the agent is currently participating in steering
+
+    // For wandering aroundthe origin
+    glm::vec3 wander_origin;
+    bool has_origin = false;
 };

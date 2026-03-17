@@ -53,6 +53,7 @@ void SteeringDataEditor::on_inspect() {
     ImGui::DragFloat("Activation Range", &params.activation_range, 0.5f, 0.f, 100.f);
     ImGui::DragFloat("Min Explosion Range", &params.min_explosion_range, 0.1f, 0.f, 50.f);
     ImGui::DragFloat("Max Explosion Range", &params.max_explosion_range, 0.1f, 0.f, 50.f);
+    ImGui::DragFloat("Max Wander Distance", &params.wander_radius_limit, 0.1f, 0.f, 100.f);
 
     if (ImGui::Button("Reset Defaults")) {
         params = SteeringParams {};

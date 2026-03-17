@@ -41,26 +41,11 @@ void SteeringSystem::on_fixed_update(const FrameData& time) {
 
         if (request.mode == SteeringMode::NONE) continue;
 
-        //// -------- Overshoot prevention --------
-        // glm::vec3 position = transform.get_world_position();
-
-        // if (request.mode == SteeringMode::ARRIVE) {
-        //     glm::vec3 to_target = request.target_position - position;
-
-        //    float dist = glm::length(to_target);
-        //    float move_this_frame = glm::length(body.velocity) * time.delta_time;
-
-        //    if (move_this_frame >= dist) {
-        //        body.velocity = glm::vec3(0);
-        //        body.angular_velocity = glm::vec3(0);
-
-        //        request.completed = true;
-        //        request.mode = SteeringMode::NONE;
-
-        //        continue;
-        //    }
-        //}
-        //// --------------------------------------
+        // Ge origin of the agent entity for wander behavior
+        if (!agent.has_origin) {
+            agent.wander_origin = transform.get_world_position();
+            agent.has_origin = true;
+        }
 
         glm::vec3 steering = calculate_force(agent, request, transform, body, time.delta_time);
 
@@ -125,25 +110,44 @@ glm::vec3 SteeringSystem::arrive(const SteeringAgent& agent, const glm::vec3& po
 glm::vec3 SteeringSystem::wander(const SteeringAgent& agent, const glm::vec3& position, const VoxelBody& body, WanderData wander, float dt) {
     glm::vec3 velocity_dir = glm::normalize(body.velocity);
     if (glm::length2(body.velocity) < 0.0001f) {
-        // if agent is almost stationary, pick some default forward
         velocity_dir = glm::vec3(0, 0, 1);
     }
 
-    // Add random jitter to wanderTarget
+    // --- Normal wander ---
     glm::vec3 jitter(
-        (glm::linearRand(-1.0f, 1.0f)) * wander.wander_jitter * dt, (glm::linearRand(-1.0f, 1.0f)) * wander.wander_jitter * dt, (glm::linearRand(-1.0f, 1.0f)) * wander.wander_jitter * dt
+        glm::linearRand(-1.0f, 1.0f) * wander.wander_jitter * dt, glm::linearRand(-1.0f, 1.0f) * wander.wander_jitter * dt, glm::linearRand(-1.0f, 1.0f) * wander.wander_jitter * dt
     );
-    wander.wander_target += jitter;
 
+    wander.wander_target += jitter;
     wander.wander_target = glm::normalize(wander.wander_target) * wander.wander_radius;
 
-    // Calculate target in world space
     glm::vec3 target_in_front = velocity_dir * wander.wander_distance;
     glm::vec3 world_target = position + target_in_front + wander.wander_target;
 
-    // Seek toward worldTarget
     glm::vec3 desired_velocity = glm::normalize(world_target - position) * agent.params->max_speed;
-    return desired_velocity - body.velocity;
+
+    glm::vec3 wander_force = desired_velocity - body.velocity;
+
+    // --- Boundary constraint ---
+    glm::vec3 to_origin = agent.wander_origin - position;
+    float dist = glm::length(to_origin);
+
+    float max_radius = agent.params->wander_radius_limit;
+
+    if (dist > max_radius) {
+        // Strong pull back toward center
+        glm::vec3 return_desired = glm::normalize(to_origin) * agent.params->max_speed;
+
+        glm::vec3 return_force = return_desired - body.velocity;
+
+        // Blend: stronger the further you are outside
+        float strength = (dist - max_radius) / max_radius;
+        strength = glm::clamp(strength, 0.0f, 1.0f);
+
+        wander_force = glm::mix(wander_force, return_force, strength);
+    }
+
+    return wander_force;
 }
 
 /**
@@ -179,9 +183,9 @@ glm::vec3 SteeringSystem::collision_avoidance(const SteeringAgent& agent, const 
         Hit hit = physics->raycast(ray, layer_mask);
 
         // debug draw
-        /*engine.polyline.use_color(1.0f, 0.0f, 0.0f);
+        engine.polyline.use_color(1.0f, 0.0f, 0.0f);
         engine.polyline.use_line_width(0.5f);
-        engine.polyline.draw_line(ray.origin, ray.origin + dir * avoid_distance);*/
+        engine.polyline.draw_line(ray.origin, ray.origin + dir * avoid_distance);
 
         if (hit && hit.distance < avoid_distance) {
             float strength = agent.params->max_force * (avoid_distance - hit.distance) / avoid_distance;

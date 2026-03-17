@@ -78,7 +78,7 @@ void Goap::on_end() {
  *  2. update_plan()   : generate a new plan when needed
  *  3. update_action() : tick the action currently running
  */
-void Goap::process_agent(Entity entity, WorldState& ws, float /*dt*/) {
+/*void Goap::process_agent(Entity entity, WorldState& ws, float) {
     auto& registry = engine.ecs.get_registry();
     auto& agent = registry.get<GoapAgent>(entity);
 
@@ -88,37 +88,89 @@ void Goap::process_agent(Entity entity, WorldState& ws, float /*dt*/) {
     }
 
     update_action(entity, agent, ws);
+}*/
+void Goap::process_agent(Entity entity, WorldState& ws, float /*dt*/) {
+    auto& registry = engine.ecs.get_registry();
+    auto& agent = registry.get<GoapAgent>(entity);
+
+    // If the agent doesn't have a goal yet
+    if (agent.needs_replan || agent.plan.empty()) {
+        try_plan_goals(entity, agent, ws);
+    }
+
+    update_action(entity, agent, ws);
 }
 
 // ------------------------------------------------------
-// Try planning goals in priority order
+// Goal assignment
 // ------------------------------------------------------
+/**
+ * Choose the highest priority relevant goal.
+ *
+ * Rules:
+ *   - If agent already has an active, valid goal ? keep it.
+ *   - Sort all available_goals by priority.
+ *   - Choose the first goal whose conditions are not satisfied.
+ *   - If all goals are satisfied ? pick lowest priority as fallback.
+ */
 void Goap::try_plan_goals(Entity entity, GoapAgent& agent, WorldState& ws) {
-    if (agent.available_goals.empty()) return;
+    if (agent.available_goals.empty()) {
+        Log::warn("GOAP Agent {} has no goals.", entity);
+        return;
+    }
 
+    // Sort goals by priority
     std::sort(agent.available_goals.begin(), agent.available_goals.end(), [](const GoapGoal& a, const GoapGoal& b) { return a.priority > b.priority; });
 
-    for (const GoapGoal& goal : agent.available_goals) {
+    GoapGoal* previous_goal = agent.has_goal() ? &agent.active_goal : nullptr;
+
+    // Try goals in priority order
+    for (auto& goal : agent.available_goals) {
+        if (!goal.valid) continue;
         if (!goal.is_relevant(ws)) continue;
         if (ws.satisfies(goal.desired_state)) continue;
 
+        // If this goal is already the active goal and plan exists, skip replanning
+        if (previous_goal && previous_goal->name == goal.name && !agent.plan.empty()) {
+            if (show_logging) {
+                Log::info("GOAP Agent {} keeps current goal '{}'", entity, goal.name);
+            }
+            agent.active_goal = *previous_goal;
+            agent.needs_replan = false;
+            return;  // keep same goal & plan
+        }
+
+        // New goal, try to plan it
         agent.active_goal = goal;
 
         if (show_logging) {
             Log::info("GOAP Agent {} trying goal '{}'", entity, goal.name);
         }
 
-        if (update_plan(entity, agent, ws)) {
+        bool plan_success = update_plan(entity, agent, ws);
+
+        if (plan_success) {
+            agent.needs_replan = false;
             if (show_logging) {
                 Log::info("GOAP Agent {} selected goal '{}'", entity, goal.name);
             }
-            return;  // Stop after first goal that succeeds
+            return;  // Found a goal that works
+        } else {
+            if (show_logging) {
+                Log::warn("GOAP planning failed for goal '{}'", goal.name);
+            }
+            agent.active_goal.valid = false;  // mark as unachievable for now
         }
     }
 
+    // No achievable goal found
     if (show_logging) {
         Log::warn("GOAP Agent {} could not satisfy any goals", entity);
     }
+    agent.plan.clear();
+    agent.current_action = nullptr;
+    agent.active_goal.valid = false;
+    agent.needs_replan = true;
 }
 
 // ------------------------------------------------------
@@ -161,45 +213,6 @@ std::vector<FactPair> preconditions_to_vector(const std::unordered_map<std::stri
     }
 
     return out;
-}
-
-// ------------------------------------------------------
-// Goal assignment
-// ------------------------------------------------------
-/**
- * Choose the highest priority relevant goal.
- *
- * Rules:
- *   - If agent already has an active, valid goal ? keep it.
- *   - Sort all available_goals by priority.
- *   - Choose the first goal whose conditions are not satisfied.
- *   - If all goals are satisfied ? pick lowest priority as fallback.
- */
-void Goap::update_goal(Entity entity, GoapAgent& agent, WorldState& ws) {
-    // if (agent.has_goal()) return;
-    if (agent.has_goal() && agent.active_goal.valid) return;
-
-    if (agent.available_goals.empty()) {
-        Log::warn("GOAP Agent {} has no goals.", entity);
-        return;
-    }
-
-    std::sort(agent.available_goals.begin(), agent.available_goals.end(), [](const GoapGoal& a, const GoapGoal& b) { return a.priority > b.priority; });
-
-    for (const auto& goal : agent.available_goals) {
-        if (!goal.valid) continue;
-
-        if (goal.is_relevant(ws)) {
-            agent.active_goal = goal;
-            agent.needs_replan = true;
-
-            if (show_logging) {
-                Log::info("GOAP Agent {} selected goal '{}'", entity, goal.name);
-            }
-
-            return;
-        }
-    }
 }
 
 /**
@@ -262,10 +275,18 @@ bool Goap::update_plan(Entity entity, GoapAgent& agent, WorldState& ws) {
     };
 
     // Interrupt current action if any
-    if (agent.current_action) {
+    /*if (agent.current_action) {
         agent.current_action->on_interrupt(entity);
         agent.current_action->is_running = false;
         agent.current_action = nullptr;
+    }*/
+    if (agent.current_action) {
+        // If we're replanning or the plan changed, interrupt
+        if (agent.needs_replan || agent.plan[agent.current_index] != agent.current_action) {
+            agent.current_action->on_interrupt(entity);
+            agent.current_action->is_running = false;
+            agent.current_action = nullptr;
+        }
     }
 
     agent.clear_plan();
