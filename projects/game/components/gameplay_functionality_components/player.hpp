@@ -12,9 +12,12 @@ struct PlayerStat {
     float increase_multiplier = 1.0f;
 };
 struct RayCollisionCheck {
-    float ray_distance = 1.0f;
     uint32_t collision_layer = 1;
-    float bump_force = 1.0f;
+
+    float player_radius = 0.3f;
+
+    float collision_speed_damping = 0.4f;
+    float camera_near_distance = 0.3f;
 };
 enum class PlayerState { FREEMOVING, ATTACHED, PAUSED };
 
@@ -28,6 +31,8 @@ class Player : public tmt::GameComponent<Player> {
     void look_camera() const;
     tmt::Hit check_collision() const;
     void apply_impulse(const glm::vec3& direction, float force);
+    void resolve_penetration();
+    void prevent_camera_clip() const;
     void move_player();
     void update(const tmt::FrameData& time) override;
     void draw_debug_lines() const override;
@@ -76,7 +81,7 @@ class Player : public tmt::GameComponent<Player> {
 
 }  // namespace game
 TMT_OBJECT(game::PlayerStat, (max_value, value, increase_multiplier));
-TMT_OBJECT(game::RayCollisionCheck, (ray_distance, collision_layer, bump_force));
+TMT_OBJECT(game::RayCollisionCheck, (collision_layer, player_radius, collision_speed_damping, camera_near_distance));
 TMT_OBJECT(
     game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, health, energy, energy_drain_per_second, hp_bar_max, hp_bar_current, energy_bar_max, energy_bar_current,
                    barge, recharge_distance, ray_check)

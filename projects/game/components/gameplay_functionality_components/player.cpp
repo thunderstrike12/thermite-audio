@@ -1,4 +1,4 @@
-#include "player.hpp"
+﻿#include "player.hpp"
 
 #include "engine/core/polyline.hpp"
 #include "projects/game/data_headers/events.hpp"
@@ -113,11 +113,30 @@ void Player::look_camera() const {
 
 tmt::Hit Player::check_collision() const {
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+    auto& physics = tmt::engine.ecs.systems.get<tmt::Physics>();
 
     if (glm::length(velocity) < 0.001f) return tmt::Hit {};
 
-    const tmt::Ray ray = tmt::Ray(transform.get_world_position(), glm::normalize(velocity));
-    return tmt::engine.ecs.systems.get<tmt::Physics>().raycast(ray, ray_check.collision_layer);
+    glm::vec3 pos = transform.get_world_position();
+    glm::vec3 vel_dir = glm::normalize(velocity);
+
+    tmt::Hit closest = physics.raycast(tmt::Ray(pos, vel_dir), ray_check.collision_layer);
+
+    glm::vec3 up = glm::vec3(0, 1, 0);
+    if (glm::abs(glm::dot(vel_dir, up)) > 0.99f) up = glm::vec3(1, 0, 0);
+
+    glm::vec3 right = glm::normalize(glm::cross(vel_dir, up));
+    glm::vec3 local_up = glm::cross(right, vel_dir);
+
+    glm::vec3 offsets[] = { right * ray_check.player_radius, -right * ray_check.player_radius, local_up * ray_check.player_radius, -local_up * ray_check.player_radius };
+
+    for (auto& offset : offsets) {
+        auto hit = physics.raycast(tmt::Ray(pos + offset, vel_dir), ray_check.collision_layer);
+        if (!hit.miss() && (closest.miss() || hit.distance < closest.distance)) {
+            closest = hit;
+        }
+    }
+    return closest;
 }
 void Player::apply_impulse(const glm::vec3& direction, float force) {
     if (glm::length(direction) < 0.001f) return;
@@ -172,19 +191,70 @@ void Player::move_player() {
         velocity = glm::normalize(velocity) * max_speed;
     }
 
-    // Stop or even bump in the opposite direction of velocity
     auto hit = check_collision();
-    if (!hit.miss() && hit.distance < ray_check.ray_distance) {
-        apply_impulse(hit.normal, glm::length(velocity) * ray_check.bump_force);
-        // hit into something again, so just stop
+    if (!hit.miss() && hit.distance < ray_check.player_radius) {
         float into_wall = glm::dot(velocity, -hit.normal);
         if (into_wall > 0.0f) {
             velocity += hit.normal * into_wall;
+
+            velocity *= ray_check.collision_speed_damping;
         }
     }
+
+    // Move
     transform.translate(velocity * delta_time);
+
+    resolve_penetration();
+
+    prevent_camera_clip();
+}
+// try to get out of inside a voxel
+void Player::resolve_penetration() {
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+    auto& physics = tmt::engine.ecs.systems.get<tmt::Physics>();
+    glm::vec3 pos = transform.get_world_position();
+
+    constexpr glm::vec3 dirs[] = { { 1, 0, 0 }, { -1, 0, 0 }, { 0, 1, 0 }, { 0, -1, 0 }, { 0, 0, 1 }, { 0, 0, -1 } };
+
+    glm::vec3 push_out { 0.f };
+
+    for (const auto& dir : dirs) {
+        auto hit = physics.raycast(tmt::Ray(pos, dir), ray_check.collision_layer);
+        if (!hit.miss() && hit.distance < ray_check.player_radius) {
+            float penetration = ray_check.player_radius - hit.distance;
+            push_out -= dir * penetration;
+        }
+    }
+
+    if (glm::length(push_out) < 0.0001f) return;
+
+    pos += push_out;
+    transform.set_world_position(pos);
+
+    // Kill velocity component that points into the collision
+    glm::vec3 push_dir = glm::normalize(push_out);
+    float into = glm::dot(velocity, -push_dir);
+    if (into > 0.f) {
+        velocity += push_dir * into;
+    }
+
+    velocity *= ray_check.collision_speed_damping;
 }
 
+void Player::prevent_camera_clip() const {
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+    auto& physics = tmt::engine.ecs.systems.get<tmt::Physics>();
+
+    glm::vec3 pos = transform.get_world_position();
+    glm::vec3 forward = transform.get_forward();
+
+    const auto hit = physics.raycast(tmt::Ray(pos, forward), ray_check.collision_layer);
+
+    if (!hit.miss() && hit.distance < ray_check.camera_near_distance) {
+        float pushback = ray_check.camera_near_distance - hit.distance;
+        transform.set_world_position(pos - forward * pushback);
+    }
+}
 void Player::update(const tmt::FrameData& time) {
     auto& input = tmt::engine.input;
     switch (state) {
@@ -236,20 +306,88 @@ void Player::update(const tmt::FrameData& time) {
     }
 }
 void Player::draw_debug_lines() const {
-    if (glm::length(input_dir) < 0.001f) {
-        return;
-    }
     const auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
-    const auto world_pos = transform.get_world_position();
-    const auto arrow_origin = world_pos + transform.get_forward() - glm::vec3 { 0.0f, 0.1f, 0.0f };
+    const auto& physics = tmt::engine.ecs.systems.get<tmt::Physics>();
+    const auto pos = transform.get_world_position();
 
-    game::DebugLineConfig cf;
-    if (check_collision()) {
-        cf.color = tmt::RGBA { { glm::vec4 { 1.0f, 0.0f, 0.0f, 1.0f } } };
+    // player radius
+    {
+        game::DebugLineConfig cf;
+        cf.color = tmt::RGBA { glm::vec4 { 0.2f, 0.8f, 0.2f, 0.5f } };  // soft green
+        cf.set_values();
+        tmt::engine.polyline.draw_sphere(pos, ray_check.player_radius);
     }
-    cf.set_values();
 
-    tmt::engine.polyline.draw_arrow(arrow_origin, glm::normalize(velocity), ray_check.ray_distance);
+    // Green  = clear (no geometry within radius)
+    // Yellow = surface nearby but outside radius
+    // Red    = penetrating (surface closer than player_radius)
+    {
+        constexpr glm::vec3 dirs[] = { { 1, 0, 0 }, { -1, 0, 0 }, { 0, 1, 0 }, { 0, -1, 0 }, { 0, 0, 1 }, { 0, 0, -1 } };
+
+        for (const auto& dir : dirs) {
+            auto hit = physics.raycast(tmt::Ray(pos, dir), ray_check.collision_layer);
+
+            game::DebugLineConfig cf;
+            if (!hit.miss() && hit.distance < ray_check.player_radius) {
+                // Penetrating — red
+                cf.color = tmt::RGBA { glm::vec4 { 1.0f, 0.0f, 0.0f, 1.0f } };
+            } else if (!hit.miss() && hit.distance < ray_check.player_radius * 2.0f) {
+                // Close but not penetrating — yellow warning
+                cf.color = tmt::RGBA { glm::vec4 { 1.0f, 1.0f, 0.0f, 0.8f } };
+            } else {
+                // Clear — green
+                cf.color = tmt::RGBA { glm::vec4 { 0.0f, 1.0f, 0.0f, 0.5f } };
+            }
+            cf.set_values();
+
+            // Draw ray out to player_radius length
+            tmt::engine.polyline.draw_arrow(pos, dir, ray_check.player_radius);
+
+            // If there's a hit, draw a small cross at the hit point
+            if (!hit.miss() && hit.distance < ray_check.player_radius * 2.0f) {
+                glm::vec3 hit_point = pos + dir * hit.distance;
+                glm::vec3 up = glm::abs(dir.y) > 0.9f ? glm::vec3 { 1, 0, 0 } : glm::vec3 { 0, 1, 0 };
+                glm::vec3 perp_a = glm::normalize(glm::cross(dir, up));
+                glm::vec3 perp_b = glm::cross(dir, perp_a);
+                float cross_size = 0.05f;
+                tmt::engine.polyline.draw_line(hit_point - perp_a * cross_size, hit_point + perp_a * cross_size);
+                tmt::engine.polyline.draw_line(hit_point - perp_b * cross_size, hit_point + perp_b * cross_size);
+            }
+        }
+    }
+
+    // camera check
+    {
+        glm::vec3 forward = transform.get_forward();
+        auto hit = physics.raycast(tmt::Ray(pos, forward), ray_check.collision_layer);
+
+        game::DebugLineConfig cf;
+        if (!hit.miss() && hit.distance < ray_check.camera_near_distance) {
+            cf.color = tmt::RGBA { glm::vec4 { 1.0f, 0.0f, 1.0f, 1.0f } };  // magenta = clipping
+        } else {
+            cf.color = tmt::RGBA { glm::vec4 { 0.0f, 1.0f, 1.0f, 0.6f } };  // cyan = clear
+        }
+        cf.set_values();
+        tmt::engine.polyline.draw_arrow(pos, forward, ray_check.camera_near_distance);
+    }
+
+    // velocity
+    if (glm::length(velocity) > 0.001f) {
+        const auto arrow_origin = pos + transform.get_forward() - glm::vec3 { 0.0f, 0.1f, 0.0f };
+
+        game::DebugLineConfig cf;
+        auto hit = check_collision();
+        if (!hit.miss() && hit.distance < ray_check.player_radius) {
+            cf.color = tmt::RGBA { glm::vec4 { 1.0f, 0.0f, 0.0f, 1.0f } };  // red = blocked
+        } else if (!hit.miss() && hit.distance < ray_check.player_radius * 1.5f) {
+            cf.color = tmt::RGBA { glm::vec4 { 1.0f, 0.5f, 0.0f, 1.0f } };  // orange = close
+        } else {
+            cf.color = tmt::RGBA { glm::vec4 { 1.0f, 1.0f, 1.0f, 0.6f } };  // white = clear
+        }
+        cf.set_values();
+
+        tmt::engine.polyline.draw_arrow(arrow_origin, glm::normalize(velocity), ray_check.player_radius * 2.0f);
+    }
 }
 
 void Player::attempt_attach(tmt::Input& input) {
