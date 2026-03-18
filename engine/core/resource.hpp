@@ -3,8 +3,15 @@
 
 #include "engine/core/io.hpp"
 #include "engine/core/reflection.hpp"
+#include "engine/core/logger.hpp"
 
 namespace tmt {
+
+enum class FallbackReason : uint8_t {
+    FILE_NOT_FOUND,
+    LOAD_FAILED,
+    RELOAD_FAILED,
+};
 
 class Resource {
    public:
@@ -18,6 +25,13 @@ class Resource {
     virtual bool reload() {
         unload();
         return load();
+    }
+
+    /* [Optional] fallback is called when a resource fails to load or reload */
+    virtual bool fallback(const FallbackReason reason) {
+        (void)reason;
+        tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resource] No fallback implemented for resource with fallback reason: {}", reason);
+        return true;
     }
 
     bool is_loaded() const { return loaded; }

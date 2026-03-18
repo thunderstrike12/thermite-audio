@@ -60,6 +60,7 @@ bool Resources::reload_resource(const std::shared_ptr<Resource>& resource) const
     const bool success = resource->reload();
     if (!success) {
         tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to reload resource");
+        resource->fallback(FallbackReason::RELOAD_FAILED);
         return false;
     }
     resource->loaded = true;
@@ -77,6 +78,7 @@ bool Resources::reload_resource(const std::shared_ptr<FileResource>& resource) c
     const bool success = resource->reload();
     if (!success) {
         tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to reload resource: {}", resource->file_location);
+        resource->fallback(FallbackReason::RELOAD_FAILED);
         return false;
     }
     resource->last_modified_time = last_modified_time;

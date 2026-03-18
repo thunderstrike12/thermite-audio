@@ -59,12 +59,13 @@ class Resources {
 
         // load() success checking
         const bool file_exists = resource->last_modified_time != TimeStamp::min();
-        if (!file_exists || !resource->load()) {
-            tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to load resource: {}", file_location);
-            resource->unload();
-            resource->loaded = false;
-            ResourceRef<T> ref(file_location);
-            return ref;
+        if (file_exists == false) {
+            fallback(file_location, resource);
+        } else {
+            const bool load_success = resource->load();
+            if (load_success == false) {
+                fallback(file_location, resource);
+            }
         }
         resource->loaded = true;
 
@@ -94,11 +95,7 @@ class Resources {
         std::shared_ptr<T> resource = std::make_shared<T>(file_resource.resource, std::forward<Args>(args)...);
 
         if (!resource->load()) {
-            tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to load runtime resource!");
-            resource->unload();
-            resource->loaded = false;
-            ResourceRef<T> ref(file_resource->file_location);
-            return ref;
+            fallback(file_resource.file_location, resource);
         }
         resource->loaded = true;
 
@@ -141,6 +138,20 @@ class Resources {
 
     /* File location -> file resource & runtime resources */
     std::unordered_map<IO::FileLocation, ResourceCollection, IO::FileLocationHash> resources;
+
+    template <typename T>
+    static void fallback(const tmt::IO::FileLocation& file_location, std::shared_ptr<T>& resource) {
+        tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] Failed to load resource: {}", file_location);
+
+        const bool fallback_success = resource->fallback(FallbackReason::LOAD_FAILED);
+        if (fallback_success == false) {
+            tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] [CRITICAL ERROR] Failed to load fallback (REALLY BAD).");
+            throw std::runtime_error("Failed to load resource and fallback failed: " + file_location.get_absolute_path().string());
+        }
+
+        resource->loaded = fallback_success;
+        ResourceRef<T> ref(file_location);
+    }
 };
 
 }  // namespace tmt

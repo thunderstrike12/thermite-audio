@@ -14,6 +14,8 @@ class Texture2D : public FileResource {
     bool load() override;
     void unload() override;
 
+    bool fallback(FallbackReason reason) override;
+
     inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS { ".png", ".jpg", ".tga" };
 
     Texture texture {};

@@ -41,7 +41,9 @@ class VoxelScene : public tmt::FileResource {
     std::vector<Entity> instantiate_entities() const;
     [[nodiscard]] std::vector<UUID> get_all_uuids() const;
 
-    inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS { ".vengi", ".svh" };
+    bool fallback(FallbackReason reason) override;
+
+    inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS { ".svh" };
 
     /* Voxel scene hierarchy. */
     std::vector<VoxelSceneNode> root_nodes {};

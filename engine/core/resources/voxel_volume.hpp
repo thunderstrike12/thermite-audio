@@ -25,6 +25,8 @@ class VoxelVolume : public tmt::RuntimeResource<VoxelScene, UUID> {
     bool load() override;
     void unload() override;
 
+    bool fallback(FallbackReason reason) override;
+
     /* Updates the GPU buffers of this voxel volume if dirty. (note: this should only be called from the renderer) */
     void update_if_dirty();
 

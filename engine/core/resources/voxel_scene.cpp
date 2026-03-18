@@ -469,4 +469,19 @@ std::vector<UUID> VoxelScene::get_all_uuids() const {
     return uuids;
 }
 
+bool VoxelScene::fallback(const FallbackReason) {
+    const IO::FileLocation fallback_location { IO::Location::ENGINE, "error.svh" };
+    const std::vector<char> data = IO::read_file(fallback_location);
+
+    if (data.empty()) {
+        Log::error("Failed to read fallback voxel file: {}", fallback_location);
+        return false;
+    }
+
+    root_nodes = decode_svh(data);
+    if (root_nodes.empty()) Log::error("Failed to load voxel scene from fallback file: {}", fallback_location);
+
+    return !root_nodes.empty();
+}
+
 }  // namespace tmt

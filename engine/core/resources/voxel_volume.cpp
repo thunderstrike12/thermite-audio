@@ -118,6 +118,31 @@ void VoxelVolume::unload() {
     size = glm::uvec3(0u);
 }
 
+bool VoxelVolume::fallback(FallbackReason) {
+    const VoxelSceneNode* model = nullptr;
+
+    for (VoxelSceneNode& root_node : file_resource->root_nodes) {
+        model = first_model(root_node);
+
+        if (model != nullptr) break;  // If a first node was found in a root node, then we exit the loop.
+    }
+
+    if (model == nullptr) {
+        Log::error("Failed to get model for VoxelVolume.");
+        return false;
+    }
+
+    /* Copy the voxel data from the model */
+    blas = std::make_unique<Svt64>(*model->tree);
+    size = model->size;
+    name = model->name;
+    uuid = model->uuid;
+
+    create_gpu_buffers();
+
+    return true;
+}
+
 void VoxelVolume::update_if_dirty() {
     if (is_dirty == false) return;
     VRAMBank& bank = engine.renderer.vram_bank();
