@@ -892,6 +892,12 @@ Hit Physics::raycast(const Ray& ray, uint32_t layer_mask) const {
     return hit;
 }
 
+std::vector<uint32_t> Physics::overlap(const Aabb& aabb, uint32_t layer_mask) const {
+    auto hits = bvh.overlap(aabb, layer_mask);
+
+    return hits;
+}
+
 void Physics::recalculate_physics_data(VoxelBody& vb, VoxelVolume& volume) {
     initialize_voxel_body(vb, volume);
     recalculate_surface_normals(volume);

@@ -73,6 +73,8 @@ class Bvh2 {
 
     /* Find all primitives overlapping an AABB. */
     std::vector<uint32_t> overlap(const Aabb& aabb) const;
+    /* Find only the primitives in layer_mask overlapping with an AABB */
+    std::vector<uint32_t> overlap(const Aabb& aabb, uint32_t layer_mask) const;
 
     /* Trace the acceleration structure. */
     Hit trace(const Ray& ray) const;

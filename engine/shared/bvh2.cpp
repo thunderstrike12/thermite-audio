@@ -271,6 +271,69 @@ std::vector<uint32_t> Bvh2<T>::overlap(const Aabb& aabb) const {
     return hits;
 }
 
+template <typename T>
+std::vector<uint32_t> Bvh2<T>::overlap(const Aabb& aabb, uint32_t layer_mask) const {
+    /* Traversal state */
+    // TODO check with Milan
+
+    std::vector<uint32_t> hits {};
+    uint32_t stack[32] {}, stack_ptr = 0u, node_index = 0u;
+
+    for (;;) {
+        const Bvh2Node& node = nodes[node_index];
+
+        /* Avoid an infinite loop when the BVH has nothing inside it */
+        if (nodes[0].left_first == 0u && nodes[0].prim_count == 0u) return hits;
+
+        /* Leaf node */
+        if (node.is_leaf()) {
+            /* Intersect only primitives in layer mask */
+            for (uint32_t i = 0u; i < node.prim_count; ++i) {
+                const uint32_t index = indices[node.left_first + i];
+                const T& prim = prims[index];
+
+                /* skip if masks don't match */
+                if ((prim.mask & layer_mask) == 0) continue;
+
+                if (!bounds[index].overlap(aabb)) continue;
+
+                hits.push_back(index);
+            }
+
+            /* Pop the node stack */
+            if (stack_ptr == 0u) break;
+            node_index = stack[--stack_ptr];
+            continue;
+        }
+
+        /* Interior node */
+        uint32_t child1_index = node.left_first;
+        uint32_t child2_index = node.left_first + 1u;
+        const Bvh2Node &child1 = nodes[child1_index], &child2 = nodes[child2_index];
+        bool hit1 = child1.aabb().overlap(aabb);
+        bool hit2 = child2.aabb().overlap(aabb);
+
+        /* Swap child nodes so that the closest one comes first */
+        if ((hit2 == true) && (hit1 == false)) {
+            std::swap(hit1, hit2), std::swap(child1_index, child2_index);
+        }
+
+        /* If we missed both child nodes */
+        if (hit1 == false) {
+            /* Pop the node stack */
+            if (stack_ptr == 0u) break;
+            node_index = stack[--stack_ptr];
+        } else {
+            /* Continue with the closest child node */
+            node_index = child1_index;
+            /* Push the 2nd child onto the node stack if we hit it */
+            if (hit2 == true) stack[stack_ptr++] = child2_index;
+        }
+    }
+
+    return hits;
+}
+
 /* Ray AABB intersection function. */
 inline float intersect_aabb(const Ray ray, const glm::vec3 box_min, const glm::vec3 box_max) {
     const glm::vec3 t_to_min = (box_min - ray.origin) * ray.rcp_dir;
