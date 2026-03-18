@@ -48,6 +48,12 @@ class Player : public tmt::GameComponent<Player> {
     float drag = 5.0f;
     float max_speed = 10.0f;
 
+    // Movement boost parameters
+    float boost_max_speed_multiplier = 2.0f;
+    float boost_acceleration_multiplier = 4.0f;
+    float boost_cost_per_second_per_additional_speed_above_max = 1.0f;
+    float boost_initial_cost = 5.0f;
+
     // Player stats
     PlayerStat health;
     PlayerStat energy;
@@ -66,6 +72,8 @@ class Player : public tmt::GameComponent<Player> {
     tmt::Entity energy_bar_max = entt::null;
     tmt::Entity energy_bar_current = entt::null;
 
+    tmt::Entity boost_availability = entt::null;
+
     // Barge point
     tmt::Entity barge = entt::null;
 
@@ -75,9 +83,16 @@ class Player : public tmt::GameComponent<Player> {
    private:
     void refill(float delta);
     void drain_energy(float delta);
+    void apply_boost();
+    void reset_boost();
     PlayerState state = PlayerState::FREEMOVING;
     glm::vec3 velocity = { 0.0f, 0.0f, 0.0f };
     glm::vec3 input_dir { 0.0f };
+    float max_speed_calculated = max_speed;
+    float acceleration_calculated = acceleration;
+
+    bool boost_was_applied = false;
+    bool boost_available = false;
     float previous_max_health = health.max_value;
     float previous_health = health.value;
     float previous_max_energy = energy.max_value;
@@ -90,7 +105,8 @@ class Player : public tmt::GameComponent<Player> {
 TMT_OBJECT(game::PlayerStat, (max_value, value, increase_multiplier));
 TMT_OBJECT(game::RayCollisionCheck, (collision_layer, player_radius, collision_speed_damping, camera_near_distance));
 TMT_OBJECT(
-    game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, health, energy, energy_drain_per_second, out_of_energy_time_till_death, hp_bar_max, hp_bar_current,
-                   energy_bar_max, energy_bar_current, barge, recharge_distance, ray_check)
+    game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, boost_max_speed_multiplier, boost_acceleration_multiplier,
+                   boost_cost_per_second_per_additional_speed_above_max, boost_initial_cost, boost_availability, health, energy, energy_drain_per_second, out_of_energy_time_till_death,
+                   hp_bar_max, hp_bar_current, energy_bar_max, energy_bar_current, barge, recharge_distance, ray_check)
 
 );

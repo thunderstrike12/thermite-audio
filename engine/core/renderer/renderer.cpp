@@ -205,10 +205,10 @@ void Renderer::end() {
     gpu.deinit().expect("failed to destroy gpu adapter.");
 }
 
-Hit Renderer::trace_ray(const Ray& ray) const { 
+Hit Renderer::trace_ray(const Ray& ray) const {
     Hit hit = scene_view.bvh.trace(ray);
     if (hit) hit.entity = scene_view.entities[(uint32_t)hit.entity];
-    return hit; 
+    return hit;
 }
 
 #ifdef THERMITE_EDITOR
@@ -224,8 +224,12 @@ void Renderer::set_imgui(ImGUI* new_imgui) {
 }
 #endif
 
-VRAMBank& Renderer::vram_bank() { return gpu.get_vram_bank(); }
+VRAMBank& Renderer::vram_bank() {
+    return gpu.get_vram_bank();
+}
 
-void Renderer::destroy(OpaqueHandle& handle) { render_graph.defer_destroy(handle); }
+void Renderer::destroy(OpaqueHandle& handle) {
+    render_graph.defer_destroy(handle);
+}
 
 }  // namespace tmt

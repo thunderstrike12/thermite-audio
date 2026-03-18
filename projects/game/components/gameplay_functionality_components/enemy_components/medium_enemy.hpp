@@ -93,7 +93,7 @@ struct Missile {
 };
 
 TMT_OBJECT(
-    game::MediumEnemy,
-    (walkable_asteroid, rotation_speed, height_above_ground, walk_speed, aggro_range, laser_range, stomp_range, missile_cooldown, stop_launching_after, start_homing_after, launch_speed, home_speed, life_time, missile_burst, burst_interval, missile_max_randomness, laser_cooldown, laser_firing_time, laser_sitting_down_time,
+    game::MediumEnemy, (walkable_asteroid, rotation_speed, height_above_ground, walk_speed, aggro_range, laser_range, stomp_range, missile_cooldown, stop_launching_after, start_homing_after,
+                        launch_speed, home_speed, life_time, missile_burst, burst_interval, missile_max_randomness, laser_cooldown, laser_firing_time, laser_sitting_down_time,
                         laser_winding_up_time, laser_linear_speed, laser_exponential_speed, laser_linear_threshold, laser_max_randomness, laser_prediction_length)
 );
