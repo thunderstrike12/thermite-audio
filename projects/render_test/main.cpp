@@ -111,18 +111,17 @@ void MainScene::on_update(const tmt::FrameData& time) {
                 auto& vb = tmt::engine.ecs.add_component<tmt::VoxelBody>(entity);
                 vb.gravity = 0.0f;
                 vb.type = tmt::VoxelBody::DYNAMIC;
-                tmt::Physics::initialize_voxel_body(vb, *box_model.resource.get());
 
                 const glm::vec3 x_offset = cam_transform.get_right() * ((float)x * 1.5f);
                 const glm::vec3 y_offset = cam_transform.get_up() * ((float)y * 1.5f);
-
-                tmt::Physics::set_position(vb, cam_pos + cam_forward * 2.0f + x_offset + y_offset);
 
                 float random_rot_x = ((float)(rand() % 1000) / 1000.0f) * 3.1415f;
                 float random_rot_y = ((float)(rand() % 1000) / 1000.0f) * 3.1415f;
                 float random_rot_z = ((float)(rand() % 1000) / 1000.0f) * 3.1415f;
 
-                tmt::Physics::set_rotation(vb, cam_transform.get_world_rotation() * glm::vec3(random_rot_x, random_rot_y, random_rot_z));
+                transform.set_world_position(cam_pos + cam_forward * 2.0f + x_offset + y_offset);
+                transform.set_world_rotation(cam_transform.get_world_rotation() * glm::quat(glm::vec3(random_rot_x, random_rot_y, random_rot_z)));
+
                 tmt::Physics::add_force(vb, cam_forward * 20.0f);
             }
         }

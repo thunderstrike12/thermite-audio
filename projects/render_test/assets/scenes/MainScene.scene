@@ -641,6 +641,11 @@
         }
     },
     "Voxel Body": {
+        "17": {
+            "type": "STATIC",
+            "gravity": 0.0,
+            "layer": 0
+        },
         "1048577": {
             "type": "STATIC",
             "gravity": 0.0,
