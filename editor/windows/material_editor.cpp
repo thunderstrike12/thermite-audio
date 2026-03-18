@@ -58,8 +58,10 @@ void MaterialEditor::on_inspect() {
     ImGui::BeginGroup();
 
     static glm::vec3 albedo {};
+    static glm::vec3 edge_tint {};
     if (palette.update_material_editor) {
         albedo = material.albedo.unpack();
+        edge_tint = material.edge_tint.unpack();
         palette.update_material_editor = false;
     }
     // We make sure to clamp the Rgb10 color to the range 0.0f-1.0f
@@ -69,6 +71,15 @@ void MaterialEditor::on_inspect() {
             modify_all_palettes(material_index, &Material::albedo, value);
         else
             material.albedo = value;
+    }
+
+    // We make sure to clamp the Rgb10 color to the range 0.0f-1.0f
+    if (ImGui::ColorWheel3("Edge Tint", &edge_tint.x, ImGuiColorWheelFlags_CustomColorSpace)) {
+        const Rgb10 value { glm::clamp(edge_tint, glm::zero<glm::vec3>(), glm::one<glm::vec3>()) };
+        if (edit_all_palettes)
+            modify_all_palettes(material_index, &Material::edge_tint, value);
+        else
+            material.edge_tint = value;
     }
 
     float roughness = static_cast<float>(material.roughness) / 255.0f;

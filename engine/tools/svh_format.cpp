@@ -11,7 +11,7 @@ namespace {
 
 constexpr uint32_t MAGIC_NUMBER { 0xFE2032A1 };
 constexpr uint32_t CURRENT_MAJOR_VERSION { 1 };
-constexpr uint32_t CURRENT_MINOR_VERSION { 1 };
+constexpr uint32_t CURRENT_MINOR_VERSION { 2 };
 
 // Helper structs with correct size to easily parse the binary data.
 struct FileHeader {
@@ -111,16 +111,38 @@ std::unique_ptr<Svt64> decode_svt64_tree(const std::span<const char>& svt64_data
     tree->nodes_capacity = header.tree_node_count + SVT64_BUFFER_MEMORY;
     tree->depth = header.depth;
 
-    // Handle material palette conversion for versions below 1.1.
-    if (file_header.major_version == 1 && file_header.minor_version < 1) {
+    if (file_header.major_version == 1 && file_header.minor_version == 2) {
+        tree->palette = read_data<MaterialPalette>(data_pointer);
+
+    } else if (file_header.major_version == 1 && file_header.minor_version == 1) {
+        constexpr size_t MIN_MATERIAL_COUNT = glm::min(256llu, MaterialPalette::ENTRY_COUNT);
+
+        for (size_t i = 0; i < MIN_MATERIAL_COUNT; i++) {
+            const Rgb10 albedo = read_data<Rgb10>(data_pointer);
+            const uint16_t ior = read_data<uint16_t>(data_pointer);
+            const uint16_t emission = read_data<uint16_t>(data_pointer);
+            const uint8_t roughness = read_data<uint8_t>(data_pointer);
+            const uint8_t metallic = read_data<uint8_t>(data_pointer);
+            const uint8_t transmission = read_data<uint8_t>(data_pointer);
+            const auto type = static_cast<Material::Type>(read_data<uint8_t>(data_pointer));
+
+            tree->palette.entries[i] = Material {
+                .albedo = albedo,
+                .ior = ior,
+                .emission = emission,
+                .roughness = roughness,
+                .metallic = metallic,
+                .transmission = transmission,
+                .type = type,
+            };
+        }
+    } else if (file_header.major_version == 1 && file_header.minor_version == 0) {
         const std::span<const glm::vec4> albedo_palette = read_data<glm::vec4>(data_pointer, 256llu);
         constexpr size_t MIN_MATERIAL_COUNT = glm::min(256llu, MaterialPalette::ENTRY_COUNT);
 
         for (size_t i = 0; i < MIN_MATERIAL_COUNT; i++) {
             tree->palette.entries[i] = Material { .albedo = cs::r709_to_acescg(cs::linearize(albedo_palette[i])) };
         }
-    } else {
-        tree->palette = read_data<MaterialPalette>(data_pointer);
     }
 
     tree->nodes = new Svt64Node[tree->node_count + SVT64_BUFFER_MEMORY];

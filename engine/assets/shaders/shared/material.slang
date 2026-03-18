@@ -23,9 +23,11 @@ public [ForceInline] ShadingFrame create_shading_frame(const float3 n, const flo
 
 /* Voxel material data, used in a palette. */
 public struct Material {
-    public uint packed_albedo; /* Packed 10bit RGB color. */
+    public uint packed_albedo;    /* Packed 10bit RGB color. */
+    public uint packed_edge_tint; /* Packed 10bit RGB color. */
     public uint ior_emission; /* Packed f16 ior, f16 emission. */
     public uint roughness_metallic_transmission; /* Packed 8bit roughness, metallic, and transmission. (1 byte unused) */
+    uint padding; /* 32 bit padding.  */
 
     /* Material base color (ACEScg) */
     public [ForceInline] float3 albedo() { return decode_rgb10(packed_albedo); };
