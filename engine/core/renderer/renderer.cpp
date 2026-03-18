@@ -130,25 +130,13 @@ void Renderer::update() {
     /* Enqueue pipelines */
     geometry_pipeline.enqueue(render_graph, render_view, scene_view);
     di_pipeline.enqueue(render_graph, render_view, scene_view);
-
-    if (scene_view.render_outlines) {
-        /* clang-format on */
-        /* Object outline render pass */
-        render_graph.add_compute_pass("object outline", "outline.cs")
-            .read(render_view.render_view_buffer)
-            .read(scene_view.object_data)
-            .read(render_view.vbuffer.image)
-            .write(render_view.get_render_image())
-            .group_size(16, 8)
-            .work_size(render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y);
-    }
-
     vfx_pipeline.enqueue(render_graph, render_view);
 
     /* TAA Resolve */
     if (engine.renderer.display_mode == DisplayMode::DEFAULT) {
         const uint32_t frame_flag = (render_view.frame_counter & 1) == 0;
         uint32_t taa_flag = engine.renderer.enable_taa ? 1u : 0u;
+        /* clang-format off */
         render_graph.add_compute_pass("TAA Resolve", "taa_resolve.cs")
             .read(render_view.render_view_buffer)
             .read(point_sampler)
@@ -161,7 +149,18 @@ void Renderer::update() {
             .push_constants(&taa_flag, 0, sizeof(uint32_t))
             .group_size(16, 8)
             .work_size(render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y);
-        /* clang-format off */
+    }
+
+    if (scene_view.render_outlines) {
+        /* Object outline render pass */
+        render_graph.add_compute_pass("object outline", "outline.cs")
+            .read(render_view.render_view_buffer)
+            .read(scene_view.object_data)
+            .read(render_view.vbuffer.image)
+            .write(render_view.get_render_image())
+            .group_size(16, 8)
+            .work_size(render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y);
+        /* clang-format on */
     }
 
     polyline_pipeline.enqueue(render_graph, render_view);
