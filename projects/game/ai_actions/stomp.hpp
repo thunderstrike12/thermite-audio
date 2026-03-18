@@ -2,22 +2,20 @@
 #include "engine/systems/ai/goap/components/goap_action.hpp"
 #include "engine/systems/ai/goap/components/goap_action_registry.hpp"
 
-class FireMissiles : public tmt::GoapAction {
+class Stomp : public tmt::GoapAction {
    public:
-    FireMissiles() {
-        preconditions["m_missiles_intact"] = true;
-        preconditions["m_in_aggro_range"] = true;
-        preconditions["m_missiles_ready"] = true;
+    Stomp() {
+        preconditions["m_in_stomp_range"] = true;
+        preconditions["m_stomp_ready"] = true;
         effects["m_kill_player"] = true;
-        cost = 5.f;
+        cost = 2.f;
     }
 
     tmt::Entity player = entt::null;
 
-    int missiles = 0;
-    float interval_timer = 0.0f;
+    float time = 0.0f;
 
-    std::string get_id() const override { return "a_FireMissiles"; }
+    std::string get_id() const override { return "a_Stomp"; }
 
     void on_start(tmt::Entity) override;
     void on_tick(tmt::Entity agent, float dt) override;

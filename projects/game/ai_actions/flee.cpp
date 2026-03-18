@@ -1,4 +1,4 @@
-#include "get_in_laser_range.hpp"
+#include "flee.hpp"
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
 #include "engine/systems/ai/navigation/nav_mesh.hpp"
@@ -11,18 +11,20 @@
 
 #include <cstdlib>
 
-void GetInLaserRange::on_start(tmt::Entity enemy_entity) {
+void Flee::on_start(tmt::Entity enemy_entity) {
     for (const auto& [CamEntity, camera] : tmt::engine.ecs.view<tmt::Camera>().each()) {
         player = CamEntity;
         break;
     }
+    auto& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
+    enemy.back_off_distance = 99999999.9f;
 }
 
-void GetInLaserRange::on_tick(tmt::Entity enemy_entity, float dt) {
+void Flee::on_tick(tmt::Entity enemy_entity, float dt) {
     auto& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
     enemy.kite_player();
 }
 
-bool GetInLaserRange::is_done(tmt::Entity) const {
+bool Flee::is_done(tmt::Entity) const {
     return false;
 }
