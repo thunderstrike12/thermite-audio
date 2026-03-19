@@ -336,8 +336,15 @@ void Editor::main_menu_bar() {
             ImGui::SetNextItemWidth(combo_width);
             if (ImGui::BeginCombo("##SceneSwitcher", scene_name.c_str())) {
                 for (const auto& [type_index, scene_info] : scenes) {
+                    if (type_index == typeid(VoxelEditScene)) continue;
+                    if (type_index == typeid(PrefabEditScene)) continue;
+
                     bool is_selected = (active_scene && typeid(*active_scene) == type_index);
                     if (ImGui::Selectable(scene_info.name.c_str(), is_selected)) {
+                        auto current_mode = editor_mode;
+                        if (current_mode != Mode::SCENE) {
+                            switch_mode(Mode::SCENE);
+                        }
                         engine.scenes.enqueue_scene(type_index);
                     }
                     if (is_selected) {
