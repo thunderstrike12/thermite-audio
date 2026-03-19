@@ -151,6 +151,16 @@ tmt::json tag_invoke(JsonReflect::serialize_t, const tmt::Entity& entity, tmt::S
     return static_cast<std::uint32_t>(entity);
 }
 
+/* Prefab with state */
+tmt::json tag_invoke(JsonReflect::serialize_t, const tmt::Prefab& prefab, tmt::SerializeState& state) {
+    tmt::json j;
+    j["source_location"] = tmt::Serializer::serialize(prefab.source_location, state);
+    j["source_entity"] = tmt::Serializer::serialize(prefab.source_entity); /* No state */
+    j["root_entity"] = tmt::Serializer::serialize(prefab.root_entity, state);
+    j["instance_id"] = tmt::Serializer::serialize(prefab.instance_id, state);
+    return j;
+}
+
 void tag_invoke(JsonReflect::deserialize_t, const JsonReflect::json& j, tmt::Entity& entity, const tmt::DeserializeState& state) {
     tmt::Entity deserialized_entity = entt::null;
     tmt::Serializer::deserialize(j, deserialized_entity);
