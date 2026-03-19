@@ -14,7 +14,8 @@ public static const uint INACTIVE_THRESHOLD = 60u;
 /* Number of slots available in the cache. */
 public static const uint CAPACITY = 10000000u;
 
-static const uint TEMPORAL_SAMPLES = 20u;
+static const uint TEMPORAL_DIFF_SAMPLES = 24u;
+static const uint TEMPORAL_SPEC_SAMPLES = 8u;
 
 /* Cache Slot (48 bytes) */
 public struct Slot {
@@ -63,22 +64,23 @@ public struct Slot {
         diffuse.rgb = specular.rgb = 0u;
 
         /* Accumulator warmup factor */
-        if (warmup_counter() < TEMPORAL_SAMPLES) warmup_last += 1u;
+        if (warmup_counter() < max(TEMPORAL_DIFF_SAMPLES, TEMPORAL_SPEC_SAMPLES)) warmup_last += 1u;
 
-        const float alpha = 1.0f / (float)warmup_counter();
-        diffuse.w = encode_rgb9e5(lerp(read_diffuse(), diffuse_accu, alpha));
-        specular.w = encode_rgb9e5(lerp(read_specular(), specular_accu, alpha));
+        const float diff_alpha = 1.0f / min((float)warmup_counter(), TEMPORAL_DIFF_SAMPLES);
+        const float spec_alpha = 1.0f / min((float)warmup_counter(), TEMPORAL_SPEC_SAMPLES);
+        diffuse.w = encode_rgb9e5(lerp(read_diffuse(), diffuse_accu, diff_alpha));
+        specular.w = encode_rgb9e5(lerp(read_specular(), specular_accu, spec_alpha));
     }
 
     /* Find the inactivity of the cache slot compared to a reference frame index. */
-    public [ForceInline] [mutating] uint inactivity(const uint frame_index) {
+    public [ForceInline] [mutating] uint inactivity() {
         const uint last = last_sampled();
         set_last_sampled(last + 1u);
         return last;
     }
 
     /* Activate the cache slot for the given frame index. */
-    public [ForceInline] [mutating] void activate(const uint frame_index) {
+    public [ForceInline] [mutating] void activate() {
         set_last_sampled(0u);
     }
 
@@ -110,7 +112,7 @@ public struct Slot {
 };
 
 /* Insert data into the cache. */
-public [ForceInline] void insert(RWStructuredBuffer<cache::Slot> cache, const uint64_t key, const uint frame_index, const float3 diffuse, const float3 specular) {
+public [ForceInline] void insert(RWStructuredBuffer<cache::Slot> cache, const uint64_t key, const float3 diffuse, const float3 specular) {
     /* Modulo the hash to fall within the cache capacity */
     const uint base_hash = voxel_hash(key) % CAPACITY;
     uint slot = base_hash;
@@ -154,7 +156,7 @@ public [ForceInline] void insert(RWStructuredBuffer<cache::Slot> cache, const ui
 }
 
 /* Fetch a slot with a given key from the cache. */
-public [ForceInline] Slot fetch(RWStructuredBuffer<cache::Slot> cache, const uint64_t key, const uint frame_index) {
+public [ForceInline] Slot fetch(RWStructuredBuffer<cache::Slot> cache, const uint64_t key) {
     /* Modulo the hash to fall within the cache capacity */
     uint slot = voxel_hash(key) % CAPACITY;
 
@@ -162,7 +164,7 @@ public [ForceInline] Slot fetch(RWStructuredBuffer<cache::Slot> cache, const uin
     for (uint fuse = 0u; fuse < FUSE_LENGTH; ++fuse) {
         /* Exit if we found a slot which matches our key */
         if (cache[slot].key == key) {
-            cache[slot].activate(frame_index);
+            cache[slot].activate();
             return cache[slot];
         }
 

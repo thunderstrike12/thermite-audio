@@ -45,7 +45,7 @@ void main(int2 thread_id: SV_DispatchThreadID) {
             return;
         }
     } else {
-        const cache::Slot slot = cache::fetch(macrofacet_cache, packed, render_view.frame_index);
+        const cache::Slot slot = cache::fetch(macrofacet_cache, packed);
 
         if (slot.key == cache::EMPTY_KEY) {
             /* This is bad! */
@@ -55,7 +55,7 @@ void main(int2 thread_id: SV_DispatchThreadID) {
             const VisData vis = unpack_visibility(packed);
             const GeoData geo = unpack_geometry(vis, objects, ray);
 
-            luminance = slot.read_diffuse() * geo.material.albedo();
+            luminance = slot.read_diffuse() * geo.material.albedo() + slot.read_specular();
         }
     }
 

@@ -103,3 +103,18 @@ public [ForceInline] GeoData unpack_geometry(const VisData vis, StructuredBuffer
     
     return data;
 }
+
+/* Unpack voxel material data from hit. */
+public [ForceInline] Material unpack_material(const Hit hit, StructuredBuffer<VoxelObject> objects) {
+    const VoxelObject object = objects[hit.object_index];
+
+    /* Unpack the voxel position index (1D -> 3D) */
+    const uint3 voxel_index = expand_voxel_index(hit.voxel_index);
+
+    /* Find the voxel data pointer by traversing the SVT64 */
+    const StructuredBuffer<Svt64Node> nodes = bindless::storage_buffer<StructuredBuffer<Svt64Node>>(object.blas_handle);
+    const uint voxel_ptr = fetch_svt64(nodes, object.tree_depth, voxel_index);
+
+    /* Find the voxel material */
+    return voxel_material(object, voxel_ptr);
+}

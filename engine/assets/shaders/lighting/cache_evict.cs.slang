@@ -27,7 +27,7 @@ void main(int thread_id: SV_DispatchThreadID) {
     if (macrofacet_cache[slot_id].key == cache::EMPTY_KEY) return;
 
     /* Find the number of frames between the current and last sampled frame */
-    const uint inactivity = macrofacet_cache[slot_id].inactivity(render_view.frame_index);
+    const uint inactivity = macrofacet_cache[slot_id].inactivity();
 
     /* If this slot has been inactive for too long, reset it so it can be re-used */
     if (inactivity > cache::INACTIVE_THRESHOLD) {

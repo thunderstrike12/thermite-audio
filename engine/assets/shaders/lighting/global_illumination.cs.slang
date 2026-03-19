@@ -90,6 +90,6 @@ void main(int2 thread_id: SV_DispatchThreadID) {
 
     /* Insert the sample into the illuminance cache */
     /* TODO: This is very hacky (illuminance * 8.0f), we should properly handle this */
-    cache::insert(macrofacet_cache, facet_key, render_view.frame_index, illuminance * 8.0f, 0.0f);
+    cache::insert(macrofacet_cache, facet_key, illuminance * 8.0f, 0.0f);
     lbuffer[thread_id] = illuminance;
 }

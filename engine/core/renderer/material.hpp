@@ -10,8 +10,8 @@ namespace tmt {
 struct Material {
     enum class Type : uint8_t { NONE, THERMITE, COPPER, TITANIUM };
 
-    Rgb10 albedo {};
-    Rgb10 edge_tint {};
+    Rgb10 albedo { glm::vec3(1.0f, 1.0f, 1.0f) };
+    Rgb10 edge_tint { glm::vec3(1.0f, 1.0f, 1.0f) };
     uint16_t ior { 0x3C00 };      /* f16 encoding, 1.0f by default. */
     uint16_t emission { 0x0000 }; /* f16 encoding. 0.0f by default. */
     uint8_t roughness { 0 };

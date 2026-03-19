@@ -43,7 +43,7 @@ void main(int2 thread_id: SV_DispatchThreadID) {
     if (null_visibility(packed)) {
         render_target[thread_id] = float4(0.075f, 0.075f, 0.075f, 1.0f);
     } else {
-        const cache::Slot slot = cache::fetch(macrofacet_cache, packed, render_view.frame_index);
+        const cache::Slot slot = cache::fetch(macrofacet_cache, packed);
 
         if (slot.key == cache::EMPTY_KEY) {
             render_target[pixel_id] = float4(1.0f, 0.0f, 1.0f, 1.0f);
@@ -52,9 +52,14 @@ void main(int2 thread_id: SV_DispatchThreadID) {
         }
     }
 
+    /* Convert from ACEScg to r709 */
+    float3 luminance = lbuffer[pixel_id];
+    luminance = cs::acescg_to_r709(luminance);
 
-    
+    /* Output device transform */
+    luminance = cs::delinearize(luminance);
+
     /* Render luminance to the screen */
-    // render_target[thread_id] = float4(cs::delinearize(cs::acescg_to_r709(cs::aces_filmic_tonemapping(lbuffer[pixel_id]))), 1.0f); /* TEMP: Remove tonemapping! */
+    render_target[thread_id] = float4(luminance, 1.0f); /* TEMP: Remove tonemapping! */
     // render_target[pixel_id] = float4(cs::delinearize(cs::acescg_to_r709(cs::aces_filmic_tonemapping(slot.read_diffuse()))), 1.0f);
 }

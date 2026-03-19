@@ -156,6 +156,8 @@ void Renderer::update() {
             .work_size(render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y);
     }
 
+    post_process_pipeline.enqueue(render_graph, render_view);
+
     if (scene_view.render_outlines) {
         /* Object outline render pass */
         render_graph.add_compute_pass("object outline", "outline.cs")
@@ -167,8 +169,6 @@ void Renderer::update() {
             .work_size(render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y);
         /* clang-format on */
     }
-
-    post_process_pipeline.enqueue(render_graph, render_view);
 
     polyline_pipeline.enqueue(render_graph, render_view);
     ui_pipeline.enqueue(render_graph, render_view);

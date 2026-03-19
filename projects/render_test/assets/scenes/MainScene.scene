@@ -13,6 +13,8 @@
         19,
         20,
         21,
+        22,
+        23,
         1048576,
         1048577,
         1048578,
@@ -59,7 +61,13 @@
             "name": "Test Emitter"
         },
         "21": {
-            "name": "Emissive Cube"
+            "name": "Lamp"
+        },
+        "22": {
+            "name": "TestWall (1)"
+        },
+        "23": {
+            "name": "Lamp (1)"
         },
         "1048576": {
             "name": "Camera"
@@ -315,20 +323,60 @@
         },
         "21": {
             "local_position": {
-                "x": 0.0008492469787597656,
-                "y": 1.4031391143798828,
-                "z": 16.107187271118164
+                "x": -5.906209468841553,
+                "y": 0.0,
+                "z": 16.266590118408203
             },
             "local_rotation": {
-                "w": 0.7712195515632629,
-                "x": -0.16947969794273376,
-                "y": -0.5689667463302612,
-                "z": 0.22972576320171356
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
             },
             "local_scale": {
-                "x": 0.9999991655349731,
-                "y": 0.9999991059303284,
-                "z": 0.9999992847442627
+                "x": 1.0,
+                "y": 5.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "22": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.257953405380249,
+                "z": 20.423717498779297
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 0.9999843835830688,
+                "z": 0.9999839663505554
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "23": {
+            "local_position": {
+                "x": 5.648281097412109,
+                "y": 0.0,
+                "z": 16.266590118408203
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 5.0,
+                "z": 1.0
             },
             "parent": 4294967295,
             "children": []
@@ -550,10 +598,32 @@
             "resource": {
                 "file_location": {
                     "sub_location": "PROJECT",
-                    "relative_path": "models\\emissive_cube.svh"
+                    "relative_path": "lamp.svh"
+                },
+                "constructor_args": [
+                    "d4362ea6-493a-4555-be61-559e1992a4dd"
+                ]
+            }
+        },
+        "22": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "diffuse_wall.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
+                ]
+            }
+        },
+        "23": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "lamp.svh"
+                },
+                "constructor_args": [
+                    "d4362ea6-493a-4555-be61-559e1992a4dd"
                 ]
             }
         },
@@ -850,18 +920,18 @@
         },
         "18": {
             "color": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
+                "x": 0.6441628932952881,
+                "y": 0.07901414483785629,
+                "z": 0.590932309627533
             },
-            "temperature": 6000.0,
+            "temperature": -6000.0,
             "type": "SPHERE_LIGHT",
             "light": {
                 "index": 0,
                 "value": {
-                    "source_radius": 0.4000000059604645,
-                    "attenuation_radius": 30.0,
-                    "luminous_flux": 2000.0
+                    "source_radius": 0.10000000149011612,
+                    "attenuation_radius": 10.0,
+                    "luminous_flux": 500.0
                 }
             }
         }

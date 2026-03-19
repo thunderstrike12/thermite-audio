@@ -22,7 +22,7 @@ StructuredBuffer<VoxelObject> objects;
 /* Lights buffer. */
 StructuredBuffer<Light> lights;
 /* Macrofacet cache buffer. */
-RWStructuredBuffer<cache::Slot> macrofacet_cache;
+// RWStructuredBuffer<cache::Slot> macrofacet_cache;
 /* Visibility buffer. */
 Texture2D<uint2> vbuffer;
 /* Luminance buffer. */
@@ -99,8 +99,8 @@ inline float3 direct_illuminance(const float3 point, const float3 normal, const 
         attenuation *= spot * spot;
     }
 
-    const ShadingFrame sf = create_shading_frame(normal, light_sample.dir, view_dir);
-    const float3 brdf = opaque_base_slab(sf.wi.z, sf.wo.z, sf.wh.z, mat);
+    /* Correct BRDF is 1.0f / PI however this cancels out with the PDF being 1.0f / PI, so it's just 1.0f */
+    const float brdf = 1.0f;
 
     /* Calculate light illuminance */
     const float ndotl = max(0.0f, dot(normal, light_sample.dir));
@@ -130,7 +130,10 @@ void main(int2 thread_id: SV_DispatchThreadID) {
     }
 
     /* Bounds check */
-    if (any(pixel_id >= render_view.resolution)) return;
+    if (any(pixel_id >= render_view.resolution)) {
+        lbuffer[thread_id] = 0.0f;
+        return;
+    }
 
     /* Load visibility buffer data */
     const uint64_t facet_key = asuint64(vbuffer[pixel_id]);
@@ -146,16 +149,21 @@ void main(int2 thread_id: SV_DispatchThreadID) {
 
     /* Unpack visibility data */
     const GeoData geo = unpack_geometry(unpack_visibility(facet_key), objects, ray);
+
+    /* Calculate diffuse scale based on metallicness */
+    const float scale = saturate(1.0f - geo.material.metallic());
+    if (scale == 0.0f) {
+        /* Exit early if there's no diffuse contribution */
+        lbuffer[thread_id] = 0.0f; return;
+    }
+
     const float3 hit_point = ray.origin + ray.dir * geo.depth + geo.normal * 0.001f;
 
     /* Generate a seed for the current pixel */
     uint seed = thread_id.x + thread_id.y * resolution.x + (render_view.frame_index * (resolution.x * resolution.y));
 
     const float2 noise = r2(blue_noise[pixel_id % 512].rg, render_view.frame_index % 1024u);
+    const float3 diffuse = direct_illuminance(hit_point, geo.normal, -ray.dir, geo.material, seed, noise);
 
-    float3 illuminance = direct_illuminance(hit_point, geo.normal, -ray.dir, geo.material, seed, noise);
-
-    /* Insert the sample into the illuminance cache */
-    cache::insert(macrofacet_cache, facet_key, render_view.frame_index, illuminance * 2.0f, 0.0f);
-    lbuffer[thread_id] = illuminance;
+    lbuffer[thread_id] = scale * diffuse;
 }

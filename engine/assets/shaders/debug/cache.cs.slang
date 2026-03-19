@@ -34,7 +34,7 @@ void main(int2 thread_id: SV_DispatchThreadID) {
             /* Exit if we found a slot which matches our key */
             if (macrofacet_cache[slot].key == packed) {
                 render_target[thread_id] = float4(heat_color((float)fuse / cache::FUSE_LENGTH), 1.0f);
-                macrofacet_cache[slot].activate(render_view.frame_index);
+                macrofacet_cache[slot].activate();
                 return;
             }
 

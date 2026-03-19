@@ -106,6 +106,10 @@ struct RenderView {
     ScreenBuffer hbuffer2 {};     /* Accumulated (History) frame buffer (WxH, 8 bytes) */
     ScreenBuffer mbuffer {};      /* Motion Vector buffer (WxH, 4 bytes) */
 
+    /* Intermediate specular luminance buffer */
+    ScreenBuffer raw_spec_buffer {};
+    ScreenBuffer spec_buffer {};
+
     /* Macrofacet buffers */
     Buffer macrofacet_cache {}; /* Macrofacet hash cache (10.000.000, 48 bytes) */
 

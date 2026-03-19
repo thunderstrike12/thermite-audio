@@ -80,6 +80,15 @@ void RenderView::init() {
                           .expect("failed to create nbuffer texture.");
     nbuffer.image = bank.create_image("Denoised Luminance Buffer Image", nbuffer.texture).expect("failed to create nbuffer image.");
 
+    /* Quarter size specular buffer */
+    const Size3D quarter_size { view_size.x >> 1, view_size.y >> 1 };
+    raw_spec_buffer.texture = bank.create_texture("Raw Specular Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, quarter_size)
+                                  .expect("failed to create raw specular buffer texture.");
+    raw_spec_buffer.image = bank.create_image("Raw Specular Buffer Image", raw_spec_buffer.texture).expect("failed to create raw specular buffer image.");
+    spec_buffer.texture = bank.create_texture("Specular Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, quarter_size)
+                              .expect("failed to create specular buffer texture.");
+    spec_buffer.image = bank.create_image("Specular Buffer Image", spec_buffer.texture).expect("failed to create specular buffer image.");
+
     /* History Screen Buffers */
     hbuffer1.texture = bank.create_texture("History1 Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA16Sfloat, render_size)
                            .expect("failed to initialize history buffer texture");
@@ -188,6 +197,10 @@ void RenderView::deinit() {
     bank.destroy(lbuffer.texture);
     bank.destroy(nbuffer.image);
     bank.destroy(nbuffer.texture);
+    bank.destroy(raw_spec_buffer.image);
+    bank.destroy(raw_spec_buffer.texture);
+    bank.destroy(spec_buffer.image);
+    bank.destroy(spec_buffer.texture);
     bank.destroy(hbuffer1.image);
     bank.destroy(hbuffer1.texture);
     bank.destroy(hbuffer2.image);
@@ -250,12 +263,17 @@ void RenderView::resize_textures() {
         render_size.y = render_size.y >> 1;
     }
 
+    /* Quarter rate screen size */
+    const Size3D quarter_size { view_size.x >> 1, view_size.y >> 1 };
+
     /* Resize the screen buffers */
     bank.resize_texture(viewport.texture, view_size).expect("failed to resize viewport texture.");
     bank.resize_texture(vbuffer.texture, view_size).expect("failed to resize vbuffer texture.");
     bank.resize_texture(dbuffer.texture, view_size).expect("failed to resize depth buffer texture.");
-    bank.resize_texture(lbuffer.texture, render_size, lbuffer.meta).expect("failed to resize lbuffer texture.");
+    bank.resize_texture(lbuffer.texture, view_size, lbuffer.meta).expect("failed to resize lbuffer texture.");
     bank.resize_texture(nbuffer.texture, render_size).expect("failed to resize nbuffer texture.");
+    bank.resize_texture(raw_spec_buffer.texture, quarter_size).expect("failed to resize raw specular buffer texture.");
+    bank.resize_texture(spec_buffer.texture, quarter_size).expect("failed to resize specular buffer texture.");
     bank.resize_texture(hbuffer1.texture, view_size).expect("failed to resize hbuffer texture.");
     bank.resize_texture(hbuffer2.texture, view_size).expect("failed to resize hbuffer texture.");
     bank.resize_texture(mbuffer.texture, view_size).expect("failed to resize mbuffer texture.");
