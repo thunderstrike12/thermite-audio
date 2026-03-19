@@ -38,9 +38,14 @@ void FireLaser::on_start(tmt::Entity enemy_entity) {
 }
 
 void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
-    tmt::Transform& enemy_transform = tmt::engine.ecs.get_component<tmt::Transform>(enemy_entity);
     game::MediumEnemy& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
-    const auto& enemy_entity_pos = enemy_transform.get_world_position();
+    glm::vec3 enemy_pos = tmt::engine.ecs.get_component<tmt::Transform>(enemy_entity).get_world_position();
+    glm::vec3 laser_pos = enemy_pos;
+    if (tmt::engine.ecs.valid(enemy.laser_origin)) {
+        tmt::Transform& laser_origin = tmt::engine.ecs.get_component<tmt::Transform>(enemy.laser_origin);
+        laser_pos = laser_origin.get_world_position();
+    }
+
     const auto& player_pos = tmt::engine.ecs.get_component<tmt::Transform>(player).get_world_position();
 
     enemy.height_above_ground_offset = -enemy.height_above_ground + enemy.laser_sitting_down_height_offset;
@@ -54,17 +59,17 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
             break;
         }
         case WINDING_UP: {
-            glm::vec3 target_dir = glm::normalize(target_pos - enemy_entity_pos);
+            glm::vec3 target_dir = glm::normalize(target_pos - laser_pos);
             direction = target_dir;
 
             tmt::engine.polyline.use_color(0.5f, 0.1f, 0.1f);
             tmt::engine.polyline.use_line_width(8.0f);
-            constexpr float start_dist = 5.0f;
+            constexpr float START_DIST = 5.0f;
             float t = glm::clamp(time / enemy.laser_winding_up_time, 0.0f, 1.0f);
-            dist_between_laser_spheres = glm::mix(start_dist, 0.03f, t);
+            dist_between_laser_spheres = glm::mix(START_DIST, 0.03f, t);
 
             for (float i = 0; i < 50.0f; i += dist_between_laser_spheres) {
-                tmt::engine.polyline.draw_sphere(enemy_entity_pos + direction * i, .01f);
+                tmt::engine.polyline.draw_sphere(laser_pos + direction * i, .01f);
             }
             if (time > enemy.laser_winding_up_time) {
                 state = FIRING;
@@ -98,7 +103,7 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
             float exponential_weight = 1.0f - linear_weight;
             target_pos = linear_target_pos * linear_weight + exponential_target_pos * exponential_weight;
 
-            glm::vec3 target_dir = glm::normalize(target_pos - enemy_entity_pos);
+            glm::vec3 target_dir = glm::normalize(target_pos - laser_pos);
             direction = target_dir;
 
             if (time > enemy.laser_firing_time) {
@@ -113,7 +118,7 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
             tmt::engine.polyline.use_color(1.0f, 0.1f, 0.1f);
             tmt::engine.polyline.use_line_width(10.0f);
             for (float i = 0; i < 50.0f; i += 0.03f) {
-                tmt::engine.polyline.draw_sphere(enemy_entity_pos + direction * i, .01f);
+                tmt::engine.polyline.draw_sphere(laser_pos + direction * i, .01f);
             }
 
             break;
@@ -124,6 +129,6 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
     time += dt;
 }
 
-bool FireLaser::is_done(tmt::Entity enemy_entity) const {
+bool FireLaser::is_done(tmt::Entity /*enemy_entity*/) const {
     return false;
 }

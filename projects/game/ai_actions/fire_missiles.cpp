@@ -22,11 +22,14 @@ void FireMissiles::on_start(tmt::Entity enemy_entity) {
 }
 
 void FireMissiles::on_tick(tmt::Entity enemy_entity, float dt) {
-    auto& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
-    auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(enemy.walkable_asteroid);
+    game::MediumEnemy& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
+    glm::vec3 enemy_pos = tmt::engine.ecs.get_component<tmt::Transform>(enemy_entity).get_world_position();
+    glm::vec3 missile_pos = enemy_pos;
+    if (tmt::engine.ecs.valid(enemy.missile_origin)) {
+        tmt::Transform& laser_origin = tmt::engine.ecs.get_component<tmt::Transform>(enemy.missile_origin);
+        missile_pos = laser_origin.get_world_position();
+    }
 
-    tmt::Transform& enemy_transform = tmt::engine.ecs.get_component<tmt::Transform>(enemy_entity);
-    const auto& enemy_entity_pos = enemy_transform.get_world_position();
     enemy.kite_player();
 
     interval_timer += dt;
@@ -34,7 +37,7 @@ void FireMissiles::on_tick(tmt::Entity enemy_entity, float dt) {
         interval_timer -= enemy.burst_interval;
         Missile missile;
         missile = enemy;
-        missile.position = enemy_entity_pos;
+        missile.position = missile_pos;
 
         // set random offset
         missile.offset = glm::vec3(
@@ -49,13 +52,13 @@ void FireMissiles::on_tick(tmt::Entity enemy_entity, float dt) {
     if (missiles == 0) {
         auto& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
         enemy.missile_timer = interval_timer * enemy.missile_burst;
-        auto ws = tmt::engine.ecs.try_get_component<tmt::WorldState>(enemy_entity);
+        auto* ws = tmt::engine.ecs.try_get_component<tmt::WorldState>(enemy_entity);
         if (!ws) return;
         // ws->facts[std::hash<std::string>()("m_missiles_ready")] = false;
         ws->set_fact(tmt::FactId("m_missiles_ready"), false);
     }
 }
 
-bool FireMissiles::is_done(tmt::Entity enemy_entity) const {
+bool FireMissiles::is_done(tmt::Entity /*enemy_entity*/) const {
     return false;
 }
