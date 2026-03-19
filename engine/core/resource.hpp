@@ -90,7 +90,7 @@ class ResourceRef {
     ResourceRef(IO::FileLocation file_location) : file_location(std::move(file_location)), resource(nullptr) {}
     ResourceRef(IO::FileLocation file_location, std::shared_ptr<T> resource) : file_location(std::move(file_location)), resource(std::move(resource)) {}
 
-    IO::FileLocation file_location;
+    IO::FileLocation file_location{};
     std::shared_ptr<T> resource = nullptr;
 
     T* operator->() const { return resource.get(); }

@@ -68,6 +68,7 @@ void SceneView::update(RenderGraph& render_graph, const RenderView& render_view)
 }
 
 void SceneView::deinit() {
+    bvh.build(nullptr, 0);
     /* Get the VRAM bank */
     VRAMBank& bank = engine.renderer.vram_bank();
 
@@ -153,7 +154,7 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
         cpu_object.rcp_tree_width = gpu_object.rcp_tree_width = 1.0f / powf(4.0f, (float)renderer.resource->blas->depth);
 
         /* CPU-only data */
-        cpu_object.volume = renderer.resource.resource.get();
+        cpu_object.volume = renderer.resource;
 
         /* GPU-only data */
         gpu_object.tree_depth = renderer.resource->blas->depth;

@@ -251,7 +251,7 @@ void Physics::on_fixed_update(const FrameData&) {
             object.world_to_local = glm::inverse(object.local_to_world);
             object.size = renderer.resource->size;
             object.mask = (1u << vb.layer);
-            object.volume = renderer.resource.resource.get();
+            object.volume = renderer.resource;
             object.rcp_tree_width = 1.0f / powf(4.0f, (float)renderer.resource->blas->depth);
             object.uuid = (uint32_t)objects.size() + 1u; /* Element 0 is unused */
             objects.push_back(std::move(object));
@@ -352,7 +352,7 @@ void Physics::generate_constraint(int index, const PhysicsGroup& group) {
     }
 }
 
-void Physics::on_end() {}
+void Physics::on_end() {bvh.build(nullptr, 0);}
 
 void Physics::compare_trees(
     tmt::Svt64* tree_a, const glm::vec3& center_a, const glm::quat& rotation_a, float half_extent_a, tmt::Svt64* tree_b, const glm::vec3& center_b, const glm::quat& rotation_b,
