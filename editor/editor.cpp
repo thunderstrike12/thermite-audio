@@ -157,6 +157,7 @@ void Editor::on_engine_update(const FrameData& time) {
     }
 
     main_menu_bar();
+    main_status_bar();
 
     // Call on_editor_update for all systems
     for (const auto& system : systems[editor_mode]) {
@@ -349,6 +350,37 @@ void Editor::main_menu_bar() {
 
         ImGui::EndMainMenuBar();
     }
+}
+
+void Editor::main_status_bar() {
+    const auto flags =
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+
+    const float font_size_multiplier = 0.75f;
+    ImGui::PushFont(NULL, ImGui::GetStyle().FontSizeBase * font_size_multiplier);
+
+    const auto text_height = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().FramePadding.y * 2.0f;
+
+    if (ImGui::BeginViewportSideBar("##StatusBar", NULL, ImGuiDir_Down, text_height, flags)) {
+        ImGui::Text("Thermite Editor");
+        ImGui::SameLine();
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+        ImGui::SameLine();
+        ImGui::Text("%s", engine.app_specs().name.c_str());
+        ImGui::SameLine();
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+        ImGui::SameLine();
+        const float fps_anchor_x = ImGui::GetCursorPosX();
+        const float fps_reserved = ImGui::CalcTextSize("FPS: 999").x + ImGui::GetStyle().ItemSpacing.x;
+        ImGui::Text("fps: %.0f", ImGui::GetIO().Framerate);
+        ImGui::SameLine(fps_anchor_x + fps_reserved);
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+        ImGui::SameLine();
+        ImGui::Text("ms: %.2f", 1000.0f / ImGui::GetIO().Framerate);
+        ImGui::End();
+    }
+
+    ImGui::PopFont();
 }
 
 }  // namespace tmt

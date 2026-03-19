@@ -44,6 +44,7 @@ class Editor : public OnEngineInit, public OnEngineUpdate, public OnEngineFixedU
     void on_engine_end() override;
 
     void main_menu_bar();
+    void main_status_bar();
 };
 
 /* Singleton */

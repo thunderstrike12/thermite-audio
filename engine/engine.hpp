@@ -73,6 +73,8 @@ class Engine {
     bool get_is_running() const;
     void set_is_running(bool value);
 
+    const ApplicationSpecs& app_specs() const { return app->specs; }
+
    private:
     FrameData current_frame_data {};
     bool is_running { true };
