@@ -64,7 +64,7 @@ void PostProcessPipeline::enqueue(RenderGraph& render_graph, RenderView render_v
     }
 
     /* Color Grading and Tonemapping */
-    {
+    if (engine.renderer.display_mode == DisplayMode::DEFAULT) {
         /* clang-format off */
         render_graph.add_compute_pass("Color Grading and Tonemapping", "cg_tonemap.cs")
                     .read(render_view.lbuffer.images[0])
