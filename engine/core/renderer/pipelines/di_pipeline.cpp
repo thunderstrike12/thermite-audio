@@ -69,7 +69,7 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
             .read(scene_view.lights_data) /* Lights data buffer */
             .write(render_view.macrofacet_cache) /* Cache buffer */
             .read(render_view.vbuffer.image) /* Visibility buffer */
-            .write(render_view.lbuffer.image) /* Luminance buffer */
+            .write(render_view.lbuffer.images[0]) /* Luminance buffer */
             .group_size(16, 8)
             .work_size(shading_res.x, shading_res.y);
     }
@@ -125,7 +125,7 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
             .read(scene_view.object_data) /* Voxel objects buffer */
             .read(render_view.vbuffer.image) /* Visibility buffer */
             .write(render_view.macrofacet_cache) /* Cache buffer */
-            .write(render_view.lbuffer.image) /* Luminance buffer */
+            .write(render_view.lbuffer.images[0]) /* Luminance buffer */
             .group_size(16, 8)
             .work_size(render_res.x, render_res.y);
     }
@@ -136,7 +136,7 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
             .read(render_view.render_view_buffer) /* Render view buffer */
             .read(render_view.vbuffer.image) /* Visibility buffer */
             .write(render_view.macrofacet_cache) /* Cache buffer */
-            .read(render_view.lbuffer.image) /* Luminance buffer */
+            .read(render_view.lbuffer.images[0]) /* Luminance buffer */
             .write(render_image) /* Render target */
             .group_size(16, 8)
             .work_size(render_res.x, render_res.y);

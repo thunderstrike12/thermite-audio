@@ -101,7 +101,7 @@ void prefilter_resolution(int& out_w, int& out_h, const float aperture) {
     out_w = out_h * 2; /* <- width is always 2x height */
 }
 
-void pack_and_upload(VRAMBank& bank, Texture& texture, const float* data, const uint32_t w, const uint32_t h) {
+void pack_and_upload(VRAMBank& bank, Image& image, const float* data, const uint32_t w, const uint32_t h) {
     /* Pack floating point RGB into RGBA16 */
     uint64_t* packed_data = new uint64_t[w * h] {};
     for (uint32_t i = 0u; i < w * h; ++i) {
@@ -110,7 +110,7 @@ void pack_and_upload(VRAMBank& bank, Texture& texture, const float* data, const 
     }
 
     /* Upload the packed data */
-    bank.upload_texture(texture, packed_data, w * h * sizeof(uint64_t)).expect("failed to upload envmap texture.");
+    bank.upload_texture(image, packed_data, w * h * sizeof(uint64_t)).expect("failed to upload envmap texture.");
     delete[] packed_data;
 }
 
@@ -155,15 +155,15 @@ bool Envmap::load() {
                 .expect("failed to initialise envmap texture.");
     }
 
-    /* Pack and upload full texture */
-    pack_and_upload(bank, full_texture, data, full_width, full_height);
-    stbi_image_free(data);
-
     /* Create image resources */
     const std::string full_image_name = name + " Envmap Image";
     full_image = bank.create_image(full_image_name.c_str(), full_texture).expect("failed to initialize envmap image.");
     const std::string filtered_image_name = name + " Envmap (Filtered) Image";
     filtered_image = bank.create_image(filtered_image_name.c_str(), filtered_texture).expect("failed to initialize envmap image.");
+
+    /* Pack and upload full texture */
+    pack_and_upload(bank, full_image, data, full_width, full_height);
+    stbi_image_free(data);
 
     return true;
 }

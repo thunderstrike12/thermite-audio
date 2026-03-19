@@ -195,6 +195,7 @@ void Engine::end() {
     ecs.clear();
     scenes.end();
     audio.end();  // Needs to be ended after the ecs.
+    player_data.serialize();
     resources.force_unload_all();
     renderer.end();
     Log::info("Engine finished shutdown");

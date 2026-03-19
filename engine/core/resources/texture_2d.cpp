@@ -36,12 +36,14 @@ bool Texture2D::load() {
     std::string texture_name = name + " Texture";
     texture = bank.create_texture(texture_name.c_str(), TextureUsage::Sampled | TextureUsage::TransferDst, TextureFormat::RGBA8Unorm, { (u32)tex_width, (u32)tex_height, 0 })
                   .expect("failed to initialise texture.");
-    bank.upload_texture(texture, data, tex_width * tex_height * 4).expect("failed to upload texture.");
-    free(data);
 
     /* Initialise the image */
     std::string image_name = name + " Image";
     image = bank.create_image(image_name.c_str(), texture).expect("failed to initialize image.");
+
+    /* Upload texture data */
+    bank.upload_texture(image, data, tex_width * tex_height * 4).expect("failed to upload texture.");
+    free(data);
 
     return true;
 }
@@ -76,12 +78,13 @@ bool Texture2D::fallback(FallbackReason) {
     std::string texture_name = name + " Texture";
     texture = bank.create_texture(texture_name.c_str(), TextureUsage::Sampled | TextureUsage::TransferDst, TextureFormat::RGBA8Unorm, { (u32)tex_width, (u32)tex_height, 0 })
                   .expect("failed to initialise texture.");
-    bank.upload_texture(texture, data, tex_width * tex_height * 4).expect("failed to upload texture.");
-    free(data);
 
     /* Initialise the image */
     std::string image_name = name + " Image";
     image = bank.create_image(image_name.c_str(), texture).expect("failed to initialize image.");
+
+    bank.upload_texture(image, data, tex_width * tex_height * 4).expect("failed to upload texture.");
+    free(data);
 
     return true;
 }

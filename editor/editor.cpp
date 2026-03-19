@@ -16,6 +16,7 @@
 #include "engine/core/renderer/pipelines/di_pipeline.hpp"
 #include "engine/core/renderer/pipelines/ui_pipeline.hpp"
 #include "engine/core/scenes.hpp"
+#include "engine/tools/player_data.hpp"
 
 #include "editor/imgui/manager.hpp"
 #include "editor/core/systems/font_manager.hpp"
@@ -281,6 +282,9 @@ void Editor::main_menu_bar() {
             if (ImGui::MenuItem("Toggle TAA", nullptr, engine.renderer.enable_taa)) {
                 engine.renderer.enable_taa = !engine.renderer.enable_taa;
             }
+
+            RendererSettings& settings = engine.player_data.get<RendererSettings>("RendererSettings");
+            ImGui::SliderFloat("Bloom Radius", &settings.bloom_radius, 0.0f, 1.0f);
 
             ImGui::EndMenu();
         }

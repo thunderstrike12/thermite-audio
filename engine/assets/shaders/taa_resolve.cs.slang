@@ -9,12 +9,10 @@ SamplerState linear_sampler;
 /* Motion Vectors buffer. */
 Texture2D<float2> mbuffer;
 /* Luminance buffer. */
-Texture2D<float3> lbuffer;
+RWTexture2D<float3> lbuffer;
 /* History buffers. */
 RWTexture2D<float4> hbuffer1;
 Texture2D<float4> hbuffer2;
-/* Render target. */
-RWTexture2D<float4> render_target;
 
 [[vk::push_constant]]
 uint32_t taa_flag;
@@ -54,16 +52,5 @@ void main(int2 thread_id: SV_DispatchThreadID) {
         output = curr_luminance;
     }
 
-    /* Convert from ACEScg to r709 */
-    output = cs::acescg_to_r709(output);
-
-    /* Apply AGX tonemapping */
-    output = cs::agx(output);
-    output = cs::agx_look(output);
-    output = cs::agx_eotf(output);
-
-    /* Output device transform */
-    output = cs::delinearize(output);
-
-    render_target[thread_id] = float4(output, 1.0f);
+    lbuffer[thread_id] = output;
 }

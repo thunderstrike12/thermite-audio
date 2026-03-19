@@ -12,6 +12,7 @@
         18,
         19,
         20,
+        21,
         1048576,
         1048577,
         1048578,
@@ -56,6 +57,9 @@
         },
         "20": {
             "name": "Test Emitter"
+        },
+        "21": {
+            "name": "Emissive Cube"
         },
         "1048576": {
             "name": "Camera"
@@ -309,6 +313,26 @@
             "parent": 4294967295,
             "children": []
         },
+        "21": {
+            "local_position": {
+                "x": 0.0008492469787597656,
+                "y": 1.4031391143798828,
+                "z": 16.107187271118164
+            },
+            "local_rotation": {
+                "w": 0.7712195515632629,
+                "x": -0.16947969794273376,
+                "y": -0.5689667463302612,
+                "z": 0.22972576320171356
+            },
+            "local_scale": {
+                "x": 0.9999991655349731,
+                "y": 0.9999991059303284,
+                "z": 0.9999992847442627
+            },
+            "parent": 4294967295,
+            "children": []
+        },
         "1048576": {
             "local_position": {
                 "x": 0.0,
@@ -516,6 +540,17 @@
                 "file_location": {
                     "sub_location": "PROJECT",
                     "relative_path": "wall.svh"
+                },
+                "constructor_args": [
+                    "00000000-0000-0000-0000-000000000000"
+                ]
+            }
+        },
+        "21": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "models\\emissive_cube.svh"
                 },
                 "constructor_args": [
                     "00000000-0000-0000-0000-000000000000"
