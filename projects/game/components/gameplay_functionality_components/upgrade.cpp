@@ -58,56 +58,15 @@ bool Upgrade::apply_upgrade() {
         return false;
     }
 
-    for (std::tuple<UpgradeResource, float> cost : upgrade_costs) {
-        auto resource = std::get<0>(cost);
-        auto upgrade_cost = std::get<1>(cost);
-        switch (resource) {
-            case UpgradeResource::DOLLARS:
-                if (wallet_component->dollars < upgrade_cost) {
-                    tmt::Log::info("Unable to buy upgrade, insufficient dollars.");
-                    return false;
-                }
-                wallet_component->dollars -= upgrade_cost;
-                break;
-            case UpgradeResource::GOLD:
-                if (wallet_component->gold < upgrade_cost) {
-                    tmt::Log::info("Unable to buy upgrade, insufficient gold.");
-                    return false;
-                }
-                wallet_component->gold -= upgrade_cost;
-                break;
-            case UpgradeResource::SILVER:
-                if (wallet_component->silver < upgrade_cost) {
-                    tmt::Log::info("Unable to buy upgrade, insufficient silver.");
-                    return false;
-                }
-                wallet_component->silver -= upgrade_cost;
-                break;
-            case UpgradeResource::COPPER:
-                if (wallet_component->copper < upgrade_cost) {
-                    tmt::Log::info("Unable to buy upgrade, insufficient copper.");
-                    return false;
-                }
-                wallet_component->copper -= upgrade_cost;
-                break;
-            case UpgradeResource::IRON:
-                if (wallet_component->iron < upgrade_cost) {
-                    tmt::Log::info("Unable to buy upgrade, insufficient iron.");
-                    return false;
-                }
-                wallet_component->iron -= upgrade_cost;
-                break;
-            case UpgradeResource::ENEMY_CORES:
-                if (wallet_component->enemy_cores < upgrade_cost) {
-                    tmt::Log::info("Unable to buy upgrade, insufficient enemy cores.");
-                    return false;
-                }
-                wallet_component->enemy_cores -= upgrade_cost;
-                break;
-            default:
-                tmt::Log::warn("No valid resource type for this upgrade.");
-                return false;  // Invalid resource type, cannot apply upgrade
+    for (auto& [resource, cost] : new_upgrade_costs) {
+        if (wallet_component->resource_counts[resource] < cost) {
+            tmt::Log::info("Unable to buy upgrade, insufficient {}.", magic_enum::enum_name(resource));
+            return false;
         }
+    }
+
+    for (auto& [resource, cost] : new_upgrade_costs) {
+        wallet_component->resource_counts[resource] -= cost;
     }
 
     auto player_component = tmt::engine.ecs.try_get_component<Player>(upgrade_target);

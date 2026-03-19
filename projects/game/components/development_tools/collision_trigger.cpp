@@ -17,7 +17,6 @@ void game::CollisionTrigger::fixed_update(const tmt::FrameData& time) {
         for (uint32_t hit : overlap_hits) {
             tmt::Entity other_entity = tmt::engine.ecs.systems.get<tmt::Physics>().get_entities()[hit];
             // do stuff with the entity
-            // TODO for now just kill it
             tmt::engine.ecs.get_dispatcher().trigger(TriggerCollisionEvent { .trigger = entity, .other_object = other_entity });
         }
     }

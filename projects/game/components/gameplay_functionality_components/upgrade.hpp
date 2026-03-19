@@ -5,8 +5,6 @@ namespace game {
 
 enum class UpgradeType : uint8_t { MAX_HEALTH = 0u, MAX_BATTERY = 1u, MAX_SPEED = 2u, ACCELERATION = 3u, PRIMARY_ATK_SPEED = 4u, SECONDARY_ATK_SPEED = 5u, GUN_DMG = 6u, BARGE_MAX_FUEL = 7u };
 
-enum class UpgradeResource : uint8_t { DOLLARS = 0u, GOLD = 1u, SILVER = 2u, COPPER = 3u, IRON = 4u, ENEMY_CORES = 5u };
-
 class Upgrade : public tmt::GameComponent<Upgrade> {
    public:
     using GameComponent::GameComponent;
@@ -22,7 +20,7 @@ class Upgrade : public tmt::GameComponent<Upgrade> {
     UpgradeType type = UpgradeType::MAX_HEALTH;
     float upgrade_to = 1.0f;
     tmt::Entity player_entity = entt::null;
-    std::vector<std::tuple<UpgradeResource, float>> upgrade_costs = { { UpgradeResource::DOLLARS, 1.0f } };  // An initial cost
+    std::vector<std::tuple<OreProperties::OreResources, uint64_t>> new_upgrade_costs = { { OreProperties::OreResources::NONE, 1.0f } };  // An initial cost
     bool apply_upgrade();
     void button_apply();
 
@@ -30,4 +28,4 @@ class Upgrade : public tmt::GameComponent<Upgrade> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::Upgrade, (upgrade_target, type, upgrade_to, player_entity, upgrade_costs));
+TMT_OBJECT(game::Upgrade, (upgrade_target, type, upgrade_to, player_entity, new_upgrade_costs));

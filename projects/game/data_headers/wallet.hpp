@@ -1,4 +1,5 @@
 #pragma once
+#include "ore_properties.hpp"
 #include "engine/systems/gameplay/game_component.hpp"
 
 namespace game {
@@ -16,13 +17,8 @@ class Wallet : public tmt::GameComponent<Wallet> {
     // Currencies
     float dollars = 0.0f;
 
-    // Resources
-    float gold = 0.0f;
-    float silver = 0.0f;
-    float copper = 0.0f;
-    float iron = 0.0f;
-    float enemy_cores = 0.0f;
+    std::unordered_map<OreProperties::OreResources, uint64_t> resource_counts = {};
 };
 
 }  // namespace game
-TMT_OBJECT(game::Wallet, (dollars, gold, silver, copper, iron, enemy_cores));
+TMT_OBJECT(game::Wallet, (dollars, resource_counts));

@@ -16,10 +16,12 @@ class OreCollector : public tmt::GameComponent<OreCollector> {
     float radius = 1.0f;
     // debugging settings
 
+    tmt::Entity wallet_entity { entt::null };
+
    private:
     uint64_t ore_count = 0u;
     void on_collision_trigger(const TriggerCollisionEvent& trigger);
 };
 
 }  // namespace game
-TMT_OBJECT(game::OreCollector, (radius));
+TMT_OBJECT(game::OreCollector, (radius, wallet_entity));

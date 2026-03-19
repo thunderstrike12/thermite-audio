@@ -6,7 +6,7 @@ class OreProperties : public tmt::GameComponent<OreProperties> {
    public:
     using GameComponent::GameComponent;
 
-    enum class OreResources { NONE, SCRAP, COPPER, THERMITE, TITANIUM };
+    enum class OreResources : uint8_t { NONE, SCRAP, COPPER, THERMITE, TITANIUM };
     struct MiningOre {
         float value = 1.0f;
         float toughness = 1.0f;
