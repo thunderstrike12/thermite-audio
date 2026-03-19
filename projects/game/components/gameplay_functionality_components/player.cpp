@@ -70,6 +70,10 @@ void setup_inputs(tmt::InputMap& input_map) {
     input_map.add_key_to_action(action::OPEN_UPGRADE_MENU, tmt::Key::U);
     input_map.add_action(action::ATTACH_KEY);
     input_map.add_key_to_action(action::ATTACH_KEY, tmt::Key::E);
+    input_map.add_action(action::TRIGGER_BARGE_MOVEMENT);
+    input_map.add_key_to_action(action::TRIGGER_BARGE_MOVEMENT, tmt::Key::SPACE);
+    input_map.add_action(action::TRIGGER_RUN_END);
+    input_map.add_key_to_action(action::TRIGGER_RUN_END, tmt::Key::LEFT_CTRL);
 }
 
 void Player::start() {
@@ -505,6 +509,9 @@ void Player::on_attach(const AttachEvent& event) {
     }
     if (event.is_attached) {
         state = PlayerState::ATTACHED;
+        // this is used so if the player was already holding the button, it does not instantly move
+        reset_action_time(action::TRIGGER_BARGE_MOVEMENT);
+        reset_action_time(action::TRIGGER_RUN_END);
     } else {
         state = PlayerState::FREEMOVING;
     }
@@ -520,6 +527,12 @@ void Player::reset_boost() {
     max_speed_calculated = max_speed;
     acceleration_calculated = acceleration;
     boost_was_applied = false;
+}
+
+void Player::reset_action_time(std::string_view action_name) {
+    auto& input_map = tmt::engine.input_map;
+    auto* action = input_map.get_action(std::string { action_name });
+    action->time_since_being_pressed = 0.0f;
 }
 
 }  // namespace game

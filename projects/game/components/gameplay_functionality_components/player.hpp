@@ -3,6 +3,7 @@
 #include "engine/core/components/camera.hpp"
 #include "engine/shared/ray.hpp"
 #include "projects/game/data_headers/events.hpp"
+#include "projects/game/data_headers/layer_mask.hpp"
 
 namespace game {
 
@@ -12,7 +13,7 @@ struct PlayerStat {
     float increase_multiplier = 1.0f;
 };
 struct RayCollisionCheck {
-    uint32_t collision_layer = 1;
+    LayerMask collision_layer {};
 
     float player_radius = 0.3f;
 
@@ -83,6 +84,7 @@ class Player : public tmt::GameComponent<Player> {
    private:
     void refill(float delta);
     void drain_energy(float delta);
+    void reset_action_time(std::string_view action_name);
     void apply_boost();
     void reset_boost();
     PlayerState state = PlayerState::FREEMOVING;

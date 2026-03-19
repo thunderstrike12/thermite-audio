@@ -1,6 +1,7 @@
 #include "mover_component.hpp"
 
 #include "engine/core/polyline.hpp"
+#include <projects/game/data_headers/events.hpp>
 
 void game::MoverComponent::draw_debug_lines() const {
     cfg.set_values();
@@ -13,7 +14,7 @@ void game::MoverComponent::update_movement(const TriggerMovementEvent& event) {
     if (event.trigger != trigger_entity) {
         return;
     }
-    tmt::Log::debug(" Something for programmers Received movement trigger event from entity {} for mover {}", event.trigger, entity);
+
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
     auto distance = movement_speed * tmt::engine.frame_data().delta_time;
     auto delta = transform.get_forward() * distance;

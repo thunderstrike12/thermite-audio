@@ -20,12 +20,17 @@ class AttachComponent : public tmt::GameComponent<AttachComponent> {
     void on_check_range_to_attach(const AttachAttemptEvent& event);
 
     float radius = 1.0f;
+    float time_to_start_stop_barge_movement = 2.0f;
+    float time_to_end_run = 2.0f;
+
     tmt::Entity entity_that_attaches = entt::null;
     DebugLineConfig cfg;
 
    private:
     bool is_attached = false;
+    bool is_moving = false;
+    bool has_started_pressing = false;
 };
 
 }  // namespace game
-TMT_OBJECT(game::AttachComponent, (radius, entity_that_attaches, cfg));
+TMT_OBJECT(game::AttachComponent, (radius, time_to_start_stop_barge_movement, time_to_end_run, entity_that_attaches, cfg));

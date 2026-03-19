@@ -12,8 +12,6 @@ void game::CollisionTrigger::fixed_update(const tmt::FrameData& time) {
 
     auto world_aabb = get_aabb_world();
 
-    // auto overlap_hits = bvh.overlap({ world_aabb.min_bounds, world_aabb.max_bounds });
-    uint32_t layer_mask = 0xFFFFFFFF & ~(1 << 3);  // barge layer
     auto overlap_hits = physics.overlap({ world_aabb.min_bounds, world_aabb.max_bounds }, layer_mask);
     if (!overlap_hits.empty()) {
         for (uint32_t hit : overlap_hits) {

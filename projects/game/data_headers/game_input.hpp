@@ -27,6 +27,8 @@ constexpr auto OPEN_UPGRADE_MENU = "open_upgrade_menu";
 
 // Barge
 constexpr auto ATTACH_KEY = "attach_key";
+constexpr auto TRIGGER_BARGE_MOVEMENT = "trigger_barge_movement";
+constexpr auto TRIGGER_RUN_END = "trigger_run_end";
 
 }  // namespace action
 }  // namespace game

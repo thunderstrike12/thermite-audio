@@ -3,6 +3,7 @@
 #include "engine/shared/ray.hpp"
 #include "engine/systems/gameplay/game_component.hpp"
 #include "engine/core/resources/stencil.hpp"
+#include "projects/game/data_headers/layer_mask.hpp"
 
 namespace game {
 
@@ -24,6 +25,8 @@ class RifleProjectile : public tmt::GameComponent<RifleProjectile> {
 
     tmt::ResourceRef<tmt::Stencil> stencil;
     float movement_speed = 1.0f;
+    LayerMask layer_mask {};
+    LayerMask protected_mask {};
 
    private:
     void collide(const tmt::Hit& hit) const;
@@ -34,4 +37,4 @@ class RifleProjectile : public tmt::GameComponent<RifleProjectile> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::RifleProjectile, (stencil, movement_speed));
+TMT_OBJECT(game::RifleProjectile, (stencil, movement_speed, layer_mask, protected_mask));

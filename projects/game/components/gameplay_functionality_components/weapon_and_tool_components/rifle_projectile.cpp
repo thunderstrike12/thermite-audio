@@ -5,6 +5,7 @@
 #include "engine/core/renderer/renderer.hpp"
 #include "engine/core/resources/stencil.hpp"
 #include "engine/shared/ray.hpp"
+#include "engine/systems/physics/physics_system.hpp"
 #include "engine/tools/fmt/glm.hpp"
 
 namespace game {
@@ -21,12 +22,9 @@ void RifleProjectile::update(const tmt::FrameData& time) {
 
     const float step_distance = glm::length(delta);
     const tmt::Ray ray_cast = tmt::Ray(previous_position, glm::normalize(delta));
-    const tmt::Hit hit = tmt::engine.renderer.trace_ray(ray_cast);
+    const tmt::Hit hit = tmt::engine.ecs.systems.get<tmt::Physics>().raycast(ray_cast, layer_mask);
 
-    // TODO this is very dumb code that should be updated when we have proper raycasts check
-    if (hit.entity != entt::null && hit.distance < step_distance && hit.entity != entity) {
-        // tmt::Log::info("Would collide with entity {} at distance {}, step {}", hit.entity, hit.distance, step_distance);
-
+    if (hit.distance < step_distance) {
         collide(hit);
         return;
     }
@@ -47,12 +45,14 @@ void RifleProjectile::collide(const tmt::Hit& hit) const {
     // spawn vfx sounds
     tmt::engine.ecs.get_dispatcher().trigger(ProjectileHitEvent { .projectile_entity = entity, .hit_entity = collision_entity });
 
-    // substract voxels
-    // TODO use something else than a voxel renderer to do stuff
+    // only destroy voxels if the hit entity isn't on a protected layer (e.g. barge)
+    auto& body = tmt::engine.ecs.get_component<tmt::VoxelBody>(hit.entity);
+    if (protected_mask.test(body.layer) == false) {
+        auto* resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(hit.entity).resource.resource.get();
+        resource->blas->subtract(stencil.resource.get(), hit.coord);
+        resource->set_dirty();
+    }
 
-    auto* resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(hit.entity).resource.resource.get();
-    resource->blas->subtract(stencil.resource.get(), hit.coord);
-    resource->set_dirty();
     tmt::engine.ecs.destroy_entity(entity);
 }
 

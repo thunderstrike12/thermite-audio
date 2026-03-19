@@ -1,9 +1,10 @@
 #include "attach_component.hpp"
 
 #include "engine/core/polyline.hpp"
+#include "engine/core/input/input.hpp"
 #include "glm/gtx/norm.inl"
 #include "projects/game/components/gameplay_functionality_components/player.hpp"
-
+#include "projects/game/data_headers/game_input.hpp"
 namespace {
 
 void set_attached_entity_transform(tmt::Entity entity, tmt::Entity parent = entt::null) {
@@ -27,8 +28,31 @@ void game::AttachComponent::start() {
     tmt::engine.ecs.get_dispatcher().sink<AttachAttemptEvent>().connect<&AttachComponent::on_check_range_to_attach>(this);
 }
 void game::AttachComponent::update(const tmt::FrameData& time) {
-    if (is_attached) {
+    if (is_attached == false) {
+        return;
+    }
+    auto& input = tmt::engine.input;
+    if (input.is_action_just_pressed(action::TRIGGER_BARGE_MOVEMENT)) {
+        has_started_pressing = true;
+    }
+    if (input.is_action_just_released(action::TRIGGER_BARGE_MOVEMENT)) {
+        has_started_pressing = false;
+    }
+
+    // if we have been pressing for a while trigger it, if we keep pressing after the fact ignore
+    if (has_started_pressing == true && input.get_action_duration(action::TRIGGER_BARGE_MOVEMENT) > time_to_start_stop_barge_movement) {
+        is_moving = !is_moving;
+        has_started_pressing = false;
+        tmt::Log::info("Movement is {}", is_moving);
+    }
+
+    if (is_moving) {
         tmt::engine.ecs.get_dispatcher().trigger<TriggerMovementEvent>({ .trigger = entity });
+    }
+
+    // ending run logic
+    if (input.get_action_duration(action::TRIGGER_RUN_END) > time_to_end_run) {
+        tmt::engine.ecs.get_dispatcher().trigger<EndRun>({ .player_dead = false });
     }
 }
 void game::AttachComponent::end() {

@@ -6,6 +6,7 @@
 #include "engine/core/resources/stencil.hpp"
 #include "engine/shared/ray.hpp"
 #include "projects/game/components/managers/ore_manager.hpp"
+#include "projects/game/data_headers/layer_mask.hpp"
 
 namespace game {
 
@@ -49,8 +50,7 @@ class MiningComponent : public tmt::GameComponent<MiningComponent> {
     bool active = true;
     DebugLineConfig cfg {};
     RayCylinder ray_cylinder {};
-    // TODO replace with proper mask
-    uint32_t ray_mask = 1 << 0;
+    LayerMask ray_mask {};
     float time_draw_rays_in_debug = 2.0f;
 
    private:
