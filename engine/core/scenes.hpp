@@ -78,7 +78,7 @@ class Scenes : public OnBlockInputRequest {
         constexpr static const char* SCENES_FOLDER = "scenes";
     };
 
-    void serialize_active_scene();
+    bool serialize_active_scene();
 
    private:
     std::unique_ptr<SceneBase> active_scene = nullptr;

@@ -182,7 +182,6 @@ void Hierarchy::context_menu(const Entity hovered_entity) {
         if (selected_entities.size() == 1 && is_playing == false) { /* Make Prefab */
             ImGui::Separator();
             const auto text = "Make Prefab...";
-            // TODO: give extra pop-up for name
             if (ImGui::MenuItem(text)) {
                 ImGui::OpenPopup(prefab_popup_id);
                 ImGui::CloseCurrentPopup();
@@ -206,6 +205,7 @@ void Hierarchy::context_menu(const Entity hovered_entity) {
                     PrefabHelper::create_prefab(temp_location, root_entity);
                     prefab_name = "NewPrefab";
                     ImGui::CloseCurrentPopup();
+                    OnSceneModified::dispatch();
                 } else {
                     error_message = "Selected entity is already part of a prefab, cannot create prefab from it.";
                 }
@@ -314,6 +314,7 @@ void Hierarchy::delete_selection() {
         tmt::engine.ecs.destroy_entity(selected);
     }
     clear_selection();
+    OnSceneModified::dispatch();
 }
 
 void Hierarchy::clear_selection() {

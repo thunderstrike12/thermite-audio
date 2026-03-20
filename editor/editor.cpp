@@ -25,6 +25,8 @@
 #include "engine/tools/file_dialog.hpp"
 #include "editor/gizmo.hpp"
 
+#include "editor/core/systems/pop_up/pop_up.hpp"
+
 /* Modes */
 #include "editor/modes/scene.hpp"
 #include "editor/modes/voxel.hpp"
@@ -188,6 +190,9 @@ void Editor::on_engine_update(const FrameData& time) {
             window->end_display();
         }
     }
+
+    PopUpManager::update();
+    NotificationManager::update(time.delta_time);
 
     {
         TMT_ZONE_SCOPED_N("ImGui End Frame");
