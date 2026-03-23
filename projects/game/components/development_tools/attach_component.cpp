@@ -29,6 +29,8 @@ void game::AttachComponent::start() {
 }
 void game::AttachComponent::update(const tmt::FrameData& time) {
     if (is_attached == false) {
+        is_moving = false;
+        has_started_pressing = false;
         return;
     }
     auto& input = tmt::engine.input;

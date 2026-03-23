@@ -20,6 +20,7 @@ class Upgrade : public tmt::GameComponent<Upgrade> {
     UpgradeType type = UpgradeType::MAX_HEALTH;
     float upgrade_to = 1.0f;
     tmt::Entity player_entity = entt::null;
+    uint64_t dollar_cost = 1.0f;
     std::vector<std::tuple<OreProperties::OreResources, uint64_t>> new_upgrade_costs = { { OreProperties::OreResources::NONE, 1.0f } };  // An initial cost
     bool apply_upgrade();
     void button_apply();
@@ -28,4 +29,4 @@ class Upgrade : public tmt::GameComponent<Upgrade> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::Upgrade, (upgrade_target, type, upgrade_to, player_entity, new_upgrade_costs));
+TMT_OBJECT(game::Upgrade, (upgrade_target, type, upgrade_to, player_entity, dollar_cost, new_upgrade_costs));

@@ -64,10 +64,15 @@ bool Upgrade::apply_upgrade() {
             return false;
         }
     }
+    if (wallet_component->dollars <= dollar_cost) {
+        tmt::Log::info("Unable to buy upgrade, insufficient {} dollars", wallet_component->dollars);
+        return false;
+    }
 
     for (auto& [resource, cost] : new_upgrade_costs) {
         wallet_component->resource_counts[resource] -= cost;
     }
+    wallet_component->dollars -= dollar_cost;
 
     auto player_component = tmt::engine.ecs.try_get_component<Player>(upgrade_target);
     auto weapon_component = tmt::engine.ecs.try_get_component<Weapon>(upgrade_target);

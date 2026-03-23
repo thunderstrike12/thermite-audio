@@ -512,6 +512,7 @@ void Player::on_attach(const AttachEvent& event) {
         // this is used so if the player was already holding the button, it does not instantly move
         reset_action_time(action::TRIGGER_BARGE_MOVEMENT);
         reset_action_time(action::TRIGGER_RUN_END);
+        velocity = glm::vec3 { 0.0f };
     } else {
         state = PlayerState::FREEMOVING;
     }

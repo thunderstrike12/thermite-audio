@@ -8,7 +8,7 @@ namespace tmt {
 
 /* Voxel material data, used in a palette. */
 struct Material {
-    enum class Type : uint8_t { NONE, THERMITE, COPPER, TITANIUM };
+    enum class Type : uint8_t { NONE, THERMITE, COPPER, TITANIUM, STEEL, REINFORCED_STEEL };
 
     Rgb10 albedo { glm::vec3(1.0f, 1.0f, 1.0f) };
     Rgb10 edge_tint { glm::vec3(1.0f, 1.0f, 1.0f) };

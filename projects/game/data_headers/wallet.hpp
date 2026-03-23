@@ -15,7 +15,7 @@ class Wallet : public tmt::GameComponent<Wallet> {
     void end() override {}
 
     // Currencies
-    float dollars = 0.0f;
+    uint64_t dollars = 0.0f;
 
     std::unordered_map<OreProperties::OreResources, uint64_t> resource_counts = {};
 };
