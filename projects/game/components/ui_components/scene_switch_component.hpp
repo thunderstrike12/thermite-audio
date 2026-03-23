@@ -5,7 +5,7 @@
 
 namespace game {
 
-enum class TargetSceneEnum : uint8_t { MAIN_MENU = 0u, MAIN_GAME = 1u, ZOO = 2u, GYM = 3u, DANIEL_TEST = 4u, MIKA_TEST = 5u, HUB = 6u };
+enum class TargetSceneEnum : uint8_t { MAIN_MENU = 0u, MAIN_GAME = 1u, ZOO = 2u, GYM = 3u, DANIEL_TEST = 4u, MIKA_TEST = 5u, HUB = 6u, WEAPON_MOTION_TEST = 7u };
 
 class SceneSwitchComponent : public tmt::GameComponent<SceneSwitchComponent> {
    public:

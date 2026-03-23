@@ -1,6 +1,5 @@
 #pragma once
 #include "engine/systems/gameplay/game_component.hpp"
-
 #include "projects/game/data_headers/events.hpp"
 namespace game {
 
@@ -19,8 +18,51 @@ class WeaponManager : public tmt::GameComponent<WeaponManager> {
     void end() override;
     void subscribe_weapon(WeaponType slot);
     void unsubscribe_weapon(WeaponType slot);
+    void draw_debug_lines() const override;
 
-    std::unordered_map<WeaponType, tmt::Entity> weapons;
+    struct MotionParams {
+        float frequency = 1.f;
+        float damping = 1.f;
+        float initial_response = 0.f;
+    };
+
+    struct WeaponProcAnimData {
+        tmt::Entity root = entt::null;
+
+        struct OverlapParams {
+            float start_offset = 0.f;
+            float check_length = 0.5f;
+            float scan_extent = 0.1f;
+            float length_to_shoulder = 0.1f;
+            glm::vec3 shoulder_eulers {};
+        } anti_overlap;
+        struct SwayParams {
+            float look_displacement = 1.f;
+            float look_max_rotation_factor = 0.3f;
+            float look_sensitivity = 1.f;
+            float look_roll_factor = 1.f;
+            MotionParams displacement_motion;
+            MotionParams rotational_motion;
+        } sway;
+        struct RecoilParams {
+            float upward_allowed_time = 0.3f;
+            float rot_time_offset = 0.1f;
+            glm::vec3 angle_impulse {};
+            glm::vec2 min_max_roll_deviation {};
+            glm::vec2 min_max_yaw_deviation {};
+            glm::vec3 pos_impulse {};
+            MotionParams displacement_motion;
+            MotionParams rotational_motion;
+            MotionParams out_displacement_motion;
+            MotionParams out_rotational_motion;
+        } recoil;
+    };
+    struct WeaponEntry {
+        WeaponProcAnimData proc_anim_data;
+        tmt::Entity entity = entt::null;
+    };
+
+    std::unordered_map<WeaponType, WeaponEntry> weapons;
     WeaponType starting_weapon { WeaponType::RIFLE };
 
     tmt::Entity shooting_entity = entt::null;
@@ -43,7 +85,37 @@ class WeaponManager : public tmt::GameComponent<WeaponManager> {
     WeaponType current_weapon;
     // weapon that is being switched to by the player
     WeaponType pending_weapon;
+
+    // Weapon procanim related
+    glm::vec3 target_pos;
+    struct RotTrans {
+        glm::vec3 translation;
+        glm::quat rotation;
+    };
+    float last_pitch = 0.f;
+    float last_yaw = 0.f;
+    std::unordered_map<WeaponType, RotTrans> rest_poses;
+    RotTrans animate_antioverlap();
+    RotTrans animate_sway(RotTrans input_pose, tmt::Transform* root_eff_transform, const WeaponProcAnimData& weapon_procanim_data);
+    void update_procedural_motion(float dt);
+
+    bool fired = false;
+    bool updating_recoil_impulse = false;
+    bool upward_response = false;
+    float shot_rand_roll;
+    float shot_rand_yaw;
+    RotTrans recoil_impulse { .translation = glm::vec3 { 0.f }, .rotation = glm::identity<glm::quat>() };
 };
 
 }  // namespace game
+TMT_OBJECT(game::WeaponManager::MotionParams, (frequency, damping, initial_response));
+
+TMT_OBJECT(game::WeaponManager::WeaponProcAnimData::OverlapParams, (start_offset, check_length, scan_extent, length_to_shoulder, shoulder_eulers));
+TMT_OBJECT(game::WeaponManager::WeaponProcAnimData::SwayParams, (look_displacement, look_max_rotation_factor, look_sensitivity, look_roll_factor, displacement_motion, rotational_motion));
+TMT_OBJECT(
+    game::WeaponManager::WeaponProcAnimData::RecoilParams, (upward_allowed_time, rot_time_offset, angle_impulse, min_max_roll_deviation, min_max_yaw_deviation, pos_impulse,
+                                                            displacement_motion, rotational_motion, out_displacement_motion, out_rotational_motion)
+);
+TMT_OBJECT(game::WeaponManager::WeaponProcAnimData, (root, anti_overlap, sway, recoil));
+TMT_OBJECT(game::WeaponManager::WeaponEntry, (proc_anim_data, entity));
 TMT_OBJECT(game::WeaponManager, (weapons, starting_weapon, shooting_entity, overheat_time, switching_time));

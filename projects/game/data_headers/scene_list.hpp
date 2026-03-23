@@ -25,7 +25,10 @@ class Gym : public tmt::Scene<Gym> {
    public:
     static constexpr std::string_view scene_name() { return "Gym"; }
 };
-
+class WeaponMotionTest : public tmt::Scene<WeaponMotionTest> {
+   public:
+    static constexpr std::string_view scene_name() { return "WeaponMotionTest"; }
+};
 class DanielTestScene : public tmt::Scene<DanielTestScene> {
    public:
     static constexpr std::string_view scene_name() { return "DanielTestScene"; }
