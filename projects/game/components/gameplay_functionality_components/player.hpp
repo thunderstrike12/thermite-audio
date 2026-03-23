@@ -54,6 +54,7 @@ class Player : public tmt::GameComponent<Player> {
     float boost_acceleration_multiplier = 4.0f;
     float boost_cost_per_second_per_additional_speed_above_max = 1.0f;
     float boost_initial_cost = 5.0f;
+    float boost_deceleration_factor = 5.0f;
 
     // Player stats
     PlayerStat health;
@@ -86,7 +87,7 @@ class Player : public tmt::GameComponent<Player> {
     void drain_energy(float delta);
     void reset_action_time(std::string_view action_name);
     void apply_boost();
-    void reset_boost();
+    void reset_boost(float delta_time);
     PlayerState state = PlayerState::FREEMOVING;
     glm::vec3 velocity = { 0.0f, 0.0f, 0.0f };
     glm::vec3 input_dir { 0.0f };
@@ -107,7 +108,7 @@ class Player : public tmt::GameComponent<Player> {
 TMT_OBJECT(game::PlayerStat, (max_value, value, increase_multiplier));
 TMT_OBJECT(game::RayCollisionCheck, (collision_layer, player_radius, collision_speed_damping, camera_near_distance));
 TMT_OBJECT(
-    game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, boost_max_speed_multiplier, boost_acceleration_multiplier,
+    game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, boost_max_speed_multiplier, boost_acceleration_multiplier, boost_deceleration_factor,
                    boost_cost_per_second_per_additional_speed_above_max, boost_initial_cost, boost_availability, health, energy, energy_drain_per_second, out_of_energy_time_till_death,
                    hp_bar_max, hp_bar_current, energy_bar_max, energy_bar_current, barge, recharge_distance, ray_check)
 
