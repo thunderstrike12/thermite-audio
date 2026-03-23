@@ -27,7 +27,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Build version completed by CI
-set(BUILD_VERSION "" CACHE STRING "Version suffix for executable")
+set(BUILD_VERSION "" CACHE STRING "Version of the engine, given by the CI")
 
 # Compilation settings
 option(WARNINGS_AS_ERRORS "Enable warnings as errors" OFF)
@@ -58,7 +58,7 @@ if (THERMITE_DEBUG_BUILD)
         target_compile_definitions(thermite-editor PUBLIC THERMITE_DEBUG=1)
     endif()
 endif()
-
+target_compile_definitions(thermite-engine PUBLIC BUILD_VERSION="${BUILD_VERSION}")
 # Find and add projects
 include(scripts/cmake/code_modules.cmake) 
 find_and_add_targets()

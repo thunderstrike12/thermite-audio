@@ -38,7 +38,6 @@ function(find_and_add_targets)
 			# Set runtime output directory to its own folder inside /bin/
 			set_target_properties(${target_name} PROPERTIES
 				RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${target_name}"
-				OUTPUT_NAME "${target_name}${BUILD_VERSION}"
 			)
 			# Disables the windows console
 			#if(MSVC)
@@ -79,7 +78,6 @@ function(find_and_add_targets)
 
 			# Add compile definitons
 			target_compile_definitions(${target_name} PRIVATE NOMINMAX) # Makes windows.h not define min and max
-
 			# Add some build state macros for code
 			if (THERMITE_EDITOR_BUILD)
 				target_compile_definitions(${target_name} PRIVATE THERMITE_EDITOR=1)

@@ -65,7 +65,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
       - name: Configure
         shell: pwsh
-        run: cmake --preset Developer-Packaging -DCMAKE_UNITY_BUILD=ON -DBUILD_VERSION="_editor_${{ needs.version.outputs.new_version }}"
+        run: cmake --preset Developer-Packaging -DCMAKE_UNITY_BUILD=ON -DBUILD_VERSION="${{ needs.version.outputs.new_version }}"
       - name: Build
         shell: pwsh
         run: cmake --build --preset Developer-Packaging --target game -j
@@ -88,7 +88,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
       - name: Configure
         shell: pwsh
-        run: cmake --preset Release-Game -DCMAKE_UNITY_BUILD=ON -DBUILD_VERSION="_${{ needs.version.outputs.new_version }}"
+        run: cmake --preset Release-Game -DCMAKE_UNITY_BUILD=ON -DBUILD_VERSION="${{ needs.version.outputs.new_version }}"
       - name: Build
         shell: pwsh
         run: cmake --build --preset Release-Game --target game -j
