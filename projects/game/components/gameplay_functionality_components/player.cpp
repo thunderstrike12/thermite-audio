@@ -527,9 +527,11 @@ void Player::reset_boost(float delta_time) {
     /*
     max_speed_calculated = max_speed;
     acceleration_calculated = acceleration;*/
+    float lerp_factor = std::min(1.0f, boost_deceleration_factor * delta_time);
+
     boost_was_applied = false;
-    max_speed_calculated = glm::mix(max_speed_calculated, max_speed, boost_deceleration_factor * delta_time);
-    acceleration_calculated = glm::mix(acceleration_calculated, acceleration, boost_deceleration_factor * delta_time);
+    max_speed_calculated = glm::mix(max_speed_calculated, max_speed, lerp_factor);
+    acceleration_calculated = glm::mix(acceleration_calculated, acceleration, lerp_factor);
 
     // Snap to exact values when close enough
     if (glm::abs(max_speed_calculated - max_speed) < 0.001f) {
