@@ -901,6 +901,10 @@ std::vector<uint32_t> Physics::overlap(const Aabb& aabb, uint32_t layer_mask) co
 }
 std::vector<std::pair<Entity, std::vector<std::pair<float, glm::uvec3>>>> Physics::overlap_sphere(const glm::vec3& center, float radius, uint32_t layer_mask) {
     auto data = bvh.overlap_sphere(center, radius, layer_mask);
+
+    for (auto& [entity, hit] : data) {
+        entity = entities[(uint32_t)entity];
+    }
     return data;
 }
 

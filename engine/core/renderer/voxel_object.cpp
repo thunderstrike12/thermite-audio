@@ -91,7 +91,7 @@ std::vector<std::pair<float, glm::uvec3>> VoxelObject::sphere_overlap(const glm:
                 bool overlap = sqr_dist < (radius * radius);
                 if (!overlap) continue;
 
-                hits.emplace_back(std::make_pair(sqr_dist, glm::vec3 { x, y, z }));
+                hits.emplace_back(std::make_pair(sqr_dist, glm::uvec3 { x, y, z }));
             }
         }
     }
