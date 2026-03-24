@@ -19,26 +19,28 @@ function(find_and_add_targets)
 			)
 		
 			# Add executable
-			add_executable(${target_name}
-				${PROJECT_SOURCES}
-			)
+			add_executable(${target_name} ${PROJECT_SOURCES})
 
 			# Generate a small config source file that the engine can access to know where the current relative project assets live
 			set(gen_dir "${CMAKE_CURRENT_BINARY_DIR}/generated/${target_name}")
 			file(MAKE_DIRECTORY "${gen_dir}")
-			
 			set(cfg_cpp "${gen_dir}/tmt_project_config.cpp")
-			file(WRITE "${cfg_cpp}"
-			"extern \"C\" const char* TMT_PROJECT_RELATIVE_ASSETS_DIR = \"projects/${target_name}/assets\";\n"
-			)
+			file(WRITE "${cfg_cpp}" "extern \"C\" const char* TMT_PROJECT_RELATIVE_ASSETS_DIR = \"projects/${target_name}/assets\";\n")
 			
 			target_sources(${target_name} PRIVATE "${cfg_cpp}")
-
 
 			# Set runtime output directory to its own folder inside /bin/
 			set_target_properties(${target_name} PROPERTIES
 				RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${target_name}"
 			)
+
+			# Set the output executable name
+			if(THERMITE_EDITOR_BUILD)
+				set_target_properties(${target_name} PROPERTIES OUTPUT_NAME "thermite")
+			else()
+				set_target_properties(${target_name} PROPERTIES OUTPUT_NAME "${target_name}")
+			endif()
+
 			# Disables the windows console
 			#if(MSVC)
 			#	target_link_options(${target_name} PRIVATE "/ENTRY:mainCRTStartup")
@@ -56,6 +58,7 @@ function(find_and_add_targets)
 		                "${CMAKE_SOURCE_DIR}/extern/fmod/lib/fmodstudio${FMOD_POSTFIX}.dll"
 		                "${CMAKE_BINARY_DIR}/bin/${target_name}/fmodstudio${FMOD_POSTFIX}.dll"
 			)
+
 			# Copy over auxialliary assets for developer use
 			if(THERMITE_DEVELOPER_BUILD)
 				copy_directory_to_output(${target_name} 
@@ -85,13 +88,11 @@ function(find_and_add_targets)
 			if (THERMITE_DEBUG_BUILD)
 				target_compile_definitions(${target_name} PRIVATE THERMITE_DEBUG=1)
 			endif()
-
 		endif()
 	endforeach()
 endfunction()
 
 function(copy_directory_to_output TARGET_NAME SOURCE_DIR OUTPUT_DIR)
- 
     add_custom_command(
         TARGET ${TARGET_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
