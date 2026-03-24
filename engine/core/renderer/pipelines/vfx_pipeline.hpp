@@ -2,9 +2,8 @@
 
 #include <graphite/resources/handle.hh>
 
-#include "core/renderer/render_view.hpp"
-
-#include "core/components/emitter.hpp"
+#include "engine/core/renderer/render_view.hpp"
+#include "engine/core/components/emitter.hpp"
 
 class GPUAdapter;
 class RenderGraph;
@@ -126,6 +125,9 @@ class VfxPipeline {
     void init(GPUAdapter& gpu);
     void enqueue(RenderGraph& render_graph, RenderView render_view);
     void deinit(GPUAdapter& gpu);
+
+    uint32_t emitter_count = 0u;
+    uint32_t effects_count = 0u;
 
     /* Buffers */
     Buffer counter_buffer {};

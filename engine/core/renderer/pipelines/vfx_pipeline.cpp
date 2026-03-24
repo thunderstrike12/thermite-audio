@@ -206,6 +206,8 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
     render_graph.upload_buffer(particle_effects_buffer, effects.data(), 0, sizeof(GpuParticleEffect) * effects.size());
 
     /* Emit Stage */
+    emitter_count = (uint32_t)emitters.size();
+    effects_count = (uint32_t)effects.size();
     for (uint32_t i = 0; i < emitters.size(); i++) {
         const GpuEmitter& em = emitters[i];
 

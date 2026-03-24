@@ -178,6 +178,7 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
         /* Insert Entity Transform */
         prev_transforms[entity] = gpu_object.local_to_world;
     }
+    object_count = (uint32_t)cpu_objects.size();
 
     /* Build a BVH over the scene */
     bvh.build(cpu_objects.data(), (uint32_t)cpu_objects.size());
@@ -249,6 +250,10 @@ void SceneView::update_lights(RenderGraph& render_graph, const RenderView&) {
                 break;
         }
     }
+
+    /* Update scene stats */
+    light_count = (uint32_t)gpu_lights.size();
+    sun_light_active = glm::any(glm::greaterThan(gpu_view.sun_luminance, glm::vec3(0.0f)));
 
     /* Capture all environment in the scene */
     const entt::basic_group env_group = engine.ecs.group<const Environment>();

@@ -41,6 +41,11 @@ struct SceneView {
     void update(RenderGraph& render_graph, const RenderView& render_view);
     void deinit();
 
+    /* Stats */
+    uint32_t object_count = 0u;
+    uint32_t light_count = 0u;
+    bool sun_light_active = false;
+
     /* GPU resources */
     Buffer bvh_nodes {};
     Buffer object_indices {};

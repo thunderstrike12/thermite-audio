@@ -7,8 +7,13 @@
 
 namespace tmt {
 
-class Rendering : public IEditorSystem<>, public OnDrawLines {
+class Rendering : public IWindow<>, public OnDrawLines {
    public:
+    void on_editor_start() override {};
+    void on_editor_update(const tmt::FrameData&) override {};
+    void on_editor_end() override {};
+    void on_inspect() override;
+    constexpr std::string get_title() const override { return ICON_MS_BAR_CHART_4_BARS " Rendering"; }
     void on_draw_lines() const override;
     constexpr std::string get_name() const override { return "Rendering"; };
 };
