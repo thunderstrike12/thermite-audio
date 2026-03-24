@@ -1,4 +1,5 @@
 #include "voxel_object.hpp"
+#include "glm/gtx/norm.hpp"
 
 namespace tmt {
 
@@ -52,6 +53,50 @@ Hit VoxelObject::intersect(Ray ray, const float tmax) const {
 
     /* Overwrite the current hit with the closer one */
     return Hit(hit_dist, {}, local_hit.coord, glm::normalize(hit_normal));
+}
+
+std::vector<std::pair<float, glm::uvec3>> VoxelObject::sphere_overlap(const glm::vec3& center, float radius) const {
+    if (!volume->blas) return {};
+
+    glm::vec3 local_sphere_center = glm::vec3(world_to_local * glm::vec4(center, 1.0f));
+
+    // Sphere AABB in local space
+    const glm::vec3 sphere_min = local_sphere_center - glm::vec3(radius);
+    const glm::vec3 sphere_max = local_sphere_center + glm::vec3(radius);
+
+    const glm::vec3 half_extent = glm::vec3(size) * UNITS_PER_VOXEL * 0.5f;
+
+    auto local_to_voxel = [&](const glm::vec3& p) -> glm::ivec3 {
+        glm::vec3 f = (p + half_extent) / UNITS_PER_VOXEL;
+        return glm::ivec3(glm::floor(f));
+    };
+
+    glm::ivec3 min_coord = local_to_voxel(sphere_min);
+    glm::ivec3 max_coord = local_to_voxel(sphere_max);
+
+    min_coord = glm::clamp(min_coord, glm::ivec3(0), glm::ivec3(size) - 1);
+    max_coord = glm::clamp(max_coord, glm::ivec3(0), glm::ivec3(size) - 1);
+
+    std::vector<std::pair<float, glm::uvec3>> hits;
+
+    for (int x = min_coord.x; x <= max_coord.x; ++x) {
+        for (int y = min_coord.y; y <= max_coord.y; ++y) {
+            for (int z = min_coord.z; z <= max_coord.z; ++z) {
+                if (!volume->blas->get_voxel(x, y, z)) continue;
+
+                // sphere point overlap because fast and easy
+                const glm::vec3 voxel_center = -half_extent + (glm::vec3(x, y, z) + glm::vec3(0.5f)) * UNITS_PER_VOXEL;
+                float sqr_dist = glm::length2(local_sphere_center - voxel_center);
+
+                bool overlap = sqr_dist < (radius * radius);
+                if (!overlap) continue;
+
+                hits.emplace_back(std::make_pair(sqr_dist, glm::vec3 { x, y, z }));
+            }
+        }
+    }
+
+    return hits;
 }
 
 }  // namespace tmt

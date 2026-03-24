@@ -72,6 +72,10 @@ struct VoxelObject {
 
     /* Intersect the voxel object with a ray. */
     Hit intersect(Ray ray, const float tmax) const;
+
+    /* Overlap the voxel object with a sphere.*/
+    /* Returns [distance, coord] */
+    std::vector<std::pair<float, glm::uvec3>> sphere_overlap(const glm::vec3& center, float radius) const;
 };
 
 }  // namespace tmt

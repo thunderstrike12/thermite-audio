@@ -55,11 +55,11 @@ void Bvh2<T>::build(const T* input_prims, const uint32_t input_count) {
     prims = new T[input_count] {};
     bounds = new Aabb[input_count] {};
 
-    for  (uint32_t i = 0; i < input_count; i++) {
+    for (uint32_t i = 0; i < input_count; i++) {
         prims[i] = input_prims[i];
     }
 
-   // std::memcpy(prims, input_prims, prim_count * sizeof(T));
+    // std::memcpy(prims, input_prims, prim_count * sizeof(T));
 
     /* Setup the root node for the BVH */
     Bvh2Node& root = nodes[0];
@@ -484,6 +484,26 @@ Hit Bvh2<T>::trace(const Ray& ray, uint32_t ray_mask) const {
 
     if (hit_t == 1e30f) return Hit(); /* miss */
     return Hit(hit_t, (Entity)hit_index, hit_coord, hit_normal);
+}
+
+template <typename T>
+std::vector<std::pair<Entity, std::vector<std::pair<float, glm::uvec3>>>> Bvh2<T>::overlap_sphere(const glm::vec3& center, float radius, uint32_t layer_mask) {
+    Aabb sphere_aabb(center - radius, center + radius);
+
+    std::vector<uint32_t> candidates = overlap(sphere_aabb, layer_mask);
+
+    std::vector<std::pair<Entity, std::vector<std::pair<float, glm::uvec3>>>> return_data;
+
+    for (uint32_t i = 0; i < candidates.size(); i++) {
+        const T& prim = prims[candidates[i]];
+        const std::vector<std::pair<float, glm::uvec3>> hit_voxels = prim.sphere_overlap(center, radius);
+
+        if (!hit_voxels.empty()) {
+            return_data.push_back(std::make_pair((Entity)candidates[i], hit_voxels));
+        }
+    }
+
+    return return_data;
 }
 
 template <typename T>

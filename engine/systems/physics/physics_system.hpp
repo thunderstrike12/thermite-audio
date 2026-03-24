@@ -66,6 +66,7 @@ class Physics : public ISystem {
     Hit raycast(const Ray& ray, uint32_t layer_mask) const;
     // Overlap against layers in layer_mask
     std::vector<uint32_t> overlap(const Aabb& aabb, uint32_t layer_mask) const;
+    std::vector<std::pair<Entity, std::vector<std::pair<float, glm::uvec3>>>> overlap_sphere(const glm::vec3& center, float radius, uint32_t layer_mask);
 
     static void recalculate_physics_data(VoxelBody& vb, VoxelVolume& volume);
     static void recalculate_surface_normals(VoxelRenderer& renderer);

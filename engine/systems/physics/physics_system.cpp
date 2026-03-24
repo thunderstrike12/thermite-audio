@@ -352,7 +352,9 @@ void Physics::generate_constraint(int index, const PhysicsGroup& group) {
     }
 }
 
-void Physics::on_end() {bvh.build(nullptr, 0);}
+void Physics::on_end() {
+    bvh.build(nullptr, 0);
+}
 
 void Physics::compare_trees(
     tmt::Svt64* tree_a, const glm::vec3& center_a, const glm::quat& rotation_a, float half_extent_a, tmt::Svt64* tree_b, const glm::vec3& center_b, const glm::quat& rotation_b,
@@ -896,6 +898,10 @@ std::vector<uint32_t> Physics::overlap(const Aabb& aabb, uint32_t layer_mask) co
     auto hits = bvh.overlap(aabb, layer_mask);
 
     return hits;
+}
+std::vector<std::pair<Entity, std::vector<std::pair<float, glm::uvec3>>>> Physics::overlap_sphere(const glm::vec3& center, float radius, uint32_t layer_mask) {
+    auto data = bvh.overlap_sphere(center, radius, layer_mask);
+    return data;
 }
 
 void Physics::recalculate_physics_data(VoxelBody& vb, VoxelVolume& volume) {
