@@ -187,7 +187,7 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
             eff.start_opacity = effect.start_opacity;
             eff.end_opacity = effect.end_opacity;
             eff.opacity_curve.points = effect.opacity_curve.get_vec4();
-            eff.rotation = effect.rotation;
+            eff.rotation_speed = effect.rotation_speed;
             eff.pos_jitter = effect.pos_jitter;
             eff.jitter_speed = effect.jitter_speed;
             eff.tex_index = effect.texture.resource->image.get_index();
@@ -211,7 +211,7 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
     for (uint32_t i = 0; i < emitters.size(); i++) {
         const GpuEmitter& em = emitters[i];
 
-        render_graph.add_compute_pass("Emit Particles", "emit.cs")
+        render_graph.add_compute_pass("Emit Particles", "vfx/emit.cs")
                 .push_constants(&i, 0, sizeof(i))
                 .read(render_view.render_view_buffer)
                 .read(emitter_buffer)
@@ -225,22 +225,25 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
                 .work_size(em.total_spawn_count, 1, 1);
     }
 
-    render_graph.add_compute_pass("Particle Begin Update", "particle_begin_update.cs")
+    render_graph.add_compute_pass("Particle Begin Update", "vfx/particle_begin_update.cs")
                 .write(counter_buffer)
                 .write(dispatch_args_buffer)
                 .group_size(1, 1, 1)
                 .work_size(1, 1, 1);
 
-    render_graph.add_compute_pass("Simulate Particles", "particle_sim.cs")
+    uint32_t kill_particles = engine.renderer.kill_particles ? 1u : 0u;
+    if (engine.renderer.kill_particles) engine.renderer.kill_particles = false;
+    render_graph.add_compute_pass("Simulate Particles", "vfx/particle_sim.cs")
                 .read(render_view.render_view_buffer)
                 .write(particle_buffer)
                 .write(alive_list)
                 .write(alive_list_new)
                 .write(dead_list)
                 .write(counter_buffer)
+                .push_constants(&kill_particles, 0, sizeof(uint32_t))
                 .indirect_size(dispatch_args_buffer);
 
-    render_graph.add_compute_pass("Particle End Update", "particle_end_update.cs")
+    render_graph.add_compute_pass("Particle End Update", "vfx/particle_end_update.cs")
                 .read(counter_buffer)
                 .write(instanced_draw_args_buffer)
                 .group_size(1, 1, 1)
@@ -248,7 +251,7 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
 
 
     const glm::uvec2 render_res = render_view.gpu_view.resolution;
-    RasterNode& billboard_pass = render_graph.add_raster_pass("billboard pass", "billboard.vx", "billboard.px")
+    RasterNode& billboard_pass = render_graph.add_raster_pass("billboard pass", "vfx/billboard.vx", "vfx/billboard.px")
                                 .topology(Topology::TriangleList)
                                 .attribute(AttrFormat::XY32_SFloat)  // Position
                                 .attribute(AttrFormat::XY32_SFloat)  // UVs
@@ -260,7 +263,7 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
                                 .depth_stencil(render_view.dbuffer.image, true, true)
                                 .load_op_depth(LoadOp::Load)
                                 .load_op_color(LoadOp::Load)
-                                .attach(render_view.lbuffer.images[0])
+                                .attach(render_view.lbuffer.image)
                                 .attach(render_view.mbuffer.image)
                                 .raster_extent(render_res.x, render_res.y);
     billboard_pass.draw_indirect(billboard_vertices, instanced_draw_args_buffer);

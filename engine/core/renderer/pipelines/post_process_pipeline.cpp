@@ -21,7 +21,21 @@ void PostProcessPipeline::init(GPUAdapter& gpu) {
 void PostProcessPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
     const glm::uvec2 shading_res = render_view.gpu_view.resolution;
 
-    for (uint32_t curr_mip = 1; curr_mip < render_view.lbuffer.meta.mips; curr_mip++) {
+    RendererSettings& settings = engine.player_data.get<RendererSettings>("RendererSettings");
+
+    /* Threshold the Luminance buffer */
+    {
+        /* clang-format off */
+        render_graph.add_compute_pass("Luminance Threshold", "luminance_threshold.cs")
+                    .read(render_view.lbuffer.image)
+                    .write(render_view.tbuffer.images[0])
+                    .push_constants(&settings.bloom_threshold, 0u, sizeof(float))
+                    .group_size(16, 8)
+                    .work_size(shading_res.x, shading_res.y);
+        /* clang-format on */
+    }
+
+    for (uint32_t curr_mip = 1; curr_mip < render_view.tbuffer.meta.mips; curr_mip++) {
         const uint32_t mip_w = shading_res.x >> curr_mip;
         const uint32_t mip_h = shading_res.y >> curr_mip;
 
@@ -29,19 +43,17 @@ void PostProcessPipeline::enqueue(RenderGraph& render_graph, RenderView render_v
         render_graph.add_compute_pass("Bloom Downsample", "bloom/downsample.cs")
                     .read(render_view.render_view_buffer)
                     .read(down_sampler)
-                    .write(render_view.lbuffer.images[curr_mip])
-                    .read(render_view.lbuffer.images[curr_mip - 1])
+                    .write(render_view.tbuffer.images[curr_mip])
+                    .read(render_view.tbuffer.images[curr_mip - 1])
                     .push_constants(&curr_mip, 0u, sizeof(uint32_t))
                     .group_size(16, 8)
                     .work_size(mip_w, mip_h);
         /* clang-format on */
     }
 
-    for (int32_t curr_mip = (int32_t)render_view.lbuffer.meta.mips - 2; curr_mip >= 0; curr_mip--) {
+    for (int32_t curr_mip = (int32_t)render_view.tbuffer.meta.mips - 2; curr_mip >= 0; curr_mip--) {
         const uint32_t mip_w = shading_res.x >> curr_mip;
         const uint32_t mip_h = shading_res.y >> curr_mip;
-
-        RendererSettings& settings = engine.player_data.get<RendererSettings>("RendererSettings");
 
         struct UpsampleConstants {
             uint32_t curr_mip_level;
@@ -55,24 +67,23 @@ void PostProcessPipeline::enqueue(RenderGraph& render_graph, RenderView render_v
         render_graph.add_compute_pass("Bloom Upsample", "bloom/upsample.cs")
                     .read(render_view.render_view_buffer)
                     .read(up_sampler)
-                    .write(render_view.lbuffer.images[curr_mip])
-                    .read(render_view.lbuffer.images[curr_mip + 1])
+                    .write(render_view.tbuffer.images[curr_mip])
+                    .read(render_view.tbuffer.images[curr_mip + 1])
                     .push_constants(&upsample_constants, 0u, sizeof(UpsampleConstants))
                     .group_size(16, 8)
                     .work_size(mip_w, mip_h);
         /* clang-format on */
     }
 
-    /* Color Grading and Tonemapping */
-    if (engine.renderer.display_mode == DisplayMode::DEFAULT) {
-        /* clang-format off */
+    /* Bloom Addition, Color Grading and Tonemapping */
+    /* clang-format off */
         render_graph.add_compute_pass("Color Grading and Tonemapping", "cg_tonemap.cs")
-                    .read(render_view.lbuffer.images[0])
+                    .read(render_view.lbuffer.image)
+                    .read(render_view.tbuffer.images[0])
                     .write(render_view.get_render_image())
                     .group_size(16, 8)
                     .work_size(render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y);
-        /* clang-format on */
-    }
+    /* clang-format on */
 }
 
 void PostProcessPipeline::deinit(GPUAdapter& gpu) {

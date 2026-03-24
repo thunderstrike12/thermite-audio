@@ -255,6 +255,10 @@ void Editor::main_menu_bar() {
                     }
                 }
                 ImGui::EndMenu();
+
+                if (engine.renderer.display_mode != DisplayMode::DEFAULT) {
+                    engine.renderer.enable_taa = false;
+                }
             }
 
             /* List of shading rate labels */
@@ -286,6 +290,7 @@ void Editor::main_menu_bar() {
 
             RendererSettings& settings = engine.player_data.get<RendererSettings>("RendererSettings");
             ImGui::SliderFloat("Bloom Radius", &settings.bloom_radius, 0.0f, 1.0f);
+            ImGui::SliderFloat("Bloom Threshold", &settings.bloom_threshold, 0.0f, 10.0f);
 
             ImGui::EndMenu();
         }

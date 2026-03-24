@@ -34,7 +34,7 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
 
     /* Get Render Image */
     const BindHandle render_image = render_view.get_render_image();
-    const BindHandle diffuse_image = render_view.lbuffer.images[0];
+    const BindHandle diffuse_image = render_view.lbuffer.image;
     const BindHandle raw_specular_image = render_view.raw_spec_buffer.image;
     const BindHandle specular_image = render_view.spec_buffer.image;
     const glm::uvec2 render_res = render_view.gpu_view.resolution;
@@ -94,19 +94,21 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
         .write(raw_specular_image) /* Specular buffer */
         .group_size(16, 8)
         .work_size(quarter_rate.x, quarter_rate.y);
-    
-    for (uint32_t i = 0u; i < 6u; ++i) {
-        /* Denoising pass */
-        uint32_t step_size = 1u << i;
-        render_graph.add_compute_pass("denoise pass", "lighting/wavelet_denoise.cs")
-            .push_constants(&step_size, 0u, sizeof(uint32_t))
-            .read(render_view.render_view_buffer) /* Render view buffer */
-            .read(scene_view.object_data) /* Voxel objects buffer */
-            .read(render_view.vbuffer.image) /* Visibility buffer */
-            .read(((i & 0b1u) == 0u) ? raw_specular_image : specular_image) /* Luminance buffer */
-            .write(((i & 0b1u) == 0u) ? specular_image : raw_specular_image) /* Luminance buffer */
-            .group_size(16, 8)
-            .work_size(quarter_rate.x, quarter_rate.y);
+
+    if (engine.renderer.display_mode == DisplayMode::DEFAULT) {
+        for (uint32_t i = 0u; i < 6u; ++i) {
+            /* Denoising pass */
+            uint32_t step_size = 1u << i;
+            render_graph.add_compute_pass("denoise pass", "lighting/wavelet_denoise.cs")
+                .push_constants(&step_size, 0u, sizeof(uint32_t))
+                .read(render_view.render_view_buffer) /* Render view buffer */
+                .read(scene_view.object_data) /* Voxel objects buffer */
+                .read(render_view.vbuffer.image) /* Visibility buffer */
+                .read(((i & 0b1u) == 0u) ? raw_specular_image : specular_image) /* Luminance buffer */
+                .write(((i & 0b1u) == 0u) ? specular_image : raw_specular_image) /* Luminance buffer */
+                .group_size(16, 8)
+                .work_size(quarter_rate.x, quarter_rate.y);
+        }
     }
 
     // struct DenoiseOptions {
@@ -194,8 +196,8 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
     if (engine.renderer.display_mode == DisplayMode::ILLUMINANCE) {
         render_graph.add_compute_pass("[debug] illuminance pass", "debug/illuminance.cs")
             .read(render_view.render_view_buffer) /* Render view buffer */
-            .read(render_view.vbuffer.image) /* Visibility buffer */
-            .write(render_view.macrofacet_cache) /* Cache buffer */
+            //.read(render_view.vbuffer.image) /* Visibility buffer */
+            //.write(render_view.macrofacet_cache) /* Cache buffer */
             .read(diffuse_image) /* Luminance buffer */
             .write(render_image) /* Render target */
             .group_size(16, 8)

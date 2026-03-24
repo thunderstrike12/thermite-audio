@@ -42,7 +42,7 @@ struct GpuParticleEffect {
     Range end_opacity {};
     GpuBezierCurve opacity_curve {};
 
-    Range rotation {};
+    Range rotation_speed {};
     Range pos_jitter {};
 
     float jitter_speed {};

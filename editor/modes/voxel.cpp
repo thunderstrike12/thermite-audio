@@ -66,9 +66,10 @@ void VoxelMode::on_switch_to(const std::any& meta_data) {
 
     edit_data.clear();
 
-    /* Switch to the albedo display mode, and disable TAA */
+    /* Switch to the albedo display mode, disable TAA and kill active particles */
     engine.renderer.display_mode = DisplayMode::ALBEDO;
     engine.renderer.enable_taa = false;
+    engine.renderer.kill_particles = true;
 }
 
 void VoxelMode::on_switch_away() {

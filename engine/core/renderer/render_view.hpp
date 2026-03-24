@@ -98,13 +98,15 @@ struct RenderView {
     ResourceRef<Texture2D> blue_noise1d {};
 
     /* Screen buffers */
-    ScreenBuffer vbuffer {};      /* Visibility buffer (WxH, 6->8 bytes) */
-    ScreenBuffer dbuffer {};      /* Depth buffer (WxH, 4 bytes) */
-    PostProcessBuffer lbuffer {}; /* Raw luminance buffer (WxH, 4 bytes) */
-    ScreenBuffer nbuffer {};      /* Denoised luminance buffer (WxH, 4 bytes) */
-    ScreenBuffer hbuffer1 {};     /* Accumulated (History) frame buffer (WxH, 8 bytes) */
-    ScreenBuffer hbuffer2 {};     /* Accumulated (History) frame buffer (WxH, 8 bytes) */
-    ScreenBuffer mbuffer {};      /* Motion Vector buffer (WxH, 4 bytes) */
+    ScreenBuffer vbuffer {};  /* Visibility buffer (WxH, 6->8 bytes) */
+    ScreenBuffer dbuffer {};  /* Depth buffer (WxH, 4 bytes) */
+    ScreenBuffer lbuffer {};  /* Raw luminance buffer (WxH, 4 bytes) */
+    ScreenBuffer nbuffer {};  /* Denoised luminance buffer (WxH, 4 bytes) */
+    ScreenBuffer hbuffer1 {}; /* Accumulated (History) frame buffer (WxH, 8 bytes) */
+    ScreenBuffer hbuffer2 {}; /* Accumulated (History) frame buffer (WxH, 8 bytes) */
+    ScreenBuffer mbuffer {};  /* Motion Vector buffer (WxH, 4 bytes) */
+    /* Post Process buffers */
+    PostProcessBuffer tbuffer {}; /* Thresholded luminance buffer (WxH, 4 bytes) */
 
     /* Intermediate specular luminance buffer */
     ScreenBuffer raw_spec_buffer {};

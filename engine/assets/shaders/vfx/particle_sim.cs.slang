@@ -10,6 +10,9 @@ RWStructuredBuffer<uint32_t> alive_list_new;
 RWStructuredBuffer<uint32_t> dead_list;
 RWStructuredBuffer<Counters> counters;
 
+[[vk::push_constant]]
+uint32_t kill_particles;
+
 [shader("compute")]
 [numthreads(256, 1, 1)]
 void main(uint3 thread_id: SV_DispatchThreadID) {
@@ -22,6 +25,8 @@ void main(uint3 thread_id: SV_DispatchThreadID) {
     uint32_t v0 = particle_index * 6;
 
     p.age += render_view.dt;
+
+    if (kill_particles == 1u) p.lifetime = -1.0f;
 
     if (p.age < p.lifetime) {
         const float t = p.age / p.lifetime;
