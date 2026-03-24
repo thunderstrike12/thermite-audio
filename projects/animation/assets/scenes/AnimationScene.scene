@@ -17,6 +17,7 @@
         16,
         17,
         18,
+        19,
         1048580,
         1048581,
         1048582
@@ -69,6 +70,9 @@
         },
         "18": {
             "name": "Available Pos3"
+        },
+        "19": {
+            "name": "Armature"
         },
         "1048580": {
             "name": "tip"
@@ -422,6 +426,26 @@
             "parent": 0,
             "children": []
         },
+        "19": {
+            "local_position": {
+                "x": 0.0,
+                "y": -1.5,
+                "z": -9.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": -4.371138828673793e-08,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
         "1048580": {
             "local_position": {
                 "x": -0.8466625213623047,
@@ -514,6 +538,7 @@
             "step_height": 1.0,
             "desired_target_entity": 16,
             "effector_entity": 13,
+            "ground_entity": 0,
             "cycle_offset": 0.30000001192092896,
             "grounded": true,
             "step_prediction_strength": 0.0
@@ -524,6 +549,7 @@
             "step_height": 1.0,
             "desired_target_entity": 17,
             "effector_entity": 14,
+            "ground_entity": 0,
             "cycle_offset": 0.6000000238418579,
             "grounded": true,
             "step_prediction_strength": 0.0
@@ -534,6 +560,7 @@
             "step_height": 1.0,
             "desired_target_entity": 18,
             "effector_entity": 15,
+            "ground_entity": 0,
             "cycle_offset": 0.8999999761581421,
             "grounded": true,
             "step_prediction_strength": 0.0
@@ -590,6 +617,86 @@
                 "w": 1.0
             },
             "line_width": 1.0
+        }
+    },
+    "Animated Rig": {
+        "19": {
+            "vox_is_loaded": false,
+            "vox_path": {
+                "sub_location": "PROJECT",
+                "relative_path": ""
+            },
+            "data": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": ""
+                },
+                "data": null
+            }
+        }
+    },
+    "Rig Controller": {
+        "19": {
+            "parameters": {
+                "New trigger": {
+                    "index": 3,
+                    "value": {
+                        "value": false
+                    }
+                }
+            },
+            "states": {
+                "Start": {
+                    "animation": "",
+                    "animation_speed": 1.0,
+                    "repeat": false,
+                    "transition_on_finish": false
+                },
+                "Victory_animation": {
+                    "animation": "Victory_animation",
+                    "animation_speed": 1.0,
+                    "repeat": false,
+                    "transition_on_finish": true
+                },
+                "Walk": {
+                    "animation": "Walk",
+                    "animation_speed": 1.0,
+                    "repeat": true,
+                    "transition_on_finish": false
+                }
+            },
+            "transitions": [
+                {
+                    "from": "Start",
+                    "to": "Walk",
+                    "transition_time": 0.0,
+                    "conditions": []
+                },
+                {
+                    "from": "Walk",
+                    "to": "Victory_animation",
+                    "transition_time": 0.20000000298023224,
+                    "conditions": [
+                        {
+                            "parameter_name": "New trigger",
+                            "compare_value": {
+                                "index": 3,
+                                "value": {
+                                    "value": false
+                                }
+                            },
+                            "compare_type": "EQUAL"
+                        }
+                    ]
+                },
+                {
+                    "from": "Victory_animation",
+                    "to": "Walk",
+                    "transition_time": 0.20000000298023224,
+                    "conditions": []
+                }
+            ],
+            "editor_context": "{\"nodes\":{\"node:12546042384611329151\":{\"location\":{\"x\":136,\"y\":79}},\"node:8496880098153721452\":{\"location\":{\"x\":349,\"y\":268}},\"node:9873224100154867216\":{\"location\":{\"x\":410,\"y\":83}}},\"selection\":[\"node:9873224100154867216\"],\"view\":{\"scroll\":{\"x\":-0.000119018499390222132,\"y\":-264.642974853515625},\"visible_rect\":{\"max\":{\"x\":770.0001220703125,\"y\":1345.0003662109375},\"min\":{\"x\":-0.000213623032323084772,\"y\":-475.000396728515625}},\"zoom\":0.55714261531829834}}"
         }
     },
     "systems": null

@@ -5,6 +5,8 @@
 #include "engine/core/components/voxel_renderer.hpp"
 #include "engine/core/input/input.hpp"
 #include "engine/core/logger.hpp"
+#include "engine/core/scene.hpp"
+#include "engine/core/scenes.hpp"
 #include "engine/systems/animation/animation_system.hpp"
 #include "engine/systems/camera/camera_system.hpp"
 #include "engine/core/scene.hpp"
@@ -45,13 +47,11 @@ class AnimationScene : public tmt::Scene<AnimationScene> {
 };
 
 std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs& args) {
-    // clang-format off
     tmt::ApplicationSpecs specs {
         .name = "Example Game",
         .command_args = args,
-        .log_file = "example_game_logs.txt"
+        .log_file = "example_game_logs.txt",
     };
-    // clang-format on
     tmt::engine.ecs.systems.add<tmt::CameraSystem>();
     tmt::engine.scenes.register_scene<AnimationScene>();
 

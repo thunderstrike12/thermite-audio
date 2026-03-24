@@ -21,6 +21,7 @@ target_include_directories(thermite-engine
 # Add compile definitons
 target_compile_definitions(thermite-engine PRIVATE NOMINMAX) # Makes windows.h not define min and max
 target_compile_definitions(thermite-engine PRIVATE THERMITE_ENGINE) # Define that we're building the engine
+target_compile_definitions(thermite-engine PRIVATE UFBX_REAL_IS_FLOAT) # Use 32 bit floats when parsing fbx.
 
 # Compile Shaders
 include(../scripts/cmake/shader_compilation.cmake)

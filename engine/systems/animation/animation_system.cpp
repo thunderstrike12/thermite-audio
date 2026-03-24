@@ -11,79 +11,112 @@
 #include "engine/systems/animation/constraints/damped_transform.hpp"
 #include "engine/systems/animation/constraints/two_bone_ik.hpp"
 #include "engine/core/renderer/renderer.hpp"
-#include "systems/ai/navigation/nav_mesh.hpp"
-
-#define CONDITION(comparison) [](const Variant& parameter, const Variant& value) -> bool { return parameter comparison value; }
+#include "engine/core/components/rig_controller.hpp"
+#include "engine/systems/ai/navigation/nav_mesh.hpp"
 
 namespace tmt {
 
-std::string tmt::RigModelManager::get_name() {
-    return "animation system";
-}
-
-void tmt::RigModelManager::on_game_start() {
-    for (const auto& [entity, rig] : engine.ecs.view<RigModel>().each()) {
-        auto& rigmodel = tmt::engine.ecs.get_component<tmt::RigModel>(entity);
-        rigmodel.init(rigmodel.data.file_location, entity);
-    }
-}
-
-void tmt::RigModelManager::on_start() {}
-
 void RigModelManager::on_update(const FrameData& time) {
-    for (const auto& [entity, rig] : engine.ecs.view<RigModel>().each()) {
-        auto path = rig.vox_path.relative_path;
-        if (!rig.vox_is_loaded && !path.empty()) {
-            rig.attach_voxel_objects();
+    for (const auto&& [entity, rig, controller] : engine.ecs.view<RigModel, RigController>().each()) {
+        const std::string& current_state = controller.current_state;
+        if (current_state.empty()) {
+            const auto& name = engine.ecs.get_component<Name>(entity);
+            Log::error("Trying to animate \"{}\" without a state!", name);
+            continue;
         }
 
-        if (rig.data == nullptr) continue;
+        for (auto& transition : controller.transitions) {
+            if (transition.from != current_state) continue;
 
-        if (rig.state != RigModel::State::STATIONARY && !rig.is_transferring()) rig.time += rig.animation_speed * time.delta_time;
+            std::vector<Trigger*> satisfied_triggers;
+            const bool should_transition = controller.check_transition_conditions(transition, satisfied_triggers);
+            if (!should_transition) continue;
 
-        if (rig.is_transferring()) rig.transfer_time += time.delta_time * rig.animation_speed;
+            const AnimationState& from_state = controller.states[transition.from];
+            if (from_state.transition_on_finish) {
+                const auto& animations = rig.data->bones.back().animations;
+                const auto& iterator = animations.find(from_state.animation);
 
-        if (rig.transfer_time > rig.transfer_threshold) {
-            switch (rig.state) {
-                case RigModel::State::TRANSFERRING_TO_LOOP:
-                    rig.state = RigModel::State::ANIMATE_LOOP;
-                    break;
-                case RigModel::State::TRANSFERRING_TO_ONCE:
-                    rig.state = RigModel::State::ANIMATE_ONCE;
-                    break;
-                case RigModel::State::TRANSFERRING_TO_STOP:
-                    rig.state = RigModel::State::STATIONARY;
-                    break;
-
-                case RigModel::State::ANIMATE_LOOP:
-                case RigModel::State::ANIMATE_ONCE:
-                case RigModel::State::STATIONARY:
-                    break;
+                if (iterator != animations.end() && rig.time < (iterator->second.keyframes_pos.back().time - transition.transition_time)) continue;
             }
 
-            rig.time = 0.0f;
-            rig.set_current_animation(rig.get_next_animation());
-            rig.transfer_time = 0.0f;
+            // If the transition is successful we reset all the trigger parameters
+            std::ranges::for_each(satisfied_triggers, [](Trigger* trigger) { *trigger = Trigger { false }; });
+
+            const std::string& state_name = controller.current_state = transition.to;
+            const AnimationState& state = controller.states[state_name];
+
+            rig.set_animation_speed(state.animation_speed);
+
+            if (state.animation.empty()) {
+                if (rig.state == RigModel::State::ANIMATE_LOOP) rig.stop_loop(transition.transition_time);
+                break;
+            }
+
+            rig.play_animation(state.animation, transition.transition_time, state.repeat);
+            break;
+        }
+    }
+
+    for (const auto&& [entity, rig] : engine.ecs.view<RigModel>().each()) {
+        if (rig.data == nullptr || rig.state == RigModel::State::STATIONARY) continue;
+
+        if (rig.is_transferring()) {
+            rig.transfer_time += time.delta_time * rig.animation_speed;
+
+            if (rig.transfer_time > rig.transfer_threshold) {
+                switch (rig.state) {
+                    case RigModel::State::TRANSFERRING_TO_LOOP:
+                        rig.state = RigModel::State::ANIMATE_LOOP;
+                        break;
+                    case RigModel::State::TRANSFERRING_TO_ONCE:
+                        rig.state = RigModel::State::ANIMATE_ONCE;
+                        break;
+                    case RigModel::State::TRANSFERRING_TO_STOP:
+                        rig.state = RigModel::State::STATIONARY;
+                        continue;  // This continue is for the current for loop, rather than the break which would be for the switch statement.
+
+                    default:
+                        break;
+                }
+
+                rig.time = 0.0f;
+                rig.set_current_animation(rig.get_next_animation());
+                rig.transfer_time = 0.0f;
+            }
+        } else {
+            rig.time += rig.animation_speed * time.delta_time;
         }
 
         const Bone& last_bone = rig.data->bones.back();
         const std::string& current_animation = rig.get_current_animation();
-        if (last_bone.animations.find(current_animation) == last_bone.animations.end()) {
-            // Log::warn(R"(Animation "{}" isn't a valid animation!)", current_animation);
+        if (!last_bone.animations.contains(current_animation)) {
+            Log::warn(R"(Animation "{}" isn't a valid animation!)", current_animation);
             continue;
         }
 
-        const float animation_time = last_bone.animations.at(rig.get_current_animation()).keyframes_pos.back().time;
+        const float animation_time = last_bone.animations.at(current_animation).keyframes_pos.back().time;
 
         if (rig.time >= animation_time) {
             if (rig.state == RigModel::State::ANIMATE_ONCE) {
                 rig.state = RigModel::State::STATIONARY;
-            } else if (rig.state == RigModel::State::ANIMATE_LOOP) {
+                continue;  // When state is stationary we should skip the rest of the animation process.
+            }
+
+            if (rig.state == RigModel::State::ANIMATE_LOOP) {
                 rig.time = rig.time - animation_time;
             }
         }
 
+        // Checks for when the amount of bone entities does not match the amount of bones the rig has.
+        if (rig.bone_entities.empty())
+            Log::error(Log::Scope::ENGINE, "Tried to animate RigModel without any bone entities!");
+        else if (rig.bone_entities.size() < rig.data->bones.size())
+            Log::warn(Log::Scope::ENGINE, "Tried to animate RigModel with some missing bone entities!");
+
         for (const Entity bone_entity : rig.bone_entities) {
+            if (!engine.ecs.valid(bone_entity)) continue;  // Check if the bone entity is actually valid (we'd prefer the list is guaranteed to be accurate, but this works fine.).
+
             auto& transform = engine.ecs.get_component<Transform>(bone_entity);
 
             const BoneComp& bone_comp_id = engine.ecs.get_component<BoneComp>(bone_entity);
@@ -96,39 +129,37 @@ void RigModelManager::on_update(const FrameData& time) {
     }
 }
 
-void tmt::RigModelManager::on_end() {}
-
 void RigModelManager::on_draw_lines() const {
-    for (const auto& [entity, transform, bone_renderer] : engine.ecs.get_registry().view<Transform, BoneHierarchyRenderer>().each()) {
+    for (const auto&& [entity, transform, bone_renderer] : engine.ecs.get_registry().view<Transform, BoneHierarchyRenderer>().each()) {
         tmt::engine.polyline.use_depth_testing(true);
         tmt::engine.polyline.use_color(bone_renderer.color);
         tmt::engine.polyline.use_line_width(bone_renderer.line_width);
         tmt::RenderBoneHierarchy(transform);
     }
 
-    for (const auto& [entity, transform, bend_hint] : engine.ecs.get_registry().view<Transform, BendHint>().each()) {
+    for (const auto&& [entity, transform, bend_hint] : engine.ecs.get_registry().view<Transform, BendHint>().each()) {
         tmt::engine.polyline.use_color(glm::vec4(1.f, 0.f, 0.f, 1.f));
         tmt::engine.polyline.draw_sphere(transform.get_world_position(), bend_hint.radius);
     }
 
-    for (const auto& [entity, transform, effector] : engine.ecs.get_registry().view<Transform, Effector>().each()) {
+    for (const auto&& [entity, transform, effector] : engine.ecs.get_registry().view<Transform, Effector>().each()) {
         tmt::engine.polyline.use_color(glm::vec4(0.f, 0.7f, 0.7f, 1.f));
         tmt::engine.polyline.draw_sphere(transform.get_world_position(), effector.radius);
     }
 }
 
 void tmt::AnimationConstraintSystem::on_start() {
-    for (const auto& [entity, transform, damped_constraint] : engine.ecs.view<Transform, AnimConstraints::DampedTransformConstraint>().each()) {
+    for (const auto&& [entity, transform, damped_constraint] : engine.ecs.view<Transform, AnimConstraints::DampedTransformConstraint>().each()) {
         damped_constraint.local_rest_pose.bone_entity = entity;
         AnimConstraints::DampedTransform::set_local_rest_pose(transform, damped_constraint.local_rest_pose);
     }
-    for (const auto& [entity, transform, two_bone_constraint] : engine.ecs.view<Transform, AnimConstraints::TwoBoneIKConstraint>().each()) {
+    for (const auto&& [entity, transform, two_bone_constraint] : engine.ecs.view<Transform, AnimConstraints::TwoBoneIKConstraint>().each()) {
         two_bone_constraint.root = entity;
         two_bone_constraint.parent = transform.get_parent();
     }
 }
 void tmt::AnimationConstraintSystem::on_update(const tmt::FrameData& time) {
-    for (const auto& [entity, transform, damped_constraint] : engine.ecs.view<Transform, AnimConstraints::DampedTransformConstraint>().each()) {
+    for (const auto&& [entity, transform, damped_constraint] : engine.ecs.view<Transform, AnimConstraints::DampedTransformConstraint>().each()) {
         damped_constraint.local_rest_pose.local_pos = transform.get_local_position();
         damped_constraint.local_rest_pose.local_rot = transform.get_local_rotation();
 
@@ -136,7 +167,7 @@ void tmt::AnimationConstraintSystem::on_update(const tmt::FrameData& time) {
             damped_constraint.local_rest_pose, damped_constraint.local_rest_pose.local_pos, damped_constraint.local_rest_pose.local_rot, damped_constraint.damp
         );
     }
-    for (const auto& [entity, transform, two_bone_constraint] : engine.ecs.view<Transform, AnimConstraints::TwoBoneIKConstraint>().each()) {
+    for (const auto&& [entity, transform, two_bone_constraint] : engine.ecs.view<Transform, AnimConstraints::TwoBoneIKConstraint>().each()) {
         AnimConstraints::TwoBoneIK::TwoBoneInputData input_data;
         if (engine.ecs.valid(two_bone_constraint.parent)) {
             input_data.parent = &engine.ecs.get_component<Transform>(two_bone_constraint.parent);
@@ -161,7 +192,7 @@ void tmt::AnimationConstraintSystem::on_update(const tmt::FrameData& time) {
         root_transform.set_local_rotation(output.root_rot);
         mid_transform.set_local_rotation(output.mid_rot);
     }
-    for (const auto& [entity, transform, walk_cycle] : engine.ecs.view<Transform, AnimConstraints::EffectorWalkCycle>().each()) {
+    for (const auto&& [entity, transform, walk_cycle] : engine.ecs.view<Transform, AnimConstraints::EffectorWalkCycle>().each()) {
         walk_cycle.step_timer += time.delta_time;
         auto parent = transform.get_parent();
         auto& parent_transform = engine.ecs.get_component<Transform>(parent);

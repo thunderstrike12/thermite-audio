@@ -17,6 +17,8 @@ class Resource {
    public:
     virtual ~Resource() = default;
 
+    bool is_loaded() const { return loaded; }
+
    protected:
     /* [Required] */
     virtual bool load() = 0;
@@ -33,8 +35,6 @@ class Resource {
         tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resource] No fallback implemented for resource with fallback reason: {}", reason);
         return true;
     }
-
-    bool is_loaded() const { return loaded; }
 
    private:
     friend class Resources;
@@ -90,7 +90,7 @@ class ResourceRef {
     ResourceRef(IO::FileLocation file_location) : file_location(std::move(file_location)), resource(nullptr) {}
     ResourceRef(IO::FileLocation file_location, std::shared_ptr<T> resource) : file_location(std::move(file_location)), resource(std::move(resource)) {}
 
-    IO::FileLocation file_location{};
+    IO::FileLocation file_location {};
     std::shared_ptr<T> resource = nullptr;
 
     T* operator->() const { return resource.get(); }
@@ -103,4 +103,4 @@ class ResourceRef {
 
 }  // namespace tmt
 
-TMT_OBJECT(tmt::FileResource, (file_location));
+JSON_REFLECT(tmt::FileResource, file_location);

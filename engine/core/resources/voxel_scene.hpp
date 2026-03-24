@@ -40,6 +40,8 @@ class VoxelScene : public tmt::FileResource {
 
     std::vector<Entity> instantiate_entities() const;
     [[nodiscard]] std::vector<UUID> get_all_uuids() const;
+    /* Tries to calculate the world matrix of the node with the given UUID. */
+    glm::mat4 get_node_world_matrix(const UUID& uuid) const;
 
     bool fallback(FallbackReason reason) override;
 

@@ -79,4 +79,4 @@ struct RigData : public FileResource {
 
 }  // namespace tmt
 
-TMT_OBJECT(tmt::RigData, (animation_files));
+JSON_REFLECT(tmt::RigData, animation_files);
