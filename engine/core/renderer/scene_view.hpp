@@ -55,6 +55,13 @@ struct SceneView {
     std::vector<Entity> entities {};
     bool render_outlines = false;
 
+    /* Any objects before this distance will be fully opaque. */
+    float object_opaque_distance = 128.0f;
+    /* Any objects after this distance will be fully transparent. */
+    float object_transparent_distance = 152.0f;
+    /* Factor to change the interpolation curve when going from opaque to transparent. */
+    float object_opacity_transition = 10.0f;
+
    private:
     /* Collect and upload all voxel objects in the scene. */
     void update_voxel_objects(RenderGraph& render_graph);

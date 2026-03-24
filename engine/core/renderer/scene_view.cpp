@@ -128,6 +128,12 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
         if (validate_transform(transform.get_world_matrix())) continue;
         renderer.resource->update_if_dirty();
 
+        /* Calculate object opacity based on distance from the camera */
+        const float object_d = glm::distance(transform.get_world_position(), glm::vec3(engine.renderer.render_view.gpu_view.origin));
+        const float opacity_t = glm::clamp(1.0f - (object_d - object_opaque_distance) / (object_transparent_distance - object_opaque_distance), 0.0f, 1.0f);
+        const float opacity = renderer.distance_culling ? (1.0f - powf(2.0f, -object_opacity_transition * opacity_t)) : 1.0f;
+        if (opacity <= 0.0f || renderer.opacity <= 0.0f) continue; /* Skip fully transparent objects */
+
         /* Set the UUID of the object */
         if (renderer.uuid == 0u) {
             if (uuid_free_list.empty()) {
@@ -162,6 +168,7 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
         gpu_object.voxels_handle = renderer.resource->blas_voxels.get_index();
         gpu_object.palette_handle = renderer.resource->blas_palette.get_index();
         gpu_object.object_flags = renderer.outlined ? 0b1u : 0b0u;
+        gpu_object.opacity = opacity * renderer.opacity;
         if (renderer.outlined) render_outlines = true;
         renderer.outlined = false; /* Reset outlined flag */
 
@@ -247,6 +254,9 @@ void SceneView::update_lights(RenderGraph& render_graph, const RenderView&) {
     const entt::basic_group env_group = engine.ecs.group<const Environment>();
     gpu_view.envmap_full_handle = 0u;
     gpu_view.envmap_filtered_handle = 0u;
+    object_opaque_distance = 128.0f;
+    object_transparent_distance = 152.0f;
+    object_opacity_transition = 10.0f;
 
     /* Iterate over all environments */
     for (auto&& [entity, env] : env_group.each()) {
@@ -254,6 +264,9 @@ void SceneView::update_lights(RenderGraph& render_graph, const RenderView&) {
             /* Select the first valid environment we find */
             gpu_view.envmap_full_handle = env.resource->full_image.get_index();
             gpu_view.envmap_filtered_handle = env.resource->filtered_image.get_index();
+            object_opaque_distance = env.object_opaque_distance;
+            object_transparent_distance = env.object_transparent_distance;
+            object_opacity_transition = env.object_opacity_transition;
             break;
         }
     }

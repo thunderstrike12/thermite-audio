@@ -35,6 +35,7 @@ void GeometryPipeline::enqueue(RenderGraph& render_graph, RenderView& render_vie
         render_graph.add_compute_pass("geometry pass", "geometry.cs")
             /* Render view */
             .read(render_view.render_view_buffer)
+            .read(render_view.blue_noise1d->image)
             /* Object buffers */
             .read(scene_view.bvh_nodes)
             .read(scene_view.object_indices)

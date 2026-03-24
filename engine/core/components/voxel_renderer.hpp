@@ -15,10 +15,16 @@ struct VoxelRenderer {
     /* Unique object identifier. */
     uint32_t uuid = 0u;
 
+    /* Voxel renderer opacity. */
+    float opacity = 1.0f;
+
+    /* Cull voxel renderer when far away. */
+    bool distance_culling = true;
+
     /* Should this voxel renderer be outlined? */
     bool outlined = false;
 };
 
 }  // namespace tmt
 
-TMT_COMPONENT(tmt::VoxelRenderer, "Voxel Renderer", (resource));
+TMT_COMPONENT(tmt::VoxelRenderer, "Voxel Renderer", (resource, opacity, distance_culling));

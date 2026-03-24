@@ -1,8 +1,10 @@
 #pragma once
 
 #include <ImReflect.hpp>
-#include <engine/core/resources.hpp>
-#include <engine/core/resources/voxel_volume.hpp>
+
+#include "engine/engine.hpp"
+#include "engine/core/resources.hpp"
+#include "engine/core/resources/voxel_volume.hpp"
 #include "editor/imgui/types/io.hpp"
 
 template <typename T>

@@ -6,6 +6,7 @@ import math;
 
 /* Active render view. */
 ConstantBuffer<RenderView> render_view;
+Texture2D<float4> blue_noise1d;
 /* Object buffers. */
 StructuredBuffer<float4> bvh_nodes;
 StructuredBuffer<uint> object_indices;
@@ -26,7 +27,8 @@ void main(int2 thread_id: SV_DispatchThreadID) {
     const Ray ray = pinhole_ray(render_view, thread_id);
 
     /* Trace the scene BVH */
-    const Hit hit = trace_bvh2<false>(bvh_nodes, object_indices, object_data, ray);
+    const float dither = r1(blue_noise1d[thread_id % 512].r, render_view.frame_index % 1024u);
+    const Hit hit = trace_bvh2<false>(bvh_nodes, object_indices, object_data, ray, BIG_F32, dither);
 
     /* Write packed visibility info into the visibility buffer */
     vbuffer[thread_id] = asuint2(pack_visibility(hit));

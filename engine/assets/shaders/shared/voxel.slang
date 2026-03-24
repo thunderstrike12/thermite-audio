@@ -17,6 +17,7 @@ public struct VoxelObject {
     public uint voxels_handle;
     public uint palette_handle;
     public uint object_flags; /* b0 = outlined */
+    public float opacity;
 };
 
 /* Get the face_index of the local-space AABB, in case we instantly hit a voxel in the object. */

@@ -2,6 +2,7 @@ module bvh2;
 
 import view;
 import voxel;
+import math;
 
 public struct Bvh2Node {
     /* .xyz = Left minimum bounds ~ .w = Left child node index */
@@ -32,7 +33,7 @@ public [ForceInline] Hit trace_bvh2<let DEBUG : bool>(
     StructuredBuffer<float4> nodes,
     StructuredBuffer<uint> indices,
     StructuredBuffer<VoxelObject> prims,
-    Ray ray, float tmax = 1e30f
+    Ray ray, float tmax = 1e30f, float dither = 0.0f
 ) {
     /* Check to make sure the root node of the BVH is valid */
     if (asuint(nodes[0].w) == 0u && asuint(nodes[3].w) == 0u) {
@@ -58,6 +59,8 @@ public [ForceInline] Hit trace_bvh2<let DEBUG : bool>(
             for (uint i = 0u; i < prim_count; ++i) {
                 const uint index = indices[prim_index + i];
                 const VoxelObject prim = prims[index];
+                if (prim.opacity <= r1(dither)) continue;
+
                 trace_voxel_object<DEBUG>(ray, prim, index, hit);
             }
 

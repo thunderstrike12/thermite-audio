@@ -169,12 +169,10 @@ bool Envmap::load() {
 }
 
 void Envmap::unload() {
-    auto& bank = engine.renderer.vram_bank();
-
-    bank.destroy(full_texture);
-    bank.destroy(full_image);
-    bank.destroy(filtered_texture);
-    bank.destroy(filtered_image);
+    engine.renderer.destroy(full_texture);
+    engine.renderer.destroy(full_image);
+    engine.renderer.destroy(filtered_texture);
+    engine.renderer.destroy(filtered_image);
 }
 
 }  // namespace tmt

@@ -54,3 +54,6 @@ class VoxelVolume : public tmt::RuntimeResource<VoxelScene, UUID> {
 };
 
 }  // namespace tmt
+
+TMT_OBJECT_INSPECT_EMPTY(tmt::VoxelVolume);
+TMT_OBJECT_SERIALIZE_EMPTY(tmt::VoxelVolume);

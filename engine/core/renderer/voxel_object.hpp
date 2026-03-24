@@ -32,9 +32,10 @@ struct alignas(16) GpuVoxelObject {
 
     /* Object flags, 0b = outlined. */
     uint32_t object_flags = 0u;
+    float opacity = 1.0f;
 
     /* Padding. */
-    glm::uvec3 padding {};
+    glm::uvec2 padding {};
 };
 
 struct VoxelObject {
