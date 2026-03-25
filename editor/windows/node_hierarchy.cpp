@@ -389,7 +389,7 @@ void NodeHierarchy::export_file(const std::string& file_description, const std::
                         const glm::vec3& coord = transform.get_world_matrix() * glm::vec4 { local_coord * UNITS_PER_VOXEL, 1.0f };
 
                         // Invert the X-axis to correctly load it in external programs.
-                        obj_file << std::format("v {} {} {}", -coord.x, coord.y, coord.z) << '\n';
+                        obj_file << std::format("v {} {} {}", coord.x, coord.y, -coord.z) << '\n';
                     }
 
                     // Write all the polygons using the indices (+1 because .obj indices start at 1).
