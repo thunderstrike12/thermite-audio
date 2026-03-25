@@ -11,7 +11,7 @@ class SceneSwitchComponent : public tmt::GameComponent<SceneSwitchComponent> {
    public:
     using GameComponent::GameComponent;
 
-    static std::string_view get_name() { return "Scene Switch Component (Button)"; }
+    static std::string_view get_name() { return "ButtonSceneSwitch"; }
 
     void start() override;
     void update(const tmt::FrameData& time) override;

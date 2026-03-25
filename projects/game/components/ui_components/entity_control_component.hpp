@@ -8,7 +8,7 @@ class EntityControlComponent : public tmt::GameComponent<EntityControlComponent>
    public:
     using GameComponent::GameComponent;
 
-    static std::string_view get_name() { return "Entity Control Component (Button)"; }
+    static std::string_view get_name() { return "ButtonEntityControl"; }
 
     void start() override;
     void update(const tmt::FrameData& time) override;

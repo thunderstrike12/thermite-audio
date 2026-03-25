@@ -5,7 +5,7 @@
 namespace game {
 
 void game::SceneSwitchComponent::start() {
-    if (auto button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity)) {
+    if (auto* button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity)) {
         tmt::Log::info("Found button component, adding switch scene to on click.");
         button_component->on_click.add(this, &SceneSwitchComponent::switch_scene);
     } else {
@@ -16,7 +16,7 @@ void game::SceneSwitchComponent::start() {
 void game::SceneSwitchComponent::update(const tmt::FrameData& time) {}
 
 void game::SceneSwitchComponent::end() {
-    if (auto button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity)) {
+    if (auto* button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity)) {
         button_component->on_click.clear();
     }
 }

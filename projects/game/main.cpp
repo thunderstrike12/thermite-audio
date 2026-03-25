@@ -46,6 +46,8 @@
 #include "components/ui_components/text_component.hpp"
 #include "components/ui_components/scene_switch_component.hpp"
 #include "components/ui_components/entity_control_component.hpp"
+#include "components/ui_components/self_destruct_component.hpp"
+#include "components/ui_components/quit_game_component.hpp"
 // Managers
 #include "components/managers/ore_manager.hpp"
 #include "components/managers/menu_controller.hpp"
@@ -128,6 +130,8 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     /* Register Game UI Components */
     tmt::engine.component_registry.register_component<game::SceneSwitchComponent>();
     tmt::engine.component_registry.register_component<game::EntityControlComponent>();
+    tmt::engine.component_registry.register_component<game::SelfDestructComponent>();
+    tmt::engine.component_registry.register_component<game::QuitGameComponent>();
 
     /* Register Goap Components */
     {
@@ -192,6 +196,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
         action_reg.register_action(std::make_unique<Stomp>());
         action_reg.register_action(std::make_unique<Flee>());
 
+        // Goap stuff
         {
             tmt::GoapGoal chase;
             chase.name = "g_ChasePlayer";

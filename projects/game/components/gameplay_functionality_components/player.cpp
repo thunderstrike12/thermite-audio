@@ -68,6 +68,8 @@ void setup_inputs(tmt::InputMap& input_map) {
     input_map.add_key_to_action(action::OPEN_PAUSE_MENU, tmt::Key::P);
     input_map.add_action(action::OPEN_UPGRADE_MENU);
     input_map.add_key_to_action(action::OPEN_UPGRADE_MENU, tmt::Key::U);
+
+    // barge
     input_map.add_action(action::ATTACH_KEY);
     input_map.add_key_to_action(action::ATTACH_KEY, tmt::Key::E);
     input_map.add_action(action::TRIGGER_BARGE_MOVEMENT);

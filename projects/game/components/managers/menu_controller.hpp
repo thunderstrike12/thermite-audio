@@ -21,6 +21,7 @@ class MenuController : public tmt::GameComponent<MenuController> {
     entt::entity upgrade_menu_entity = entt::null;
     entt::entity end_run_menu_entity = entt::null;
     entt::entity death_menu_entity = entt::null;
+    entt::entity player_entity = entt::null;
 
     void enable_pause_menu() const;
     void disable_pause_menu() const;
@@ -34,10 +35,10 @@ class MenuController : public tmt::GameComponent<MenuController> {
     void enable_end_of_game_menu(const EndRun& event) const;
 
    private:
-    static void lock_mouse();
-    static void unlock_mouse();
+    void lock_mouse() const;
+    void unlock_mouse() const;
     bool check_for_open_menus() const;
 };
 
 }  // namespace game
-TMT_OBJECT(game::MenuController, (pause_menu_entity, inventory_menu_entity, upgrade_menu_entity, end_run_menu_entity, death_menu_entity));
+TMT_OBJECT(game::MenuController, (pause_menu_entity, inventory_menu_entity, upgrade_menu_entity, end_run_menu_entity, death_menu_entity, player_entity));
