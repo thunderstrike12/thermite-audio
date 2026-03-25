@@ -61,6 +61,7 @@
 #include "data_headers/ore_properties.hpp"
 
 // Goap Components
+#include "components/gameplay_functionality_components/weapon_and_tool_components/explosion.hpp"
 #include "engine/systems/ai/goap/goap_system.hpp"
 #include "components/goap_actions/steer_to_player.hpp"
 #include "components/goap_actions/wander_steering.hpp"
@@ -120,6 +121,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.component_registry.register_component<game::MediumEnemy>();
     tmt::engine.component_registry.register_component<game::OreProperties>();
     tmt::engine.component_registry.register_component<game::OreManager>();
+    tmt::engine.component_registry.register_component<game::Explosion>();
     /* Register World Generation Components */
     tmt::engine.component_registry.register_component<game::AsteroidFieldComponent>();
     tmt::engine.component_registry.register_component<game::RandomPrefabSpawner>();

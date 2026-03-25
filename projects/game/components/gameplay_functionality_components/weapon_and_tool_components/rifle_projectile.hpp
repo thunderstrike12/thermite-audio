@@ -1,4 +1,5 @@
 #pragma once
+#include "explosion.hpp"
 #include "projects/game/data_headers/events.hpp"
 #include "engine/shared/ray.hpp"
 #include "engine/systems/gameplay/game_component.hpp"
@@ -27,8 +28,10 @@ class RifleProjectile : public tmt::GameComponent<RifleProjectile> {
     float movement_speed = 1.0f;
     LayerMask layer_mask {};
     LayerMask protected_mask {};
+    ExplosionParameters explosion_parameters;
 
    private:
+    void spawn_explosion() const;
     void collide(const tmt::Hit& hit) const;
     float last_step_length = 0.0f;
     glm::vec3 previous_position { 0.0f };
@@ -37,4 +40,4 @@ class RifleProjectile : public tmt::GameComponent<RifleProjectile> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::RifleProjectile, (stencil, movement_speed, layer_mask, protected_mask));
+TMT_OBJECT(game::RifleProjectile, (stencil, movement_speed, layer_mask, protected_mask, explosion_parameters));

@@ -1,5 +1,6 @@
 #include "rifle_projectile.hpp"
 
+#include "spawner.hpp"
 #include "engine/core/polyline.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
 #include "engine/core/renderer/renderer.hpp"
@@ -39,6 +40,23 @@ void RifleProjectile::draw_debug_lines() const {
     tmt::engine.polyline.use_line_width(2.5f);
     tmt::engine.polyline.draw_arrow(previous_position, direction, last_step_length);
 }
+void RifleProjectile::spawn_explosion() const {
+    auto* spawner = tmt::engine.ecs.try_get_component<Spawner>(entity);
+    if (spawner == nullptr) {
+        tmt::Log::warn("No spawner found on entity {}", entity);
+        return;
+    }
+    // we do initialize by injection
+    auto explosion_entity = spawner->spawn();
+    auto* explosion { tmt::engine.ecs.try_get_component<Explosion>(explosion_entity) };
+    if (explosion == nullptr) {
+        tmt::Log::warn("No explosion component found on entity {}", explosion_entity);
+        return;
+    }
+
+    tmt::engine.ecs.get_component<tmt::Transform>(explosion_entity).set_world_position(tmt::engine.ecs.get_component<tmt::Transform>(entity).get_world_position());
+    explosion->param = explosion_parameters;
+}
 void RifleProjectile::collide(const tmt::Hit& hit) const {
     auto collision_entity = hit.entity;
 
@@ -48,9 +66,7 @@ void RifleProjectile::collide(const tmt::Hit& hit) const {
     // only destroy voxels if the hit entity isn't on a protected layer (e.g. barge)
     auto& body = tmt::engine.ecs.get_component<tmt::VoxelBody>(hit.entity);
     if (protected_mask.test(body.layer) == false) {
-        auto* resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(hit.entity).resource.resource.get();
-        resource->blas->subtract(stencil.resource.get(), hit.coord);
-        resource->set_dirty();
+        spawn_explosion();
     }
 
     tmt::engine.ecs.destroy_entity(entity);
