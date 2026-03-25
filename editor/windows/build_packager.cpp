@@ -24,8 +24,6 @@ std::filesystem::path BuildPackager::get_unique_zip_path() const {
     if (!std::filesystem::exists(zip_path)) return zip_path;
 
     int32_t counter = 1;
-
-    // get the first unique number combination
     while (std::filesystem::exists(build_folder / (build_name + "_" + std::to_string(counter) + ".zip"))) {
         ++counter;
     }
@@ -34,35 +32,69 @@ std::filesystem::path BuildPackager::get_unique_zip_path() const {
     return zip_path;
 }
 
-std::filesystem::path BuildPackager::find_game_exe() const {
+void BuildPackager::refresh_available_exes() {
     std::filesystem::path root = get_root_folder();
+    available_exes.clear();
 
     for (const auto& entry : std::filesystem::directory_iterator(root)) {
         if (!entry.is_regular_file()) continue;
 
+        std::string ext = entry.path().extension().string();
         std::string filename = entry.path().filename().string();
-        if (filename.ends_with(".exe") && filename.starts_with("game_") && filename.find("editor") == std::string::npos) {
-            return entry.path();
+
+        // Include all .exe files except the editor itself
+        if (ext == ".exe" && filename.find("editor") == std::string::npos) {
+            available_exes.push_back(entry.path());
         }
+    }
+
+    // If the current selection is now out of range, reset it
+    if (selected_exe_index >= static_cast<int32_t>(available_exes.size())) {
+        selected_exe_index = -1;
+    }
+
+    // Auto-select "game.exe" if found, otherwise fall back to single-option auto-select
+    if (selected_exe_index < 0) {
+        for (int32_t i = 0; i < static_cast<int32_t>(available_exes.size()); ++i) {
+            if (available_exes[i].filename() == "game.exe") {
+                selected_exe_index = i;
+                break;
+            }
+        }
+    }
+
+    if (selected_exe_index < 0 && available_exes.size() == 1) {
+        selected_exe_index = 0;
+    }
+}
+
+std::filesystem::path BuildPackager::get_selected_exe() const {
+    if (selected_exe_index >= 0 && selected_exe_index < static_cast<int32_t>(available_exes.size())) {
+        return available_exes[selected_exe_index];
     }
     return {};
 }
 
 bool BuildPackager::create_package() {
+    std::filesystem::path game_exe = get_selected_exe();
+    if (game_exe.empty()) {
+        status = Status::FAILED;
+        status_message = "No executable selected!";
+        return false;
+    }
+
     std::filesystem::path root = get_root_folder();
     std::filesystem::path build_folder = get_build_folder();
     std::filesystem::path zip_path = get_unique_zip_path();
 
-    // Folder name matches zip name (without .zip)
     std::filesystem::path output_folder = zip_path;
-    output_folder.replace_extension("");  // removes .zip
+    output_folder.replace_extension("");
 
-    // Clean and create output folder
     std::filesystem::remove_all(output_folder);
     std::filesystem::create_directories(output_folder);
 
     try {
-        std::filesystem::copy(find_game_exe(), output_folder, std::filesystem::copy_options::overwrite_existing);
+        std::filesystem::copy(game_exe, output_folder, std::filesystem::copy_options::overwrite_existing);
         std::filesystem::copy(root / "fmod.dll", output_folder, std::filesystem::copy_options::overwrite_existing);
         std::filesystem::copy(root / "fmodstudio.dll", output_folder, std::filesystem::copy_options::overwrite_existing);
         std::filesystem::copy(root / "engine", output_folder / "engine", std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
@@ -79,7 +111,7 @@ bool BuildPackager::create_package() {
         return false;
     }
 
-    last_built_exe = output_folder / find_game_exe().filename();
+    last_built_exe = output_folder / game_exe.filename();
     status = Status::SUCCESS;
     status_message = fmt::format("Built: {}", output_folder.filename().string());
     Log::info("Package created: {} and {}", output_folder.string(), zip_path.string());
@@ -98,40 +130,50 @@ void BuildPackager::play_build() {
 }
 
 void BuildPackager::on_inspect() {
-    // Keep this here, we might need to select a default scene
-    // const auto& scenes = tmt::engine.scenes.get_registered_scenes();
+    if (ImGui::Button(ICON_MS_REFRESH " Scan")) {
+        refresh_available_exes();
+    }
 
-    // const char* preview = "Select a scene...";
-    // if (const auto it = scenes.find(selected_scene); it != scenes.end()) {
-    //     preview = it->second.name.c_str();
-    // }
+    if (has_scanned == false) {
+        refresh_available_exes();
+        has_scanned = true;
+    }
 
-    // ImGui::Text("Scene to package:");
-    // if (ImGui::BeginCombo("##SceneSelect", preview)) {
-    //     for (const auto& [type_index, scene_info] : scenes) {
-    //         const bool is_selected = (selected_scene == type_index);
+    ImGui::SameLine();
+    ImGui::Text("Game Executable:");
 
-    //        if (ImGui::Selectable(scene_info.name.c_str(), is_selected)) {
-    //            selected_scene = type_index;
-    //        }
-    //        if (is_selected) ImGui::SetItemDefaultFocus();
-    //    }
-    //    ImGui::EndCombo();
-    //}
+    std::filesystem::path selected_exe = get_selected_exe();
 
-    // ImGui::Separator();
+    std::string preview_str = selected_exe.empty() ? "Select an executable..." : selected_exe.filename().string();
 
-    // const bool has_selection = scenes.contains(selected_scene);
-    // ImGui::BeginDisabled(!has_selection);
+    ImGui::SetNextItemWidth(-1);
+    if (ImGui::BeginCombo("##ExeSelect", preview_str.c_str())) {
+        for (int32_t i = 0; i < static_cast<int32_t>(available_exes.size()); ++i) {
+            std::string label = available_exes[i].filename().string();
+            const bool is_selected = (selected_exe_index == i);
+
+            if (ImGui::Selectable(label.c_str(), is_selected)) {
+                selected_exe_index = i;
+            }
+            if (is_selected) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    if (available_exes.empty()) {
+        ImGui::TextColored(ImVec4(1, 0.4f, 0.4f, 1), "No .exe files found in root folder!");
+    }
+
+    ImGui::Separator();
+
     ImGui::Text("Build Name:");
     ImGui::InputText("##BuildName", &build_name);
 
     std::filesystem::path output_path = get_unique_zip_path();
     ImGui::TextDisabled("Output: %s", output_path.filename().string().c_str());
 
-    std::filesystem::path game_exe = find_game_exe();
     if (ImGui::CollapsingHeader("Package Contents")) {
-        ImGui::BulletText("Exe: %s", game_exe.empty() ? "NOT FOUND" : game_exe.filename().string().c_str());
+        ImGui::BulletText("Exe: %s", selected_exe.empty() ? "NONE SELECTED" : selected_exe.filename().string().c_str());
         ImGui::BulletText("fmod.dll");
         ImGui::BulletText("fmodstudio.dll");
         ImGui::BulletText("engine/");
@@ -141,12 +183,10 @@ void BuildPackager::on_inspect() {
 
     ImGui::Separator();
 
-    // we use the default scene by default
-    const bool has_selection = true;  //(selected_scene != NULL_SCENE);
     const bool has_name = !build_name.empty();
-    const bool has_exe = !game_exe.empty();
+    const bool has_exe = !selected_exe.empty();
+    const bool can_build = has_name && has_exe;
 
-    const bool can_build = has_selection && has_name && has_exe;
     ImGui::BeginDisabled(!can_build);
     if (ImGui::Button(ICON_MS_PACKAGE " Build")) {
         create_package();
@@ -188,10 +228,6 @@ void BuildPackager::on_inspect() {
                 color = ImVec4(1, 1, 1, 1);
         }
         ImGui::TextColored(color, "%s", status_message.c_str());
-    }
-
-    if (!has_exe) {
-        ImGui::TextColored(ImVec4(1, 0.4f, 0.4f, 1), "Game executable not found!");
     }
 }
 

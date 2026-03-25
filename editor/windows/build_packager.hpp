@@ -22,8 +22,11 @@ class BuildPackager : public IWindow<> {
     std::filesystem::path get_root_folder() const;
     std::filesystem::path get_build_folder() const;
     std::filesystem::path get_unique_zip_path() const;
-    std::filesystem::path find_game_exe() const;
-
+    void refresh_available_exes();
+    std::filesystem::path get_selected_exe() const;
+    std::vector<std::filesystem::path> available_exes;
+    int32_t selected_exe_index = -1;
+    bool has_scanned = false;
     // use windows powershell to make compression simple
     bool create_package();
     void play_build();
