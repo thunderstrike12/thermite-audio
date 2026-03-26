@@ -10,7 +10,9 @@
 
 void tag_invoke(ImReflect::Detail::ImInputLib_t, const char*, tmt::IGameComponent& value, ImSettings& settings, ImResponse& response) {
     // call inspect
+    ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.4f);
     value.inspect(settings, response);
+    ImGui::PopItemWidth();
 }
 
 void tag_invoke(ImReflect::ImInput_t, const char*, tmt::ComponentCollection& value, ImSettings& settings, ImResponse& response) {
