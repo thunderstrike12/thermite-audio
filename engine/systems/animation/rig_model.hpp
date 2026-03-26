@@ -32,7 +32,7 @@ class RigModel {
     float transfer_threshold = 0.0f;
     Entity armature_entity = entt::null;
 
-    void recurse(const ResourceRef<VoxelScene>& scene, const tmt::VoxelSceneNode& node, const glm::mat4& parent_matrix, const glm::vec3& armature_pos);
+    void recurse(const ResourceRef<VoxelScene>& scene, const tmt::VoxelSceneNode& node, const glm::vec3& armature_pos);
     void attach_voxel_objects();
 
     [[nodiscard]] bool is_transferring() const {

@@ -63,10 +63,9 @@ void RigModel::init(const IO::FileLocation& directory, Entity p) {
     }
 }
 
-void RigModel::recurse(const ResourceRef<VoxelScene>& scene, const VoxelSceneNode& node, const glm::mat4&, const glm::vec3& armature_pos) {
+void RigModel::recurse(const ResourceRef<VoxelScene>& scene, const VoxelSceneNode& node, const glm::vec3& armature_pos) {
     std::vector<Entity> pivot_entities;
 
-    // glm::mat4 matrix = glm::identity<glm::mat4>();
     Entity voxel_entity = entt::null;
     for (const auto& bone_entity : bone_entities) {
         auto& bone_name = engine.ecs.get_component<Name>(bone_entity);
@@ -96,17 +95,22 @@ void RigModel::recurse(const ResourceRef<VoxelScene>& scene, const VoxelSceneNod
     }
 
     for (const VoxelSceneNode& child : node.children) {
-        recurse(scene, child, /* matrix */ {}, armature_pos);
+        recurse(scene, child, armature_pos);
     }
 };
 
 void RigModel::attach_voxel_objects() {
+    if (!VoxelScene::SUPPORTED_FILE_EXTENSIONS.contains(vox_path.relative_path.extension().generic_string())) {
+        Log::error("Failed to attach voxel objects, file isn't a voxel file: {}", vox_path);
+        return;
+    }
+
     // Load the voxel scene and populate entities by recursing through nodes
     const auto voxel_file = engine.resources.load_resource<VoxelScene>(vox_path);
     const glm::vec3 armature_pos = engine.ecs.get_component<Transform>(armature_entity).get_world_position();
 
     for (const VoxelSceneNode& root_node : voxel_file->root_nodes) {
-        recurse(voxel_file, root_node, glm::identity<glm::mat4>(), armature_pos);
+        recurse(voxel_file, root_node, armature_pos);
     }
 
     vox_is_loaded = true;

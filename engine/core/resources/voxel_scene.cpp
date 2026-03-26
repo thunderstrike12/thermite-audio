@@ -29,18 +29,16 @@ void recurse_get_uuids(const tmt::VoxelSceneNode& node, std::vector<tmt::UUID>& 
     }
 }
 
-bool recurse_get_node_matrix(const tmt::VoxelSceneNode& node, const tmt::UUID& uuid, glm::mat4& matrix) {
+bool recurse_get_node_matrix(const tmt::VoxelSceneNode& node, const tmt::UUID& uuid, glm::mat4& out_matrix, const glm::mat4& parent_matrix = glm::identity<glm::mat4>()) {
+    const glm::mat4 world_matrix = parent_matrix * node.transform;
+
     if (node.uuid == uuid) {
-        matrix = node.transform * matrix;
+        out_matrix = world_matrix;
         return true;
     }
 
-    glm::mat4 current_matrix = node.transform * matrix;
-
     for (const tmt::VoxelSceneNode& child : node.children) {
-        if (!recurse_get_node_matrix(child, uuid, current_matrix)) continue;
-
-        return true;
+        if (recurse_get_node_matrix(child, uuid, out_matrix, world_matrix)) return true;
     }
 
     return false;
@@ -502,10 +500,8 @@ std::vector<UUID> VoxelScene::get_all_uuids() const {
 
 glm::mat4 VoxelScene::get_node_world_matrix(const UUID& uuid) const {
     for (const VoxelSceneNode& node : root_nodes) {
-        if (uuid == node.uuid) return node.transform;
-
-        glm::mat4 world_matrix = node.transform;
-        if (recurse_get_node_matrix(node, uuid, world_matrix)) return world_matrix;
+        glm::mat4 out_matrix;
+        if (recurse_get_node_matrix(node, uuid, out_matrix)) return out_matrix;
     }
 
     return glm::identity<glm::mat4>();
