@@ -130,19 +130,19 @@ void RigModelManager::on_update(const FrameData& time) {
 }
 
 void RigModelManager::on_draw_lines() const {
-    for (const auto&& [entity, transform, bone_renderer] : engine.ecs.get_registry().view<Transform, BoneHierarchyRenderer>().each()) {
+    for (const auto&& [entity, transform, bone_renderer] : engine.ecs.view<Transform, BoneHierarchyRenderer>().each()) {
         tmt::engine.polyline.use_depth_testing(true);
         tmt::engine.polyline.use_color(bone_renderer.color);
         tmt::engine.polyline.use_line_width(bone_renderer.line_width);
         tmt::RenderBoneHierarchy(transform);
     }
 
-    for (const auto&& [entity, transform, bend_hint] : engine.ecs.get_registry().view<Transform, BendHint>().each()) {
+    for (const auto&& [entity, transform, bend_hint] : engine.ecs.view<Transform, BendHint>().each()) {
         tmt::engine.polyline.use_color(glm::vec4(1.f, 0.f, 0.f, 1.f));
         tmt::engine.polyline.draw_sphere(transform.get_world_position(), bend_hint.radius);
     }
 
-    for (const auto&& [entity, transform, effector] : engine.ecs.get_registry().view<Transform, Effector>().each()) {
+    for (const auto&& [entity, transform, effector] : engine.ecs.view<Transform, Effector>().each()) {
         tmt::engine.polyline.use_color(glm::vec4(0.f, 0.7f, 0.7f, 1.f));
         tmt::engine.polyline.draw_sphere(transform.get_world_position(), effector.radius);
     }
@@ -202,12 +202,20 @@ void tmt::AnimationConstraintSystem::on_update(const tmt::FrameData& time) {
         if (auto nav_mesh = engine.ecs.try_get_component<NavMesh>(walk_cycle.ground_entity)) {
             int idx = nav_mesh->find_closest_node(continuous_available_pos);
             if (idx != -1) up = (*nav_mesh->nodes_mesh)[idx].normal;
+
+            Ray ray;
+            ray.dir = -up;
+            ray.origin = continuous_available_pos + up * 0.5f;
+            Hit hit = engine.renderer.trace_ray(ray);
+
+            if (!hit.miss()) {
+                continuous_available_pos = ray.origin + ray.dir * hit.distance;
+                walk_cycle.grounded = true;
+            } else {
+                // continuous_available_pos = ;
+                walk_cycle.grounded = false;
+            }
         }
-        Ray ray;
-        ray.dir = -up;
-        ray.origin = continuous_available_pos + up * 0.5f;
-        Hit hit = engine.renderer.trace_ray(ray);
-        continuous_available_pos = ray.origin + ray.dir * hit.distance;
 
         glm::vec3 point_velocity = (continuous_available_pos - walk_cycle.last_continuous_pos) / time.delta_time;
         walk_cycle.last_continuous_pos = continuous_available_pos;
@@ -242,8 +250,11 @@ void tmt::AnimationConstraintSystem::on_update(const tmt::FrameData& time) {
             if (walk_cycle.stepping_effector) {
                 float distance_height_factor = glm::clamp(glm::distance(walk_cycle.initial_pos, continuous_available_pos), 0.f, 1.f);
 
-                glm::vec3 mix_step = glm::mix(walk_cycle.initial_pos, walk_cycle.desired_pos, walk_cycle.step_interp);
-                float height_step = sinf(glm::pi<float>() * walk_cycle.step_interp) * walk_cycle.step_height * distance_height_factor * static_cast<float>(walk_cycle.grounded);
+                float t = walk_cycle.stepping_curve.eval(walk_cycle.step_interp);
+                float t_step = walk_cycle.height_curve.eval(walk_cycle.step_interp);
+
+                glm::vec3 mix_step = glm::mix(walk_cycle.initial_pos, walk_cycle.desired_pos, t);
+                float height_step = sinf(glm::pi<float>() * t_step) * walk_cycle.step_height * distance_height_factor * static_cast<float>(walk_cycle.grounded);
 
                 glm::vec3 heightvec = up * height_step;
                 mix_step += heightvec;

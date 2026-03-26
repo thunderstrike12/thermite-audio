@@ -2,6 +2,7 @@
 #include "engine/core/entity.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "engine/core/reflection.hpp"
+#include "engine/tools/types/bezier_curve.hpp"
 
 namespace tmt {
 namespace AnimConstraints {
@@ -55,6 +56,9 @@ struct EffectorWalkCycle {
     // the timing offset of the internal step timer
     float cycle_offset = 0.f;
 
+    BezierCurve stepping_curve;
+    BezierCurve height_curve;
+
     float step_prediction_strength = 1.f;
 
     glm::vec3 last_continuous_pos;
@@ -77,6 +81,6 @@ TMT_COMPONENT(tmt::AnimConstraints::DampedTransformConstraint, "Damped Transform
 TMT_COMPONENT(tmt::AnimConstraints::TwoBoneIKConstraint, "Two Bone IK Constraint", (mid, tip, target_position_entity, bend_position_entity));
 TMT_COMPONENT(
     tmt::AnimConstraints::EffectorWalkCycle, "Effector Walk Cycle",
-    (step_time, step_duration, step_height, desired_target_entity, effector_entity, ground_entity, cycle_offset, grounded, step_prediction_strength)
+    (step_time, step_duration, step_height, desired_target_entity, effector_entity, ground_entity, cycle_offset, grounded, step_prediction_strength, stepping_curve, height_curve)
 );
 // TMT_COMPONENT(tmt::AnimConstraints::EffectorWalkCycle, "Effector e"
