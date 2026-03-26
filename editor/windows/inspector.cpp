@@ -4,6 +4,7 @@
 #include <imgui_internal.h>
 #include <ImReflect.hpp>
 
+#include "editor/shared/colors.hpp"
 #include "editor/shared/theme.hpp"
 
 #include "engine/engine.hpp"
@@ -76,8 +77,23 @@ void Inspector::display_entity_info(const MenuContext& menu_context) {
 
     auto entity_str = tmt::EntityHelper::to_string(menu_context.primary_entity);
     ImGui::Text("Entity: %s", entity_str.c_str());
-    if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("Click to copy Entity ID");
+
+    const bool is_prefab = engine.ecs.has_component<Prefab>(menu_context.primary_entity);
+
+    if (is_prefab) {
+        ImGui::SameLine();
+        ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+        ImGui::SameLine();
+
+        const auto& prefab = engine.ecs.get_component<Prefab>(menu_context.primary_entity);
+        const auto prefab_location = prefab.source_location.relative_path.string();
+        // ImGui::BeginDisabled();
+        // const ImVec4 color = colors::to_imvec4(tmt::colors::PREFAB);
+        const auto text = ICON_MS_OPEN_IN_NEW " " + prefab_location;
+        if (ImGui::TextLink(text.c_str())) {
+            editor.switch_mode(Editor::Mode::PREFAB, prefab.source_location);
+        }
+        // ImGui::EndDisabled();
     }
 }
 
