@@ -33,3 +33,12 @@
 [submodule "extern/imgui-node-editor"]
 	path = extern/imgui-node-editor
 	url = https://github.com/littlemine/imgui-node-editor
+[submodule "extern/msdf-atlas-gen"]
+	path = extern/msdf-atlas-gen
+	url = https://github.com/Chlumsky/msdf-atlas-gen.git
+[submodule "extern/freetype"]
+	path = extern/freetype
+	url = https://github.com/freetype/freetype
+[submodule "extern/libpng"]
+	path = extern/libpng
+	url = https://github.com/pnggroup/libpng

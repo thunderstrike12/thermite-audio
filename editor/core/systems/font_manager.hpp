@@ -9,9 +9,9 @@ struct ImFontConfig;
 
 namespace tmt {
 
-class FontManager {
+class EditorFontManager {
    public:
-    FontManager() = default;
+    EditorFontManager() = default;
 
     struct FontData {
         IO::FileLocation file_location;

@@ -4,7 +4,7 @@
 #include "engine/core/logger.hpp"
 #include "engine/core/renderer/renderer.hpp"
 
-void tmt::FontManager::init() {
+void tmt::EditorFontManager::init() {
     /* Rubrik */
     load("Rubik", { IO::Location::EDITOR, "fonts/Rubik-Regular.ttf" }, 18.f);
 
@@ -16,7 +16,7 @@ void tmt::FontManager::init() {
     load("MaterialSymbols", { IO::Location::EDITOR, "fonts/MaterialSymbolsRounded.ttf" }, 24.f, config, glyph_ranges);
 }
 
-void tmt::FontManager::load(const std::string& name, const IO::FileLocation& location, const float size, const ImFontConfig& config, const uint16_t* glyph_ranges) {
+void tmt::EditorFontManager::load(const std::string& name, const IO::FileLocation& location, const float size, const ImFontConfig& config, const uint16_t* glyph_ranges) {
     auto& io = ImGui::GetIO();
 
     const auto& full_path = location.get_absolute_path();
@@ -41,7 +41,7 @@ void tmt::FontManager::load(const std::string& name, const IO::FileLocation& loc
     m_fonts.push_back(data);
 }
 
-void tmt::FontManager::reload_fonts() {
+void tmt::EditorFontManager::reload_fonts() {
     Log::info(Log::Scope::ENGINE, "Reloading fonts...");
 
     auto& io = ImGui::GetIO();

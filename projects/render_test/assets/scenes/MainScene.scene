@@ -24,7 +24,8 @@
         1048582,
         1048583,
         1048584,
-        1048585
+        1048585,
+        1048597
     ],
     "Name": {
         "10": {
@@ -98,6 +99,9 @@
         },
         "1048585": {
             "name": "Asteroid8"
+        },
+        "1048597": {
+            "name": "Test UI"
         }
     },
     "Transform": {
@@ -580,6 +584,26 @@
             },
             "parent": 4294967295,
             "children": []
+        },
+        "1048597": {
+            "local_position": {
+                "x": 18.50146484375,
+                "y": -74.99996948242188,
+                "z": -0.890625
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
         }
     },
     "Voxel Renderer": {
@@ -1033,6 +1057,83 @@
                 }
             ],
             "active": true
+        }
+    },
+    "UIComponent": {
+        "1048597": {
+            "size": {
+                "x": 1175.9984130859375,
+                "y": 274.00006103515625
+            },
+            "pivot": {
+                "x": 0.5,
+                "y": 0.5
+            },
+            "block_raycasts": false,
+            "scale_with_parent_x": false,
+            "scale_with_parent_y": false,
+            "aspect_mode": "STRETCH",
+            "aspect_ratio": {
+                "x": 1.0,
+                "y": 1.0
+            },
+            "anchor": "MIDDLE_CENTER"
+        }
+    },
+    "ImageRenderer": {
+        "1048597": {
+            "texture": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": ""
+                },
+                "data": null
+            },
+            "color": {
+                "x": 0.3451957106590271,
+                "y": 0.3451957106590271,
+                "z": 0.3451957106590271,
+                "w": 1.0
+            }
+        }
+    },
+    "TextRenderer": {
+        "1048597": {
+            "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+            "font": {
+                "file_location": {
+                    "sub_location": "ENGINE",
+                    "relative_path": "fonts/Rubik-Regular.ttf"
+                },
+                "data": {
+                    "atlas_size": 1024,
+                    "base_font_size": 80.0,
+                    "sdf_padding": 8,
+                    "sdf_on_edge_value": 128.0,
+                    "sdf_pixel_dist_scale": 16.0,
+                    "first_char": 32,
+                    "last_char": 126
+                }
+            },
+            "font_size": 32.0,
+            "color": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0,
+                "w": 1.0
+            },
+            "line_spacing": 74.0,
+            "letter_spacing": 0.0,
+            "paragraph_spacing": 0.0,
+            "horizontal_align": "LEFT",
+            "vertical_align": "TOP",
+            "word_wrap": true,
+            "max_width": 1175.9984130859375,
+            "max_height": 274.00006103515625,
+            "overflow": "VISIBLE",
+            "use_ui_component_size": true,
+            "auto_font_size": false,
+            "rich_text_enabled": true
         }
     },
     "systems": null

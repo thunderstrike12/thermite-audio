@@ -11,36 +11,30 @@ class RenderGraph;
 
 namespace tmt {
 
-constexpr uint32_t MAX_UI_IMAGES = 256;
-
-struct ImageVertex {
-    glm::vec3 pos {};
-    glm::vec2 uvs {};
-};
-
-struct GpuImage {
-    glm::vec2 pos {};
-    glm::vec2 extent {};
-    glm::vec4 color {};
-    glm::vec3 angles {};
-    uint32_t image_index {};
-    glm::vec2 pivot {};
-    float d0 = {}, d1 = {}; /* dummies */
-};
+constexpr uint32_t MAX_UI_IMAGES = 256u;
+constexpr uint32_t MAX_UI_GLYPHS = 4096u;
 
 class UiPipeline {
    private:
+    /* Image Rendering */
     Buffer images_buffer {};
     Buffer image_vertex_buffer {};
     Sampler image_sampler {};
 
+    /* Text Rendering */
+    Buffer glyphs_buffer {};
+    Buffer glyph_vertex_buffer {};
+    Sampler text_sampler {};
+    uint32_t glyph_count = 0u;
+
    public:
     void init(GPUAdapter& gpu);
-    // void on_engine_update(const FrameData& time) override;
     void enqueue(RenderGraph& render_graph, RenderView& render_view);
-    void deinit(GPUAdapter& gpu);
 
-    uint32_t image_count = 0;
+    void enqueue_images(RenderGraph& render_graph, RenderView& render_view);
+    void enqueue_text(RenderGraph& render_graph, RenderView& render_view);
+
+    void deinit(GPUAdapter& gpu);
 
     UiPipeline() = default;
     ~UiPipeline() = default;
@@ -49,7 +43,10 @@ class UiPipeline {
     UiPipeline(const UiPipeline&) = delete;
     UiPipeline& operator=(const UiPipeline&) = delete;
 
+    uint32_t image_count = 0u;
+
     bool render_ui_pipeline = true;
+    bool render_text = true;
 };
 
 }  // namespace tmt
