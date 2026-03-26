@@ -124,6 +124,9 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
         /* Don't render objects with a null resource */
         if (renderer.resource == nullptr) continue;
 
+        /* Validate transform scale */
+        if (!transform.validate_scale()) continue;
+
         /* Don't render objects with invalid transforms */
         if (validate_transform(transform.get_world_matrix())) continue;
         renderer.resource->update_if_dirty();

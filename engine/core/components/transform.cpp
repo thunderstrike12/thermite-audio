@@ -338,6 +338,19 @@ std::set<Entity> Transform::get_all_parents() const {
     return result;
 }
 
+bool Transform::validate_scale() const {
+    Entity current_parent = parent;
+    while (current_parent != entt::null) {
+        const auto& transform = engine.ecs.get_component<Transform>(current_parent);
+        current_parent = transform.parent;
+
+        if (glm::any(glm::epsilonEqual(transform.get_local_scale(), glm::vec3(0.0f), 0.001f))) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool Transform::has_children() const {
     return !children.empty();
 }

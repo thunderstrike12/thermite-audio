@@ -72,6 +72,9 @@ struct Transform {
     /* Get all children recursivly, aka children of children too */
     std::set<Entity> get_all_children() const;
 
+    /* Validate if the object scale is valid */
+    bool validate_scale() const;
+
     void mark_dirty();
 
    private:
