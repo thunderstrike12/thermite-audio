@@ -69,7 +69,7 @@ struct Light {
     /* Color of the light emitted. (in ACEScg color-space) */
     glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
     /* Temperature of the light emitted in kelvin. */
-    float temperature = -1.0f;
+    float temperature = -6500.0f;
 
     /* Type of the light source. */
     LightType type = LightType::SPHERE_LIGHT;

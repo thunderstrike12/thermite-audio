@@ -44,6 +44,7 @@ void SceneMode::on_switch_to(const std::any& /*meta_data*/) {
 
     engine.renderer.get_debug_camera() = cached_editor_camera;
     engine.renderer.get_debug_transform() = cached_editor_transform;
+    engine.renderer.display_mode = cached_display_mode;
 }
 
 void SceneMode::on_switch_away() {
@@ -52,6 +53,7 @@ void SceneMode::on_switch_away() {
 
     cached_editor_camera = engine.renderer.get_debug_camera();
     cached_editor_transform = engine.renderer.get_debug_transform();
+    cached_display_mode = engine.renderer.display_mode;
 }
 
 void SceneMode::on_pre_load_scene(PreLoadSceneEvent& event) {

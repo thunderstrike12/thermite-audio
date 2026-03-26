@@ -4,6 +4,7 @@
 
 #include "engine/events/scene.hpp"
 #include "engine/tools/scene_types.hpp"
+#include "engine/core/renderer/renderer.hpp"
 #include "engine/core/components/camera.hpp"
 #include "engine/core/components/transform.hpp"
 
@@ -28,6 +29,7 @@ class SceneMode : public IEditorMode, public OnPreLoadScene {
 
     Camera cached_editor_camera;
     Transform cached_editor_transform;
+    DisplayMode cached_display_mode { DisplayMode::DEFAULT };
 
     // Used as a flag for the on_pre_load_scene function call.
     bool is_switching_to { false };

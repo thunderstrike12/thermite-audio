@@ -498,8 +498,10 @@ void NodeHierarchy::recurse_display_node(const Entity entity, const Name& name, 
 
 void NodeHierarchy::clear_hierarchy() {
     clear_selected_entities();
+    for (const Entity root_entity : root_entities) {
+        engine.ecs.destroy_entity(root_entity);
+    }
     root_entities.clear();
-    engine.ecs.clear();
 
     // Clear the undo/redo stack so the user doesn't try to undo changes to an old file in the newly loaded one.
     editor.systems[Editor::Mode::VOXEL].get<UndoRedoManager>().clear();

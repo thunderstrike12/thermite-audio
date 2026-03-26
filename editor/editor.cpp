@@ -63,6 +63,7 @@
 #include "editor/windows/ui.hpp"
 #include "editor/windows/level_editor.hpp"
 #include "editor/windows/player_data.hpp"
+#include "editor/windows/voxel_editor_lights.hpp"
 
 /* Singleton */
 tmt::Editor tmt::editor;
@@ -88,7 +89,7 @@ void Editor::switch_mode(Mode new_mode, const std::any& meta_data) {
 }
 
 void Editor::on_engine_init(const ApplicationSpecs&) {
-    tmt::Log::info("Starting Thermite Editor...");
+    Log::info("Starting Thermite Editor...");
     imgui_manager.init();
     gizmo.init();
 
@@ -132,6 +133,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     systems[Mode::VOXEL].add<Brush>();
     systems[Mode::VOXEL].add<Console>();
     systems[Mode::VOXEL].add<UndoRedoManager>();
+    systems[Mode::VOXEL].add<VoxelEditorLights>();
 
     engine.scenes.register_scene<PrefabEditScene>();
     systems[Mode::PREFAB].add<Hierarchy>();
