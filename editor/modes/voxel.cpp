@@ -47,7 +47,6 @@ void VoxelMode::on_switch_to(const std::any& meta_data) {
     engine.scenes.load_scene<VoxelEditScene>();
 
     if (meta_data.has_value()) {
-        editor.switch_mode(Editor::Mode::VOXEL);
         editor.systems[Editor::Mode::VOXEL].get<NodeHierarchy>().open_svh(std::any_cast<IO::FileLocation>(meta_data));
 
         engine.renderer.get_debug_transform().set_world_position(glm::vec3(0.0f, 0.0f, -32.0f));
@@ -68,13 +67,15 @@ void VoxelMode::on_switch_to(const std::any& meta_data) {
 
     /* Create the camera follower and light that follows the camera */
     const Entity camera_follower = engine.ecs.create_entity("CameraFollower");
+    Transform& follower_transform = engine.ecs.get_component<Transform>(camera_follower);
+    follower_transform = cached_editor_transform;
 
     const Entity light_entity = engine.ecs.create_entity("Light");
     engine.ecs.add_component<Light>(light_entity) = cached_editor_light;
 
     Transform& light_transform = engine.ecs.get_component<Transform>(light_entity);
-    light_transform = cached_light_offset;
     light_transform.set_parent(camera_follower);
+    light_transform.set_world_matrix(cached_light_offset);
 
     /* Create the default skybox entity */
     Environment& environment = engine.ecs.create_entity<Environment>();
@@ -101,7 +102,9 @@ void VoxelMode::on_switch_away() {
 
     const Entity light = engine.ecs.view<Light>().front();
     cached_editor_light = engine.ecs.get_component<Light>(light);
-    cached_light_offset = engine.ecs.get_component<Transform>(light);
+
+    const Transform& light_transform = engine.ecs.get_component<Transform>(light);
+    cached_light_offset = light_transform.get_world_matrix();
 
     node_hierarchy.clear_root_entities();
     node_hierarchy.clear_selected_entities();

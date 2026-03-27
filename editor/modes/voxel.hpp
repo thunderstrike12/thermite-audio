@@ -29,7 +29,7 @@ class VoxelMode : public IEditorMode {
     DisplayMode cached_display_mode { DisplayMode::ALBEDO };
 
     Light cached_editor_light;
-    Transform cached_light_offset;
+    glm::mat4 cached_light_offset { glm::identity<glm::mat4>() };
 
     std::vector<char> edit_data;
     std::map<UUID, Entity> old_entity_mapping;
