@@ -12,9 +12,15 @@ void game::MediumEnemy::start() {
         player = CamEntity;
         break;
     }
+
+    auto& dispatcher = tmt::engine.ecs.get_dispatcher();
+    dispatcher.sink<game::GamePausedEvent>().connect<&MediumEnemy::on_game_paused>(this);
+    dispatcher.sink<game::GameUnpausedEvent>().connect<&MediumEnemy::on_game_unpaused>(this);
 }
 
 void game::MediumEnemy::update(const tmt::FrameData& time) {
+    if (paused) return;
+
     tmt::engine.polyline.use_color(1.0f, 0.0f, 0.0f);
     tmt::engine.polyline.use_line_width(2.0f);
     tmt::engine.polyline.use_depth_testing(false);
@@ -147,6 +153,14 @@ void game::MediumEnemy::kite_player() const {
         // Close enough to consider node reached, force path recompute
         nav_mesh.path.clear();
     }
+}
+
+void game::MediumEnemy::on_game_paused(const game::GamePausedEvent&) {
+    paused = true;
+}
+
+void game::MediumEnemy::on_game_unpaused(const game::GameUnpausedEvent&) {
+    paused = false;
 }
 
 bool Missile::update(float dt, glm::vec3 ground_up, glm::vec3 player_pos) {

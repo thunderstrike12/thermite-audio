@@ -65,5 +65,8 @@ struct PlayerEnergyChanged {
 struct EndRun {
     bool player_dead;
 };
+struct GamePausedEvent {};
+
+struct GameUnpausedEvent {};
 
 }  // namespace game

@@ -70,6 +70,8 @@ class WeaponManager : public tmt::GameComponent<WeaponManager> {
     float overheat_time = .8f;
     float switching_time = .5f;
 
+    WeaponType last_used_weapon = WeaponType::RIFLE;  // default ?
+
    private:
     void complete_switch();
     float overheat_remaining_time = -0.1f;
@@ -98,6 +100,8 @@ class WeaponManager : public tmt::GameComponent<WeaponManager> {
     RotTrans animate_antioverlap();
     RotTrans animate_sway(RotTrans input_pose, tmt::Transform* root_eff_transform, const WeaponProcAnimData& weapon_procanim_data);
     void update_procedural_motion(float dt);
+    void on_game_paused(const game::GamePausedEvent& event);
+    void on_game_unpaused(const game::GameUnpausedEvent& event);
 
     bool fired = false;
     bool updating_recoil_impulse = false;
