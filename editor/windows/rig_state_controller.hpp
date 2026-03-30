@@ -18,7 +18,7 @@ class RigStateController : public IWindow<> {
     void on_inspect() override;
 
     void on_editor_start() override;
-    void on_editor_update(const FrameData&) override;
+    void on_editor_update(const FrameData&) override {}
     void on_editor_end() override;
 
    private:

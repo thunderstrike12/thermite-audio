@@ -146,6 +146,24 @@ void RigModelManager::on_draw_lines() const {
         tmt::engine.polyline.use_color(glm::vec4(0.f, 0.7f, 0.7f, 1.f));
         tmt::engine.polyline.draw_sphere(transform.get_world_position(), effector.radius);
     }
+
+    engine.polyline.use_color(0.0f, 1.0f, 0.0f);
+    engine.polyline.use_line_width(0.75f);
+
+    for (const auto&& [entity, transform, rig] : engine.ecs.view<Transform, RigModel>().each()) {
+        for (const Entity bone_entity : rig.bone_entities) {
+            if (!engine.ecs.valid(bone_entity)) continue;
+
+            auto& bone_transform = engine.ecs.get_component<Transform>(bone_entity);
+            const glm::vec3 joint = bone_transform.get_world_position();
+
+            if (bone_transform.has_parent()) {
+                auto& parent_transform = engine.ecs.get_component<Transform>(bone_transform.get_parent());
+                const glm::vec3 parent_joint = parent_transform.get_world_position();
+                engine.polyline.draw_line(parent_joint, joint);
+            }
+        }
+    }
 }
 
 void tmt::AnimationConstraintSystem::on_start() {
