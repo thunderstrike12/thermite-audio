@@ -16,7 +16,7 @@ void Rendering::on_inspect() {
     ImGui::Text("Objects: %d", engine.renderer.scene_view.object_count);
 
     ImGui::Spacing();
-    
+
     ImGui::TextColored(ImVec4(0.60f, 0.60f, 0.60f, 1.0f), "Lighting Statistics");
     ImGui::Text("Lights: %d", engine.renderer.scene_view.light_count);
     ImGui::Text("Sun Light:");
