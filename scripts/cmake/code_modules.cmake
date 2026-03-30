@@ -59,6 +59,8 @@ function(find_and_add_targets)
 		                "${CMAKE_BINARY_DIR}/bin/${target_name}/fmodstudio${FMOD_POSTFIX}.dll"
 			)
 
+			graphite_bundle_crash_diagnostics("${CMAKE_BINARY_DIR}/bin/${target_name}")
+
 			# Copy over auxialliary assets for developer use
 			if(THERMITE_DEVELOPER_BUILD)
 				copy_directory_to_output(${target_name} 

@@ -50,9 +50,6 @@ BillboardVertexOutput main(VertexInput input, uint32_t instance_id: SV_InstanceI
 
     output.motion_vec = (prev_ndc - curr_ndc) * float2(0.5f, 0.5f);
 
-    if (length(output.motion_vec) < 1e-5f)
-        output.motion_vec = float2(0.0f, 0.0f);
-
     output.uv = input.uv;
     output.tex_index = particle.tex_index;
     output.opacity = particle.opacity;

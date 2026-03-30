@@ -36,6 +36,7 @@ option(THERMITE_DEVELOPER_BUILD "Build for developer use on P4" OFF)
 option(THERMITE_DEBUG_BUILD "Build debug-style config (extra asserts/logging)" OFF)
 option(THERMITE_BUILD_TESTS "Build unit tests" OFF)
 option(THERMITE_CI "Treat the build as CI" OFF)
+
 # Engine sub-directory
 add_subdirectory("engine")
 
@@ -59,6 +60,7 @@ if (THERMITE_DEBUG_BUILD)
     endif()
 endif()
 target_compile_definitions(thermite-engine PUBLIC BUILD_VERSION="${BUILD_VERSION}")
+
 # Find and add projects
 include(scripts/cmake/code_modules.cmake) 
 find_and_add_targets()
