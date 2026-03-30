@@ -4,6 +4,8 @@ import view;
 import math;
 import material;
 
+static const uint SVT64_FUSE = 512u;
+
 public struct Svt64Hit {
     public float3 point;
     public uint voxel_index;
@@ -118,7 +120,7 @@ public [ForceInline] Svt64Hit trace_svt64<let DEBUG : bool>(
     float3 pos = clamp(ray.origin, 1.0f, 1.9999999f);
     float3 side_dist = 0.0f;
     uint steps = 0u;
-    for (;;) {
+    for (uint f = 0u; f < SVT64_FUSE; ++f) {
         uint child_index = get_node_cell_index(pos, scale_exp) ^ mirror_mask;
 
         /* Descend down the tree until we find an empty node or leaf node */
@@ -213,7 +215,7 @@ public [ForceInline] float3 occlusion_svt64(
     int scale_exp = 21;   /* 23 mantissa bits - 2 */
     Svt64Node node = nodes[node_index];
     float3 pos = clamp(ray.origin, 1.0f, 1.9999999f);
-    for (;;) {
+    for (uint f = 0u; f < SVT64_FUSE; ++f) {
         uint child_index = get_node_cell_index(pos, scale_exp) ^ mirror_mask;
 
         /* Descend down the tree until we find an empty node or leaf node */
@@ -278,7 +280,7 @@ public [ForceInline] uint fetch_svt64(
     Svt64Node node = nodes[0];
     uint depth = root_depth - 1u;
 
-    for (;;) {
+    for (uint f = 0u; f < SVT64_FUSE; ++f) {
         /* Find the local index at the current tree depth (0..4) */
         const uint3 local_index = voxel >> (depth << 1) & 0b11u;
         const uint child_pos = (local_index.x << 0) | (local_index.z << 2) | (local_index.y << 4);

@@ -4,6 +4,8 @@ import view;
 import voxel;
 import math;
 
+static const uint BVH2_FUSE = 128u;
+
 public struct Bvh2Node {
     /* .xyz = Left minimum bounds ~ .w = Left child node index */
     float4 lmin_left;
@@ -47,7 +49,7 @@ public [ForceInline] Hit trace_bvh2<let DEBUG : bool>(
     Hit hit = Hit::miss();
     hit.t = tmax;
     uint node_index = 0u, stack[14], stack_ptr = 0u;
-    for (;;) {
+    for (uint f = 0u; f < BVH2_FUSE; ++f) {
         const float4 rmax_prim_count = nodes[node_index + 3u];
         const float4 rmin_prim_index = nodes[node_index + 2u];
         const uint prim_count = asuint(rmax_prim_count.w);
@@ -132,7 +134,7 @@ public [ForceInline] float occlusion_bvh2(
     /* Traversal state */
     float t = tmax;
     uint node_index = 0u, stack[14], stack_ptr = 0u;
-    for (;;) {
+    for (uint f = 0u; f < BVH2_FUSE; ++f) {
         const float4 rmax_prim_count = nodes[node_index + 3u];
         const float4 rmin_prim_index = nodes[node_index + 2u];
         const uint prim_count = asuint(rmax_prim_count.w);
