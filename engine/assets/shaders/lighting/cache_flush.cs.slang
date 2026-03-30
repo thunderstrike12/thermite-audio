@@ -6,11 +6,15 @@ import math;
 import view;
 import cache;
 import visibility;
+import voxel;
+import material;
 
 /* Active render view. */
 ConstantBuffer<RenderView> render_view;
 /* Macrofacet illuminance cache buffer. */
 RWStructuredBuffer<cache::Slot> macrofacet_cache;
+/* Voxel objects buffer. */ 
+StructuredBuffer<VoxelObject> objects;
 /* Visibility buffer. */
 Texture2D<uint2> vbuffer;
 
@@ -26,5 +30,6 @@ void main(int2 thread_id: SV_DispatchThreadID) {
     if (null_visibility(facet_key)) return;
 
     /* Flush the cache slot */
-    cache::flush(macrofacet_cache, facet_key);
+    const Material m = unpack_material(facet_key, objects);
+    cache::flush(macrofacet_cache, facet_key, m);
 }

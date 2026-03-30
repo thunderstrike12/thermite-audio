@@ -2,6 +2,7 @@ module cache;
 
 import math;
 import voxel;
+import material;
 
 namespace cache {
 
@@ -15,7 +16,7 @@ public static const uint INACTIVE_THRESHOLD = 60u;
 public static const uint CAPACITY = 10000000u;
 
 static const uint TEMPORAL_DIFF_SAMPLES = 24u;
-static const uint TEMPORAL_SPEC_SAMPLES = 8u;
+static const uint TEMPORAL_SPEC_SAMPLES = 6u;
 
 /* Cache Slot (48 bytes) */
 public struct Slot {
@@ -49,7 +50,7 @@ public struct Slot {
 
     /* Flush the diffuse and specular accumulators of the cache slot. */
     /* This resets the spatial accumulators and updates the temporal accumulators. */
-    public [ForceInline] [mutating] void flush_accu() {
+    public [ForceInline] [mutating] void flush_accu(const Material m) {
         /* Atomically claim the cache slot for flushing */
         uint spatial_samples = 0u;
         InterlockedExchange(sample_count, 0u, spatial_samples);
@@ -66,10 +67,17 @@ public struct Slot {
         /* Accumulator warmup factor */
         if (warmup_counter() < max(TEMPORAL_DIFF_SAMPLES, TEMPORAL_SPEC_SAMPLES)) warmup_last += 1u;
 
+        float spec_history = 1.0f;
+        if (spatial_samples < 6) {
+            spec_history *= (float)spatial_samples / 6.0f;
+        }
+        spec_history *= (1.0f - m.roughness() * m.roughness());
+        spec_history = max(0.05f, spec_history);
+
         const float diff_alpha = 1.0f / min((float)warmup_counter(), TEMPORAL_DIFF_SAMPLES);
         const float spec_alpha = 1.0f / min((float)warmup_counter(), TEMPORAL_SPEC_SAMPLES);
         diffuse.w = encode_rgb9e5(lerp(read_diffuse(), diffuse_accu, diff_alpha));
-        specular.w = encode_rgb9e5(lerp(read_specular(), specular_accu, spec_alpha));
+        specular.w = encode_rgb9e5(lerp(read_specular(), specular_accu, spec_alpha * spec_history));
     }
 
     /* Find the inactivity of the cache slot compared to a reference frame index. */
@@ -176,7 +184,7 @@ public [ForceInline] Slot fetch(RWStructuredBuffer<cache::Slot> cache, const uin
 }
 
 /* Flush the spatial accumulator for a given key. */
-public [ForceInline] void flush(RWStructuredBuffer<cache::Slot> cache, const uint64_t key) {
+public [ForceInline] void flush(RWStructuredBuffer<cache::Slot> cache, const uint64_t key, const Material m) {
     /* Modulo the hash to fall within the cache capacity */
     uint slot = voxel_hash(key) % CAPACITY;
 
@@ -184,7 +192,7 @@ public [ForceInline] void flush(RWStructuredBuffer<cache::Slot> cache, const uin
     for (uint fuse = 0u; fuse < FUSE_LENGTH; ++fuse) {
         /* Exit if we found a slot which matches our key */
         if (cache[slot].key == key) {
-            cache[slot].flush_accu();
+            cache[slot].flush_accu(m);
             return;
         }
 

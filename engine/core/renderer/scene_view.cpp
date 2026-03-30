@@ -133,9 +133,10 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
 
         /* Calculate object opacity based on distance from the camera */
         const float object_d = glm::distance(transform.get_world_position(), glm::vec3(engine.renderer.render_view.gpu_view.origin));
-        const float opacity_t = glm::clamp(1.0f - (object_d - object_opaque_distance) / (object_transparent_distance - object_opaque_distance), 0.0f, 1.0f);
-        const float opacity = renderer.distance_culling ? (1.0f - powf(2.0f, -object_opacity_transition * opacity_t)) : 1.0f;
-        if (opacity <= 0.0f || renderer.opacity <= 0.0f) continue; /* Skip fully transparent objects */
+        const float range_d = object_transparent_distance - object_opaque_distance;
+        const float opacity_t = 1.0f - glm::clamp(object_d - object_opaque_distance, 0.0f, range_d) / range_d;
+        const float opacity = (renderer.distance_culling ? (1.0f - powf(2.0f, -object_opacity_transition * opacity_t)) : 1.0f) * renderer.opacity;
+        if (opacity <= 0.0f) continue; /* Skip fully transparent objects */
 
         /* Set the UUID of the object */
         if (renderer.uuid == 0u) {
@@ -171,7 +172,7 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
         gpu_object.voxels_handle = renderer.resource->blas_voxels.get_index();
         gpu_object.palette_handle = renderer.resource->blas_palette.get_index();
         gpu_object.object_flags = renderer.outlined ? 0b1u : 0b0u;
-        gpu_object.opacity = opacity * renderer.opacity;
+        gpu_object.opacity = opacity > 0.99f ? 1.0f : opacity;
         if (renderer.outlined) render_outlines = true;
         renderer.outlined = false; /* Reset outlined flag */
 

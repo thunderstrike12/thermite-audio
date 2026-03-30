@@ -226,3 +226,10 @@ public inline float2 dir_to_latlong(const float3 dir) {
     const float2 uv = float2(phi / (PI_F32 * 2.0f), theta / PI_F32);
     return uv;
 }
+
+public inline float3 spherical_to_dir(const float phi, const float theta) {
+    float sinTheta = sin(theta);
+    return float3(sinTheta * cos(phi),
+              sinTheta * sin(phi),
+              cos(theta));
+}

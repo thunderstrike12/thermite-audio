@@ -195,12 +195,43 @@ RWTexture2D<float3> specular;
 //     return alphaSquare / (PI_F32 * 4.0f * nrmN * nrmN * sigmaI);
 // }
 
+float2 importance_sample_ggx(float2 xi, float a2) {
+    const float phi = 2.0f * PI_F32 * xi.x;
+    const float theta = acos(sqrt((1.0f - xi.y) / ((a2 - 1.0f) * xi.y + 1.0f)));
+    return float2(phi, theta);
+}
+
+float3 SampleVNDF_GGX_Isotropic(float2 u, float3 wi, float alpha, float3 n) {
+    float3 wi_z = -n * dot(wi, n);
+    float3 wi_xy = wi + wi_z;
+
+    // Warp to hemisphere configuration
+    float3 wiStd = -normalize(alpha * wi_xy + wi_z);
+
+    // Sample spherical cap in (-wiStd.z, 1]
+    float wiStd_z = dot(wiStd, n);
+    float z = 1.0 - u.y * (1.0 + wiStd_z);
+    float sinTheta = sqrt(saturate(1.0 - z * z));
+    float phi = PI_F32 * 2.0f * u.x - PI_F32;
+    float3 cStd = float3(sinTheta * cos(phi), sinTheta * sin(phi), z);
+
+    // Reflect to align with normal
+    float3 wr = n + float3(0, 0, 1.000001);
+    float3 c = dot(wr, cStd) * wr / wr.z - cStd;
+
+    // Unstretch
+    float3 wmStd = c + wiStd;
+    float3 wmStd_z = n * dot(n, wmStd);
+    float3 wmStd_xy = wmStd_z - wmStd;
+    return normalize(alpha * wmStd_xy + wmStd_z);
+}
+
 [shader("compute")]
 [numthreads(16, 8, 1)]
 void main(int2 thread_id: SV_DispatchThreadID) {
     /* Quarter-rate shading */
-    // const int2 offset = int2(render_view.frame_index & 0b1, (render_view.frame_index >> 1) & 0b1);
-    const int2 pixel_id = (thread_id << 1); // + offset;
+    const int2 offset = int2(render_view.frame_index & 0b1, (render_view.frame_index >> 1) & 0b1);
+    const int2 pixel_id = (thread_id << 1) + offset;
 
     /* Bounds check */
     if (any(pixel_id >= render_view.resolution)) return;
@@ -225,24 +256,30 @@ void main(int2 thread_id: SV_DispatchThreadID) {
         return; /* No reflections */
     }
 
-    const float3 hit_point = ray.origin + ray.dir * geo.depth + geo.normal * 0.001f;
+    float3 hit_point = ray.origin + ray.dir * geo.depth + geo.normal * 0.001f;
 
     const float2 noise = r2(blue_noise[thread_id % 512].rg, render_view.frame_index % 1024u);
 
     /* Transform vectors into shading space */
-    const float3x3 basis = orthonormal_basis(geo.normal);
-    const float3 wo = normalize(mul(basis, -ray.dir));
+    // const float3x3 basis = orthonormal_basis(geo.normal);
+    // const float3 wo = normalize(mul(basis, -ray.dir));
 
     /* Get the material roughness */
     const float roughness = geo.material.roughness();
     const float alpha = roughness * roughness;
 
     /* Importance sample specular lobe */
-    const float alpha_2 = alpha * alpha;
-    const float3 wh = sample_vndf_bounded(wo, alpha, alpha_2, noise);
-    const float3 wi = normalize(reflect(-wo, wh));
-    // const float3 wi = sample_cone(float3(-wo.x, -wo.y, wo.z), cos(0.1f), noise);
-    // const float3 wh = normalize(wi + wo);
+    // const float alpha_2 = alpha * alpha;
+    const float3 wo = -ray.dir;
+    const float3 wh = SampleVNDF_GGX_Isotropic(clamp(noise, 0.05f, 0.95f), wo, alpha, geo.normal);
+    const float3 wi = reflect(-wo, wh);
+    // const float3 wh = sample_vndf_bounded(wo, alpha, alpha_2, noise);
+    // const float3 wi = normalize(reflect(-wo, wh));
+    // const float3 wi = sample_hemisphere_cosine(float3(0, 0, 1), noise);
+    // const float2 wi_s = importance_sample_ggx(noise, alpha_2);
+    // const float3 wi = spherical_to_dir(wi_s.x, wi_s.y);
+    // const float3 wh = spherical_to_dir(wi_s.x, wi_s.y);  // normalize(wi + wo);
+    // const float3 wi = reflect(-wo, wh);
 
     /* Ignore directions which lie underneath the horizon */
     // if (wi.z <= 0.0f) wi = float3(-wo.x, -wo.y, wo.z);
@@ -250,16 +287,31 @@ void main(int2 thread_id: SV_DispatchThreadID) {
     //     specular[thread_id] = 0.0f;
     //     return;
     // }
-    const float3 sample_dir = normalize(mul(transpose(basis), wi));
+    if (dot(geo.normal, wi) <= 0.0f) {
+        specular[thread_id] = 0.0f;
+        return;
+    }
 
     /* Evaluate the BSDF and PDF of the sample */
     const float pdf = 1.0f;  // pdf_vndf_isotropic(wo, wi, alpha, float3(0, 0, 1));
-    const float3 bsdf = specular_brdf(wi.z, wo.z, wh.z, dot(wo, wh), geo.material) / pdf;
+    const float3 bsdf = specular_brdf(dot(wi, geo.normal), dot(wo, geo.normal), dot(wh, geo.normal), dot(wo, wh), geo.material) / pdf;
     // float3 wi;
     // const float3 bsdf = ImportanceSampleGgxD(wo, wi, alpha, eta, noise);
 
     /* Trace sample direction */
-    const Hit hit = trace_bvh2<false>(tlas_nodes, object_indices, objects, custom_ray(hit_point, sample_dir), BIG_F32);
+    // Hit hit;
+    // for (int i = 0; i < 3; ++i) {
+    //     const Ray ray = custom_ray(hit_point, sample_dir);
+    //     hit = trace_bvh2<false>(tlas_nodes, object_indices, objects, ray, BIG_F32);
+    //     if (hit.t >= BIG_F32) break; /* Hit sky */
+
+    //     const Material mat = unpack_material(hit, objects);
+    //     if (mat.ior() <= 1.0f) break; /* Hit non-reflective surface */
+
+    //     hit_point = ray.origin + ray.dir * (hit.t - 0.0001f);
+    //     sample_dir = sample_cone(reflect(ray.dir, unpack_normal(hit, objects, ray)), cos(PI_F32 * 0.5f * mat.roughness() * mat.roughness()), noise);
+    // }
+    const Hit hit = trace_bvh2<false>(tlas_nodes, object_indices, objects, custom_ray(hit_point, wi), BIG_F32);
 
     float3 luminance;
     if (hit.t < BIG_F32) {
@@ -271,10 +323,13 @@ void main(int2 thread_id: SV_DispatchThreadID) {
         const cache::Slot slot = cache::fetch(macrofacet_cache, pack_visibility(hit));
         if (slot.key != cache::EMPTY_KEY) luminance += mat.albedo() * slot.read_diffuse();
     } else {
-        const float2 uv = dir_to_latlong(sample_dir);
-        luminance = bindless::texture_sampled<Texture2D<float4>>(scene_view.envmap_full_handle).SampleLevel(envmap_sampler, uv, 0).rgb;
+        const float2 uv = dir_to_latlong(wi);
+        luminance = bindless::texture_sampled<Texture2D<float4>>(scene_view.envmap_filtered_handle).SampleLevel(envmap_sampler, uv, 0).rgb * PI_F32 * 2.0f;
     }
-    luminance *= bsdf;
-
-    specular[thread_id] = luminance;
+    specular[thread_id] = luminance * bsdf;
+    // if (dot(bsdf, bsdf) < 0.1f) {
+    //     specular[thread_id] = 0.0f;
+    // } else {
+    //     specular[thread_id] = luminance * bsdf;
+    // }    
 }

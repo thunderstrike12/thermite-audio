@@ -132,8 +132,8 @@ bool Envmap::load() {
     prefilter_resolution(filtered_width, filtered_height, 0.3f);
 
     /* Perform filtering */
-    // float* filtered_data = new float[filtered_width * filtered_height * 3] {};
-    // conic_prefilter(data, filtered_data, full_width, full_height, 3, filtered_width, filtered_height, 3, 0.3f);
+    float* filtered_data = new float[filtered_width * filtered_height * 3] {};
+    conic_prefilter(data, filtered_data, full_width, full_height, 3, filtered_width, filtered_height, 3, 0.1f);
 
     { /* Init the filtered texture resource */
         const std::string texture_name = name + " Envmap (Filtered) Texture";
@@ -143,10 +143,6 @@ bool Envmap::load() {
             )
                 .expect("failed to initialise envmap texture.");
     }
-
-    /* Pack and upload filtered texture */
-    // pack_and_upload(bank, filtered_texture, filtered_data, filtered_width, filtered_height);
-    // delete[] filtered_data;
 
     { /* Init the full texture resource */
         const std::string texture_name = name + " Envmap (Full) Texture";
@@ -160,6 +156,10 @@ bool Envmap::load() {
     full_image = bank.create_image(full_image_name.c_str(), full_texture).expect("failed to initialize envmap image.");
     const std::string filtered_image_name = name + " Envmap (Filtered) Image";
     filtered_image = bank.create_image(filtered_image_name.c_str(), filtered_texture).expect("failed to initialize envmap image.");
+
+    /* Pack and upload filtered texture */
+    pack_and_upload(bank, filtered_image, filtered_data, filtered_width, filtered_height);
+    delete[] filtered_data;
 
     /* Pack and upload full texture */
     pack_and_upload(bank, full_image, data, full_width, full_height);

@@ -154,6 +154,7 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
     render_graph.add_compute_pass("cache flush pass", "lighting/cache_flush.cs")
         .read(render_view.render_view_buffer) /* Render view buffer */
         .write(render_view.macrofacet_cache) /* Cache buffer */
+        .read(scene_view.object_data) /* Voxel objects buffer */
         .read(render_view.vbuffer.image) /* Visibility buffer */
         .group_size(16, 8)
         .work_size(render_res.x, render_res.y);

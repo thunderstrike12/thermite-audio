@@ -68,6 +68,7 @@ bool fetch_center(const int2 thread_id, out float3 c, out float3 n, out float3 p
 
     /* Fetch the material roughness */
     r = voxel_material(object, voxel_ptr).roughness();
+    // r *= r;
     return r <= 0.05f ? false : true;
 }
 
