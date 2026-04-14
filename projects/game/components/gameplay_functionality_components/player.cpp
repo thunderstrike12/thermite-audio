@@ -79,12 +79,14 @@ void setup_inputs(tmt::InputMap& input_map) {
 }
 
 void Player::start() {
-    tmt::engine.input.set_mouse_relative_to_window(true);
-    glm::vec2 screen_size = { tmt::engine.window.width, tmt::engine.window.height };
-    tmt::engine.input.warp_mouse({ screen_size.x / 2.0f, screen_size.y / 2.0f }, true);
-    tmt::engine.input.lock_mouse(true);
-    setup_inputs(tmt::engine.input_map);
-    tmt::engine.ecs.get_dispatcher().sink<AttachEvent>().connect<&Player::on_attach>(this);
+    if (tmt::engine.ecs.is_enabled(entity)) {
+        tmt::engine.input.set_mouse_relative_to_window(true);
+        glm::vec2 screen_size = { tmt::engine.window.width, tmt::engine.window.height };
+        tmt::engine.input.warp_mouse({ screen_size.x / 2.0f, screen_size.y / 2.0f }, true);
+        tmt::engine.input.lock_mouse(true);
+        setup_inputs(tmt::engine.input_map);
+        tmt::engine.ecs.get_dispatcher().sink<AttachEvent>().connect<&Player::on_attach>(this);
+    }
 }
 void Player::end() {
     // tmt::engine.ecs.get_dispatcher().trigger<AttachEvent>({ .entity = entity_that_attaches, .is_attached = is_attached });
