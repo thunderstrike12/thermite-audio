@@ -1,6 +1,7 @@
 #pragma once
 #include <any>
 #include <map>
+#include <typeindex>
 #include "engine/tools/serializer.hpp"
 #include "engine/core/logger.hpp"
 #include "engine/core/io.hpp"
@@ -21,17 +22,15 @@ class PlayerData {
     };
 
     struct TypeOps {
-        const std::type_info& type_info;
-        const std::function<tmt::json(const std::any&)> serialize;
-        const std::function<void(const tmt::json&, std::any&)> deserialize;
-#if defined(THERMITE_EDITOR) && !defined(THERMITE_ENGINE)
-        const std::function<void(const char* label, std::any&)> inspect;
-#endif
+        std::type_index type_index = typeid(void);
+        std::function<tmt::json(const std::any&)> serialize = nullptr;
+        std::function<void(const tmt::json&, std::any&)> deserialize = nullptr;
+        std::function<void(const char* label, std::any&)> inspect = nullptr;
     };
 
     struct Entry {
-        std::any value;
-        TypeOps ops;
+        std::any value = {};
+        TypeOps ops = {};
     };
 
     std::map<std::string, Entry> entries;
@@ -45,12 +44,11 @@ class PlayerData {
         const bool contains = entries.contains(key);
         if (contains == false) {
             /* Default emplace */
-            entries.emplace(
-                key, Entry {
-                         .value = default_value,
-                         .ops = create_ops<T>(),
-                     }
-            );
+            auto ops_entry = Entry {
+                .value = default_value,
+                .ops = create_ops<T>(),
+            };
+            entries.emplace(key, ops_entry);
 
             /* Check if json, else use default */
             const bool has_json = data && data->get_parsed_json().contains(key);
@@ -66,8 +64,8 @@ class PlayerData {
         }
 
         auto& entry = entries.at(key);
-        if (entry.ops.type_info != typeid(T)) {
-            tmt::Log::error(tmt::Log::Scope::ENGINE, "Type mismatch for key '{}'. Requested type: '{}', actual type: '{}'. Overriding...", key, typeid(T).name(), entry.ops.type_info.name());
+        if (entry.ops.type_index != std::type_index(typeid(T))) {
+            tmt::Log::error(tmt::Log::Scope::ENGINE, "Type mismatch for key '{}'. Requested type: '{}', actual type: '{}'. Overriding...", key, typeid(T).name(), entry.ops.type_index.name());
             entries.erase(key);
             entries.emplace(
                 key, Entry {
@@ -117,6 +115,14 @@ class PlayerData {
 #if defined(THERMITE_EDITOR) && !defined(THERMITE_ENGINE)
     void inspect() {
         for (auto& [key, entry] : entries) {
+            if (entry.ops.inspect == nullptr) {
+                ImGui::Text("Key '%s' with type '%s' has not been called yet or is engine struct.", key.c_str(), entry.ops.type_index.name());
+                continue;
+            }
+            if (entry.value.has_value() == false) {
+                ImGui::Text("Key '%s' with type '%s' has no value.", key.c_str(), entry.ops.type_index.name());
+                continue;
+            }
             try {
                 entry.ops.inspect(key.c_str(), entry.value);
             } catch (const std::exception& e) {
@@ -130,7 +136,7 @@ class PlayerData {
     template <typename T>
     TypeOps create_ops() {
         return TypeOps {
-            typeid(T),
+            std::type_index(typeid(T)),
             [](const std::any& value) -> tmt::json {
                 //
                 return tmt::Serializer::serialize(std::any_cast<T>(value));
