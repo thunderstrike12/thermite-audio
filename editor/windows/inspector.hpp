@@ -40,6 +40,8 @@ class Inspector : public IWindow<> {
     void paste_compile_time_values(const json& deserialized, const MenuContext& menu_context);
     void paste_values(const auto& name, const MenuContext& menu_context);
 
+    static bool contains_filter(std::string input, std::string filter);
+
     struct HeaderResponse {
         const bool open = false;
         const bool right_clicked = false;
@@ -59,6 +61,8 @@ class Inspector : public IWindow<> {
     float component_body_start_y = 0.0f;
     float component_body_x_min = 0.0f;
     float component_body_x_max = 0.0f;
+
+    std::string filter = "";
 };
 
 }  // namespace tmt

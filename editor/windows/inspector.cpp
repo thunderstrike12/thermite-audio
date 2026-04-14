@@ -311,11 +311,19 @@ void Inspector::display_runtime_components(const MenuContext& menu_context) {
 void Inspector::add_component(const MenuContext& menu_context) {
     if (menu_context.primary_entity == entt::null) return;
 
+    bool just_opened = false;
+
     if (IMGUI_CENTER(ImGui::Button("Add Component"), 20.0f)) {
         ImGui::OpenPopup("AddComponentPopup");
+        just_opened = true;
     }
 
-    if (ImGui::BeginPopup("AddComponentPopup")) {
+    if (ImGui::BeginPopup("AddComponentPopup", ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (just_opened) {
+            ImGui::SetKeyboardFocusHere();
+        }
+        ImGui::InputTextWithHint("##EntitySearch", ICON_MS_SEARCH " Search entities...", &filter, ImGuiInputTextFlags_AutoSelectAll);
+
         ImGui::SeparatorText("Engine");
         add_compile_time_component(menu_context);
 
@@ -327,12 +335,15 @@ void Inspector::add_component(const MenuContext& menu_context) {
 }
 
 void Inspector::add_compile_time_component(const tmt::Inspector::MenuContext& menu_context) {
-    InspectComponents::for_each([menu_context](auto type_tag) {
+    InspectComponents::for_each([menu_context, this](auto type_tag) {
         using T = typename decltype(type_tag)::type;  // Extract type from tag
         const bool has_component = tmt::engine.ecs.has_component<T>(menu_context.primary_entity);
         if (has_component) return;
 
         const auto name = tmt::Component<T>::get_name();
+        const bool has_filter = contains_filter(name, filter);
+        if (!has_filter) return;
+
         if (ImGui::MenuItem(name)) {
             UndoRedoCollection collection;
             for (const Entity& entity : menu_context.selected_entities) {
@@ -357,7 +368,12 @@ void Inspector::add_runtime_component(const tmt::Inspector::MenuContext& menu_co
             const auto& component_collection = engine.ecs.get_component<ComponentCollection>(menu_context.primary_entity);
             has_component = component_collection.has_component(componend_index);
         }
+
         if (has_component) continue;
+
+        const bool has_filter = contains_filter(component_info.name, filter);
+        if (!has_filter) continue;
+
         if (ImGui::MenuItem(component_info.name.c_str())) {
             UndoRedoCollection collection;
             for (const Entity& entity : menu_context.selected_entities) {
@@ -606,6 +622,18 @@ void Inspector::paste_values(const auto& name, const tmt::Inspector::MenuContext
     } else {
         paste_compile_time_values(deserialized, menu_context);
     }
+}
+
+bool Inspector::contains_filter(std::string input, std::string filter) {
+    if (filter.empty()) {
+        return true;
+    }
+    std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+    std::transform(filter.begin(), filter.end(), filter.begin(), ::tolower);
+    if (input.find(filter) == std::string::npos) {
+        return false;
+    }
+    return true;
 }
 
 }  // namespace tmt
