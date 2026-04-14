@@ -37,6 +37,16 @@ const VoxelSceneNode* first_model(const VoxelSceneNode& parent) {
     return nullptr;
 }
 
+VoxelVolume::VoxelVolume() : Base({}, {}) {
+    blas = std::make_unique<Svt64>();
+    uuid = UUIDGenerator::generate(); /* Generate a new UUID. */
+
+    blas->nodes_capacity = 1u;
+    blas->voxels_capacity = 1u;
+
+    create_gpu_buffers();
+}
+
 VoxelVolume::VoxelVolume(const glm::uvec3& grid_size) : Base({}, {}) {
     RawVoxels raw_voxels { .w = grid_size.x, .h = grid_size.y, .d = grid_size.z };
 

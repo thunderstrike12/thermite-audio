@@ -6,6 +6,7 @@
 #include "engine/shared/ray.hpp"
 #include "engine/core/resources/stencil.hpp"
 #include "engine/core/logger.hpp"
+#include "engine/systems/physics/components/destructable.hpp"
 
 namespace tmt {
 
@@ -129,6 +130,234 @@ Svt64Node Svt64::subdivide(const RawVoxels& raw_data, uint32_t scale, glm::uvec3
     memcpy(nodes + node_count, child_nodes, child_count * sizeof(Svt64Node));
     node_count += child_count;
     return node;
+}
+
+/* Recursive tree subdivide function. */
+Svt64Node Svt64::subdivide_masked(
+    uint32_t scale, glm::uvec3 index, const Svt64* original_tree, uint32_t node_index, const std::vector<uint64_t>& tree_masks, uint8_t id, const Destructible& graph
+) {
+    TMT_ZONE_SCOPED
+
+    /* Create a leaf node */
+    if (scale == 2u) {
+        Svt64Node leaf_node = Svt64Node(true, voxel_count, 0x00);
+
+        // Copy voxels from the original tree
+        uint64_t origin_mask = original_tree->nodes[node_index].child_mask;
+
+        // Get destruction node, and check if it exists
+        const DestructionNode* destruction_node = graph.get_node(index.x, index.y, index.z);
+        if (destruction_node != nullptr && destruction_node->level == 1u && !destruction_node->cleared) {
+            // Add the filled parts connected to the id to mask_accum
+            uint64_t mask_accum = 0ull;
+            for (const auto& filled : destruction_node->flood_masks) {
+                if (filled.first != id) continue;
+                mask_accum |= filled.second;
+            }
+
+            // Apply mask
+            origin_mask &= mask_accum;
+        }
+
+        while (origin_mask != 0ull) {
+            // Find index of first set bit
+            const uint32_t i = std::countr_zero(origin_mask);
+
+            /* Fetch the voxel data */
+            const uint32_t child_node_offset = (uint32_t)__popcnt64(original_tree->nodes[node_index].child_mask & ((1ull << i) - 1u));
+            const uint32_t child_node_index = original_tree->nodes[node_index].abs_ptr() + child_node_offset;
+
+            const MaterialIndex material = original_tree->materials[child_node_index];
+
+            // Only add it to the tree if its solid
+            if (material != AIR_INDEX) {
+                materials[voxel_count] = material;
+                physics_data[voxel_count++] = original_tree->physics_data[child_node_index];
+                leaf_node.child_mask |= (1ull << i);
+            }
+
+            // Remove looped over bit
+            origin_mask &= ~(1ull << i);
+        }
+
+        return leaf_node;
+    }
+
+    /* Descend */
+    scale -= 2u;
+
+    /* Collect child nodes */
+    Svt64Node child_nodes[64] {};
+    uint64_t child_mask = 0x00u;
+    uint32_t child_count = 0u;
+
+    uint64_t origin_mask = original_tree->nodes[node_index].child_mask;
+    while (origin_mask != 0ull) {
+        // Find index of first set bit
+        const uint32_t i = std::countr_zero(origin_mask);
+
+        /* Subdivide the child node */
+        const glm::uvec3 child_index = glm::uvec3(i >> 0u & 3u, i >> 4u & 3u, i >> 2u & 3u);
+
+        const uint32_t child_node_offset = (uint32_t)__popcnt64(original_tree->nodes[node_index].child_mask & ((1ull << i) - 1u));
+        const uint32_t child_node_index = original_tree->nodes[node_index].abs_ptr() + child_node_offset;
+
+        // Check if the child its masked out before descending deeper
+        if (tree_masks[child_node_index] != 0 && (tree_masks[child_node_index] & (1ull << id)) == 0ull) {
+            origin_mask &= ~(1ull << i);
+            continue;
+        }
+
+        const Svt64Node child = subdivide_masked(scale, index + (child_index << scale), original_tree, child_node_index, tree_masks, id, graph);
+
+        /* If the child is not empty */
+        if (child.child_mask != 0u) {
+            child_mask |= (1ull << i);
+            child_nodes[child_count++] = child;
+        }
+
+        // Remove looped over bit
+        origin_mask &= ~(1ull << i);
+    }
+
+    /* Create a node */
+    const Svt64Node node = Svt64Node(false, node_count, child_mask);
+
+    /* Add child nodes into the nodes array */
+    memcpy(nodes + node_count, child_nodes, child_count * sizeof(Svt64Node));
+    node_count += child_count;
+    return node;
+}
+
+constexpr uint64_t x_masks[4] = {
+    0x8888888888888888ULL,  // x=3
+    0x4444444444444444ULL,  // x=2
+    0x2222222222222222ULL,  // x=1
+    0x1111111111111111ULL,  // x=0
+};
+
+constexpr uint64_t z_masks[4] = {
+    0xF000F000F000F000ULL,  // z=3
+    0x0F000F000F000F00ULL,  // z=2
+    0x00F000F000F000F0ULL,  // z=1
+    0x000F000F000F000FULL,  // z=0
+};
+
+constexpr uint64_t y_masks[4] = {
+    0xFFFF000000000000ULL,  // y=3
+    0x0000FFFF00000000ULL,  // y=2
+    0x00000000FFFF0000ULL,  // y=1
+    0x000000000000FFFFULL,  // y=0
+};
+
+void get_max_x(Svt64* tree, uint32_t node_index, uint32_t depth, uint32_t x, uint32_t& max_x) {
+    const tmt::Svt64Node& node = tree->nodes[node_index];
+
+    for (size_t i = 0; i < 4; i++) {
+        // Get mask and apply
+        uint64_t current_mask = x_masks[i] & node.child_mask;
+        if (current_mask == 0ull) continue;
+
+        // Loop over all active nodes in this slice
+        while (current_mask != 0ull) {
+            // Get and clear bit
+            const uint32_t bit = std::countr_zero(current_mask);
+            current_mask &= ~(1ull << bit);
+
+            // Get child x position
+            const uint32_t child_scale = 1u << ((tree->depth - depth - 1) * 2u);
+            const uint32_t child_x = x + ((bit >> 0u) & 3u) * child_scale;
+
+            // Set maximum
+            if (child_x > max_x) max_x = child_x;
+
+            // Only recurse if not at leaf level
+            if (depth + 1 < tree->depth) {
+                const uint32_t child_offset = (uint32_t)__popcnt64(node.child_mask & ((1ull << bit) - 1u));
+                const uint32_t child_node_index = node.abs_ptr() + child_offset;
+                get_max_x(tree, child_node_index, depth + 1, child_x, max_x);
+            }
+        }
+
+        // We don't need to check further because we loop from max to min
+        return;
+    }
+}
+
+void get_max_y(Svt64* tree, uint32_t node_index, uint32_t depth, uint32_t y, uint32_t& max_y) {
+    const tmt::Svt64Node& node = tree->nodes[node_index];
+
+    for (size_t i = 0; i < 4; i++) {
+        // Get mask and apply
+        uint64_t current_mask = y_masks[i] & node.child_mask;
+        if (current_mask == 0ull) continue;
+
+        // Loop over all active nodes in this slice
+        while (current_mask != 0ull) {
+            // Get and clear bit
+            const uint32_t bit = std::countr_zero(current_mask);
+            current_mask &= ~(1ull << bit);
+
+            // Get child y position
+            const uint32_t child_scale = 1u << ((tree->depth - depth - 1) * 2u);
+            const uint32_t child_y = y + ((bit >> 4u) & 3u) * child_scale;
+
+            // Set maximum
+            if (child_y > max_y) max_y = child_y;
+
+            // Only recurse if not at leaf level
+            if (depth + 1 < tree->depth) {
+                const uint32_t child_offset = (uint32_t)__popcnt64(node.child_mask & ((1ull << bit) - 1u));
+                const uint32_t child_node_index = node.abs_ptr() + child_offset;
+                get_max_y(tree, child_node_index, depth + 1, child_y, max_y);
+            }
+        }
+
+        // We don't need to check further because we loop from max to min
+        return;
+    }
+}
+
+void get_max_z(Svt64* tree, uint32_t node_index, uint32_t depth, uint32_t z, uint32_t& max_z) {
+    const tmt::Svt64Node& node = tree->nodes[node_index];
+
+    for (size_t i = 0; i < 4; i++) {
+        // Get mask and apply
+        uint64_t current_mask = z_masks[i] & node.child_mask;
+        if (current_mask == 0ull) continue;
+
+        // Loop over all active nodes in this slice
+        while (current_mask != 0ull) {
+            // Get and clear bit
+            const uint32_t bit = std::countr_zero(current_mask);
+            current_mask &= ~(1ull << bit);
+
+            // Get child z position
+            const uint32_t child_scale = 1u << ((tree->depth - depth - 1) * 2u);
+            const uint32_t child_z = z + ((bit >> 2u) & 3u) * child_scale;
+
+            // Set maximum
+            if (child_z > max_z) max_z = child_z;
+
+            // Only recurse if not at leaf level
+            if (depth + 1 < tree->depth) {
+                const uint32_t child_offset = (uint32_t)__popcnt64(node.child_mask & ((1ull << bit) - 1u));
+                const uint32_t child_node_index = node.abs_ptr() + child_offset;
+                get_max_z(tree, child_node_index, depth + 1, child_z, max_z);
+            }
+        }
+
+        // We don't need to check further because we loop from max to min
+        return;
+    }
+}
+
+glm::uvec3 Svt64::get_max() {
+    glm::uvec3 max_pos(0);
+    get_max_x(this, 0, 0, 0, max_pos.x);
+    get_max_y(this, 0, 0, 0, max_pos.y);
+    get_max_z(this, 0, 0, 0, max_pos.z);
+    return max_pos;
 }
 
 bool Svt64::is_empty(const uint32_t x, const uint32_t y, const uint32_t z) {

@@ -1,0 +1,11 @@
+{
+    "params": {
+        "arrive_radius": 6.0,
+        "activation_range": 50.0,
+        "min_explosion_range": 1.0,
+        "max_explosion_range": 5.0,
+        "max_speed": 5.0,
+        "max_force": 20.0,
+        "wander_radius_limit": 25.0
+    }
+}

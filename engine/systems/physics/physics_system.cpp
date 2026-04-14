@@ -24,7 +24,8 @@ void Physics::on_start() {
         vb.rotation = transform.get_world_rotation();
 
         if (vb.type == VoxelBody::DYNAMIC) {
-            initialize_voxel_body(vb, *renderer.resource.resource);
+            // initialize_voxel_body(vb, *renderer.resource.resource);
+            recalculate_physics_data(vb, *renderer.resource.resource);
             if (vb.gravity <= 0.0f) {
                 vb.type = VoxelBody::SLEEPING;
                 vb.accumulated_forces = 0.0f;
@@ -36,6 +37,8 @@ void Physics::on_start() {
             vb.depth = (float)size.z * UNITS_PER_VOXEL;
             vb.center_of_mass = vb.position + (vb.rotation * vb.com_local_offset);
         }
+
+        vb.initialized = true;
     }
 
     physics_layers.load();
@@ -116,7 +119,7 @@ void Physics::on_update(const FrameData&) {
             vb.rotation = transform.get_world_rotation();
 
             if (vb.type == VoxelBody::DYNAMIC) {
-                initialize_voxel_body(vb, *vr.resource.resource);
+                recalculate_physics_data(vb, *vr.resource.resource);
                 if (vb.gravity <= 0.0f) {
                     vb.type = VoxelBody::SLEEPING;
                     vb.accumulated_forces = 0.0f;
@@ -132,61 +135,6 @@ void Physics::on_update(const FrameData&) {
             vb.initialized = true;
         }
     }
-
-    // for (const auto& [entity, vb, transform] : engine.ecs.view<VoxelBody, Transform>().each()) {
-    //     // auto* tree_a = vb.resource->blas.get();
-    //     // const float half_extent_a = powf(4.0f, (float)tree_a->depth) * 0.5f * UNITS_PER_VOXEL;
-    //     // const glm::vec3 extents_diff_a = half_extent_a - ((glm::vec3)vb.resource->size * 0.5f * UNITS_PER_VOXEL);
-    //     // const glm::vec3 root_center_a = vb.position + (vb.rotation * extents_diff_a);
-
-    //    // draw_solids(tree_a, 0u, 0u, half_extent_a, root_center_a + glm::vec3(10, 0, 0), extents_diff_a, vb.rotation);
-
-    //    // auto edges = vb.get_world_edges();
-    //    // engine.polyline.use_color(vb.type == VoxelBody::DYNAMIC ? glm::vec4(0, 1, 0, 1) : glm::vec4(1, 0, 0, 1));
-    //    // for (size_t i = 0; i < edges.size(); i++) {
-    //    //     engine.polyline.draw_line(edges[i].start, edges[i].end);
-    //    // }
-
-    //    // engine.polyline.use_depth_testing(false);
-    //    // engine.polyline.use_line_width(0.5f);
-    //    // engine.polyline.use_color(1.0f, 0.0f, 0.0f);
-    //    // engine.polyline.draw_circle(vb.center_of_mass, 0.2f);  // glm::vec3(1.0f, 0.0f, 1.0f), 0.2f);
-    //    // engine.polyline.use_color(0.0f, 1.0f, 0.0f);
-    //    // engine.polyline.draw_circle(vb.position, 0.2f);
-    //    // engine.polyline.use_color(0.0f, 0.0f, 1.0f);
-    //    // engine.polyline.draw_circle(vb.position + vb.rotation * vb.com_local_offset, 0.2f);
-    //    /* engine.renderer.draw_cross(vb.position, glm::vec3(1.0f, 0.0f, 0.0f), 0.2f);
-    //     engine.renderer.draw_cross(vb.position + vb.rotation * vb.com_local_offset, glm::vec3(0.0f, 0.0f, 1.0f), 0.2f);*/
-
-    //    //// Draw voxel normals
-    //    // engine.polyline.use_depth_testing(false);
-    //    // engine.polyline.use_color(1.0f, 0.0f, 0.0f);
-    //    //
-    //    // glm::uvec3 size = vb.resource->size;
-    //    // auto* tree = vb.resource->blas.get();
-    //    // for (size_t z = 0; z < size.z; z++) {
-    //    //     for (size_t y = 0; y < size.y; y++) {
-    //    //         for (size_t x = 0; x < size.x; x++) {
-    //    //             const tmt::PhysicsVoxel* voxel = tree->get_physics_voxel(x, y, z);
-    //    //             if (voxel == nullptr || voxel->normal_index == 0 || voxel->normal_index == 28) continue;
-
-    //    //            glm::ivec3 local_normal = voxel->get_normal();
-    //    //            glm::vec3 normal = vb.rotation * glm::vec3((float)local_normal.x, (float)local_normal.y, (float)local_normal.z);
-    //    //            glm::vec3 local_pos = glm::vec3(
-    //    //                ((float)x + 0.5f - (size.x * 0.5f)) * UNITS_PER_VOXEL, ((float)y + 0.5f - (size.y * 0.5f)) * UNITS_PER_VOXEL, ((float)z + 0.5f - (size.z * 0.5f)) * UNITS_PER_VOXEL
-    //    //            );
-    //    //            glm::vec3 world_pos = vb.position + (vb.rotation * local_pos);
-
-    //    //            engine.polyline.draw_line(world_pos, world_pos + normal * 0.05f);
-    //    //            // engine.polyline.draw_arrow(world_pos, normal * 0.1f, 0.15f);
-    //    //            // tmt::engine.renderer.draw_arrow(world_pos, normal, glm::vec3(0.0f, 0.6f, 0.0f), 0.15f, 0.05f);
-    //    //        }
-    //    //    }
-    //    //}
-    //}
-
-    // if (bvh.nodes) draw_node(bvh, 0u);
-    //  draw_node(bvh, bvh.nodes[0].left_first + 1u);
 }
 
 void Physics::on_fixed_update(const FrameData&) {
@@ -324,7 +272,7 @@ void Physics::generate_constraint(int index, const PhysicsGroup& group) {
         // auto& [other_vb, other_transform] = group.get<VoxelBody, Transform>(other_entity);
 
         // --- check layer collision ---
-        if (!physics_layers.can_collide(vb.layer, other_vb.layer)) continue;
+        // if (!physics_layers.can_collide(vb.layer, other_vb.layer)) continue;
 
         if (sat_early_out(vb, other_vb)) continue;
 
@@ -665,22 +613,31 @@ void Physics::apply_velocities() const {
     for (const auto& [entity, vb, transform] : engine.ecs.view<VoxelBody, Transform>().each()) {
         if (vb.type == VoxelBody::STATIC) continue;
 
+        // Update positions
         vb.position += vb.velocity * Engine::Config::FIXED_TIME_STEP;
         vb.center_of_mass += vb.velocity * Engine::Config::FIXED_TIME_STEP;
 
-        transform.set_world_position(vb.position);  // TEMP
-
+        // Get change in angle
         float angle = glm::length(vb.angular_velocity) * Engine::Config::FIXED_TIME_STEP;
         if (angle <= 0.0f) {
+            transform.set_world_position(vb.position);
             transform.set_world_rotation(vb.rotation);
             continue;
         }
 
+        // Apply change in angle
         glm::vec3 axis = glm::normalize(vb.angular_velocity);
         glm::quat incremental_rot = glm::angleAxis(angle, axis);
         vb.rotation = glm::normalize(incremental_rot * vb.rotation);
 
-        transform.set_world_rotation(vb.rotation);  // TEMP
+        // Rotate the offset from center_of_mass to position around the com
+        glm::vec3 offset = vb.position - vb.center_of_mass;
+        offset = incremental_rot * offset;
+        vb.position = vb.center_of_mass + offset;
+
+        // Apply position and rotation
+        transform.set_world_position(vb.position);
+        transform.set_world_rotation(vb.rotation);
     }
 }
 
@@ -756,7 +713,11 @@ inline void calculate_center_of_mass(VoxelBody& vb, const VoxelVolume& volume) {
     // Apply results to voxel body
     // vb.com_local_offset = mass_center_sum / (float)voxel_count;
     const float voxel_mass = std::powf(UNITS_PER_VOXEL, 3) * vb.density;
-    vb.inv_mass = 1.0f / (voxel_mass * voxel_count);
+
+    if (voxel_count == 0)
+        vb.inv_mass = 1.0f;
+    else
+        vb.inv_mass = 1.0f / (voxel_mass * voxel_count);
 }
 
 inline void recurse_inertia(
@@ -787,7 +748,7 @@ inline void recurse_inertia(
         if (current_depth + 1 < tree->depth) {
             recurse_inertia(tree, child_node_index, current_depth + 1, child_half_extent, child_center, extents_diff, com_local, voxel_mass, inertia_tensor);
         } else {
-            // Leaf node - accumulate inertia contribution
+            // Leaf node, accumulate inertia contribution
             // Convert to local voxel space (same as mass calculation) then subtract COM
             const glm::vec3 voxel_pos = child_center - extents_diff;
             const glm::vec3 r = voxel_pos - com_local;
@@ -837,6 +798,10 @@ void Physics::initialize_voxel_body(VoxelBody& vb, VoxelVolume& volume) {
 
     // Then calculate inertia (needs COM)
     vb.inv_inertia = glm::inverse(calculate_inertia_tensor(vb, volume));
+
+    if (glm::any(glm::isnan(vb.inv_inertia[0])) || glm::any(glm::isinf(vb.inv_inertia[0]))) vb.inv_inertia = glm::mat3(1.0f);
+    if (glm::any(glm::isnan(vb.inv_inertia[1])) || glm::any(glm::isinf(vb.inv_inertia[1]))) vb.inv_inertia = glm::mat3(1.0f);
+    if (glm::any(glm::isnan(vb.inv_inertia[2])) || glm::any(glm::isinf(vb.inv_inertia[2]))) vb.inv_inertia = glm::mat3(1.0f);
 
     vb.center_of_mass = vb.position + (vb.rotation * vb.com_local_offset);
 }
@@ -1040,6 +1005,89 @@ void Physics::recalculate_surface_normals(VoxelVolume& volume) {
     auto* tree = volume.blas.get();
     const uint32_t node_scale = (1u << (tree->depth * 2u));
     recurse_recalculate_normals(tree, 0, 0, node_scale, 0, 0, 0);
+}
+
+void Physics::recalculate_edge_normals(Svt64* tree, const std::vector<glm::uvec3>& edge_indices) {
+    TMT_ZONE_SCOPED
+
+    // Svt64* tree = vb.resource.resource->blas.get();
+
+    for (const glm::uvec3& edge_pos : edge_indices) {
+        const uint32_t x = edge_pos.x;
+        const uint32_t y = edge_pos.y;
+        const uint32_t z = edge_pos.z;
+        PhysicsVoxel& voxel = *tree->get_physics_voxel(x, y, z);
+
+        int empty_sides = 0;
+        glm::ivec3 normal = {};
+
+        // -X
+        if (tree->is_empty(x - 1, y, z)) {
+            normal += glm::ivec3(-1, 0, 0);
+            empty_sides++;
+        }
+
+        // +X
+        if (tree->is_empty(x + 1, y, z)) {
+            normal += glm::ivec3(1, 0, 0);
+            empty_sides++;
+        }
+
+        // -Y
+        if (tree->is_empty(x, y - 1, z)) {
+            normal += glm::ivec3(0, -1, 0);
+            empty_sides++;
+        }
+
+        // +Y
+        if (tree->is_empty(x, y + 1, z)) {
+            normal += glm::ivec3(0, 1, 0);
+            empty_sides++;
+        }
+
+        // -Z
+        if (tree->is_empty(x, y, z - 1)) {
+            normal += glm::ivec3(0, 0, -1);
+            empty_sides++;
+        }
+
+        // +Z
+        if (tree->is_empty(x, y, z + 1)) {
+            normal += glm::ivec3(0, 0, 1);
+            empty_sides++;
+        }
+
+        voxel.normal_index = 0;
+
+        // Classify voxel type based on empty neighbors
+        if (empty_sides == 0) {
+            voxel.type = PhysicsVoxelType::INSIDE;
+        } else if (empty_sides == 1) {
+            for (size_t i = 1; i < 7; i++) {
+                if (NORMAL_LUT[i] == normal) {
+                    voxel.normal_index = i;
+                    break;
+                }
+            }
+            voxel.type = PhysicsVoxelType::FACE;
+        } else if (empty_sides == 2) {
+            for (size_t i = 7; i < 19; i++) {
+                if (NORMAL_LUT[i] == normal) {
+                    voxel.normal_index = i;
+                    break;
+                }
+            }
+            voxel.type = PhysicsVoxelType::EDGE;
+        } else {  // empty_sides >= 3
+            for (size_t i = 19; i < 27; i++) {
+                if (NORMAL_LUT[i] == normal) {
+                    voxel.normal_index = i;
+                    break;
+                }
+            }
+            voxel.type = PhysicsVoxelType::CORNER;
+        }
+    }
 }
 
 }  // namespace tmt

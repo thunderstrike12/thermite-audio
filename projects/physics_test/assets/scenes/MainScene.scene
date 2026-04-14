@@ -1,0 +1,121 @@
+{
+    "version": 1,
+    "entities": [
+        0,
+        1,
+        2
+    ],
+    "Name": {
+        "0": {
+            "name": "Sun"
+        },
+        "1": {
+            "name": "Camera"
+        },
+        "2": {
+            "name": "Entity_2"
+        }
+    },
+    "Transform": {
+        "0": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_rotation": {
+                "w": 0.8660253882408142,
+                "x": 0.0,
+                "y": -0.5,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "2": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        }
+    },
+    "Environment": {
+        "2": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "volcanic_planet.hdr"
+                }
+            },
+            "object_opaque_distance": 128.0,
+            "object_transparent_distance": 152.0,
+            "object_opacity_transition": 10.0
+        }
+    },
+    "Camera": {
+        "1": {
+            "fov": 80.0,
+            "pitch": 0.0,
+            "yaw": 90.0,
+            "active": true
+        }
+    },
+    "Light": {
+        "0": {
+            "color": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "temperature": 5200.0,
+            "type": "SUN_LIGHT",
+            "light": {
+                "index": 1,
+                "value": {
+                    "source_angle": 0.10000000149011612,
+                    "luminous_intensity": 1.0
+                }
+            }
+        }
+    },
+    "systems": null
+}
