@@ -10,6 +10,7 @@
 #include "engine/tools/serializer/ecs.hpp"
 
 #include "engine/core/input/input.hpp"
+#include "engine/core/renderer/renderer.hpp"
 
 namespace tmt {
 
@@ -43,6 +44,9 @@ void Scenes::swap_scenes() {
         Log::error(Log::Scope::ENGINE, "[Scenes] swap_scenes: Scene not registered");
         return;
     }
+
+    /* Reset Particles */
+    engine.renderer.kill_particles = true;
 
     /* Unload */
     OnPreUnloadScene::dispatch();

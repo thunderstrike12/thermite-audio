@@ -30,10 +30,8 @@ void PrefabMode::on_switch_to(const std::any& meta_data) {
         Log::error("PrefabMode::on_switch_to called without prefab location meta data");
         return;
     }
-
-    /* Reset Particles and Disable TAA */
+    /* Disable TAA */
     engine.renderer.enable_taa = false;
-    engine.renderer.kill_particles = true;
 
     engine.scenes.load_scene<PrefabEditScene>();
 

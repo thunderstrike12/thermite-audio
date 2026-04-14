@@ -81,10 +81,9 @@ void VoxelMode::on_switch_to(const std::any& meta_data) {
     Environment& environment = engine.ecs.create_entity<Environment>();
     environment.resource = engine.resources.load_resource<Envmap>(IO::FileLocation { IO::Location::EDITOR, "volcanic_planet.hdr" });
 
-    /* Switch back display mode, disable TAA and kill active particles */
+    /* Switch back display mode, disable TAA */
     engine.renderer.display_mode = cached_display_mode;
     engine.renderer.enable_taa = false;
-    engine.renderer.kill_particles = true;
 }
 
 void VoxelMode::on_switch_away() {
