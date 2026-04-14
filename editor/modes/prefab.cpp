@@ -9,6 +9,7 @@
 #include "engine/core/logger.hpp"
 #include "engine/tools/serializer.hpp"
 #include "engine/tools/serializer/ecs.hpp"
+#include "engine/core/renderer/renderer.hpp"
 
 #include "editor/core/systems/pop_up/pop_up.hpp"
 
@@ -29,6 +30,10 @@ void PrefabMode::on_switch_to(const std::any& meta_data) {
         Log::error("PrefabMode::on_switch_to called without prefab location meta data");
         return;
     }
+
+    /* Reset Particles and Disable TAA */
+    engine.renderer.enable_taa = false;
+    engine.renderer.kill_particles = true;
 
     engine.scenes.load_scene<PrefabEditScene>();
 
