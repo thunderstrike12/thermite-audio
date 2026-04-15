@@ -52,13 +52,15 @@ void Scenes::swap_scenes() {
     OnPreUnloadScene::dispatch();
     if (active_scene) active_scene->on_end();
     active_scene_type = NULL_SCENE;
-    engine.ecs.clear();
     OnSceneEnd::dispatch();
 
     const bool was_playing = engine.game_controller.is_playing();
     if (was_playing) {
         engine.ecs.on_game_end();
     }
+
+    /* Clear scene after we end everything */
+    engine.ecs.clear();
 
     /* Load */
     SceneInfo& info = registered_scenes.at(next_scene_type);
