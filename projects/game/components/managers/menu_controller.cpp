@@ -13,6 +13,11 @@
 #include "engine/systems/gameplay/gameplay.hpp"               // also probably not disable this one
 #include "engine/systems/motion_math/motion_math_system.hpp"  // undure of this pause either
 #include "engine/systems/physics/physics_system.hpp"
+#include "engine/tools/player_data.hpp"
+#include "projects/game/components/development_tools/save_data.hpp"
+#include "projects/game/components/gameplay_functionality_components/ore_collector.hpp"
+#include "projects/game/data_headers/save_entries.hpp"
+#include "projects/game/data_headers/wallet.hpp"
 
 namespace game {
 
@@ -67,6 +72,11 @@ void MenuController::update(const tmt::FrameData& time) {
 
 void MenuController::end() {
     tmt::engine.ecs.get_dispatcher().sink<EndRun>().disconnect<&MenuController::enable_end_of_game_menu>(this);
+    auto has_ended { tmt::engine.ecs.get_component<Player>(tmt::engine.ecs.view<Player>().front().entity).player_ended_run };
+    if (has_ended == false) {
+        // trigger death of player if forced quit
+        enable_end_of_game_menu({ true });
+    }
 }
 
 void MenuController::enable_pause_menu() const {
@@ -183,6 +193,7 @@ void MenuController::enable_end_of_game_menu(const EndRun& event) const {
 
     // Open end of game menu
     if (event.player_dead) {
+        // Ore gets reduced here
         if (death_menu_entity == entt::null) {
             tmt::Log::error("No death menu found, please add the menu to the menu controller.");
             return;
@@ -197,6 +208,12 @@ void MenuController::enable_end_of_game_menu(const EndRun& event) const {
         unlock_mouse();
         tmt::engine.ecs.enable(end_run_menu_entity);
     }
+    // this run
+    float multiplier = 1.0f;
+    if (event.player_dead) {
+        multiplier = penalty_percentage;
+    }
+    save_resources_on_run(multiplier);
 }
 
 void MenuController::lock_mouse() const {

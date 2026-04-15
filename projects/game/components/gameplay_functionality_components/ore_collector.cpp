@@ -3,6 +3,8 @@
 #include "projects/game/components/development_tools/collision_trigger.hpp"
 #include "engine/core/polyline.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
+#include "engine/tools/player_data.hpp"
+#include "projects/game/data_headers/save_entries.hpp"
 #include "projects/game/data_headers/wallet.hpp"
 void game::OreCollector::start() {
     tmt::engine.ecs.get_dispatcher().sink<TriggerCollisionEvent>().connect<&OreCollector::on_collision_trigger>(this);
@@ -84,6 +86,6 @@ void game::OreCollector::on_collision_trigger(const TriggerCollisionEvent& trigg
         auto count = type_counts[static_cast<uint8_t>(mat_type)];
         if (count == 0) continue;
 
-        wallet->resource_counts[ore.ore_resource] += count * ore.resource_per_voxel;
+        wallet->currencies.resource_counts[ore.ore_resource] += count * ore.resource_per_voxel;
     }
 }

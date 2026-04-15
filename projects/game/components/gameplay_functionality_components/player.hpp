@@ -40,7 +40,6 @@ class Player : public tmt::GameComponent<Player> {
     void attempt_attach(tmt::Input& input);
     void on_attach(const AttachEvent& event);
     void end() override;
-
     float camera_sensitivity = 0.1f;
 
     // Movement parameters
@@ -81,6 +80,7 @@ class Player : public tmt::GameComponent<Player> {
 
     float recharge_distance = 20.0f;
     RayCollisionCheck ray_check;
+    bool player_ended_run = false;
 
    private:
     void refill(float delta);
@@ -101,7 +101,6 @@ class Player : public tmt::GameComponent<Player> {
     float previous_max_energy = energy.max_value;
     float previous_energy = energy.value;
     float out_of_energy_timer = 0.0f;
-    bool player_ended_run = false;
 };
 
 }  // namespace game

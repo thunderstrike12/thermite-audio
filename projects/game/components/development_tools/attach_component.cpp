@@ -52,8 +52,11 @@ void game::AttachComponent::update(const tmt::FrameData& time) {
         tmt::engine.ecs.get_dispatcher().trigger<TriggerMovementEvent>({ .trigger = entity });
     }
 
+    auto player { tmt::engine.ecs.view<Player>().front().entity };
+    auto& player_component { tmt::engine.ecs.get_component<Player>(player) };
     // ending run logic
-    if (input.get_action_duration(action::TRIGGER_RUN_END) > time_to_end_run) {
+    if (player_component.player_ended_run == false && input.get_action_duration(action::TRIGGER_RUN_END) > time_to_end_run) {
+        player_component.player_ended_run = true;
         tmt::engine.ecs.get_dispatcher().trigger<EndRun>({ .player_dead = false });
     }
 }

@@ -15,7 +15,6 @@ class OreCollector : public tmt::GameComponent<OreCollector> {
     // Shoots rays
     float radius = 1.0f;
     // debugging settings
-
     tmt::Entity wallet_entity { entt::null };
 
    private:

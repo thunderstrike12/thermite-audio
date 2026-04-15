@@ -50,11 +50,11 @@ void WalletUiLink::change_text() const {
 void WalletUiLink::update_value() {
     if (component_check()) {
         if (resource_to_display == DisplayTextType::DOLLARS) {
-            current_value = static_cast<int>(wallet_component->dollars);
+            current_value = static_cast<int>(wallet_component->currencies.dollars);
         } else {
             // Cast enum to OreResources and use directly
             auto ore_type = static_cast<OreProperties::OreResources>(resource_to_display);
-            current_value = static_cast<int>(wallet_component->resource_counts.at(ore_type));
+            current_value = static_cast<int>(wallet_component->currencies.resource_counts.at(ore_type));
         }
     }
 
