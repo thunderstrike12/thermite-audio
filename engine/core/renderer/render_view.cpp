@@ -16,6 +16,7 @@
 
 #include "core/components/camera.hpp"
 #include "core/components/transform.hpp"
+#include "engine/tools/player_data.hpp"
 
 namespace tmt {
 
@@ -38,89 +39,83 @@ void RenderView::init() {
         render_target = r.unwrap();
     }
 
+    /* clang-format off */
     /* Viewport Texture */
-    viewport.texture = bank.create_texture(
-                               "Viewport Texture", TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA8Unorm,
-                               { (uint32_t)engine.window.width, (uint32_t)engine.window.height, 0 }
-    )
-                           .expect("failed to initialize attachment texture");
+    viewport.texture = bank.create_texture("Viewport Texture", 
+        TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA8Unorm, 
+        { (uint32_t)engine.window.width, (uint32_t)engine.window.height, 0 }
+    ).expect("failed to initialize attachment texture");
 
     /* Viewport Image */
     viewport.image = bank.create_image("Viewport Image", viewport.texture).expect("failed to initialize attachment image.");
 
     /* Create the active render view buffer */
-    render_view_buffer = bank.create_buffer("Render View Buffer", BufferUsage::Constant | BufferUsage::TransferDst, sizeof(RenderView)).expect("failed to create render view buffer.");
+    render_view_buffer = bank.create_buffer("Render View Buffer", 
+        BufferUsage::Constant | BufferUsage::TransferDst, sizeof(RenderView)
+    ).expect("failed to create render view buffer.");
 
-    /* Create the visibility buffer */
-    const Size3D view_size { gpu_view.resolution.x, gpu_view.resolution.y };
-    vbuffer.texture =
-        bank.create_texture("Visibility Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG32Uint, view_size).expect("failed to create vbuffer texture.");
+    /* Create the visibility & depth buffer */
+    const Size3D full_rate { gpu_view.resolution.x, gpu_view.resolution.y };
+    vbuffer.texture = bank.create_texture("Visibility Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG32Uint, full_rate).expect("failed to create vbuffer texture.");
     vbuffer.image = bank.create_image("Visibility Buffer Image", vbuffer.texture).expect("failed to create vbuffer image.");
     dbuffer.texture =
-        bank.create_texture("Depth Buffer Texture", TextureUsage::DepthStencil | TextureUsage::Sampled, TextureFormat::D32Sfloat, view_size).expect("failed to create depth buffer texture.");
+        bank.create_texture("Depth Buffer Texture", TextureUsage::DepthStencil | TextureUsage::Sampled, TextureFormat::D32Sfloat, full_rate).expect("failed to create depth buffer texture.");
     dbuffer.image = bank.create_image("Depth Buffer Image", dbuffer.texture).expect("failed to create depth buffer image.");
 
-    /* Calculate the render size (based on shading rate) */
-    Size3D render_size { view_size.x, view_size.y };
-    if (shading_rate_di == ShadingRate::HALF_RATE) {
-        render_size.x = render_size.x >> 1;
-    } else if (shading_rate_di == ShadingRate::QUARTER_RATE) {
-        render_size.x = render_size.x >> 1;
-        render_size.y = render_size.y >> 1;
-    }
+    /* Calculate the specular and diffuse shading resolutions */
+    const RendererSettings& settings = engine.player_data.get<RendererSettings>("RendererSettings");
+    const Size3D diff_rate = rated_resolution(full_rate, settings.diff_shading_rate);
+    const Size3D spec_rate = rated_resolution(full_rate, settings.spec_shading_rate);
+
+    /* Create specular and diffuse intermediate buffers */
+    diff_buffer.texture = bank.create_texture("Intermediate Diffuse Buffer Texture", 
+        TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, diff_rate
+    ).expect("failed to create diffuse buffer texture.");
+    diff_buffer.image = bank.create_image("Intermediate Diffuse Buffer Image", diff_buffer.texture).expect("failed to create diffuse buffer image.");
+    spec_buffer.texture = bank.create_texture("Intermediate Specular Buffer Texture", 
+        TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, spec_rate
+    ).expect("failed to create specular buffer texture.");
+    spec_buffer.image = bank.create_image("Intermediate Specular Buffer Image", spec_buffer.texture).expect("failed to create specular buffer image.");
 
     /* Create the luminance buffer */
-    lbuffer.texture = bank.create_texture("Luminance Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, render_size)
+    lbuffer.texture = bank.create_texture("Luminance Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, full_rate)
                           .expect("failed to create lbuffer texture.");
     lbuffer.image = bank.create_image("Luminance Buffer Image", lbuffer.texture).expect("failed to create lbuffer image.");
-
-    nbuffer.texture = bank.create_texture("Denoised Luminance Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, render_size)
-                          .expect("failed to create nbuffer texture.");
-    nbuffer.image = bank.create_image("Denoised Luminance Buffer Image", nbuffer.texture).expect("failed to create nbuffer image.");
 
     /* Create the thresholded luminance buffer */
     tbuffer.meta = { 7, 1 };  // Set 7 mips, 1 array layer
     tbuffer.texture =
         bank.create_texture(
-                "Thresholded Luminance Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, render_size, tbuffer.meta
+                "Thresholded Luminance Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, full_rate, tbuffer.meta
         )
             .expect("failed to create tbuffer texture.");
     for (uint32_t curr_mip = 0; curr_mip < tbuffer.meta.mips; curr_mip++)
         tbuffer.images.push_back(bank.create_image("Thresholded Luminance Buffer Image", tbuffer.texture, curr_mip).expect("failed to create tbuffer image."));
 
-    /* Quarter size specular buffer */
-    const Size3D quarter_size { view_size.x >> 1, view_size.y >> 1 };
-    raw_spec_buffer.texture = bank.create_texture("Raw Specular Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, quarter_size)
-                                  .expect("failed to create raw specular buffer texture.");
-    raw_spec_buffer.image = bank.create_image("Raw Specular Buffer Image", raw_spec_buffer.texture).expect("failed to create raw specular buffer image.");
-    spec_buffer.texture = bank.create_texture("Specular Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, quarter_size)
-                              .expect("failed to create specular buffer texture.");
-    spec_buffer.image = bank.create_image("Specular Buffer Image", spec_buffer.texture).expect("failed to create specular buffer image.");
-
     /* History Screen Buffers */
-    hbuffer1.texture = bank.create_texture("History1 Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA16Sfloat, render_size)
-                           .expect("failed to initialize history buffer texture");
+    hbuffer1.texture = bank.create_texture("History1 Buffer Texture", 
+        TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA16Sfloat, full_rate
+    ).expect("failed to initialize history buffer texture");
     hbuffer1.image = bank.create_image("History1 Buffer Image", hbuffer1.texture).expect("failed to initialize history buffer image.");
-    hbuffer2.texture = bank.create_texture("History2 Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA16Sfloat, render_size)
-                           .expect("failed to initialize history buffer texture");
+    hbuffer2.texture = bank.create_texture("History2 Buffer Texture", 
+        TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA16Sfloat, full_rate
+    ).expect("failed to initialize history buffer texture");
     hbuffer2.image = bank.create_image("History2 Buffer Image", hbuffer2.texture).expect("failed to initialize history buffer image.");
 
     /* Motion Vector Buffer */
-    mbuffer.texture = bank.create_texture("Motion Vector Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RG16Sfloat, render_size)
-                          .expect("failed to initialize motion vector buffer texture");
+    mbuffer.texture = bank.create_texture("Motion Vector Buffer Texture", 
+        TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RG16Sfloat, full_rate
+    ).expect("failed to initialize motion vector buffer texture");
     mbuffer.image = bank.create_image("Motion Vector Buffer Image", mbuffer.texture).expect("failed to initialize motion vector buffer image.");
 
     /* Create the macrofacet cache */
     const uint64_t cache_size = 10'000'000u; /* 480 MB */
     macrofacet_cache = bank.create_buffer("Macrofacet Cache Buffer", BufferUsage::Storage, cache_size, 48ull /* bytes */).expect("failed to create macrofacet cache buffer.");
 
-    /* Generate directional albedo LUT */
-    // generate_e_lut(diralbedo_lut_texture, 256u);
-    // diralbedo_lut = bank.create_image("Directional Albedo LUT Image", diralbedo_lut_texture).expect("failed to create directional albedo lut image.");
-
     /* Load blue noise textures */
     blue_noise2d = engine.resources.load_resource<Texture2D>({ IO::Location::ENGINE, "blue_noise_rg512.png" });
     blue_noise1d = engine.resources.load_resource<Texture2D>({ IO::Location::ENGINE, "blue_noise_r512.png" });
+    /* clang-format on */
 }
 
 void RenderView::update() {
@@ -147,6 +142,7 @@ void RenderView::update() {
 
 void RenderView::update_gpu_view(RenderGraph& render_graph, const Camera& camera, const Transform& transform) {
     const float aspect_ratio = (float)gpu_view.resolution.x / (float)gpu_view.resolution.y;
+    const RendererSettings& settings = engine.player_data.get<RendererSettings>("RendererSettings");
 
     /* Calculate camera jitter */
     const glm::vec2 r2 = r2_sequence(frame_counter);  // [0, 1) range
@@ -171,8 +167,8 @@ void RenderView::update_gpu_view(RenderGraph& render_graph, const Camera& camera
     gpu_view.origin = glm::vec4(transform.get_world_position(), 0.0f);
     gpu_view.frame_index = frame_counter;
     gpu_view.dt = engine.frame_data().delta_time;
-    gpu_view.shading_rate_di = (uint32_t)shading_rate_di;
-    gpu_view.shading_rate_gi = (uint32_t)shading_rate_gi;
+    gpu_view.diff_shading_rate = (uint32_t)settings.diff_shading_rate;
+    gpu_view.spec_shading_rate = (uint32_t)settings.spec_shading_rate;
     gpu_view.jitter = pixel_offset;
     gpu_view.prev_jitter = prev_jitter;
 
@@ -203,12 +199,10 @@ void RenderView::deinit() {
     bank.destroy(dbuffer.texture);
     bank.destroy(lbuffer.image);
     bank.destroy(lbuffer.texture);
+    bank.destroy(diff_buffer.image);
+    bank.destroy(diff_buffer.texture);
     for (auto& timage : tbuffer.images) bank.destroy(timage);
     bank.destroy(tbuffer.texture);
-    bank.destroy(nbuffer.image);
-    bank.destroy(nbuffer.texture);
-    bank.destroy(raw_spec_buffer.image);
-    bank.destroy(raw_spec_buffer.texture);
     bank.destroy(spec_buffer.image);
     bank.destroy(spec_buffer.texture);
     bank.destroy(hbuffer1.image);
@@ -261,34 +255,25 @@ Ray RenderView::pixel_ray(glm::ivec2 pixel) const {
 }
 
 void RenderView::resize_textures() {
-    const Size3D view_size { gpu_view.resolution.x, gpu_view.resolution.y };
     VRAMBank& bank = engine.renderer.vram_bank();
+    const Size3D full_rate { gpu_view.resolution.x, gpu_view.resolution.y };
 
-    /* Calculate the render size (based on shading rate) */
-    Size3D render_size { view_size.x, view_size.y };
-    if (shading_rate_di == ShadingRate::HALF_RATE) {
-        render_size.x = render_size.x >> 1;
-    } else if (shading_rate_di == ShadingRate::QUARTER_RATE) {
-        render_size.x = render_size.x >> 1;
-        render_size.y = render_size.y >> 1;
-    }
-
-    /* Quarter rate screen size */
-    const Size3D quarter_size { view_size.x >> 1, view_size.y >> 1 };
+    /* Calculate the specular and diffuse shading resolutions */
+    const RendererSettings& settings = engine.player_data.get<RendererSettings>("RendererSettings");
+    const Size3D diff_rate = rated_resolution(full_rate, settings.diff_shading_rate);
+    const Size3D spec_rate = rated_resolution(full_rate, settings.spec_shading_rate);
 
     /* Resize the screen buffers */
-    bank.resize_texture(viewport.texture, view_size).expect("failed to resize viewport texture.");
-    bank.resize_texture(vbuffer.texture, view_size).expect("failed to resize vbuffer texture.");
-    bank.resize_texture(dbuffer.texture, view_size).expect("failed to resize depth buffer texture.");
-    bank.resize_texture(lbuffer.texture, render_size).expect("failed to resize lbuffer texture.");
-    bank.resize_texture(nbuffer.texture, render_size).expect("failed to resize nbuffer texture.");
-    bank.resize_texture(raw_spec_buffer.texture, quarter_size).expect("failed to resize raw specular buffer texture.");
-    bank.resize_texture(spec_buffer.texture, quarter_size).expect("failed to resize specular buffer texture.");
-    bank.resize_texture(hbuffer1.texture, view_size).expect("failed to resize hbuffer texture.");
-    bank.resize_texture(hbuffer2.texture, view_size).expect("failed to resize hbuffer texture.");
-    bank.resize_texture(mbuffer.texture, view_size).expect("failed to resize mbuffer texture.");
-
-    bank.resize_texture(tbuffer.texture, render_size, tbuffer.meta).expect("failed to resize tbuffer texture.");
+    bank.resize_texture(viewport.texture, full_rate).expect("failed to resize viewport texture.");
+    bank.resize_texture(vbuffer.texture, full_rate).expect("failed to resize vbuffer texture.");
+    bank.resize_texture(dbuffer.texture, full_rate).expect("failed to resize depth buffer texture.");
+    bank.resize_texture(lbuffer.texture, full_rate).expect("failed to resize lbuffer texture.");
+    bank.resize_texture(diff_buffer.texture, diff_rate).expect("failed to resize diffuse buffer texture.");
+    bank.resize_texture(spec_buffer.texture, spec_rate).expect("failed to resize specular buffer texture.");
+    bank.resize_texture(hbuffer1.texture, full_rate).expect("failed to resize hbuffer texture.");
+    bank.resize_texture(hbuffer2.texture, full_rate).expect("failed to resize hbuffer texture.");
+    bank.resize_texture(mbuffer.texture, full_rate).expect("failed to resize mbuffer texture.");
+    bank.resize_texture(tbuffer.texture, full_rate, tbuffer.meta).expect("failed to resize tbuffer texture.");
 }
 
 }  // namespace tmt

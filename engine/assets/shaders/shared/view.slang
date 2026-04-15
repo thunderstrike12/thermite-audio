@@ -19,9 +19,9 @@ public struct RenderView {
     /* Delta Time in seconds. */
     public float dt;
     /* 0 = FullRate, 1 = HalfRate, 2 = QuarterRate */
-    public uint shading_rate_di;
+    public uint diff_shading_rate;
     /* 0 = FullRate, 1 = HalfRate, 2 = QuarterRate */
-    public uint shading_rate_gi;
+    public uint spec_shading_rate;
     /* Current frame jitter offset */
     public float2 jitter;
     /* Prev frame jitter offset */

@@ -45,11 +45,8 @@ RWTexture2D<float3> specular;
 [shader("compute")]
 [numthreads(16, 8, 1)]
 void main(int2 thread_id: SV_DispatchThreadID) {
-    /* Quarter-rate shading */
-    const int2 offset = int2(render_view.frame_index & 0b1, (render_view.frame_index >> 1) & 0b1);
-    const int2 pixel_id = (thread_id << 1) + offset;
-
     /* Bounds check */
+    const int2 pixel_id = rate_to_full(thread_id, render_view.spec_shading_rate);
     if (any(pixel_id >= render_view.resolution)) return;
 
     /* Load visibility buffer data */

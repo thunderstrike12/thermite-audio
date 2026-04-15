@@ -33,9 +33,9 @@ struct GpuView {
     /* Delta Time in seconds. */
     glm::float32 dt {};
     /* Shading rate DI. (0 = 1/1, 1 = 1/2, 2 = 1/4) */
-    glm::uint shading_rate_di = 0u;
+    glm::uint diff_shading_rate = 0u;
     /* Shading rate GI. (0 = 1/1, 1 = 1/2, 2 = 1/4) */
-    glm::uint shading_rate_gi = 2u;
+    glm::uint spec_shading_rate = 2u;
     /* Current frame jitter offset */
     glm::vec2 jitter {};
     /* Prev frame jitter offset */
@@ -55,13 +55,6 @@ struct PostProcessBuffer {
     std::vector<Image> images {};
 };
 
-/* Direct Illumination Shading Rate. */
-enum class ShadingRate : uint32_t {
-    FULL_RATE = 0u,    /* Perform shading for every pixel on screen. */
-    HALF_RATE = 1u,    /* Perform shading for half the pixels on screen. */
-    QUARTER_RATE = 2u, /* Perform shading for 1/4th the pixels on screen. */
-};
-
 struct RenderView {
     RenderView() = default;
     ~RenderView() = default;
@@ -71,15 +64,8 @@ struct RenderView {
     void update_gpu_view(RenderGraph& render_graph, const Camera& camera, const Transform& transform);
     void deinit();
 
-    /* Get the shading rate. */
-    inline ShadingRate get_shading_rate_di() const { return shading_rate_di; };
-    inline ShadingRate get_shading_rate_gi() const { return shading_rate_gi; };
-    /* Set the shading rate. */
-    inline void set_shading_rate_di(ShadingRate new_shading_rate) {
-        if (shading_rate_di == new_shading_rate) return;
-        shading_rate_di = new_shading_rate;
-        resize_textures();
-    };
+    /* Used to force update gbuffers when settings have been modified. */
+    inline void update_gbuffers() { resize_textures(); }
 
     /* Returns the viewport image if we're in the editor, or the render target if we're in the game. */
     BindHandle get_render_image() const;
@@ -101,16 +87,15 @@ struct RenderView {
     ScreenBuffer vbuffer {};  /* Visibility buffer (WxH, 6->8 bytes) */
     ScreenBuffer dbuffer {};  /* Depth buffer (WxH, 4 bytes) */
     ScreenBuffer lbuffer {};  /* Raw luminance buffer (WxH, 4 bytes) */
-    ScreenBuffer nbuffer {};  /* Denoised luminance buffer (WxH, 4 bytes) */
     ScreenBuffer hbuffer1 {}; /* Accumulated (History) frame buffer (WxH, 8 bytes) */
     ScreenBuffer hbuffer2 {}; /* Accumulated (History) frame buffer (WxH, 8 bytes) */
     ScreenBuffer mbuffer {};  /* Motion Vector buffer (WxH, 4 bytes) */
     /* Post Process buffers */
     PostProcessBuffer tbuffer {}; /* Thresholded luminance buffer (WxH, 4 bytes) */
 
-    /* Intermediate specular luminance buffer */
-    ScreenBuffer raw_spec_buffer {};
+    /* Intermediate specular & diffuse buffers */
     ScreenBuffer spec_buffer {};
+    ScreenBuffer diff_buffer {};
 
     /* Macrofacet buffers */
     Buffer macrofacet_cache {}; /* Macrofacet hash cache (10.000.000, 48 bytes) */
@@ -132,8 +117,6 @@ struct RenderView {
     glm::vec2 prev_jitter { 0.0f };
 
    private:
-    ShadingRate shading_rate_di = ShadingRate::FULL_RATE;
-    ShadingRate shading_rate_gi = ShadingRate::QUARTER_RATE;
     void resize_textures();
 };
 

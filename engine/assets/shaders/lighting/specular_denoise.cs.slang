@@ -40,7 +40,7 @@ struct Sample {
 
 bool fetch_center(const int2 thread_id, out float3 c, out float3 n, out float3 p, out float r) {
     /* Load visibility buffer data */
-    const uint64_t facet_key = asuint64(vbuffer[thread_id << 1]);
+    const uint64_t facet_key = asuint64(vbuffer[rate_to_full(thread_id, render_view.spec_shading_rate)]);
     c = lbuffer_in[thread_id];
     n = 0.0f; p = 0.0f; r = 0.0f;
 
@@ -110,9 +110,8 @@ Sample fetch_sample(const int2 vpixel, const int2 lpixel) {
 [shader("compute")]
 [numthreads(16, 8, 1)]
 void main(int2 thread_id: SV_DispatchThreadID) {
-    const int2 pixel_id = thread_id << 1;
-
     /* Bounds check */
+    const int2 pixel_id = rate_to_full(thread_id, render_view.spec_shading_rate);
     if (any(pixel_id >= render_view.resolution)) return;
 
     /* Fetch the center data */
@@ -133,7 +132,7 @@ void main(int2 thread_id: SV_DispatchThreadID) {
     [ForceUnroll] for (uint i = 0u; i < 9u; ++i) {
         /* Sample neighbour */
         const int2 lpixel = thread_id + offsets[i] * step_size;
-        const int2 vpixel = lpixel << 1;
+        const int2 vpixel = rate_to_full(lpixel, render_view.spec_shading_rate);
         const Sample sample = fetch_sample(vpixel, lpixel);
         if (dot(sample.normal, normal) <= 0.01f) continue;
 

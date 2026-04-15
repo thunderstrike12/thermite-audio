@@ -10,6 +10,7 @@
 #include "engine/core/renderer/scene_view.hpp"
 #include "engine/core/renderer/voxel_object.hpp"
 #include "engine/core/renderer/renderer.hpp"
+#include "engine/tools/player_data.hpp"
 
 namespace tmt {
 
@@ -32,12 +33,13 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
     /* Only run this pass if it's outputs are actually used */
     if (engine.renderer.display_mode != DisplayMode::ILLUMINANCE && engine.renderer.display_mode != DisplayMode::CACHE && engine.renderer.display_mode != DisplayMode::DEFAULT) return;
 
-    /* Get Render Image */
+    /* Gather buffer handles */
     const BindHandle render_image = render_view.get_render_image();
-    const BindHandle diffuse_image = render_view.lbuffer.image;
-    const BindHandle raw_specular_image = render_view.raw_spec_buffer.image;
-    const BindHandle specular_image = render_view.spec_buffer.image;
-    const glm::uvec2 render_res = render_view.gpu_view.resolution;
+    const BindHandle diff_buffer = render_view.diff_buffer.image, raw_diff_buffer = render_view.lbuffer.image;
+    const BindHandle spec_buffer = render_view.spec_buffer.image, raw_spec_buffer = render_view.lbuffer.image;
+    const BindHandle output_buffer = render_view.lbuffer.image;
+    const Size3D output_res { render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y };
+    const RendererSettings& settings = engine.player_data.get<RendererSettings>("RendererSettings");
 
     if (cache_init == false) {
         /* Cache init pass */
@@ -56,58 +58,65 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
             .work_size(div_up(CACHE_SIZE, 8u));
     }
 
-    { /* Shading resolution based on shading rate */
-        glm::uvec2 shading_res = render_view.gpu_view.resolution;
-        if (render_view.get_shading_rate_di() == ShadingRate::HALF_RATE) shading_res = div_up(render_view.gpu_view.resolution, 2u, 1u);
-        if (render_view.get_shading_rate_di() == ShadingRate::QUARTER_RATE) shading_res = div_up(render_view.gpu_view.resolution, 2u, 2u);
-
-        /* Direct illumination pass */
-        render_graph.add_compute_pass("direct illumination pass", "lighting/direct_illumination.cs")
-            .read(render_view.render_view_buffer) /* Render view buffer */
-            .read(scene_view.scene_view) /* Scene view buffer */
-            .read(render_view.blue_noise2d->image) /* Blue noise texture */
-            .read(scene_view.bvh_nodes) /* TLAS nodes buffer */
-            .read(scene_view.object_indices) /* Voxel object indices buffer */
-            .read(scene_view.object_data) /* Voxel objects buffer */
-            .read(scene_view.lights_data) /* Lights data buffer */
-            // .write(render_view.macrofacet_cache) /* Cache buffer */
-            .read(render_view.vbuffer.image) /* Visibility buffer */
-            .write(diffuse_image) /* Diffuse buffer */
+    { /* Diffuse illumination pass */
+        const Size3D rate = rated_resolution(output_res, settings.diff_shading_rate);
+        render_graph.add_compute_pass("diffuse pass", "lighting/diffuse.cs")
+            /* Render & Scene view */
+            .read(render_view.render_view_buffer)
+            .read(scene_view.scene_view)
+            /* Noise texture */
+            .read(render_view.blue_noise2d->image)
+            /* Ray-tracing buffers */
+            .read(scene_view.bvh_nodes)
+            .read(scene_view.object_indices)
+            .read(scene_view.object_data)
+            /* Light data */
+            .read(scene_view.lights_data)
+            /* Visibility buffer & Output buffer */
+            .read(render_view.vbuffer.image)
+            .write(diff_buffer)
             .group_size(16, 8)
-            .work_size(shading_res.x, shading_res.y);
+            .work_size(rate.x, rate.y);
     }
 
-    const glm::uvec2 quarter_rate = div_up(render_view.gpu_view.resolution, 2u, 2u);
-
-    /* Reflections pass */
-    render_graph.add_compute_pass("reflections pass", "lighting/reflections.cs")
-        .read(render_view.render_view_buffer) /* Render view buffer */
-        .read(scene_view.scene_view) /* Scene view buffer */
-        .read(engine.renderer.linear_sampler)
-        .read(render_view.blue_noise2d->image) /* Blue noise texture */
-        .read(scene_view.bvh_nodes) /* TLAS nodes buffer */
-        .read(scene_view.object_indices) /* Voxel object indices buffer */
-        .read(scene_view.object_data) /* Voxel objects buffer */
-        // .read(scene_view.lights_data) /* Lights data buffer */
-        .write(render_view.macrofacet_cache) /* Cache buffer */
-        .read(render_view.vbuffer.image) /* Visibility buffer */
-        .write(raw_specular_image) /* Specular buffer */
-        .group_size(16, 8)
-        .work_size(quarter_rate.x, quarter_rate.y);
-
-    if (engine.renderer.display_mode == DisplayMode::DEFAULT) {
+    { /* Specular illumination pass */
+        const Size3D rate = rated_resolution(output_res, settings.spec_shading_rate);
+        render_graph.add_compute_pass("specular pass", "lighting/specular.cs")
+            /* Render & Scene view */
+            .read(render_view.render_view_buffer)
+            .read(scene_view.scene_view)
+            /* Sampler & Noise texture */
+            .read(engine.renderer.linear_sampler)
+            .read(render_view.blue_noise2d->image)
+            /* Ray-tracing buffers */
+            .read(scene_view.bvh_nodes)
+            .read(scene_view.object_indices)
+            .read(scene_view.object_data)
+            /* Lighting cache (for reflecting environment) */
+            .write(render_view.macrofacet_cache)
+            /* Visibility buffer & Output buffer */
+            .read(render_view.vbuffer.image)
+            .write(raw_spec_buffer)
+            .group_size(16, 8)
+            .work_size(rate.x, rate.y);
+        
+        /* Specular denoising */
         for (uint32_t i = 0u; i < 6u; ++i) {
-            /* Denoising pass */
             uint32_t step_size = 1u << i;
-            render_graph.add_compute_pass("denoise pass", "lighting/wavelet_denoise.cs")
+            render_graph.add_compute_pass("specular denoise pass", "lighting/specular_denoise.cs")
+                /* Render view */
+                .read(render_view.render_view_buffer) 
+                /* Voxel objects */
+                .read(scene_view.object_data)
+                /* Visibility buffer */
+                .read(render_view.vbuffer.image) 
+                /* Luminance input & output buffers */
+                .read(((i & 0b1u) == 0u) ? raw_spec_buffer : spec_buffer)
+                .write(((i & 0b1u) == 0u) ? spec_buffer : raw_spec_buffer)
+                /* Step size push constant */
                 .push_constants(&step_size, 0u, sizeof(uint32_t))
-                .read(render_view.render_view_buffer) /* Render view buffer */
-                .read(scene_view.object_data) /* Voxel objects buffer */
-                .read(render_view.vbuffer.image) /* Visibility buffer */
-                .read(((i & 0b1u) == 0u) ? raw_specular_image : specular_image) /* Luminance buffer */
-                .write(((i & 0b1u) == 0u) ? specular_image : raw_specular_image) /* Luminance buffer */
                 .group_size(16, 8)
-                .work_size(quarter_rate.x, quarter_rate.y);
+                .work_size(rate.x, rate.y);
         }
     }
 
@@ -145,10 +154,10 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
         .read(render_view.render_view_buffer) /* Render view buffer */
         .write(render_view.macrofacet_cache) /* Cache buffer */
         .read(render_view.vbuffer.image) /* Visibility buffer */
-        .read(diffuse_image) /* Diffuse buffer */
-        .read(specular_image) /* Specular buffer */
+        .read(diff_buffer) /* Diffuse buffer */
+        .read(spec_buffer) /* Specular buffer */
         .group_size(16, 8)
-        .work_size(render_res.x, render_res.y);
+        .work_size(output_res.x, output_res.y);
 
     /* Cache flush pass */
     render_graph.add_compute_pass("cache flush pass", "lighting/cache_flush.cs")
@@ -157,27 +166,7 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
         .read(scene_view.object_data) /* Voxel objects buffer */
         .read(render_view.vbuffer.image) /* Visibility buffer */
         .group_size(16, 8)
-        .work_size(render_res.x, render_res.y);
-    
-    // { /* Global illumination pass */
-    //     glm::uvec2 shading_res = render_view.gpu_view.resolution;
-    //     if (render_view.get_shading_rate_gi() == ShadingRate::HALF_RATE) shading_res = div_up(render_view.gpu_view.resolution, 2u, 1u);
-    //     if (render_view.get_shading_rate_gi() == ShadingRate::QUARTER_RATE) shading_res = div_up(render_view.gpu_view.resolution, 2u, 2u);
-
-    //     render_graph.add_compute_pass("global illumination pass", "global_illumination.cs")
-    //         .read(render_view.render_view_buffer) /* Render view buffer */
-    //         .read(scene_view.scene_view) /* Scene view buffer */
-    //         .read(render_view.blue_noise->image) /* Blue noise texture */
-    //         .read(engine.renderer.linear_sampler)
-    //         .read(scene_view.bvh_nodes) /* TLAS nodes buffer */
-    //         .read(scene_view.object_indices) /* Voxel object indices buffer */
-    //         .read(scene_view.object_data) /* Voxel objects buffer */
-    //         .write(render_view.macrofacet_cache) /* Cache buffer */
-    //         .read(render_view.vbuffer.image) /* Visibility buffer */
-    //         .write(diffuse_image) /* Luminance buffer */
-    //         .group_size(16, 8)
-    //         .work_size(shading_res.x, shading_res.y);
-    // }
+        .work_size(output_res.x, output_res.y);
     
     /* Composite pass */
     if (engine.renderer.display_mode == DisplayMode::DEFAULT) {
@@ -188,9 +177,9 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
             .read(scene_view.object_data) /* Voxel objects buffer */
             .read(render_view.vbuffer.image) /* Visibility buffer */
             .write(render_view.macrofacet_cache) /* Cache buffer */
-            .write(diffuse_image) /* Luminance Output */
+            .write(output_buffer) /* Luminance Output */
             .group_size(16, 8)
-            .work_size(render_res.x, render_res.y);
+            .work_size(output_res.x, output_res.y);
     }
 
     /* Debug visualizations */
@@ -199,10 +188,10 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
             .read(render_view.render_view_buffer) /* Render view buffer */
             //.read(render_view.vbuffer.image) /* Visibility buffer */
             //.write(render_view.macrofacet_cache) /* Cache buffer */
-            .read(diffuse_image) /* Luminance buffer */
+            .read(diff_buffer) /* Luminance buffer */
             .write(render_image) /* Render target */
             .group_size(16, 8)
-            .work_size(render_res.x, render_res.y);
+            .work_size(output_res.x, output_res.y);
     }
     if (engine.renderer.display_mode == DisplayMode::CACHE) {
         render_graph.add_compute_pass("[debug] cache pass", "debug/cache.cs")
@@ -211,7 +200,7 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
             .write(render_view.macrofacet_cache) /* Cache buffer */
             .write(render_image) /* Render target */
             .group_size(16, 8)
-            .work_size(render_res.x, render_res.y);
+            .work_size(output_res.x, output_res.y);
     }
 }
 

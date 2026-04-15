@@ -23,9 +23,29 @@ enum class DisplayMode : uint32_t {
     MOTIONVECTORS, /* Visualize motion vectors. */
 };
 
+/* Shading rate. */
+enum class ShadingRate : uint32_t {
+    FULL_RATE = 0u,    /* Perform shading for every pixel on screen. */
+    HALF_RATE = 1u,    /* Perform shading for half the pixels on screen. */
+    QUARTER_RATE = 2u, /* Perform shading for 1/4th the pixels on screen. */
+};
+
+/* Get the resolution for a given shading rate. */
+inline Size3D rated_resolution(Size3D base, ShadingRate rate) {
+    if (rate == ShadingRate::HALF_RATE) {
+        base.x = base.x >> 1;
+    } else if (rate == ShadingRate::QUARTER_RATE) {
+        base.x = base.x >> 1;
+        base.y = base.y >> 1;
+    }
+    return base;
+}
+
 struct RendererSettings {
     float bloom_radius = 0.2f;
     float bloom_threshold = 1.0f;
+    ShadingRate diff_shading_rate = ShadingRate::HALF_RATE;
+    ShadingRate spec_shading_rate = ShadingRate::QUARTER_RATE;
 };
 
 class Renderer {

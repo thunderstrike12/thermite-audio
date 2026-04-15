@@ -227,6 +227,42 @@ public inline float2 dir_to_latlong(const float3 dir) {
     return uv;
 }
 
+/* Convert thread ID from full rate to a given shading rate pixel ID. */
+public [ForceInline] int2 full_to_rate(int2 thread_id, uint rate) {
+    int2 pixel_id = thread_id;
+    if (rate == 1u) {
+        /* Half-rate */
+        /*  [ X- ]  */
+        /*  [ -X ]  */
+        const int offset = pixel_id.y & 0b1;
+        pixel_id.x = (pixel_id.x + offset) >> 1;
+    } else if (rate == 2u) {
+        /* Quarter-rate */
+        /*  [ X- ]  */
+        /*  [ -- ]  */
+        pixel_id = (pixel_id >> 1);
+    }
+    return pixel_id;
+}
+
+/* Convert thread ID from a given shading rate to full rate pixel ID. */
+public [ForceInline] int2 rate_to_full(int2 thread_id, uint rate) {
+    int2 pixel_id = thread_id;
+    if (rate == 1u) {
+        /* Half-rate */
+        /*  [ X- ]  */
+        /*  [ -X ]  */
+        const int offset = pixel_id.y & 0b1;
+        pixel_id.x = (pixel_id.x << 1) + offset;
+    } else if (rate == 2u) {
+        /* Quarter-rate */
+        /*  [ X- ]  */
+        /*  [ -- ]  */
+        pixel_id = (pixel_id << 1);
+    }
+    return pixel_id;
+}
+
 public inline float3 spherical_to_dir(const float phi, const float theta) {
     float sinTheta = sin(theta);
     return float3(sinTheta * cos(phi),

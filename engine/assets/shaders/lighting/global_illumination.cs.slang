@@ -47,49 +47,49 @@ inline float3 ambient_occlusion(const float3 point, const float3 normal, const f
 [shader("compute")]
 [numthreads(16, 8, 1)]
 void main(int2 thread_id: SV_DispatchThreadID) {
-    int2 pixel_id = thread_id;
-    int2 resolution = render_view.resolution;
-    if (render_view.shading_rate_gi == 1u) {
-        /* Half-rate */
-        /*  [ XY ]  */
-        /*  [ YX ]  */
-        const int offset = (pixel_id.y + render_view.frame_index) & 0b1;
-        pixel_id.x = (pixel_id.x << 1) + offset;
-        resolution.x = resolution.x >> 1;
-    } else if (render_view.shading_rate_gi == 2u) {
-        /* Quarter-rate */
-        /*  [ XY ]  */
-        /*  [ ZW ]  */
-        const int2 offset = int2(render_view.frame_index & 0b1, (render_view.frame_index >> 1) & 0b1);
-        pixel_id = (pixel_id << 1) + offset;
-        resolution = resolution >> 1;
-    }
+    // int2 pixel_id = thread_id;
+    // int2 resolution = render_view.resolution;
+    // if (render_view.shading_rate_gi == 1u) {
+    //     /* Half-rate */
+    //     /*  [ XY ]  */
+    //     /*  [ YX ]  */
+    //     const int offset = (pixel_id.y + render_view.frame_index) & 0b1;
+    //     pixel_id.x = (pixel_id.x << 1) + offset;
+    //     resolution.x = resolution.x >> 1;
+    // } else if (render_view.shading_rate_gi == 2u) {
+    //     /* Quarter-rate */
+    //     /*  [ XY ]  */
+    //     /*  [ ZW ]  */
+    //     const int2 offset = int2(render_view.frame_index & 0b1, (render_view.frame_index >> 1) & 0b1);
+    //     pixel_id = (pixel_id << 1) + offset;
+    //     resolution = resolution >> 1;
+    // }
 
-    /* Bounds check */
-    if (any(pixel_id >= render_view.resolution)) return;
+    // /* Bounds check */
+    // if (any(pixel_id >= render_view.resolution)) return;
 
-    /* Load visibility buffer data */
-    const uint64_t facet_key = asuint64(vbuffer[pixel_id]);
+    // /* Load visibility buffer data */
+    // const uint64_t facet_key = asuint64(vbuffer[pixel_id]);
 
-    /* Exit early if the visibility for this pixel is null */
-    if (null_visibility(facet_key)) {
-        lbuffer[thread_id] = 0.0f;
-        return;
-    }
+    // /* Exit early if the visibility for this pixel is null */
+    // if (null_visibility(facet_key)) {
+    //     lbuffer[thread_id] = 0.0f;
+    //     return;
+    // }
 
-    /* Generate a ray for our render view */
-    const Ray ray = pinhole_ray(render_view, pixel_id);
+    // /* Generate a ray for our render view */
+    // const Ray ray = pinhole_ray(render_view, pixel_id);
 
-    /* Unpack visibility data */
-    const GeoData geo = unpack_geometry(unpack_visibility(facet_key), objects, ray);
-    const float3 hit_point = ray.origin + ray.dir * geo.depth + geo.normal * 0.001f;
+    // /* Unpack visibility data */
+    // const GeoData geo = unpack_geometry(unpack_visibility(facet_key), objects, ray);
+    // const float3 hit_point = ray.origin + ray.dir * geo.depth + geo.normal * 0.001f;
 
-    /* Ray trace global illuminance (AO for now) */
-    const float2 noise = r2(blue_noise[pixel_id % 512].rg, render_view.frame_index % 1024u);
-    const float3 illuminance = ambient_occlusion(hit_point, geo.normal, noise);
+    // /* Ray trace global illuminance (AO for now) */
+    // const float2 noise = r2(blue_noise[pixel_id % 512].rg, render_view.frame_index % 1024u);
+    // const float3 illuminance = ambient_occlusion(hit_point, geo.normal, noise);
 
-    /* Insert the sample into the illuminance cache */
-    /* TODO: This is very hacky (illuminance * 8.0f), we should properly handle this */
-    cache::insert(macrofacet_cache, facet_key, illuminance * 8.0f, 0.0f);
-    lbuffer[thread_id] = illuminance;
+    // /* Insert the sample into the illuminance cache */
+    // /* TODO: This is very hacky (illuminance * 8.0f), we should properly handle this */
+    // cache::insert(macrofacet_cache, facet_key, illuminance * 8.0f, 0.0f);
+    // lbuffer[thread_id] = illuminance;
 }
