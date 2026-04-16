@@ -7,21 +7,12 @@ void SellOreComponent::start() {
         return;
     }
 
-    wallet_component = tmt::engine.ecs.try_get_component<Wallet>(entity_with_wallet);
-    ore_properties_component = tmt::engine.ecs.try_get_component<OreProperties>(ore_property_entity);
-
-    if (!component_check()) {
-        return;
-    }
-
     if (auto* button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity)) {
         button_component->on_click.add(this, &SellOreComponent::down_toggle);
         button_component->on_release.add(this, &SellOreComponent::up_toggle);
     } else {
         tmt::Log::warn("No button found on entity {}", entity);
     }
-
-    ore_entry = &ore_properties_component->ores.at(material_to_sell);
 }
 
 void SellOreComponent::update(const tmt::FrameData& time) {
@@ -50,22 +41,13 @@ bool SellOreComponent::entity_check() const {
     return true;
 }
 
-bool SellOreComponent::component_check() const {
-    if (!wallet_component) {
-        tmt::Log::error("Wallet component missing on {}", entity_with_wallet);
-        return false;
-    }
-    if (!ore_properties_component) {
-        tmt::Log::error("OreProperty component missing on {}", ore_property_entity);
-        return false;
-    }
-    return true;
-}
-
 void SellOreComponent::sell_ore() {
-    if (wallet_component->currencies.resource_counts.at(ore_entry->ore_resource) > 1) {
-        wallet_component->currencies.resource_counts.at(ore_entry->ore_resource) -= 1;
-        wallet_component->currencies.dollars += static_cast<int>(ore_entry->value);
+    auto* wallet_component = tmt::engine.ecs.try_get_component<Wallet>(entity_with_wallet);
+    auto ore_entry = tmt::engine.ecs.try_get_component<OreProperties>(ore_property_entity)->ores.at(material_to_sell);
+
+    if (wallet_component->currencies.resource_counts.at(ore_entry.ore_resource) > 1) {
+        wallet_component->currencies.resource_counts.at(ore_entry.ore_resource) -= 1;
+        wallet_component->currencies.dollars += static_cast<int>(ore_entry.value);
     }
 }
 
