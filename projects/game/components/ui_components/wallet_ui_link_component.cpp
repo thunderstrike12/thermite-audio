@@ -51,6 +51,13 @@ void WalletUiLink::update_value() {
     if (component_check()) {
         if (resource_to_display == DisplayTextType::DOLLARS) {
             current_value = static_cast<int>(wallet_component->currencies.dollars);
+        } else if (resource_to_display == DisplayTextType::ALL_RESOURCES) {
+            // reset value first for accumulation
+            current_value = 0;
+            // accumulate resource counts
+            for (auto resource_pair : wallet_component->currencies.resource_counts) {
+                current_value += static_cast<int>(resource_pair.second);
+            }
         } else {
             // Cast enum to OreResources and use directly
             auto ore_type = static_cast<OreProperties::OreResources>(resource_to_display);

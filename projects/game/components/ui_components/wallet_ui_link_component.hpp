@@ -11,7 +11,8 @@ enum class DisplayTextType : uint8_t {
     COPPER = static_cast<uint8_t>(OreProperties::OreResources::COPPER),
     THERMITE = static_cast<uint8_t>(OreProperties::OreResources::THERMITE),
     TITANIUM = static_cast<uint8_t>(OreProperties::OreResources::TITANIUM),
-    DOLLARS
+    DOLLARS,
+    ALL_RESOURCES
 };
 
 class WalletUiLink : public tmt::GameComponent<WalletUiLink> {
