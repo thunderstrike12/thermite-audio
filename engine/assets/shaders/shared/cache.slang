@@ -40,7 +40,7 @@ public struct Slot {
     public [ForceInline] [mutating] void set_last_sampled(uint value) { warmup_last = warmup_counter() | (value << WARMUP_BITS); }
 
     /* Quantization factor */
-    static const float QFACTOR = 1e3f;
+    static const float QFACTOR = 1e4f;
     static const float RCP_QFACTOR = 1.0f / QFACTOR;
 
     /* Read diffuse illuminance from the cache slot. */

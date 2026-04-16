@@ -305,8 +305,22 @@ void Editor::main_menu_bar() {
                 engine.renderer.enable_taa = !engine.renderer.enable_taa;
             }
 
-            ImGui::SliderFloat("Bloom Radius", &settings.bloom_radius, 0.0f, 1.0f);
-            ImGui::SliderFloat("Bloom Threshold", &settings.bloom_threshold, 0.0f, 10.0f);
+            if (ImGui::BeginMenu("Bloom")) {
+                ImGui::SliderFloat("Radius (px)", &settings.bloom_radius, 0.0f, 1.0f);
+                ImGui::SliderFloat("Threshold (lum)", &settings.bloom_threshold, 0.0f, 10.0f);
+                ImGui::SliderFloat("Trail (%)", &settings.bloom_trail, 0.0f, 1.0f);
+
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Auto Exposure")) {
+                ImGui::DragFloat("Key Value", &settings.autox_key_value, 0.01f, 0.001f, 100.0f);
+                ImGui::DragFloat("Min (lum)", &settings.autox_lum_min, 0.01f, 0.0f, 100000.0f);
+                ImGui::DragFloat("Max (lum)", &settings.autox_lum_max, 0.01f, 0.0f, 100000.0f);
+                ImGui::SliderFloat("Response", &settings.autox_response, 0.01f, 10.0f);
+
+                ImGui::EndMenu();
+            }
 
             ImGui::EndMenu();
         }

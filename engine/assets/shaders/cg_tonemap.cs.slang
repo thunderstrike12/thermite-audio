@@ -1,4 +1,6 @@
 import colorspace;
+import visibility;
+import math;
 
 /* Luminance buffer. */
 Texture2D<float3> lbuffer;

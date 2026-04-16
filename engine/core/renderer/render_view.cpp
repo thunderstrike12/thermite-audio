@@ -69,16 +69,16 @@ void RenderView::init() {
 
     /* Create specular and diffuse intermediate buffers */
     diff_buffer.texture = bank.create_texture("Intermediate Diffuse Buffer Texture", 
-        TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, diff_rate
+        TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RGBA16Sfloat, diff_rate
     ).expect("failed to create diffuse buffer texture.");
     diff_buffer.image = bank.create_image("Intermediate Diffuse Buffer Image", diff_buffer.texture).expect("failed to create diffuse buffer image.");
     spec_buffer.texture = bank.create_texture("Intermediate Specular Buffer Texture", 
-        TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, spec_rate
+        TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RGBA16Sfloat, spec_rate
     ).expect("failed to create specular buffer texture.");
     spec_buffer.image = bank.create_image("Intermediate Specular Buffer Image", spec_buffer.texture).expect("failed to create specular buffer image.");
 
     /* Create the luminance buffer */
-    lbuffer.texture = bank.create_texture("Luminance Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, full_rate)
+    lbuffer.texture = bank.create_texture("Luminance Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RGBA16Sfloat, full_rate)
                           .expect("failed to create lbuffer texture.");
     lbuffer.image = bank.create_image("Luminance Buffer Image", lbuffer.texture).expect("failed to create lbuffer image.");
 
@@ -86,7 +86,7 @@ void RenderView::init() {
     tbuffer.meta = { 7, 1 };  // Set 7 mips, 1 array layer
     tbuffer.texture =
         bank.create_texture(
-                "Thresholded Luminance Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG11B10Ufloat, full_rate, tbuffer.meta
+                "Thresholded Luminance Buffer Texture", TextureUsage::ColorAttachment | TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RGBA16Sfloat, full_rate, tbuffer.meta
         )
             .expect("failed to create tbuffer texture.");
     for (uint32_t curr_mip = 0; curr_mip < tbuffer.meta.mips; curr_mip++)

@@ -149,5 +149,5 @@ void main(int2 thread_id: SV_DispatchThreadID) {
     const float2 noise = r2(blue_noise[pixel_id % 512].rg, render_view.frame_index % 1024u);
     const float3 diffuse = direct_illuminance(hit_point, geo.normal, -ray.dir, geo.material, seed, noise);
 
-    lbuffer[thread_id] = scale * diffuse;
+    lbuffer[thread_id] = scale * diffuse + 0.0025f;
 }
