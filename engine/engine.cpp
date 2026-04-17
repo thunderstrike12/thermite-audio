@@ -83,12 +83,12 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     Log::info(Log::Scope::GLOBAL, "Build version: {}", build_ver);
 
     IO::init_mounts(app->specs.organization, app->specs.name);
+    player_data.init();
     window.init(app->specs);
     input.init();
     renderer.init();
     audio.init();
     salvo.init();
-    player_data.init();
 
     ecs.systems.add<Physics>();
     ecs.systems.add<Destruction>();
