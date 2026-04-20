@@ -62,7 +62,8 @@ void SellOreComponent::down_toggle(tmt::Button::Context) {
     is_held = true;
 }
 
-void SellOreComponent::up_toggle(tmt::Button::Context) {
+void SellOreComponent::up_toggle(tmt::Button::Context context) {
+    if (context.disabled) return;
     // reset all values for rampup
     timer = 0.0f;
     current_cooldown = initial_hold_cooldown;

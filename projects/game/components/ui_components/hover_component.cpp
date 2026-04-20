@@ -1,4 +1,5 @@
 #include "hover_component.hpp"
+#include "engine/core/components/button.hpp"
 
 void game::HoverComponent::start() {
     if (hover_entity == entt::null) {

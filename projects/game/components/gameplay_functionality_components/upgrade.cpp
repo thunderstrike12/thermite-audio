@@ -1,7 +1,6 @@
 #include "upgrade.hpp"
 
 #include "fuel.hpp"
-#include "engine/core/components/button.hpp"
 #include "projects/game/components/gameplay_functionality_components/weapon_and_tool_components/mining_component.hpp"
 #include "player.hpp"
 #include "projects/game/components/gameplay_functionality_components/weapon_and_tool_components/weapon.hpp"
@@ -31,7 +30,9 @@ void Upgrade::end() {
     }
 }
 
-void Upgrade::button_apply(tmt::Button::Context) {
+void Upgrade::button_apply(tmt::Button::Context context) {
+    if (context.disabled) return;
+
     if (apply_upgrade()) {
         tmt::engine.ecs.disable(entity);
         tmt::Log::info("Applied upgrade.");

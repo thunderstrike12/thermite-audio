@@ -1,6 +1,8 @@
 #pragma once
 #include "player.hpp"
 #include "projects/game/data_headers/wallet.hpp"
+#include "engine/core/components/button.hpp"
+
 namespace game {
 
 enum class UpgradeType : uint8_t { MAX_HEALTH = 0u, MAX_BATTERY = 1u, MAX_SPEED = 2u, ACCELERATION = 3u, PRIMARY_ATK_SPEED = 4u, SECONDARY_ATK_SPEED = 5u, GUN_DMG = 6u, BARGE_MAX_FUEL = 7u };

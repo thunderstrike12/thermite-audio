@@ -2,6 +2,7 @@
 #include "engine/systems/gameplay/game_component.hpp"
 #include "engine/core/components/text_renderer.hpp"
 #include "projects/game/data_headers/wallet.hpp"
+#include "engine/core/components/button.hpp"
 
 namespace game {
 

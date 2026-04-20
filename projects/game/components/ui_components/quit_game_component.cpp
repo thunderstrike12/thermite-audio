@@ -1,5 +1,4 @@
 #include "quit_game_component.hpp"
-#include "engine/core/components/button.hpp"
 
 namespace game {
 
@@ -22,7 +21,8 @@ void QuitGameComponent::end() {
     }
 }
 
-void QuitGameComponent::quit_game(tmt::Button::Context) {
+void QuitGameComponent::quit_game(tmt::Button::Context context) {
+    if (context.disabled) return;
     tmt::engine.game_controller.end_game();
 }
 

@@ -2,6 +2,7 @@
 #include "engine/systems/gameplay/game_component.hpp"
 #include "engine/core/components/camera.hpp"
 #include "../../data_headers/scene_list.hpp"
+#include "engine/core/components/button.hpp"
 
 namespace game {
 
