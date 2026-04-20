@@ -19,7 +19,7 @@ class SceneSwitchComponent : public tmt::GameComponent<SceneSwitchComponent> {
 
     TargetSceneEnum target_scene = TargetSceneEnum::MAIN_MENU;
 
-    void switch_scene();
+    void switch_scene(tmt::Button::Context context);
 
    private:
 };

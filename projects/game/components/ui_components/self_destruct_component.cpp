@@ -25,7 +25,7 @@ void SelfDestructComponent::end() {
 }
 
 // Cannot be made const because button does not take const functions
-void SelfDestructComponent::self_destruct() {
+void SelfDestructComponent::self_destruct(tmt::Button::Context) {
     // Guard for player entity
     if (player_entity == entt::null) {
         tmt::Log::error("Self destruct button does not have a player entity set.");

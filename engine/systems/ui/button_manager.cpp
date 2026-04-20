@@ -28,33 +28,34 @@ void ButtonManager::update_states(const tmt::FrameData& time) {
     auto group = engine.ecs.group<Button>(entt::get<ImageRenderer>);
     for (const auto& [entity, button, image_renderer] : group.each()) {
         image_renderer.color = button.colors.at(static_cast<uint8_t>(button.state));
+        Button::Context context { entity, button.state, button.disabled };
 
         switch (button.state) {
             case ButtonState::IDLE:
                 break;
             case ButtonState::ON_SELECT:
-                button.on_select();
+                button.on_select(context);
                 button.state = ButtonState::SELECTED;
                 break;
             case ButtonState::SELECTED:
-                button.on_selected();
+                button.on_selected(context);
                 break;
             case ButtonState::ON_DESELECT:
-                button.on_deselect();
+                button.on_deselect(context);
                 button.state = ButtonState::IDLE;
                 break;
             case ButtonState::DISABLED:
                 break;
             case ButtonState::ON_CLICK:
-                button.on_click();
+                button.on_click(context);
                 button.state = ButtonState::ON_HOLD;
                 break;
             case ButtonState::ON_HOLD:
-                button.on_hold(time.delta_time);
+                button.on_hold(context, time.delta_time);
                 hold_time += time.delta_time;
                 break;
             case ButtonState::ON_RELEASE:
-                button.on_release();
+                button.on_release(context);
                 button.state = ButtonState::SELECTED;
                 hold_time = 0.0f;
                 break;

@@ -56,7 +56,7 @@ class MyButton : public tmt::GameComponent<MyButton> {
     void end() override {}
 
    private:
-    void on_click();
+    void on_click(tmt::Button::Context context);
 };
 
 std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs& args) {
@@ -106,6 +106,6 @@ void MyButton::start() {
     button.on_click.add(this, &MyButton::on_click);
 }
 
-void MyButton::on_click() {
+void MyButton::on_click(tmt::Button::Context context) {
     tmt::Log::info("Button clicked!");
 }

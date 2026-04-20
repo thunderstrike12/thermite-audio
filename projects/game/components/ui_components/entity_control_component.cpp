@@ -18,7 +18,7 @@ void game::EntityControlComponent::end() {
     }
 }
 
-void game::EntityControlComponent::button_functionality() {
+void game::EntityControlComponent::button_functionality(tmt::Button::Context) {
     /*
     for (auto currett : entities_to_enable) {
         enable(currett);

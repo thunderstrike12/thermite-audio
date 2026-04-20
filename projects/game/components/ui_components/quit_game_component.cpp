@@ -22,7 +22,7 @@ void QuitGameComponent::end() {
     }
 }
 
-void QuitGameComponent::quit_game() {
+void QuitGameComponent::quit_game(tmt::Button::Context) {
     tmt::engine.game_controller.end_game();
 }
 

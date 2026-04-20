@@ -14,7 +14,7 @@ class QuitGameComponent : public tmt::GameComponent<QuitGameComponent> {
     void update(const tmt::FrameData& time) override;
     void end() override;
 
-    void quit_game();
+    void quit_game(tmt::Button::Context context);
 
    private:
 };

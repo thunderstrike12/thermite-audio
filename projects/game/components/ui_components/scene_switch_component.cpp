@@ -22,7 +22,7 @@ void game::SceneSwitchComponent::end() {
 }
 
 // Cannot be made const because its being used in the button callback and on_click.add doesnt take const functions
-void SceneSwitchComponent::switch_scene() {
+void SceneSwitchComponent::switch_scene(tmt::Button::Context) {
     switch (target_scene) {
         case TargetSceneEnum::MAIN_MENU:
             tmt::engine.scenes.enqueue_scene<MainMenuScene>();

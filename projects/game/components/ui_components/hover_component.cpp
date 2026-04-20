@@ -30,7 +30,7 @@ void game::HoverComponent::end() {
     }
 }
 
-void game::HoverComponent::enable() {
+void game::HoverComponent::enable(tmt::Button::Context) {
     if (hover_entity == entt::null) {
         tmt::Log::error("Hover entity not set for {}", entity);
         return;
@@ -44,7 +44,7 @@ void game::HoverComponent::enable() {
     tmt::engine.ecs.enable(hover_entity);
 }
 
-void game::HoverComponent::disable() {
+void game::HoverComponent::disable(tmt::Button::Context) {
     if (hover_entity == entt::null) {
         tmt::Log::error("Hover entity not set for {}", entity);
         return;

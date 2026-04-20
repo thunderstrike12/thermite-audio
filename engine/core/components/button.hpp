@@ -63,13 +63,22 @@ struct ButtonCallback {
 
 struct Button {
    public:
+    struct Context {
+        const Entity entity;
+        const ButtonState state;
+        const bool disabled;
+    };
+
     ButtonState state = ButtonState::IDLE;
-    ButtonCallback<> on_select = {};
-    ButtonCallback<> on_selected = {};
-    ButtonCallback<> on_deselect = {};
-    ButtonCallback<> on_click = {};
-    ButtonCallback<float> on_hold = {};
-    ButtonCallback<> on_release = {};
+
+    bool disabled = false;
+
+    ButtonCallback<Button::Context> on_select = {};
+    ButtonCallback<Button::Context> on_selected = {};
+    ButtonCallback<Button::Context> on_deselect = {};
+    ButtonCallback<Button::Context> on_click = {};
+    ButtonCallback<Button::Context, float> on_hold = {};
+    ButtonCallback<Button::Context> on_release = {};
 
     /* Color for each state */
     std::array<RGBA, 8> colors = {
@@ -89,4 +98,4 @@ struct Button {
 
 }  // namespace tmt
 
-TMT_COMPONENT(tmt::Button, "Button", (colors, flow_direction));
+TMT_COMPONENT(tmt::Button, "Button", (disabled, colors, flow_direction));

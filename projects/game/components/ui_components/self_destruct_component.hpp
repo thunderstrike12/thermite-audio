@@ -14,7 +14,7 @@ class SelfDestructComponent : public tmt::GameComponent<SelfDestructComponent> {
     void update(const tmt::FrameData& time) override;
     void end() override;
 
-    void self_destruct();
+    void self_destruct(tmt::Button::Context context);
     tmt::Entity player_entity = entt::null;
 
    private:
