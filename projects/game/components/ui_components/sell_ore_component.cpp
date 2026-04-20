@@ -27,7 +27,14 @@ void SellOreComponent::update(const tmt::FrameData& time) {
     }
 }
 
-void SellOreComponent::end() {}
+void SellOreComponent::end() {
+    if (auto* button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity)) {
+        button_component->on_click.clear();
+        button_component->on_release.clear();
+    } else {
+        tmt::Log::warn("No button found on entity {}", entity);
+    }
+}
 
 bool SellOreComponent::entity_check() const {
     if (entity_with_wallet == entt::null) {
