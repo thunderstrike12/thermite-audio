@@ -35,19 +35,47 @@ void WalletUiLink::change_text() const {
 void WalletUiLink::update_value() {
     auto* wallet_component = tmt::engine.ecs.try_get_component<Wallet>(entity_with_wallet);
     if (wallet_component) {
-        if (resource_to_display == DisplayTextType::DOLLARS) {
-            current_value = static_cast<int>(wallet_component->currencies.dollars);
-        } else if (resource_to_display == DisplayTextType::ALL_RESOURCES) {
-            // reset value first for accumulation
-            current_value = 0;
-            // accumulate resource counts
-            for (auto resource_pair : wallet_component->currencies.resource_counts) {
-                current_value += static_cast<int>(resource_pair.second);
+        if (display_type == DisplayType::CURRENT) {
+            if (resource_to_display == DisplayTextType::DOLLARS) {
+                current_value = static_cast<int>(wallet_component->currencies.dollars);
+            } else if (resource_to_display == DisplayTextType::ALL_RESOURCES) {
+                // reset value first for accumulation
+                current_value = 0;
+                // accumulate resource counts
+                for (auto resource_pair : wallet_component->currencies.resource_counts) {
+                    current_value += static_cast<int>(resource_pair.second);
+                }
+            } else {
+                // Cast enum to OreResources and use directly
+                auto ore_type = static_cast<OreProperties::OreResources>(resource_to_display);
+                current_value = static_cast<int>(wallet_component->currencies.resource_counts.at(ore_type));
             }
-        } else {
-            // Cast enum to OreResources and use directly
-            auto ore_type = static_cast<OreProperties::OreResources>(resource_to_display);
-            current_value = static_cast<int>(wallet_component->currencies.resource_counts.at(ore_type));
+        } else if (display_type == DisplayType::LIMIT) {
+            if (resource_to_display == DisplayTextType::DOLLARS) {
+                current_value = static_cast<int>(wallet_component->limits.dollars);
+            } else if (resource_to_display == DisplayTextType::ALL_RESOURCES) {
+                // reset value first for accumulation
+                current_value = 0;
+                // accumulate resource counts
+                current_value = wallet_component->total_resource_limit;
+            } else {
+                // Cast enum to OreResources and use directly
+                auto ore_type = static_cast<OreProperties::OreResources>(resource_to_display);
+                current_value = static_cast<int>(wallet_component->limits.resource_counts.at(ore_type));
+                auto* wallet_component = tmt::engine.ecs.try_get_component<Wallet>(entity_with_wallet);
+                if (wallet_component) {
+                    if (resource_to_display == DisplayTextType::DOLLARS) {
+                        current_value = static_cast<int>(wallet_component->currencies.dollars);
+                    } else if (resource_to_display == DisplayTextType::ALL_RESOURCES) {
+                        // reset value first for accumulation
+                        current_value = 0;
+                        // accumulate resource counts
+                        for (auto resource_pair : wallet_component->currencies.resource_counts) {
+                            current_value += static_cast<int>(resource_pair.second);
+                        }
+                    }
+                }
+            }
         }
     }
 

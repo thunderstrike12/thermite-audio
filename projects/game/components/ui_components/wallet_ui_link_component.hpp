@@ -15,6 +15,8 @@ enum class DisplayTextType : uint8_t {
     ALL_RESOURCES
 };
 
+enum class DisplayType : uint8_t { CURRENT, LIMIT };
+
 class WalletUiLink : public tmt::GameComponent<WalletUiLink> {
    public:
     using GameComponent::GameComponent;
@@ -25,6 +27,7 @@ class WalletUiLink : public tmt::GameComponent<WalletUiLink> {
 
     tmt::Entity entity_with_wallet = entt::null;
     DisplayTextType resource_to_display = DisplayTextType::DOLLARS;
+    DisplayType display_type = DisplayType::CURRENT;
 
    private:
     void change_text() const;
@@ -36,4 +39,4 @@ class WalletUiLink : public tmt::GameComponent<WalletUiLink> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::WalletUiLink, (entity_with_wallet, resource_to_display));
+TMT_OBJECT(game::WalletUiLink, (entity_with_wallet, resource_to_display, display_type));
