@@ -263,6 +263,17 @@ public [ForceInline] int2 rate_to_full(int2 thread_id, uint rate) {
     return pixel_id;
 }
 
+/* Get the resolution for a given shading rate. */
+public [ForceInline] int2 rated_resolution(int2 full_rate, uint rate) {
+    if (rate == 1u) {
+        full_rate.x = full_rate.x >> 1;
+    } else if (rate == 2u) {
+        full_rate.x = full_rate.x >> 1;
+        full_rate.y = full_rate.y >> 1;
+    }
+    return full_rate;
+}
+
 public inline float3 spherical_to_dir(const float phi, const float theta) {
     float sinTheta = sin(theta);
     return float3(sinTheta * cos(phi),

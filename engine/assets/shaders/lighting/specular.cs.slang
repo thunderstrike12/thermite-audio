@@ -47,7 +47,7 @@ RWTexture2D<float3> specular;
 void main(int2 thread_id: SV_DispatchThreadID) {
     /* Bounds check */
     const int2 pixel_id = rate_to_full(thread_id, render_view.spec_shading_rate);
-    if (any(pixel_id >= render_view.resolution)) return;
+    if (any(thread_id >= rated_resolution(render_view.resolution, render_view.spec_shading_rate))) return;
 
     /* Load visibility buffer data */
     const uint64_t facet_key = asuint64(vbuffer[pixel_id]);
@@ -95,7 +95,7 @@ void main(int2 thread_id: SV_DispatchThreadID) {
     wi = normalize(mul(transpose(basis), wi));
     const Hit hit = trace_bvh2<false>(tlas_nodes, object_indices, objects, custom_ray(hit_point, wi), BIG_F32);
 
-    float3 luminance;
+    float3 luminance = 0.0f;
     if (hit.t < BIG_F32) {
         /* Sample material emission */
         const Material mat = unpack_material(hit, objects);
@@ -105,8 +105,10 @@ void main(int2 thread_id: SV_DispatchThreadID) {
         const cache::Slot slot = cache::fetch(macrofacet_cache, pack_visibility(hit));
         if (slot.key != cache::EMPTY_KEY) luminance += mat.albedo() * slot.read_diffuse();
     } else {
-        const float2 uv = dir_to_latlong(wi);
-        luminance = bindless::texture_sampled<Texture2D<float4>>(scene_view.envmap_filtered_handle).SampleLevel(envmap_sampler, uv, 0).rgb * PI_F32 * 2.0f;
+        if (scene_view.envmap_filtered_handle != 0u) {
+            const float2 uv = dir_to_latlong(wi);
+            luminance = bindless::texture_sampled<Texture2D<float4>>(scene_view.envmap_filtered_handle) .SampleLevel(envmap_sampler, uv, 0) .rgb * PI_F32 * 2.0f;
+        }
     }
     specular[thread_id] = luminance * bsdf;
 }

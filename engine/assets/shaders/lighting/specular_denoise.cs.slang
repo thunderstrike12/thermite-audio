@@ -112,7 +112,7 @@ Sample fetch_sample(const int2 vpixel, const int2 lpixel) {
 void main(int2 thread_id: SV_DispatchThreadID) {
     /* Bounds check */
     const int2 pixel_id = rate_to_full(thread_id, render_view.spec_shading_rate);
-    if (any(pixel_id >= render_view.resolution)) return;
+    if (any(thread_id >= rated_resolution(render_view.resolution, render_view.spec_shading_rate))) return;
 
     /* Fetch the center data */
     float3 color, normal, point;
