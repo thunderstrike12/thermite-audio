@@ -1,5 +1,6 @@
 #include "medium_enemy.hpp"
 #include "engine/systems/ai/goap/components/goap_agent_factory.hpp"
+#include "engine/systems/ai/goap/components/goap_agent.hpp"
 
 #include "engine/core/renderer/renderer.hpp"
 #include "engine/core/polyline.hpp"
@@ -20,6 +21,9 @@ void game::MediumEnemy::start() {
 
 void game::MediumEnemy::update(const tmt::FrameData& time) {
     if (paused) return;
+
+    // check core, if none, enemy dies
+    // if (this->core == entt::null) die();
 
     tmt::engine.polyline.use_color(1.0f, 0.0f, 0.0f);
     tmt::engine.polyline.use_line_width(2.0f);
@@ -153,6 +157,13 @@ void game::MediumEnemy::kite_player() const {
         // Close enough to consider node reached, force path recompute
         nav_mesh.path.clear();
     }
+}
+
+void game::MediumEnemy::die() {
+    // remove GOAP so it doesn't keep acting
+    /*auto& registry = tmt::engine.ecs.get_registry();
+    auto& agent = registry.get<tmt::GoapAgent>(this);
+    tmt::engine.ecs.remove_component<tmt::GoapAgent>(this);*/
 }
 
 void game::MediumEnemy::on_game_paused(const game::GamePausedEvent&) {

@@ -23,14 +23,23 @@ void Goap::on_start() {
     auto& registry = engine.ecs.get_registry();
 
     // Build runtime agents from serialized scene data
-    for (auto entity : engine.ecs.view<GoapAgentTypeRef>()) {
+    /*for (auto entity : engine.ecs.view<GoapAgentTypeRef>()) {
         auto& type_ref = registry.get<GoapAgentTypeRef>(entity);
 
         // Avoid double building if already exists
         if (registry.any_of<GoapAgent>(entity)) continue;
 
         GoapAgentFactory::spawn_agent_from_type(type_ref.type_id, entity);
-        // registry.emplace<SteeringAgent>(entity);
+    }*/
+
+    for (auto entity : engine.ecs.view<GoapAgentTypeRef>()) {
+        auto& type_ref = registry.get<GoapAgentTypeRef>(entity);
+
+        if (!registry.any_of<GoapAgent>(entity)) {
+            GoapAgentFactory::spawn_agent_from_type(type_ref.type_id, entity);
+        }
+
+        registry.remove<GoapAgentTypeRef>(entity);
     }
 }
 
@@ -47,6 +56,17 @@ void Goap::on_start() {
  *    3. Execute action(s)
  */
 void Goap::on_update(const FrameData& time) {
+    auto& registry = engine.ecs.get_registry();
+
+    for (auto entity : engine.ecs.view<GoapAgentTypeRef>()) {
+        if (!registry.any_of<GoapAgent>(entity)) {
+            auto& type_ref = registry.get<GoapAgentTypeRef>(entity);
+            GoapAgentFactory::spawn_agent_from_type(type_ref.type_id, entity);
+        }
+
+        registry.remove<GoapAgentTypeRef>(entity);
+    }
+
     for (auto [entity, agent, world] : engine.ecs.view<GoapAgent, WorldState>().each()) {
         process_agent(entity, world, time.delta_time);
 

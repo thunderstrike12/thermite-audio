@@ -9,8 +9,6 @@
 #include "components/steering_agent.hpp"
 #include "components/steering_mode.hpp"
 
-#include "components/steering_params_overrides.hpp"
-
 namespace tmt {
 
 /**
@@ -30,9 +28,6 @@ class SteeringSystem : public ISystem {
     void on_update(const FrameData& /* time */) override {}
     void on_fixed_update(const FrameData& time) override;
     void on_end() override {}
-
-    SteeringOverrides& overrides() { return steering_overrides; }
-    const SteeringOverrides& overrides() const { return steering_overrides; }
 
     /**
      * Calculate SEEK force toward a target.
@@ -63,10 +58,7 @@ class SteeringSystem : public ISystem {
     /**
      * Check if an ARRIVE request is complete and stop the agent.
      */
-    void check_completion(SteeringRequest& request, const Transform& transform, VoxelBody& body);
-
-   private:
-    SteeringOverrides steering_overrides;
+    void check_completion(const SteeringAgent& agent, SteeringRequest& request, const Transform& transform, VoxelBody& body);
 };
 
 }  // namespace tmt

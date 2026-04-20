@@ -25,10 +25,6 @@ void WanderSteering::on_start(tmt::Entity agent) {
         return;
     }
 
-    // Get the SteeringAgent component & copy global steering params into this agent
-    auto& steering_agent = registry.get<SteeringAgent>(agent);
-    steering_agent.params = &steering->overrides().params;
-
     // Create a wander steering request
     tmt::SteeringRequest request {};
     request.mode = SteeringMode::WANDER;

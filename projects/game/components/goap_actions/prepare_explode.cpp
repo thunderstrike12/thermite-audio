@@ -29,10 +29,6 @@ void PrepareExplode::on_start(tmt::Entity agent) {
         return;
     }
 
-    // Get the SteeringAgent component & copy global steering params into this agent
-    auto& steering_agent = registry.get<SteeringAgent>(agent);
-    steering_agent.params = &steering->overrides().params;
-
     tmt::SteeringRequest request {};
     request.mode = SteeringMode::ARRIVE;
 

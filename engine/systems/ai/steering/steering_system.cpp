@@ -12,14 +12,14 @@
 namespace tmt {
 
 void SteeringSystem::on_start() {
-    Log::info("Steering on_start");
+    /*Log::info("Steering on_start");
 
     overrides().load();
 
     auto view = engine.ecs.view<SteeringAgent>();
     for (auto [entity, agent] : view.each()) {
         agent.params = &overrides().params;
-    }
+    }*/
 }
 
 /**
@@ -51,16 +51,36 @@ void SteeringSystem::on_fixed_update(const FrameData& time) {
 
         // Clamp steering acceleration
         float len = glm::length(steering);
-        if (len > agent.params->max_force) steering = (steering / len) * agent.params->max_force;
+        if (len > agent.max_force) steering = (steering / len) * agent.max_force;
 
         // Apply steering as acceleration
         body.velocity += steering * time.delta_time;
 
         // Clamp max speed
         float speed = glm::length(body.velocity);
-        if (speed > agent.params->max_speed) body.velocity = (body.velocity / speed) * agent.params->max_speed;
+        if (speed > agent.max_speed) body.velocity = (body.velocity / speed) * agent.max_speed;
 
-        check_completion(request, transform, body);
+        // rotate towards movement
+        glm::vec3 desired_forward = body.velocity;
+        desired_forward.y = 0.0f;
+
+        if (glm::length2(desired_forward) > 0.0001f) {
+            desired_forward = glm::normalize(desired_forward);
+
+            glm::quat target_rot = glm::quatLookAt(desired_forward, glm::vec3(0, 1, 0));
+
+            // you may need this depending on your model orientation
+            target_rot *= glm::angleAxis(glm::radians(180.0f), glm::vec3(0, 1, 0));
+
+            glm::quat current_rot = body.rotation;
+
+            float turn_speed = 5.0f;
+            glm::quat new_rot = glm::slerp(current_rot, target_rot, turn_speed * time.delta_time);
+
+            body.rotation = new_rot;
+        }
+
+        check_completion(agent, request, transform, body);
     }
 }
 
@@ -68,7 +88,7 @@ void SteeringSystem::on_fixed_update(const FrameData& time) {
  * Returns a steering force to move toward a target at max_speed.
  */
 glm::vec3 SteeringSystem::seek(const SteeringAgent& agent, const glm::vec3& pos, const glm::vec3& target, const glm::vec3& velocity) {
-    glm::vec3 desired = glm::normalize(target - pos) * agent.params->max_speed;
+    glm::vec3 desired = glm::normalize(target - pos) * agent.max_speed;
 
     return desired - velocity;
 }
@@ -89,7 +109,7 @@ glm::vec3 SteeringSystem::arrive(const SteeringAgent& agent, const glm::vec3& po
 
     if (dist < 0.01f) return -velocity;  // brake
 
-    float speed = agent.params->max_speed;
+    float speed = agent.max_speed;
 
     if (dist < radius) speed *= (dist / radius);
 
@@ -124,7 +144,7 @@ glm::vec3 SteeringSystem::wander(const SteeringAgent& agent, const glm::vec3& po
     glm::vec3 target_in_front = velocity_dir * wander.wander_distance;
     glm::vec3 world_target = position + target_in_front + wander.wander_target;
 
-    glm::vec3 desired_velocity = glm::normalize(world_target - position) * agent.params->max_speed;
+    glm::vec3 desired_velocity = glm::normalize(world_target - position) * agent.max_speed;
 
     glm::vec3 wander_force = desired_velocity - body.velocity;
 
@@ -132,11 +152,11 @@ glm::vec3 SteeringSystem::wander(const SteeringAgent& agent, const glm::vec3& po
     glm::vec3 to_origin = agent.wander_origin - position;
     float dist = glm::length(to_origin);
 
-    float max_radius = agent.params->wander_radius_limit;
+    float max_radius = agent.wander_radius_limit;
 
     if (dist > max_radius) {
         // Strong pull back toward center
-        glm::vec3 return_desired = glm::normalize(to_origin) * agent.params->max_speed;
+        glm::vec3 return_desired = glm::normalize(to_origin) * agent.max_speed;
 
         glm::vec3 return_force = return_desired - body.velocity;
 
@@ -188,7 +208,7 @@ glm::vec3 SteeringSystem::collision_avoidance(const SteeringAgent& agent, const 
         engine.polyline.draw_line(ray.origin, ray.origin + dir * avoid_distance);
 
         if (hit && hit.distance < avoid_distance) {
-            float strength = agent.params->max_force * (avoid_distance - hit.distance) / avoid_distance;
+            float strength = agent.max_force * (avoid_distance - hit.distance) / avoid_distance;
             // total_avoid += hit.normal * strength;
             total_avoid += -dir * strength;
         }
@@ -215,7 +235,7 @@ glm::vec3 SteeringSystem::calculate_force(const SteeringAgent& agent, const Stee
             break;
 
         case SteeringMode::ARRIVE:
-            force += arrive(agent, position, request.target_position, overrides().params.arrive_radius, body.velocity);
+            force += arrive(agent, position, request.target_position, agent.arrive_radius, body.velocity);
             break;
 
         case SteeringMode::FLEE:
@@ -241,13 +261,13 @@ glm::vec3 SteeringSystem::calculate_force(const SteeringAgent& agent, const Stee
  * For ARRIVE requests, checks if the agent is within arrive_radius and moving slowly enough.
  * Stops the agent and marks the request as completed.
  */
-void SteeringSystem::check_completion(SteeringRequest& request, const Transform& transform, VoxelBody& body) {
+void SteeringSystem::check_completion(const SteeringAgent& agent, SteeringRequest& request, const Transform& transform, VoxelBody& body) {
     if (request.mode != SteeringMode::ARRIVE) return;
 
     float dist = glm::distance(transform.get_world_position(), request.target_position);
 
     // stop movement if close enough
-    if (dist <= overrides().params.min_explosion_range) {
+    if (dist <= agent.min_explosion_range) {
         body.velocity = glm::vec3(0);
         body.angular_velocity = glm::vec3(0);
 

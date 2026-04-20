@@ -22,6 +22,8 @@ class Explode : public tmt::GoapAction {
 
    private:
     tmt::Entity player_entity = entt::null;
+    float live_charge_time = 0.0f;
+    bool exploded = false;
 };
 
 }  // namespace game

@@ -2,8 +2,6 @@
 
 #include <glm/glm.hpp>
 
-#include "steering_params.hpp"
-
 /**
  * Enum SteeringMode
  * Defines the current steering behavior of an agent.
@@ -58,8 +56,6 @@ struct SteeringRequest {
     bool completed = false;
 
     WanderData wander_data;
-
-    const SteeringParams* params = nullptr;
 };
 
 }  // namespace tmt

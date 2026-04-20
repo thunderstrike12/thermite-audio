@@ -1,4 +1,6 @@
 #include "sensor_system.hpp"
+#include "../gameplay_functionality_components/enemy_components/small_enemy.hpp"
+#include "../gameplay_functionality_components/enemy_components/medium_enemy.hpp"
 #include "../gameplay_functionality_components/player.hpp"
 #include "engine/systems/ai/steering/steering_system.hpp"
 #include "engine/systems/ai/steering/components/steering_agent.hpp"
@@ -48,6 +50,24 @@ void SensorsSystem::on_update(const tmt::FrameData& /*time*/) {
 
     // Update each agent with a SteeringAgent component
     ecs.view<SteeringAgent>().each([&](tmt::Entity agent, SteeringAgent& /*sa*/) {
+        // check cores
+        auto& registry = tmt::engine.ecs.get_registry();
+        auto& steering_agent = registry.get<SteeringAgent>(agent);
+        auto* small_enemy = tmt::engine.ecs.try_get_component<SmallEnemy>(agent);
+
+        // try get small enemy component, and the core entity, if no core enemy dies
+        /*if (!small_enemy || !tmt::engine.ecs.valid(small_enemy->core)) {
+            // call die on the small_enemy so it shows it died?
+            small_enemy->die();
+
+            // remove GOAP so it doesn't keep acting
+            tmt::engine.ecs.remove_component<tmt::GoapAgent>(agent);
+            tmt::engine.ecs.remove_component<SteeringAgent>(agent);
+
+            return;  // nothing to explode
+        }*/
+
+        // check world states
         auto* agent_transform = ecs.try_get_component<tmt::Transform>(agent);
         if (!agent_transform) return;
 
@@ -57,22 +77,18 @@ void SensorsSystem::on_update(const tmt::FrameData& /*time*/) {
         glm::vec3 agent_pos = agent_transform->get_world_position();
         float distance = glm::length(player_pos - agent_pos);
 
-        const auto& params = steering->overrides().params;
-
-        // Update facts
-        /*ws->facts[(uint32_t)std::hash<std::string>()("s_player_in_range")] = distance <= params.activation_range;
-        ws->facts[(uint32_t)std::hash<std::string>()("s_player_in_explosion_zone")] = distance <= params.max_explosion_range;
-        if (ws->facts[(uint32_t)std::hash<std::string>()("s_player_in_explosion_zone")] == false) {
-            ws->facts[(uint32_t)std::hash<std::string>()("s_ready_to_explode")] = false;
-        }*/
-
-        ws->set_fact(tmt::FactId("s_player_in_range"), distance <= params.activation_range);
-        ws->set_fact(tmt::FactId("s_player_in_explosion_zone"), distance <= params.max_explosion_range);
+        ws->set_fact(tmt::FactId("s_player_in_range"), distance <= small_enemy->logic_paramaters.activation_range);
+        ws->set_fact(tmt::FactId("s_player_in_explosion_zone"), distance <= small_enemy->logic_paramaters.max_explosion_range);
 
         if (!ws->facts[tmt::FactId("s_player_in_explosion_zone").id]) {
             ws->set_fact(tmt::FactId("s_ready_to_explode"), false);
         }
     });
+
+    // update medium enemy to check the core
+    /*ecs.view<MediumEnemy>().each([&](tmt::Entity agent, MediumEnemy& medium_enemy) {
+
+    });*/
 }
 
 void SensorsSystem::on_end() {
