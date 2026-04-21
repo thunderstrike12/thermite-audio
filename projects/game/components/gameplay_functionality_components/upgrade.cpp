@@ -10,6 +10,12 @@
 namespace game {
 
 void Upgrade::start() {
+    if (auto* name_component { tmt::engine.ecs.try_get_component<tmt::Name>(entity) }) {
+        // check if this should be disabled
+        if (tmt::engine.player_data.get<bool>(name_component->name, false)) {
+            tmt::engine.ecs.disable(entity);
+        }
+    }
     auto button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity);
     if (button_component) {
         tmt::Log::info("Found button component, adding apply function to button.");
@@ -32,7 +38,9 @@ void Upgrade::button_apply(tmt::Button::Context context) {
     if (apply_upgrade()) {
         tmt::engine.ecs.disable(entity);
         tmt::Log::info("Applied upgrade.");
-
+        if (auto* name_component { tmt::engine.ecs.try_get_component<tmt::Name>(entity) }) {
+            tmt::engine.player_data.get<bool>(name_component->name) = true;
+        }
     } else {
         tmt::Log::warn("Did not apply upgrade.");
     }
