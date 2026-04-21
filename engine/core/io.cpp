@@ -103,11 +103,11 @@ std::pair<bool, std::filesystem::path> IO::find_root(const std::filesystem::path
     auto has_marker = [](const std::filesystem::path& p) { return (std::filesystem::exists(p / "engine/assets") && std::filesystem::exists(p / "editor/assets")); };
 
     // iterates backward through parent paths to find signature file structure
-    for (auto p = exe_dir; !p.empty(); p = p.parent_path())
+    for (auto p = exe_dir; p != p.parent_path(); p = p.parent_path())
         if (has_marker(p)) return std::make_pair(false, p);
 
     // not found, we might be in packaged mode
-    if (std::filesystem::exists(exe_dir / "assets/engine")) return std::make_pair(true, exe_dir);
+    if (std::filesystem::exists(exe_dir.parent_path() / "assets/engine")) return std::make_pair(true, exe_dir.parent_path());
 
     // Root not found - throw an error as this is an unrecoverable state
     throw std::runtime_error("Could not find root directory - neither development nor packaged mode detected!");
