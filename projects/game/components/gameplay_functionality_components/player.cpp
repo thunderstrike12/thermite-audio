@@ -556,8 +556,15 @@ void Player::on_attach(const AttachEvent& event) {
         reset_action_time(action::TRIGGER_BARGE_MOVEMENT);
         reset_action_time(action::TRIGGER_RUN_END);
         velocity = glm::vec3 { 0.0f };
+
+        set_hud_enabled(player_hud, false);
+        set_hud_enabled(barge_hud, true);
+
     } else {
         state = PlayerState::FREEMOVING;
+
+        set_hud_enabled(player_hud, true);
+        set_hud_enabled(barge_hud, false);
     }
 }
 
@@ -590,6 +597,29 @@ void Player::reset_action_time(std::string_view action_name) {
     auto& input_map = tmt::engine.input_map;
     auto* action = input_map.get_action(std::string { action_name });
     action->time_since_being_pressed = 0.0f;
+}
+
+void Player::set_hud_enabled(tmt::Entity hud_root, bool enabled) {
+    auto& ecs = tmt::engine.ecs;
+
+    if (!ecs.valid(hud_root)) return;
+
+    // Toggle this entity
+    if (enabled) {
+        ecs.remove_component<tmt::Disable>(hud_root);
+    } else {
+        ecs.add_or_get_component<tmt::Disable>(hud_root);
+    }
+
+    // Get transform
+    if (!ecs.has_component<tmt::Transform>(hud_root)) return;
+
+    auto& transform = ecs.get_component<tmt::Transform>(hud_root);
+
+    // Recurse children
+    for (auto child : transform.get_all_children()) {
+        set_hud_enabled(child, enabled);
+    }
 }
 
 }  // namespace game
