@@ -1,7 +1,7 @@
 #pragma once
 #include <set>
 #include <optional>
-#include <JsonReflect.hpp>
+#include "engine/tools/serializer.hpp"
 #include "engine/core/entity.hpp"
 #include "engine/tools/json.hpp"
 #include "engine/tools/types/tree_map.hpp"

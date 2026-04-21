@@ -1,6 +1,6 @@
 #pragma once
 #include <named_type.hpp>
-#include "JsonReflect.hpp"
+#include "engine/tools/serializer.hpp"
 
 template <typename T, typename Parameter, template <typename> class... Skills>
 static inline JsonReflect::json tag_invoke(JsonReflect::serialize_t, const fluent::NamedType<T, Parameter, Skills...>& type) {

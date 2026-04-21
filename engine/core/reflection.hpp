@@ -2,6 +2,9 @@
 
 #define JSON_REFLECT_ENABLE_CONST_CAST
 // #define JSON_REFLECT_INITIALIZE_SMART_POINTERS
+#ifndef JSON_RELFECT_ALLOW_THROW
+    #define JSON_RELFECT_ALLOW_THROW 0
+#endif
 #include <JsonReflect.hpp>
 #include <ImReflect_macro.hpp>
 
