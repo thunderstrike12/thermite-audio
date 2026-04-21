@@ -85,6 +85,13 @@ target_include_directories(JsonReflect
     ${CMAKE_CURRENT_SOURCE_DIR}/ImReflect/imgui/imgui/misc/cpp
 )
 
+# type_tween
+add_library(type_tween INTERFACE)
+target_include_directories(type_tween
+    INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/type_tween/
+)
+
 # STB
 # STB Image - https://github.com/nothings/stb
 # STB Truetype - https://github.com/nothings/stb/blob/master/stb_truetype.h

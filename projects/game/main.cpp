@@ -133,6 +133,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.component_registry.register_component<game::OreManager>();
     tmt::engine.component_registry.register_component<game::Explosion>();
     tmt::engine.component_registry.register_component<game::DestroyTimed>();
+    tmt::engine.component_registry.register_component<game::TransformTween>();
     /* Register World Generation Components */
     tmt::engine.component_registry.register_component<game::AsteroidFieldComponent>();
     tmt::engine.component_registry.register_component<game::RandomPrefabSpawner>();

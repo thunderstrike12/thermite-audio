@@ -15,3 +15,4 @@
 #include "engine/tools/serializer/rig_model.hpp"
 #include "engine/tools/serializer/prefab.hpp"
 #include "engine/tools/serializer/inspection.hpp"
+#include "engine/tools/serializer/tweening.hpp"

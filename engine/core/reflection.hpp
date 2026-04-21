@@ -20,6 +20,8 @@
 
 #define TMT_OBJECT_SERIALIZE(Type, Fields) JSON_REFLECT(Type, Fields)
 
+#define TMT_OBJECT_SERIALIZE_TEMPLATE(TPARAMS, Type, TARGS, ...) JSON_REFLECT_TEMPLATE(TPARAMS, Type, TARGS, __VA_ARGS__)
+
 #define TMT_OBJECT_SERIALIZE_EMPTY(Type)                                                  \
     inline tmt::json tag_invoke(JsonReflect::serialize_t, const Type&) {                  \
         return nlohmann::json::object();                                                  \
@@ -31,11 +33,17 @@
 
 #define TMT_OBJECT_INSPECT(Type, Fields) IMGUI_REFLECT(Type, Fields)
 
+#define TMT_OBJECT_INSPECT_TEMPLATE(TPARAMS, Type, TARGS, ...) IMGUI_REFLECT_TEMPLATE(TPARAMS, Type, TARGS, __VA_ARGS__)
+
 #define TMT_OBJECT_INSPECT_EMPTY(Type)                                                           \
     inline void tag_invoke(ImReflect::ImInput_t, const char*, Type&, ImSettings&, ImResponse&) { \
         /* No fields to inspect */                                                               \
     }                                                                                            \
     static_assert(true, "")
+
+#define TMT_OBJECT_TEMPLATE(TPARAMS, Type, TARGS, ...)                \
+    TMT_OBJECT_SERIALIZE_TEMPLATE(TPARAMS, Type, TARGS, __VA_ARGS__); \
+    TMT_OBJECT_INSPECT_TEMPLATE(TPARAMS, Type, TARGS, __VA_ARGS__)
 
 namespace tmt {
 

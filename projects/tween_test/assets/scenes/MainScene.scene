@@ -1,0 +1,81 @@
+{
+    "version": 1,
+    "entities": [
+        19,
+        1048596
+    ],
+    "Name": {
+        "19": {
+            "name": "Environment"
+        },
+        "1048596": {
+            "name": "Entity_1048596"
+        }
+    },
+    "Transform": {
+        "19": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048596": {
+            "local_position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_rotation": {
+                "w": 0.7071067690849304,
+                "x": 0.0,
+                "y": -0.7071067690849304,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        }
+    },
+    "Voxel Renderer": {
+        "1048596": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "dragon128.vengi"
+                },
+                "constructor_args": [
+                    "00000000-0000-0000-0000-000000000000"
+                ]
+            }
+        }
+    },
+    "Environment": {
+        "19": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "env\\HDR_multi_nebulae_3.hdr"
+                }
+            }
+        }
+    },
+    "systems": null
+}

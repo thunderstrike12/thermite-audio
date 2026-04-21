@@ -322,7 +322,7 @@ void Inspector::add_component(const MenuContext& menu_context) {
         if (just_opened) {
             ImGui::SetKeyboardFocusHere();
         }
-        ImGui::InputTextWithHint("##EntitySearch", ICON_MS_SEARCH " Search entities...", &filter, ImGuiInputTextFlags_AutoSelectAll);
+        ImGui::InputTextWithHint("##EntitySearch", ICON_MS_SEARCH " Search component...", &filter, ImGuiInputTextFlags_AutoSelectAll);
 
         ImGui::SeparatorText("Engine");
         add_compile_time_component(menu_context);

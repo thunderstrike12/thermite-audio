@@ -35,6 +35,7 @@
 #include "core/input/input_map.hpp"
 #include "tools/profiler.hpp"
 #include "tools/timer.hpp"
+#include "tools/tweening.hpp"
 
 /* Singleton */
 tmt::Engine tmt::engine;
@@ -101,6 +102,7 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     ecs.systems.add<UI>();
     ecs.systems.add<MotionMathSystem>();
     ecs.systems.add<ButtonManager>();
+    ecs.systems.add<Tweener>();
     ecs.systems.add<Gameplay>(); /* Should be last */
 
     OnEngineInit::dispatch(app->specs);
@@ -233,7 +235,6 @@ void Engine::start_game() {
 
 void Engine::update_game(const FrameData& frame_data) {
     TMT_ZONE_SCOPED_N("Engine::update_game")
-
     app->on_update(frame_data);
     if (scenes.get_active_scene()) scenes.get_active_scene()->on_update(frame_data);
     OnGameUpdate::dispatch(frame_data);
