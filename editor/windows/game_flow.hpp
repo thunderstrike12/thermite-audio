@@ -1,24 +1,21 @@
 #pragma once
 #include "editor/core/window.hpp"
 #include "engine/core/scenes.hpp"
-#include "engine/events/Game.hpp"
+#include "engine/events/game.hpp"
 #include "engine/events/scene.hpp"
 
 namespace tmt {
 
-class GameFlow : public IWindow<>, public OnGameEnd, public OnPreLoadScene {
+class GameFlow : public IEditorSystem<>, public OnGameEnd, public OnPreLoadScene {
    public:
     // Inherited via IWindow
     std::string get_title() const override { return ICON_MS_GAMEPAD "  Game Flow"; };
-    constexpr bool default_open() const override { return true; }
-
-    void on_inspect() override;
 
     void pause_game();
 
     void resume_game();
 
-    void start_game();
+    void start_game(const bool fullscreen);
 
     void end_game();
 
@@ -26,11 +23,16 @@ class GameFlow : public IWindow<>, public OnGameEnd, public OnPreLoadScene {
     void on_editor_update(const tmt::FrameData& time) override;
     void on_editor_end() override;
 
+    bool is_fullscreen() const { return fullscreen; }
+
    private:
     SceneIndex working_scene = NULL_SCENE;
     nlohmann::ordered_json cached_scene;
     bool has_ended = false;
     bool was_mouse_locked = false;
+
+    bool fullscreen = false;
+    std::unordered_map<std::string, bool> open_windows_before {};
 
     // Inherited via OnPreLoadScene
     void on_pre_load_scene(PreLoadSceneEvent& event) override;

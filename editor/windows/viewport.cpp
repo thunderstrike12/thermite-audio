@@ -294,12 +294,13 @@ void tmt::Viewport::toolbar() {
             // end_game();
             editor.systems[editor.editor_mode].get<GameFlow>().end_game();
         }
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Stop");
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Ctrl+P: To Stop");
     } else {
         if (ImGui::Button(ICON_MS_PLAY_ARROW "##Play")) {
-            editor.systems[editor.editor_mode].get<GameFlow>().start_game();
+            const bool shift_down = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
+            editor.systems[editor.editor_mode].get<GameFlow>().start_game(shift_down);
         }
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Start");
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Ctrl+P: To Start\n(Hold) Shift: for Fullscreen");
     }
 
     // Pause/Resume button (only shown when playing)
@@ -310,12 +311,12 @@ void tmt::Viewport::toolbar() {
         if (ImGui::Button(ICON_MS_PLAY_ARROW "##Resume")) {
             editor.systems[editor.editor_mode].get<GameFlow>().resume_game();
         }
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Resume");
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Ctrl+Shift+P: To Resume");
     } else {
         if (ImGui::Button(ICON_MS_PAUSE "##Pause")) {
             editor.systems[editor.editor_mode].get<GameFlow>().pause_game();
         }
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Pause");
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Ctrl+Shift+P: To Pause");
     }
     if (can_interact == false) ImGui::EndDisabled();
 
