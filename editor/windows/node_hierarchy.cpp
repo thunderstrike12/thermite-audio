@@ -210,6 +210,123 @@ tmt::Entity recurse_duplicate_node(const tmt::Entity source_entity, const tmt::E
     return entity;
 }
 
+std::unique_ptr<tmt::GridResizeDiff> resize_voxel_node(const NodeResizeData& node_resize_data, tmt::Transform& transform, tmt::VoxelRenderer* renderer) {
+    std::unique_ptr<tmt::GridResizeDiff> diff;
+
+    // Only rescale the volume if the new scale isn't 0 on any axis.
+    if (node_resize_data.size.x != 0 && node_resize_data.size.y != 0 && node_resize_data.size.z != 0) {
+        const auto new_volume = std::make_shared<tmt::VoxelVolume>(node_resize_data.size);
+        const tmt::ResourceRef grid_resource { {}, new_volume };
+
+        // If the node already has a renderer (aka: has a grid), copy over its data.
+        if (renderer != nullptr) {
+            const glm::uvec3 current_grid_size = renderer->resource->size;
+
+            if (current_grid_size == node_resize_data.size) return diff;
+
+            // For each axis check if the current size is greater than the new size.
+            const glm::bvec3 result = glm::greaterThan(current_grid_size, node_resize_data.size);
+
+            // Using the greater than results we decided the min and max for each axis, these different depending on if we are decreasing or increasing the grid size.
+            const glm::uvec3 min = glm::mix(glm::zero<glm::uvec3>(), node_resize_data.offset, result);
+            const glm::uvec3 max = glm::mix(current_grid_size, node_resize_data.offset + node_resize_data.size, result);
+
+            // Copy the pallet to the new volume.
+            new_volume->blas->palette = renderer->resource->blas->palette;
+
+            // Iterate over the voxels remaining in the model and set them in the new volume.
+            for (uint32_t x = min.x; x < max.x; x++) {
+                for (uint32_t y = min.y; y < max.y; y++) {
+                    for (uint32_t z = min.z; z < max.z; z++) {
+                        const tmt::Material* material = renderer->resource->blas->get_voxel(x, y, z);
+
+                        if (material == nullptr) continue;
+
+                        const tmt::MaterialIndex index = static_cast<tmt::MaterialIndex>(material - renderer->resource->blas->palette.entries);
+
+                        // Kinda scuffed because we are taking the negative of an unsigned value, but this gets the start position in the new voxel grid.
+                        const glm::uvec3 new_min = glm::mix(node_resize_data.offset, -min, result);
+                        new_volume->blas->set_voxel(x + new_min.x, y + new_min.y, z + new_min.z, index);
+                    }
+                }
+            }
+            new_volume->set_dirty();
+
+            // Apply offsets to the entity and its children to match the visualization.
+            const glm::vec3 half_extent = glm::vec3 { current_grid_size } * VOXEL_SIZE_HALF;
+            const glm::vec3 resize_half_extent = glm::vec3 { node_resize_data.size } * VOXEL_SIZE_HALF;
+
+            // Sign multiplication since we have to invert the offset when increasing the grid size.
+            const glm::vec3 local_offset = glm::vec3 { node_resize_data.offset } * glm::sign(half_extent - resize_half_extent) * UNITS_PER_VOXEL;
+            const glm::vec3 offset = transform.get_world_rotation() * ((resize_half_extent - half_extent) + local_offset) * transform.get_world_scale();
+
+            transform.set_local_position(transform.get_local_position() + offset);
+
+            for (const tmt::Entity child : transform.get_children()) {
+                tmt::Transform& child_transform = tmt::engine.ecs.get_component<tmt::Transform>(child);
+                child_transform.set_local_position(child_transform.get_local_position() - offset);
+            }
+
+            diff = std::make_unique<tmt::GridResizeDiff>(node_resize_data.entity, offset, renderer->resource, grid_resource);
+        } else {
+            // If the node doesn't already have a renderer (aka: doesn't have a grid), add it.
+            renderer = &tmt::engine.ecs.add_component<tmt::VoxelRenderer>(node_resize_data.entity);
+
+            const glm::vec3 resize_half_extent = glm::vec3 { node_resize_data.size } * VOXEL_SIZE_HALF;
+
+            const glm::vec3 local_offset = -glm::vec3 { node_resize_data.offset } * UNITS_PER_VOXEL;
+            const glm::vec3 offset = resize_half_extent + local_offset;
+
+            transform.set_local_position(transform.get_local_position() + offset);
+
+            for (const tmt::Entity child : transform.get_children()) {
+                tmt::Transform& child_transform = tmt::engine.ecs.get_component<tmt::Transform>(child);
+                child_transform.set_local_position(child_transform.get_local_position() - offset);
+            }
+
+            diff = std::make_unique<tmt::GridResizeDiff>(node_resize_data.entity, offset, tmt::ResourceRef<tmt::VoxelVolume> {}, grid_resource);
+        }
+        renderer->resource = grid_resource;
+    } else {
+        renderer = &tmt::engine.ecs.get_component<tmt::VoxelRenderer>(node_resize_data.entity);
+        diff = std::make_unique<tmt::GridResizeDiff>(node_resize_data.entity, glm::zero<glm::vec3>(), renderer->resource, tmt::ResourceRef<tmt::VoxelVolume> {});
+
+        // Remove the VoxelRenderer component if the new grid size of 0 on any axis, this removes the grid from the entity entirely.
+        tmt::engine.ecs.remove_component<tmt::VoxelRenderer>(node_resize_data.entity);
+    }
+
+    return diff;
+}
+
+std::unique_ptr<tmt::GridResizeDiff> fit_voxel_grid(const tmt::Entity entity, tmt::VoxelRenderer* renderer) {
+    glm::uvec3 min { 1023 };
+    glm::uvec3 max { 0 };
+
+    const glm::uvec3& size = renderer->resource->size;
+    for (uint32_t x = 0; x < size.x; ++x) {
+        for (uint32_t y = 0; y < size.y; ++y) {
+            for (uint32_t z = 0; z < size.z; ++z) {
+                if (renderer->resource->blas->get_voxel(x, y, z) == nullptr) continue;
+
+                const glm::uvec3 voxel { x, y, z };
+
+                min = glm::min(voxel, min);
+                max = glm::max(voxel, max);
+            }
+        }
+    }
+
+    /* Return empty voxel fit if the voxel grid doesn't have any voxels, and thus no bounds can be calculated */
+    if (min == glm::uvec3 { 1023 } && max == glm::uvec3 { 0 }) return {};
+
+    NodeResizeData node_resize_data;
+    node_resize_data.entity = entity;
+    node_resize_data.size = (max - min) + 1u;
+    node_resize_data.offset = min;
+
+    return resize_voxel_node(node_resize_data, tmt::engine.ecs.get_component<tmt::Transform>(entity), renderer);
+}
+
 std::atomic_bool model_load_atomic { true };
 
 }  // namespace
@@ -217,7 +334,7 @@ std::atomic_bool model_load_atomic { true };
 namespace tmt {
 
 bool NodeHierarchy::is_entity_selected(Entity entity) {
-    // Linear search because we use an std vector, but we need to keep our own order so there is no good alternative.
+    // Linear search because we use a std vector, but we need to keep our own order so there is no good alternative.
     return std::ranges::find(selected_entities, entity) != selected_entities.end();
 }
 
@@ -677,86 +794,8 @@ void NodeHierarchy::popup_resize_node() {
 
     ImGui::BeginDisabled(current_grid_size == node_resize_info->size);
     if (ImGui::Button("Resize")) {
-        // Only rescale the volume if the new scale isn't 0 on any axis.
-        if (node_resize_info->size.x != 0 && node_resize_info->size.y != 0 && node_resize_info->size.z != 0) {
-            const auto new_volume = std::make_shared<VoxelVolume>(node_resize_info->size);
-            const ResourceRef grid_resource { {}, new_volume };
-
-            // If the node already has a renderer (aka: has a grid), copy over its data.
-            if (renderer != nullptr) {
-                // For each axis check if the current size is greater than the new size.
-                const glm::bvec3 result = glm::greaterThan(current_grid_size, node_resize_info->size);
-
-                // Using the greater than results we decided the min and max for each axis, these different depending on if we are decreasing or increasing the grid size.
-                const glm::uvec3 min = glm::mix(glm::zero<glm::uvec3>(), node_resize_info->offset, result);
-                const glm::uvec3 max = glm::mix(current_grid_size, node_resize_info->offset + node_resize_info->size, result);
-
-                // Copy the pallet to the new volume.
-                new_volume->blas->palette = renderer->resource->blas->palette;
-
-                // Iterate over the voxels remaining in the model and set them in the new volume.
-                for (uint32_t x = min.x; x < max.x; x++) {
-                    for (uint32_t y = min.y; y < max.y; y++) {
-                        for (uint32_t z = min.z; z < max.z; z++) {
-                            const Material* material = renderer->resource->blas->get_voxel(x, y, z);
-
-                            if (material == nullptr) continue;
-
-                            const MaterialIndex index = static_cast<MaterialIndex>(material - renderer->resource->blas->palette.entries);
-
-                            // Kind scuffed because we are taking the negative of an unsigned value, but this gets the start position in the new voxel grid.
-                            const glm::uvec3 new_min = glm::mix(node_resize_info->offset, -min, result);
-                            new_volume->blas->set_voxel(x + new_min.x, y + new_min.y, z + new_min.z, index);
-                        }
-                    }
-                }
-                new_volume->set_dirty();
-
-                // Apply offsets to the entity and its children to match the visualization.
-                const glm::vec3 half_extent = glm::vec3 { current_grid_size } * VOXEL_SIZE_HALF;
-                const glm::vec3 resize_half_extent = glm::vec3 { node_resize_info->size } * VOXEL_SIZE_HALF;
-
-                // Sign multiplication since we have to invert the offset when increasing the grid size.
-                const glm::vec3 local_offset = glm::vec3 { node_resize_info->offset } * glm::sign(half_extent - resize_half_extent) * UNITS_PER_VOXEL;
-                const glm::vec3 offset = (resize_half_extent - half_extent) + local_offset;
-
-                transform.set_local_position(transform.get_local_position() + offset);
-
-                for (const Entity child : transform.get_children()) {
-                    Transform& child_transform = engine.ecs.get_component<Transform>(child);
-                    child_transform.set_local_position(child_transform.get_local_position() - offset);
-                }
-
-                GridResizeDiff diff { node_resize_info->entity, offset, renderer->resource, grid_resource };
-                GridResizeDiff::send_to_manager(std::move(diff), "Resize Grid");
-            } else {
-                // If the node doesn't already have a renderer (aka: doesn't have a grid), add it.
-                renderer = &engine.ecs.add_component<VoxelRenderer>(node_resize_info->entity);
-
-                const glm::vec3 resize_half_extent = glm::vec3 { node_resize_info->size } * VOXEL_SIZE_HALF;
-
-                const glm::vec3 local_offset = -glm::vec3 { node_resize_info->offset } * UNITS_PER_VOXEL;
-                const glm::vec3 offset = resize_half_extent + local_offset;
-
-                transform.set_local_position(transform.get_local_position() + offset);
-
-                for (const Entity child : transform.get_children()) {
-                    Transform& child_transform = engine.ecs.get_component<Transform>(child);
-                    child_transform.set_local_position(child_transform.get_local_position() - offset);
-                }
-
-                GridResizeDiff diff { node_resize_info->entity, offset, {}, grid_resource };
-                GridResizeDiff::send_to_manager(std::move(diff), "Resize Grid");
-            }
-            renderer->resource = grid_resource;
-        } else {
-            renderer = &engine.ecs.get_component<VoxelRenderer>(node_resize_info->entity);
-            GridResizeDiff diff { node_resize_info->entity, glm::zero<glm::vec3>(), renderer->resource, {} };
-            GridResizeDiff::send_to_manager(std::move(diff), "Resize Grid");
-
-            // Remove the VoxelRenderer component if the new grid size of 0 on any axis, this removes the grid from the entity entirely.
-            engine.ecs.remove_component<VoxelRenderer>(node_resize_info->entity);
-        }
+        const std::unique_ptr diff = resize_voxel_node(*node_resize_info, transform, renderer);
+        GridResizeDiff::send_to_manager(std::move(*diff), "Resized Voxel Grid");
 
         ImGui::CloseCurrentPopup();
         node_resize_info.reset();
@@ -818,6 +857,14 @@ void NodeHierarchy::node_context_menu(const Entity node_entity) {
         ImGui::OpenPopupEx(resize_popup_id);
     }
 
+    if (ImGui::MenuItem(ICON_MS_ZOOM_IN " Fit Grid", "Ctrl G")) {
+        VoxelRenderer* renderer = engine.ecs.try_get_component<VoxelRenderer>(node_entity);
+        if (renderer != nullptr) {
+            const std::unique_ptr diff = fit_voxel_grid(node_entity, renderer);
+            if (diff != nullptr) GridResizeDiff::send_to_manager(std::move(*diff), "Fit Grid");
+        }
+    }
+
     ImGui::EndPopup();
 }
 
@@ -860,7 +907,7 @@ void NodeHierarchy::on_inspect() {
         }
 
         // Resize shortcut
-        if (ImGui::IsKeyDown(ImGuiKey_C)) {
+        if (ImGui::IsKeyPressed(ImGuiKey_C)) {
             node_resize_info = std::make_unique<NodeResizeData>();
             node_resize_info->entity = first_entity;
 
@@ -868,6 +915,21 @@ void NodeHierarchy::on_inspect() {
             if (renderer != nullptr) node_resize_info->size = renderer->resource->size;
 
             ImGui::OpenPopupEx(resize_popup_id);
+        }
+
+        // Fit voxel grid shortcut
+        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_G)) {
+            UndoRedoCollection diff_collection;
+
+            for (const Entity selected_entity : selected_entities) {
+                VoxelRenderer* renderer = engine.ecs.try_get_component<VoxelRenderer>(selected_entity);
+                if (renderer == nullptr) continue;
+
+                std::unique_ptr diff = fit_voxel_grid(selected_entity, renderer);
+                if (diff != nullptr) diff_collection.add_action(std::move(*diff));
+            }
+
+            diff_collection.commit("Fit Grid(s)");
         }
     }
 

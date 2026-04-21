@@ -18,7 +18,7 @@ UndoRedoManager& IUndoRedo::get_manager() {
 }
 
 void UndoRedoCollection::commit(const std::string& message) {
-    send_to_manager(std::move(*this), message);
+    if (!actions.empty()) send_to_manager(std::move(*this), message);
 }
 
 void UndoRedoCollection::undo() {
