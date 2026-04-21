@@ -6,7 +6,7 @@
 
 namespace tmt {
 
-class Gameplay : public ISystem, OnPreUnloadScene, OnEnableEntity, OnDisableEntity {
+class Gameplay : public ISystem, OnEnableEntity, OnDisableEntity {
    public:
     constexpr virtual std::string get_name() override { return "Gameplay"; };
 
@@ -26,9 +26,6 @@ class Gameplay : public ISystem, OnPreUnloadScene, OnEnableEntity, OnDisableEnti
     std::unordered_map<ComponentIndex, std::vector<std::weak_ptr<IGameComponent>>> component_instances;
 
     void clear_component_instances() { component_instances.clear(); }
-
-    // Inherited via OnPreUnloadScene
-    void on_pre_unload_scene() override;
 
     void on_enable_entity(const Entity& entity) override;
     void on_disable_entity(const Entity& entity) override;

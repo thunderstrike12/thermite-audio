@@ -99,10 +99,6 @@ const std::vector<std::weak_ptr<IGameComponent>>& Gameplay::get_component_instan
     return component_instances.at(index);
 }
 
-void Gameplay::on_pre_unload_scene() {
-    clear_component_instances();
-}
-
 void Gameplay::on_enable_entity(const Entity& entity) {
     if (engine.game_controller.is_playing() == false) return;
     to_enable.insert(entity);

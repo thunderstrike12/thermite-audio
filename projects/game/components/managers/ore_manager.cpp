@@ -10,7 +10,7 @@
 namespace game {
 
 void OreManager::start() {
-    auto player_view = tmt::engine.ecs.view<Player>();
+    auto player_view = tmt::engine.ecs.view<Player>(entt::exclude_t {});
 
     if (!player_view.empty()) {
         player_entity = player_view.front().entity;

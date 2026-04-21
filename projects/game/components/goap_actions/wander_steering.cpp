@@ -38,7 +38,7 @@ void WanderSteering::on_start(tmt::Entity agent) {
     registry.emplace_or_replace<tmt::SteeringRequest>(agent, request);
 
     if (!tmt::engine.ecs.valid(player_entity)) {
-        player_entity = tmt::engine.ecs.view<Player>().front().entity;  // Assuming there's only one player entity in the game
+        player_entity = Player::get().entity;  // Assuming there's only one player entity in the game
     }
 }
 

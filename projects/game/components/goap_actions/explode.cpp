@@ -38,7 +38,7 @@ void Explode::on_start(tmt::Entity agent) {
     }
 
     if (!ecs.valid(player_entity)) {
-        player_entity = ecs.view<Player>().front().entity;  // Assuming there's only one player entity in the game
+        player_entity = ecs.view<Player>(entt::exclude_t {}).front().entity;  // Assuming there's only one player entity in the game
     }
 
     live_charge_time = 0.0f;

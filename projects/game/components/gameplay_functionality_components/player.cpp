@@ -81,6 +81,15 @@ void setup_inputs(tmt::InputMap& input_map) {
     input_map.add_key_to_action(action::TRIGGER_RUN_END, tmt::Key::LEFT_CTRL);
 }
 
+Player& Player::get() {
+    auto view = tmt::engine.ecs.view<Player>(entt::exclude_t {});
+    if (view.empty()) {
+        tmt::Log::error("[CRITICAL] No Player component found in the scene");
+        throw std::runtime_error("No player entity found");
+    }
+    return view.front();
+}
+
 void Player::load_upgrades() {
     // TODO only load if there is data there
     health = tmt::engine.player_data.get<PlayerStat>(PLAYER_HEALTH_DATA, health);

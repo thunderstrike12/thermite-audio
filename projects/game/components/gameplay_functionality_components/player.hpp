@@ -35,6 +35,8 @@ class Player : public tmt::GameComponent<Player> {
    public:
     using GameComponent::GameComponent;
 
+    static Player& get();
+
     static std::string_view get_name() { return "Player"; }
 
     void load_upgrades();

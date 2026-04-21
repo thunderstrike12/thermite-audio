@@ -13,7 +13,7 @@ namespace game {
 
 void PrepareExplode::on_start(tmt::Entity agent) {
     if (!tmt::engine.ecs.valid(player_entity)) {
-        player_entity = tmt::engine.ecs.view<Player>().front().entity;
+        player_entity = Player::get().entity;
     }
 
     auto& registry = tmt::engine.ecs.get_registry();
