@@ -72,9 +72,20 @@ void MenuController::update(const tmt::FrameData& time) {
 
 void MenuController::end() {
     tmt::engine.ecs.get_dispatcher().sink<EndRun>().disconnect<&MenuController::enable_end_of_game_menu>(this);
-    auto has_ended { tmt::engine.ecs.get_component<Player>(tmt::engine.ecs.view<Player>().front().entity).player_ended_run };
-    if (has_ended == false) {
-        // trigger death of player if forced quit
+    auto player_view = tmt::engine.ecs.view<Player>();
+    if (player_view.empty()) {
+        tmt::Log::error("No Player entity ");
+
+        return;
+    }
+
+    auto* player = tmt::engine.ecs.try_get_component<Player>(player_view.front().entity);
+    if (player == nullptr) {
+        tmt::Log::error("No Player component found");
+        return;
+    }
+
+    if (!player->player_ended_run) {
         enable_end_of_game_menu({ true });
     }
 }

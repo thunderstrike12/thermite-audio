@@ -7,10 +7,19 @@
 
 namespace game {
 
+struct PlayerMovement {
+    float acceleration = 20.0f;
+    float max_speed = 10.0f;
+    float boost_max_speed_multiplier = 2.0f;
+};
 struct PlayerStat {
     float max_value = 100.f;
     float value = 100.f;
     float increase_multiplier = 1.0f;
+};
+struct PlayerRecharge {
+    float recharge_distance = 20.0f;
+    float out_of_energy_time_till_death = 10.0f;
 };
 struct RayCollisionCheck {
     LayerMask collision_layer {};
@@ -28,6 +37,7 @@ class Player : public tmt::GameComponent<Player> {
 
     static std::string_view get_name() { return "Player"; }
 
+    void load_upgrades();
     void start() override;
     void look_camera();
     tmt::Hit check_collision() const;
@@ -105,6 +115,8 @@ class Player : public tmt::GameComponent<Player> {
 
 }  // namespace game
 TMT_OBJECT(game::PlayerStat, (max_value, value, increase_multiplier));
+TMT_OBJECT(game::PlayerMovement, (acceleration, max_speed, boost_max_speed_multiplier));
+TMT_OBJECT(game::PlayerRecharge, (recharge_distance, out_of_energy_time_till_death));
 TMT_OBJECT(game::RayCollisionCheck, (collision_layer, player_radius, collision_speed_damping, camera_near_distance));
 TMT_OBJECT(
     game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, boost_max_speed_multiplier, boost_acceleration_multiplier, boost_deceleration_factor,

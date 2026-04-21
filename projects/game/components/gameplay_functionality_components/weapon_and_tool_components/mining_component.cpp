@@ -1,11 +1,15 @@
 #include "mining_component.hpp"
+
+#include "weapon.hpp"
 #include "engine/shared/ray.hpp"
 #include "engine/core/renderer/renderer.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
 #include "engine/core/logger.hpp"
 #include "engine/core/polyline.hpp"
 #include "engine/systems/physics/physics_system.hpp"
+#include "engine/tools/player_data.hpp"
 #include "projects/game/components/managers/ore_manager.hpp"
+#include "projects/game/data_headers/save_entries.hpp"
 
 #include <engine/tools/fmt/glm.hpp>
 #include <glm/detail/_noise.hpp>
@@ -53,6 +57,17 @@ void MiningComponent::start() {
         ore_manager = tmt::engine.ecs.try_get_component<OreManager>(ore_manager_view.front().entity);
     } else {
         tmt::Log::warn("No ore manager found in scene, add one if you want to use custom ore behaviour");
+    }
+
+    auto mining_data { tmt::engine.player_data.try_get<MiningData>(MINING_DATA) };
+    if (mining_data.has_value()) {
+        ray_cylinder.ray_distance = mining_data->ray_distance;
+        ray_cylinder.base_radius = mining_data->base_radius;
+        ray_cylinder.ray_amount = mining_data->ray_amount;
+
+        if (auto* weapon { tmt::engine.ecs.try_get_component<Weapon>(entity) }) {
+            weapon->primary_fire_rate.shots_per_second = mining_data->rays_per_second;
+        }
     }
 }
 

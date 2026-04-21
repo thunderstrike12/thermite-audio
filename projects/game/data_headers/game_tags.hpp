@@ -1,10 +1,10 @@
 #pragma once
 
-namespace tmt {
+namespace game {
 
 struct Destructible {
     // TODO remove when serialization works
     char dummy = 0;
 };
 
-}  // namespace tmt
+}  // namespace game

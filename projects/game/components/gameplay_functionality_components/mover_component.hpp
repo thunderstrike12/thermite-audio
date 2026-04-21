@@ -10,7 +10,7 @@ class MoverComponent : public tmt::GameComponent<MoverComponent> {
     using GameComponent::GameComponent;
     static std::string_view get_name() { return "MoverComponent"; }
 
-    void start() override {};
+    void start() override;
     void update(const tmt::FrameData& time) override {}
     void end() override {};
     void draw_debug_lines() const;

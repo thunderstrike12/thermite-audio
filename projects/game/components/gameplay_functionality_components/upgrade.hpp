@@ -5,8 +5,32 @@
 
 namespace game {
 
-enum class UpgradeType : uint8_t { MAX_HEALTH = 0u, MAX_BATTERY = 1u, MAX_SPEED = 2u, ACCELERATION = 3u, PRIMARY_ATK_SPEED = 4u, SECONDARY_ATK_SPEED = 5u, GUN_DMG = 6u, BARGE_MAX_FUEL = 7u };
-
+enum class UpgradeType : uint8_t {
+    // Player
+    MAX_HEALTH,
+    MAX_BATTERY,
+    MAX_SPEED,
+    ACCELERATION,
+    MAX_BOOST_SPEED,
+    HEALTH_RESTORE_SPEED,
+    BATTERY_RESTORE_SPEED,
+    EMERGENCY_BATTERY_TIME,
+    STORAGE_LIMIT,
+    // Barge
+    BARGE_MAX_FUEL,
+    BARGE_SPEED,
+    BARGE_RECHARGE_DISTANCE,
+    // Mining Tool
+    DRILL_RADIUS,
+    DRILL_DISTANCE,
+    DRILL_CONSISTENCY,
+    DRILL_SPEED,
+    // Gravity Tool
+    MAX_GRAB_SIZE,
+    // Rifle
+    RIFLE_IMPACT_RADIUS,
+    RIFLE_EXPLOSION_POWER,
+};
 class Upgrade : public tmt::GameComponent<Upgrade> {
    public:
     using GameComponent::GameComponent;
@@ -18,17 +42,17 @@ class Upgrade : public tmt::GameComponent<Upgrade> {
     void update(const tmt::FrameData& time) override {}
     void end() override;
 
-    tmt::Entity upgrade_target = entt::null;
     UpgradeType type = UpgradeType::MAX_HEALTH;
     float upgrade_to = 1.0f;
-    tmt::Entity player_entity = entt::null;
     uint64_t dollar_cost = 1.0f;
+
     std::vector<std::tuple<OreProperties::OreResources, uint64_t>> new_upgrade_costs = { { OreProperties::OreResources::NONE, 1.0f } };  // An initial cost
     bool apply_upgrade();
+    void modify_upgrade_entities() const;
     void button_apply(tmt::Button::Context context);
 
    private:
 };
 
 }  // namespace game
-TMT_OBJECT(game::Upgrade, (upgrade_target, type, upgrade_to, player_entity, dollar_cost, new_upgrade_costs));
+TMT_OBJECT(game::Upgrade, (type, upgrade_to, dollar_cost, new_upgrade_costs));

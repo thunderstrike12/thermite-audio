@@ -4,6 +4,9 @@
 
 namespace game {
 
+struct FuelData {
+    float max_fuel = 100.0f;
+};
 class FuelComponent : public tmt::GameComponent<FuelComponent> {
    public:
     using GameComponent::GameComponent;
@@ -15,13 +18,14 @@ class FuelComponent : public tmt::GameComponent<FuelComponent> {
     void on_trigger_movement(const MovementUpdateEvent& event);
 
     tmt::Entity mover_entity = entt::null;
-    float max_fuel = 100.0f;
+    FuelData fuel_data;
     float decrease_multiplier = 1.0f;
 
-    float current_fuel = max_fuel;
+    float current_fuel;
 
    private:
 };
 
 }  // namespace game
-TMT_OBJECT(game::FuelComponent, (mover_entity, max_fuel, decrease_multiplier, current_fuel));
+TMT_OBJECT(game::FuelData, (max_fuel));
+TMT_OBJECT(game::FuelComponent, (mover_entity, fuel_data, decrease_multiplier, current_fuel));

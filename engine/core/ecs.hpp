@@ -260,27 +260,28 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
         }
     }
 
-    /* Returns a view of given elements */
-    template <typename First, typename... Rest, typename... Excludes>
-    auto view(entt::exclude_t<Excludes...> = entt::exclude_t {}) {
-        constexpr bool ALL_NATIVE = (!EcsComponentTraits<First>::IS_GAME_COMPONENT && (!EcsComponentTraits<Rest>::IS_GAME_COMPONENT && ...));
-        constexpr bool ALL_GAME = (EcsComponentTraits<First>::IS_GAME_COMPONENT && (EcsComponentTraits<Rest>::IS_GAME_COMPONENT && ...));
-
-        static_assert(ALL_NATIVE || ALL_GAME, "Cannot mix native ECS components and IGameComponent-derived types in a single view.");
-        static_assert(ALL_GAME || (!EcsComponentTraits<Excludes>::IS_GAME_COMPONENT && ...), "Cannot exclude game components from a native component view.");
-
-        return EcsComponentTraits<First>::template view_with<Rest...>(registry, entt::exclude_t<Disable, Excludes...> {});
+    /* Returns a view of given elements Disable auto-injected */
+    template <typename First, typename... Rest>
+    auto view() {
+        return view_impl<First, Rest...>(entt::exclude_t<Disable> {});
     }
 
-    /* Returns a view of given elements (const) */
+    /* Returns a view of given elements explicit excludes, no Disable */
     template <typename First, typename... Rest, typename... Excludes>
-    auto view(entt::exclude_t<Excludes...> = entt::exclude_t {}) const {
-        constexpr bool ALL_NATIVE = (!EcsComponentTraits<First>::IS_GAME_COMPONENT && (!EcsComponentTraits<Rest>::IS_GAME_COMPONENT && ...));
-        constexpr bool ALL_GAME = (EcsComponentTraits<First>::IS_GAME_COMPONENT && (EcsComponentTraits<Rest>::IS_GAME_COMPONENT && ...));
+    auto view(entt::exclude_t<Excludes...> ex) {
+        return view_impl<First, Rest...>(ex);
+    }
 
-        static_assert(ALL_NATIVE || ALL_GAME, "Cannot mix native ECS components and IGameComponent-derived types in a single view.");
-        static_assert(ALL_GAME || (!EcsComponentTraits<Excludes>::IS_GAME_COMPONENT && ...), "Cannot exclude game components from a native component view.");
-        return EcsComponentTraits<First>::template view_with<Rest...>(registry, entt::exclude_t<Excludes...> {});
+    /* Returns a view of given elements (const) Disable auto-injected */
+    template <typename First, typename... Rest>
+    auto view() const {
+        return view_impl<First, Rest...>(/*entt::exclude_t<Disable> {}*/);
+    }
+
+    /* Returns a view of given elements (const) explicit excludes, no Disable */
+    template <typename First, typename... Rest, typename... Excludes>
+    auto view(entt::exclude_t<Excludes...> ex) const {
+        return view_impl<First, Rest...>(ex);
     }
 
     /* Returns a group of given elements, default ignores disabled entities */
@@ -346,6 +347,29 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
     void on_end_frame() override;
 
     void propagate_enable(const Entity entity);
+
+    /* Returns a view of given elements */
+    template <typename First, typename... Rest, typename... Excludes>
+    auto view_impl(entt::exclude_t<Excludes...> = entt::exclude_t {}) {
+        constexpr bool ALL_NATIVE = (!EcsComponentTraits<First>::IS_GAME_COMPONENT && (!EcsComponentTraits<Rest>::IS_GAME_COMPONENT && ...));
+        constexpr bool ALL_GAME = (EcsComponentTraits<First>::IS_GAME_COMPONENT && (EcsComponentTraits<Rest>::IS_GAME_COMPONENT && ...));
+
+        static_assert(ALL_NATIVE || ALL_GAME, "Cannot mix native ECS components and IGameComponent-derived types in a single view.");
+        static_assert(ALL_GAME || (!EcsComponentTraits<Excludes>::IS_GAME_COMPONENT && ...), "Cannot exclude game components from a native component view.");
+
+        return EcsComponentTraits<First>::template view_with<Rest...>(registry, entt::exclude_t<Excludes...> {});
+    }
+
+    /* Returns a view of given elements (const) */
+    template <typename First, typename... Rest, typename... Excludes>
+    auto view_impl(entt::exclude_t<Excludes...> = entt::exclude_t {}) const {
+        constexpr bool ALL_NATIVE = (!EcsComponentTraits<First>::IS_GAME_COMPONENT && (!EcsComponentTraits<Rest>::IS_GAME_COMPONENT && ...));
+        constexpr bool ALL_GAME = (EcsComponentTraits<First>::IS_GAME_COMPONENT && (EcsComponentTraits<Rest>::IS_GAME_COMPONENT && ...));
+
+        static_assert(ALL_NATIVE || ALL_GAME, "Cannot mix native ECS components and IGameComponent-derived types in a single view.");
+        static_assert(ALL_GAME || (!EcsComponentTraits<Excludes>::IS_GAME_COMPONENT && ...), "Cannot exclude game components from a native component view.");
+        return EcsComponentTraits<First>::template view_with<Rest...>(registry, entt::exclude_t<Excludes...> {});
+    }
 };
 
 }  // namespace tmt

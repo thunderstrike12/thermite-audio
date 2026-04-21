@@ -36,6 +36,12 @@ struct RayCylinder {
     uint32_t ray_amount = 20;
     float rotating_speed = 0.0f;
 };
+struct MiningData {
+    float base_radius = 0.20f;
+    float ray_distance = 2.0f;
+    uint32_t ray_amount = 20;
+    float rays_per_second = 30.0f;
+};
 class MiningComponent : public tmt::GameComponent<MiningComponent> {
    public:
     using GameComponent::GameComponent;
@@ -80,3 +86,4 @@ class MiningComponent : public tmt::GameComponent<MiningComponent> {
 }  // namespace game
 TMT_OBJECT(game::RayCylinder, (base_transform_entity, base_radius, ray_distance, ray_amount, rotating_speed));
 TMT_OBJECT(game::MiningComponent, (active, cfg, ray_cylinder, ray_mask, time_draw_rays_in_debug));
+TMT_OBJECT(game::MiningData, (base_radius, ray_distance, ray_amount, rays_per_second));

@@ -1,8 +1,15 @@
 #include "mover_component.hpp"
 
 #include "engine/core/polyline.hpp"
+#include "engine/tools/player_data.hpp"
+#include "projects/game/data_headers/save_entries.hpp"
+
 #include <projects/game/data_headers/events.hpp>
 
+void game::MoverComponent::start() {
+    // TODO check if data
+    movement_speed = tmt::engine.player_data.get<float>(BARGE_MOVE_DATA, movement_speed);
+}
 void game::MoverComponent::draw_debug_lines() const {
     cfg.set_values();
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);

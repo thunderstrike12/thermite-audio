@@ -3,11 +3,8 @@
 #include "spawner.hpp"
 #include "engine/core/polyline.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
-#include "engine/core/renderer/renderer.hpp"
-#include "engine/core/resources/stencil.hpp"
 #include "engine/shared/ray.hpp"
 #include "engine/systems/physics/physics_system.hpp"
-#include "engine/tools/fmt/glm.hpp"
 
 namespace game {
 
@@ -36,7 +33,6 @@ void RifleProjectile::update(const tmt::FrameData& time) {
 }
 void RifleProjectile::end() {}
 void RifleProjectile::draw_debug_lines() const {
-    // tmt::engine.polyline.use_color(tmt::colors::RED);
     tmt::engine.polyline.use_line_width(2.5f);
     tmt::engine.polyline.draw_arrow(previous_position, direction, last_step_length);
 }

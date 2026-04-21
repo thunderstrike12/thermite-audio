@@ -78,6 +78,36 @@ class PlayerData {
         return std::any_cast<T&>(entry.value);
     }
 
+    template <typename T>
+    std::optional<T> try_get(const std::string& key) {
+        if (!entries.contains(key)) {
+            return std::nullopt;
+        }
+        const auto& entry = entries.at(key);
+        if (entry.ops.type_index != std::type_index(typeid(T))) {
+            tmt::Log::error(
+                tmt::Log::Scope::ENGINE, "Type mismatch for key '{}'. Requested type: '{}', actual type: '{}'. Returning nullopt...", key, typeid(T).name(), entry.ops.type_index.name()
+            );
+            return std::nullopt;
+        }
+        try {
+            return std::any_cast<T>(entry.value);
+        } catch (const std::exception& e) {
+            tmt::Log::error(tmt::Log::Scope::ENGINE, "Failed to cast value for key '{}': {}. Returning nullopt...", key, e.what());
+            return std::nullopt;
+        }
+    }
+
+    template <typename T>
+    bool has(const std::string& key) const {
+        if (!entries.contains(key)) {
+            return false;
+        }
+
+        const auto& entry = entries.at(key);
+        return entry.ops.type_index == std::type_index(typeid(T));
+    }
+
     void serialize() {
         /* Update JSON data from entries */
         for (const auto& [key, entry] : entries) {
