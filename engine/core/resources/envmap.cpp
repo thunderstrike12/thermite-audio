@@ -1,5 +1,6 @@
 #include "envmap.hpp"
 
+#include <zlib.h>
 #include <stb_image.h>
 #include <glm/gtc/packing.hpp>
 
@@ -11,15 +12,15 @@
 #include "engine/core/renderer/renderer.hpp"
 #include "engine/shared/colorspace.hpp"
 
-namespace tmt {
+namespace {
 
 /* Convert spherical coordinates to a direction vector. */
-static inline glm::vec3 spherical_to_dir(const float phi, const float theta) {
+glm::vec3 spherical_to_dir(const float phi, const float theta) {
     return glm::vec3(sinf(theta) * sinf(phi), cosf(theta), sinf(theta) * cosf(phi));
 }
 
 /* Convert direction vector to spherical coordinates. */
-static inline glm::vec2 dir_to_spherical(const glm::vec3& d) {
+glm::vec2 dir_to_spherical(const glm::vec3& d) {
     const float phi = atan2(d.x, -d.z) + glm::pi<float>();
     const float theta = atan(d.y / sqrtf(d.x * d.x + d.z * d.z)) + glm::pi<float>() / 2.0f;
     return glm::vec2(glm::pi<float>() * 2.0f - phi, glm::pi<float>() - theta);
@@ -101,11 +102,19 @@ void prefilter_resolution(int& out_w, int& out_h, const float aperture) {
     out_w = out_h * 2; /* <- width is always 2x height */
 }
 
+void pack(uint64_t* dest, const float* src, const size_t size) {
+    /* Pack floating point RGB into RGBA16 */
+    for (uint32_t i = 0u; i < size; ++i) {
+        const glm::vec3 unpacked = tmt::cs::r709_to_acescg(glm::vec3(src[i * 3u], src[i * 3u + 1u], src[i * 3u + 2u]));
+        dest[i] = glm::packHalf4x16(glm::vec4(unpacked, 0.0f));
+    }
+}
+
 void pack_and_upload(VRAMBank& bank, Image& image, const float* data, const uint32_t w, const uint32_t h) {
     /* Pack floating point RGB into RGBA16 */
     uint64_t* packed_data = new uint64_t[w * h] {};
     for (uint32_t i = 0u; i < w * h; ++i) {
-        const glm::vec3 unpacked = cs::r709_to_acescg(glm::vec3(data[i * 3u], data[i * 3u + 1u], data[i * 3u + 2u]));
+        const glm::vec3 unpacked = tmt::cs::r709_to_acescg(glm::vec3(data[i * 3u], data[i * 3u + 1u], data[i * 3u + 2u]));
         packed_data[i] = glm::packHalf4x16(glm::vec4(unpacked, 0.0f));
     }
 
@@ -114,7 +123,144 @@ void pack_and_upload(VRAMBank& bank, Image& image, const float* data, const uint
     delete[] packed_data;
 }
 
+}  // namespace
+
+struct EnvmapDataHeader {
+    uint32_t width;
+    uint32_t height;
+    uint32_t filtered_width;
+    uint32_t filtered_height;
+};
+namespace tmt {
+
+std::vector<char> import_envmap(const IO::FileLocation& file_location) {
+    int full_width = -1, full_height = -1, n = -1;
+
+    /* Parse HDR data */
+    float* full_data = stbi_loadf(file_location.get_absolute_path().string().c_str(), &full_width, &full_height, &n, 3);
+    if (!full_data) return {};
+
+    const int full_size = full_width * full_height;
+
+    /* Calculate ideal resolution for filtered envmap */
+    int filtered_width = -1, filtered_height = -1;
+    prefilter_resolution(filtered_width, filtered_height, 0.3f);
+    const int filtered_size = filtered_width * filtered_height;
+
+    /* Perform filtering */
+    float* filtered_data = new float[filtered_width * filtered_height * 3] {};
+    conic_prefilter(full_data, filtered_data, full_width, full_height, 3, filtered_width, filtered_height, 3, 0.1f);
+
+    /* Allocate the vector for the file data */
+    constexpr size_t data_header_size = sizeof(EnvmapDataHeader);
+    const size_t full_data_size = full_size * sizeof(uint64_t);
+    const size_t filtered_data_size = filtered_size * sizeof(uint64_t);
+    std::vector<char> data(data_header_size + full_data_size + filtered_data_size);
+
+    /* Construct the EnvmapDataHeader at the start of the file data vector */
+    char* data_ptr = data.data();
+    *(EnvmapDataHeader*)data_ptr = EnvmapDataHeader { (uint32_t)full_width, (uint32_t)full_height, (uint32_t)filtered_width, (uint32_t)filtered_height };
+
+    /* Move the data pointer to the end of the EnvmapDataHeader and pack the full image data in the vector */
+    data_ptr += data_header_size;
+    pack((uint64_t*)data_ptr, full_data, full_size);
+
+    /* Move the data pointer to the end of the full image data and pack the filtered image data in the vector */
+    data_ptr += full_data_size;
+    pack((uint64_t*)data_ptr, filtered_data, filtered_size);
+
+    stbi_image_free(full_data);
+
+    /* Allocate the size of the data + a single uin64_t to store the uncompressed size */
+    std::vector<char> compressed_data(data.size() + sizeof(uint64_t));
+    *(uint64_t*)compressed_data.data() = data.size();
+    uLong compressed_size = (uLong)data.size();
+
+    /* Compress the data and resize the buffer to the new compressed size */
+    const int error = compress((Bytef*)compressed_data.data() + sizeof(uint64_t), &compressed_size, (Bytef*)data.data(), (uLong)data.size());
+    if (error != Z_OK) {
+        Log::error("Failed to compress imported file: {}", file_location);
+        return {};
+    }
+
+    compressed_data.resize(compressed_size + sizeof(uint64_t));
+    return compressed_data;
+}
+
 bool Envmap::load() {
+    const std::string extension = file_location.relative_path.extension().generic_string();
+    if (extension == ".hdr" || extension == ".exr") {
+        return load_hdr();
+    }
+
+    VRAMBank& bank = engine.renderer.vram_bank();
+
+    std::vector<char> data = IO::read_file(file_location);
+    if (data.empty()) return false;
+
+    uLongf uncompressed_size = (uLong)(*(uint64_t*)data.data());
+    std::vector<char> uncompressed_data(uncompressed_size);
+
+    const int error = uncompress((Bytef*)uncompressed_data.data(), &uncompressed_size, (Bytef*)data.data() + sizeof(uint64_t), (uLong)data.size() - sizeof(uint64_t));
+    if (error != Z_OK) {
+        Log::error("Failed to decompress the .env file: {}", file_location);
+        return false;
+    }
+
+    char* data_ptr = uncompressed_data.data();
+    const EnvmapDataHeader* header = (EnvmapDataHeader*)data_ptr;
+
+    data_ptr += sizeof(EnvmapDataHeader);
+    const uint64_t* full_data = (uint64_t*)data_ptr;
+    const size_t full_data_size = header->width * header->height * sizeof(uint64_t);
+
+    data_ptr += full_data_size;
+    const uint64_t* filtered_data = (uint64_t*)data_ptr;
+    const size_t filtered_data_size = header->filtered_width * header->filtered_height * sizeof(uint64_t);
+
+    /* Save the image width, height, and name */
+    width = header->width;
+    height = header->height;
+    name = file_location.get_relative_path().string();
+
+    { /* Init the filtered texture resource */
+        std::string texture_name = name + " Envmap (Filtered) Texture";
+        filtered_texture =
+            bank.create_texture(
+                    std::move(texture_name), TextureUsage::Sampled | TextureUsage::TransferDst, TextureFormat::RGBA16Sfloat, { header->filtered_width, header->filtered_height, 0u }
+            )
+                .expect("failed to initialise envmap texture.");
+    }
+
+    { /* Init the full texture resource */
+        std::string texture_name = name + " Envmap (Full) Texture";
+        full_texture = bank.create_texture(std::move(texture_name), TextureUsage::Sampled | TextureUsage::TransferDst, TextureFormat::RGBA16Sfloat, { width, height, 0u })
+                           .expect("failed to initialise envmap texture.");
+    }
+
+    /* Create image resources */
+    std::string full_image_name = name + " Envmap Image";
+    full_image = bank.create_image(std::move(full_image_name), full_texture).expect("failed to initialize envmap image.");
+    std::string filtered_image_name = name + " Envmap (Filtered) Image";
+    filtered_image = bank.create_image(std::move(filtered_image_name), filtered_texture).expect("failed to initialize envmap image.");
+
+    /* Pack and upload filtered texture */
+    bank.upload_texture(filtered_image, filtered_data, filtered_data_size).expect("failed to upload envmap texture.");
+
+    /* Pack and upload full texture */
+    bank.upload_texture(full_image, full_data, full_data_size).expect("failed to upload envmap texture.");
+
+    return true;
+}
+
+void Envmap::unload() {
+    engine.renderer.destroy(full_texture);
+    engine.renderer.destroy(full_image);
+    engine.renderer.destroy(filtered_texture);
+    engine.renderer.destroy(filtered_image);
+}
+
+bool Envmap::load_hdr() {
     VRAMBank& bank = engine.renderer.vram_bank();
     int full_width = -1, full_height = -1, n = -1;
 
@@ -136,26 +282,26 @@ bool Envmap::load() {
     conic_prefilter(data, filtered_data, full_width, full_height, 3, filtered_width, filtered_height, 3, 0.1f);
 
     { /* Init the filtered texture resource */
-        const std::string texture_name = name + " Envmap (Filtered) Texture";
+        std::string texture_name = name + " Envmap (Filtered) Texture";
         filtered_texture =
             bank.create_texture(
-                    texture_name.c_str(), TextureUsage::Sampled | TextureUsage::TransferDst, TextureFormat::RGBA16Sfloat, { (uint32_t)filtered_width, (uint32_t)filtered_height, 0u }
+                    std::move(texture_name), TextureUsage::Sampled | TextureUsage::TransferDst, TextureFormat::RGBA16Sfloat, { (uint32_t)filtered_width, (uint32_t)filtered_height, 0u }
             )
                 .expect("failed to initialise envmap texture.");
     }
 
     { /* Init the full texture resource */
-        const std::string texture_name = name + " Envmap (Full) Texture";
+        std::string texture_name = name + " Envmap (Full) Texture";
         full_texture =
-            bank.create_texture(texture_name.c_str(), TextureUsage::Sampled | TextureUsage::TransferDst, TextureFormat::RGBA16Sfloat, { (uint32_t)full_width, (uint32_t)full_height, 0u })
+            bank.create_texture(std::move(texture_name), TextureUsage::Sampled | TextureUsage::TransferDst, TextureFormat::RGBA16Sfloat, { (uint32_t)full_width, (uint32_t)full_height, 0u })
                 .expect("failed to initialise envmap texture.");
     }
 
     /* Create image resources */
-    const std::string full_image_name = name + " Envmap Image";
-    full_image = bank.create_image(full_image_name.c_str(), full_texture).expect("failed to initialize envmap image.");
-    const std::string filtered_image_name = name + " Envmap (Filtered) Image";
-    filtered_image = bank.create_image(filtered_image_name.c_str(), filtered_texture).expect("failed to initialize envmap image.");
+    std::string full_image_name = name + " Envmap Image";
+    full_image = bank.create_image(std::move(full_image_name), full_texture).expect("failed to initialize envmap image.");
+    std::string filtered_image_name = name + " Envmap (Filtered) Image";
+    filtered_image = bank.create_image(std::move(filtered_image_name), filtered_texture).expect("failed to initialize envmap image.");
 
     /* Pack and upload filtered texture */
     pack_and_upload(bank, filtered_image, filtered_data, filtered_width, filtered_height);
@@ -166,13 +312,6 @@ bool Envmap::load() {
     stbi_image_free(data);
 
     return true;
-}
-
-void Envmap::unload() {
-    engine.renderer.destroy(full_texture);
-    engine.renderer.destroy(full_image);
-    engine.renderer.destroy(filtered_texture);
-    engine.renderer.destroy(filtered_image);
 }
 
 }  // namespace tmt

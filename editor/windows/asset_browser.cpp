@@ -289,6 +289,22 @@ void AssetBrowser::import_asset(const IO::FileLocation& import_file, const IO::F
         return;
     }
 
+    if (extension == ".hdr" || extension == ".exr") {
+        const std::vector<char>& data = import_envmap(import_file);
+        if (data.empty()) {
+            Log::error("Failed to import asset: failed to load .hdr/.exr file.");
+            return;
+        }
+
+        IO::FileLocation import_file_location = location;
+        import_file_location.relative_path /= import_file.relative_path.filename().replace_extension(".env");
+        import_file_location = find_unused_file_location(import_file_location);
+
+        IO::write_file(import_file_location, data.data(), data.size());
+
+        return;
+    }
+
     Log::error("Failed to import asset: invalid file type.");
 }
 
@@ -480,6 +496,10 @@ void AssetBrowser::location_context_menu(const IO::FileLocation& location, const
     // Shortcut for importing '.vengi' files.
     if (ext == ".vengi") {
         if (ImGui::MenuItem(ICON_MS_DOWNLOAD " Import as SVH")) {
+            import_asset(location, viewing_location);
+        }
+    } else if (ext == ".hdr" || ext == ".exr") {
+        if (ImGui::MenuItem(ICON_MS_DOWNLOAD " Import as ENV")) {
             import_asset(location, viewing_location);
         }
     }

@@ -79,7 +79,7 @@ void VoxelMode::on_switch_to(const std::any& meta_data) {
 
     /* Create the default skybox entity */
     Environment& environment = engine.ecs.create_entity<Environment>();
-    environment.resource = engine.resources.load_resource<Envmap>(IO::FileLocation { IO::Location::EDITOR, "volcanic_planet.hdr" });
+    environment.resource = engine.resources.load_resource<Envmap>(IO::FileLocation { IO::Location::EDITOR, "volcanic_planet.env" });
 
     /* Switch back display mode, disable TAA */
     engine.renderer.display_mode = cached_display_mode;

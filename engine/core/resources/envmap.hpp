@@ -6,6 +6,8 @@
 
 namespace tmt {
 
+std::vector<char> import_envmap(const IO::FileLocation& file_location);
+
 /* Environment Map Resource - used as skydome when rendering */
 class Envmap : public FileResource {
    public:
@@ -14,7 +16,9 @@ class Envmap : public FileResource {
     bool load() override;
     void unload() override;
 
-    inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS { ".hdr", ".exr" };
+    bool load_hdr();
+
+    inline static const std::set<std::string_view> SUPPORTED_FILE_EXTENSIONS { ".env" };
 
     Texture full_texture {};
     Image full_image {};

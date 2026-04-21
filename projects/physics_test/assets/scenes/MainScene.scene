@@ -82,8 +82,8 @@
         "2": {
             "resource": {
                 "file_location": {
-                    "sub_location": "PROJECT",
-                    "relative_path": "volcanic_planet.hdr"
+                    "sub_location": "EDITOR",
+                    "relative_path": "volcanic_planet.env"
                 }
             },
             "object_opaque_distance": 128.0,
