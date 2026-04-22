@@ -35,6 +35,13 @@ void Upgrade::end() {
 void Upgrade::button_apply(tmt::Button::Context context) {
     if (context.disabled) return;
 
+    for (auto required_upgrade_entity : required_upgrade_entities) {
+        if (tmt::engine.ecs.is_enabled(required_upgrade_entity)) {
+            tmt::Log::info("Required upgrades have not been purchased, canceling upgrade on entity: {}", entity);
+            return;
+        }
+    }
+
     if (apply_upgrade()) {
         tmt::engine.ecs.disable(entity);
         tmt::Log::info("Applied upgrade.");

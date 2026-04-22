@@ -42,6 +42,7 @@ class Upgrade : public tmt::GameComponent<Upgrade> {
     void update(const tmt::FrameData& time) override {}
     void end() override;
 
+    tmt::Entity upgrade_target = entt::null;
     UpgradeType type = UpgradeType::MAX_HEALTH;
     float upgrade_to = 1.0f;
     uint64_t dollar_cost = 1.0f;
@@ -50,9 +51,10 @@ class Upgrade : public tmt::GameComponent<Upgrade> {
     bool apply_upgrade();
     void modify_upgrade_entities() const;
     void button_apply(tmt::Button::Context context);
+    std::vector<tmt::Entity> required_upgrade_entities = {};
 
    private:
 };
 
 }  // namespace game
-TMT_OBJECT(game::Upgrade, (type, upgrade_to, dollar_cost, new_upgrade_costs));
+TMT_OBJECT(game::Upgrade, (upgrade_target, type, upgrade_to, dollar_cost, new_upgrade_costs, required_upgrade_entities));
