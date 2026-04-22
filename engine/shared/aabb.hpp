@@ -18,6 +18,10 @@ struct Aabb {
     bool overlap(const Aabb& other) const {
         return (min.x <= other.max.x && max.x >= other.min.x) && (min.y <= other.max.y && max.y >= other.min.y) && (min.z <= other.max.z && max.z >= other.min.z);
     }
+
+    bool contains(const Aabb& other) const {
+        return other.min.x >= min.x && other.max.x <= max.x && other.min.y >= min.y && other.max.y <= max.y && other.min.z >= min.z && other.max.z <= max.z;
+    }
 };
 
 }  // namespace tmt

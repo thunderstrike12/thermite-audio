@@ -10,6 +10,7 @@ import bvh2;
 import cache;
 import lights;
 import material;
+import lightgrid;
 
 /* Active render & scene view. */
 ConstantBuffer<RenderView> render_view;
@@ -17,10 +18,12 @@ ConstantBuffer<SceneView> scene_view;
 Texture2D<float4> blue_noise;
 /* Voxel objects buffers. */
 StructuredBuffer<float4> tlas_nodes;
-StructuredBuffer<uint> object_indices;
+StructuredBuffer<uint32_t> object_indices;
 StructuredBuffer<VoxelObject> objects;
 /* Lights buffer. */
 StructuredBuffer<Light> lights;
+/* Light grid buffer. */
+StructuredBuffer<uint32_t> light_grid;
 /* Macrofacet cache buffer. */
 // RWStructuredBuffer<cache::Slot> macrofacet_cache;
 /* Visibility buffer. */
@@ -28,38 +31,13 @@ Texture2D<uint2> vbuffer;
 /* Luminance buffer. */
 RWTexture2D<float3> lbuffer;
 
+[[vk::push_constant]]
+float3 grid_center;
+
 struct PickedLight {
-    uint i; /* Selected light index. */
+    uint32_t i;    /* Selected light index. */
     float rcp_pdf; /* Reciprocal probability distribution function. */
 };
-
-/* Pick a light to sample for a given sample point using reservoir sampling. */
-inline PickedLight pick_light(const float3 point, const float3 normal, inout uint seed, const float2 noise) {
-    /* Reservoir state */
-    uint i = uint::maxValue;
-    float w_sum = 0.0f, w_i = BIG_F32;
-    // float r = frac(noise.x + GOLDEN_RATIO_F32);
-
-    // const uint light_index = uint(rand_float(seed) * (float)scene_view.light_count);
-    // const float rcp_pdf = scene_view.light_count;
-
-    for (uint l = 0u; l < scene_view.light_count; ++l) {
-        /* Calculate light weight */
-        const float w = evaluate_weight(point, normal, lights[l]);
-
-        w_sum += w; /* Update the reservoir */
-        if (rand_float(seed) * w_sum <= w) {
-            i = l;
-            w_i = w;
-        }
-
-        /* Move to the next element in the sequence */
-        // r = frac(noise.x + GOLDEN_RATIO_F32);
-    }
-
-    return PickedLight(i, w_sum / w_i);
-    // return PickedLight(light_index, rcp_pdf);
-}
 
 inline float3 direct_illuminance(const float3 point, const float3 normal, const float3 view_dir, const Material mat, inout uint seed, const float2 noise) {
     float3 illuminance = mat.albedo() * mat.emission();
@@ -77,17 +55,29 @@ inline float3 direct_illuminance(const float3 point, const float3 normal, const 
         }
     }
 
-    if (scene_view.light_count == 0u) return illuminance;
+    /* Index light grid cascades */
+    PickedLight picked_light;
+    const lgrid::CascadeIndex index = lgrid::index_cascades(point - grid_center);
+    if (index.cascade == uint::maxValue) return illuminance;
+
+    /* Compute cell index and base, and retrieve light count */
+    const uint32_t cell_base = lgrid::cell_base(index.cascade, index.x, index.y, index.z);
+    const uint32_t light_count = light_grid[cell_base];
+    if (light_count == 0u) return illuminance;
+
+    /* Pick light */
+    const uint32_t slot = uint32_t(rand_float(seed) * light_count);
+    const uint32_t light_index = light_grid[cell_base + 1u + slot];
+    picked_light = PickedLight(light_index, (float)light_count);
 
     /* Fetch a light to sample */
-    const PickedLight picked_light = pick_light(point, normal, seed, noise);
-    if (picked_light.i == uint::maxValue) return illuminance;
     const Light light = lights[picked_light.i];
 
     /* Generate a sample for the light we picked */
     const LightSample light_sample = sample_light(point, light, noise);
     const float t = occlusion_bvh2(tlas_nodes, object_indices, objects, custom_ray(point, light_sample.dir), light_sample.tmax);
-    if (t < light_sample.tmax) return illuminance;
+    if (t < light_sample.tmax)
+        return illuminance;
 
     /* Distance based attenuation */
     const float relative_dist = saturate(light_sample.tmax / light.attenuation_radius);
@@ -138,7 +128,8 @@ void main(int2 thread_id: SV_DispatchThreadID) {
     const float scale = saturate(1.0f - geo.material.metallic());
     if (scale == 0.0f) {
         /* Exit early if there's no diffuse contribution */
-        lbuffer[thread_id] = 0.0f; return;
+        lbuffer[thread_id] = 0.0f;
+        return;
     }
 
     const float3 hit_point = ray.origin + ray.dir * geo.depth + geo.normal * 0.001f;

@@ -12,6 +12,8 @@
 #include "engine/core/renderer/renderer.hpp"
 #include "engine/tools/player_data.hpp"
 
+#include "engine/core/input/input.hpp"
+
 namespace tmt {
 
 /* Divide two numbers, rounding up. */
@@ -31,7 +33,7 @@ void DiPipeline::init(GPUAdapter&) {}
 
 void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, SceneView& scene_view) {
     /* Only run this pass if it's outputs are actually used */
-    if (engine.renderer.display_mode != DisplayMode::ILLUMINANCE && engine.renderer.display_mode != DisplayMode::CACHE && engine.renderer.display_mode != DisplayMode::DEFAULT) return;
+    if (engine.renderer.display_mode != DisplayMode::ILLUMINANCE && engine.renderer.display_mode != DisplayMode::CACHE && engine.renderer.display_mode != DisplayMode::LIGHTS && engine.renderer.display_mode != DisplayMode::DEFAULT ) return;
 
     /* Gather buffer handles */
     const BindHandle render_image = render_view.get_render_image();
@@ -72,9 +74,12 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
             .read(scene_view.object_data)
             /* Light data */
             .read(scene_view.lights_data)
+            /* Lights grid */
+            .read(scene_view.light_grid) 
             /* Visibility buffer & Output buffer */
             .read(render_view.vbuffer.image)
             .write(diff_buffer)
+            .push_constants(&scene_view.light_grid_center, 0, sizeof(glm::vec3))
             .group_size(16, 8)
             .work_size(rate.x, rate.y);
     }
@@ -169,7 +174,7 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
         .work_size(output_res.x, output_res.y);
     
     /* Composite pass */
-    if (engine.renderer.display_mode == DisplayMode::DEFAULT) {
+    if (engine.renderer.display_mode == DisplayMode::DEFAULT || engine.renderer.display_mode == DisplayMode::LIGHTS) {
         render_graph.add_compute_pass("composite pass", "composite.cs")
             .read(render_view.render_view_buffer) /* Render view buffer */
             .read(scene_view.scene_view) /* Scene view buffer */

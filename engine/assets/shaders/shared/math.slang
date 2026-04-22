@@ -18,6 +18,15 @@ public struct Range {
     public float max;
 };
 
+public struct Aabb {
+    public float3 min;
+    public float3 max;
+
+    public bool overlap(const Aabb other) {
+        return (min.x <= other.max.x && max.x >= other.min.x) && (min.y <= other.max.y && max.y >= other.min.y) && (min.z <= other.max.z && max.z >= other.min.z);
+    }
+};
+
 // Bezier Helpers
 float bezier_x(float t, float4 p) {
     const float u = 1.0f - t;

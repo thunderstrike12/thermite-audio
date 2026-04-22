@@ -12,6 +12,9 @@
 #include "engine/core/components/light.hpp"
 #include "engine/core/components/environment.hpp"
 
+#include "engine/core/polyline.hpp"
+#include "engine/core/input/input.hpp"
+
 namespace tmt {
 
 /* Universal light descriptor. */
@@ -54,6 +57,14 @@ void SceneView::init() {
     lights_data = bank.create_buffer("Lights Data Buffer", s, MAX_LIGHTS, sizeof(UniversalLightDesc)).expect("failed to create lights data buffer.");
     scene_view = bank.create_buffer("Scene View Buffer", c, sizeof(GpuSceneView)).expect("failed to create scene view buffer.");
 
+    /* Cascades bitmasks buffer */
+    cascades_bitmasks = bank.create_buffer("Cascades Bitmasks", BufferUsage::TransferDst | BufferUsage::Storage, light_grid::BITMASKS_PER_CASCADE * light_grid::MAX_CASCADES, sizeof(uint32_t))
+                            .expect("failed to initialize the cascades bitmasks buffer");
+
+    /* Fine light grid */
+    light_grid = bank.create_buffer("Fine Light Grid", BufferUsage::TransferDst | BufferUsage::Storage, light_grid::LIGHT_GRID_BUFFER_SIZE, sizeof(uint32_t))
+                     .expect("failed to initialize the fine light grid buffer");
+
     /* Subscribe to EnTT */
     engine.ecs.get_registry().on_destroy<VoxelRenderer>().connect<&SceneView::on_renderer_destroyed>(this);
     next_uuid = 1u; /* Set the base uuid */
@@ -65,6 +76,10 @@ void SceneView::update(RenderGraph& render_graph, const RenderView& render_view)
 
     /* Update lights */
     update_lights(render_graph, render_view);
+
+    if (engine.input.is_keyboard_button_just_pressed(Key::L)) {
+        update_light_grid_center = !update_light_grid_center;
+    }
 }
 
 void SceneView::deinit() {
@@ -78,6 +93,9 @@ void SceneView::deinit() {
     bank.destroy(object_data);
     bank.destroy(lights_data);
     bank.destroy(scene_view);
+
+    bank.destroy(cascades_bitmasks);
+    bank.destroy(light_grid);
 }
 
 /* Create a vector containing type `T`, with space reserved for `count` instances. */
@@ -241,7 +259,7 @@ void SceneView::update_lights(RenderGraph& render_graph, const RenderView&) {
                 gpu_light.culling_radius = spot_light.attenuation_distance;
                 break;
             }
-            /* Spot light */
+            /* Tube light */
             case LightType::TUBE_LIGHT: {
                 const TubeLight tube_light = std::get<TubeLight>(light.light);
                 gpu_light.source_radius = tube_light.source_radius;
@@ -254,6 +272,57 @@ void SceneView::update_lights(RenderGraph& render_graph, const RenderView&) {
                 break;
         }
     }
+
+    /* Allocate space for the cpu flatbit array */
+    std::vector light_bitmasks = std::vector<uint32_t>((size_t)(light_grid::BITMASKS_PER_CASCADE * light_grid::MAX_CASCADES));
+
+    for (size_t cascade = 0; cascade < light_grid::MAX_CASCADES; cascade++) {
+        /* compute cascade half extent (in world space units) */
+        const uint32_t cascade_half_extent = (light_grid::FIRST_CASCADE_BOUNDS << cascade) / 2u;
+        light_grid_center = update_light_grid_center ? glm::vec3(engine.renderer.render_view.gpu_view.origin) : light_grid_center;
+        const Aabb cascade_aabb = Aabb(light_grid_center - (float)cascade_half_extent, light_grid_center + (float)cascade_half_extent);
+
+        /* compute inner aabb (the area covered by the previous cascade) */
+        Aabb inner_aabb {};
+        const bool has_inner = cascade > 0;
+        if (has_inner) {
+            const uint32_t inner_half_extent = (light_grid::FIRST_CASCADE_BOUNDS << (cascade - 1)) / 2u;
+            inner_aabb = Aabb(light_grid_center - (float)inner_half_extent, light_grid_center + (float)inner_half_extent);
+        }
+
+        // engine.polyline.use_color({ 1.0f, 0.0f, 0.0f, 1.0f });
+        // engine.polyline.draw_aabb(cascade_min, cascade_max);
+
+        for (size_t light_index = 0; light_index < gpu_lights.size(); light_index++) {
+            const uint32_t bitmask_index = (uint32_t)light_index >> 5;   /* light_index / 32 */
+            const uint32_t bit_index = (uint32_t)light_index & 0b11111u; /* light_index % 32 */
+
+            /* TODO: Might be a good idea to use OBBs or Spheres instead of AABB */
+            /* compute light aabb */
+            const UniversalLightDesc& light = gpu_lights[light_index];
+            const Aabb light_aabb = Aabb(light.origin - light.culling_radius, light.origin + light.culling_radius);
+
+            // engine.polyline.use_color({ 1.0f, 1.0f, 0.0f, 1.0f });
+            // engine.polyline.draw_aabb(light_min, light_max);
+
+            /* get bitmask (32 bitmasks per cascade) */
+            uint32_t& bitmask = light_bitmasks[cascade * light_grid::BITMASKS_PER_CASCADE + bitmask_index];
+
+            /* if inside bounds update the bitmask and counter */
+            if (cascade_aabb.overlap(light_aabb)) {
+                if (has_inner && inner_aabb.contains(light_aabb)) {
+                    continue; /* entirely covered by the finer cascade so we skip it */
+                }
+
+                bitmask |= 1 << bit_index;
+            }
+        }
+
+        // Log::info("Cascade #{} has {} Lights!", cascade, light_counter);
+    }
+
+    /* Upload light grid buffers */
+    render_graph.upload_buffer(cascades_bitmasks, light_bitmasks.data(), 0u, light_bitmasks.size() * sizeof(uint32_t));
 
     /* Update scene stats */
     light_count = (uint32_t)gpu_lights.size();

@@ -15,7 +15,22 @@ constexpr uint32_t MAX_VOXEL_OBJECTS = 10000u;
 /* We have a hard limit due to technical limitations. */
 static_assert(MAX_VOXEL_OBJECTS < (1u << 14));
 /* Maximum number of lights we support in the scene at once. */
-constexpr uint32_t MAX_LIGHTS = 1000u;
+constexpr uint32_t MAX_LIGHTS = 1024u;
+
+namespace light_grid {
+
+constexpr uint32_t MAX_LIGHTS_PER_CELL = 64u;
+constexpr uint32_t MAX_CASCADES = 6u;
+constexpr uint32_t CASCADES_RESOLUTION = 16u;
+constexpr uint32_t BITMASKS_PER_CASCADE = (MAX_LIGHTS + 31u) / 32u;                      /* div up */
+constexpr uint32_t FIRST_CASCADE_BOUNDS = 32u;                                           /* world space units */
+constexpr uint32_t FIRST_CASCADE_CELL_SIZE = FIRST_CASCADE_BOUNDS / CASCADES_RESOLUTION; /* world space units */
+
+constexpr uint32_t CELLS_PER_CASCADE = CASCADES_RESOLUTION * CASCADES_RESOLUTION * CASCADES_RESOLUTION;
+constexpr uint32_t TOTAL_LIGHTS_PER_CASCADE = MAX_LIGHTS_PER_CELL * CELLS_PER_CASCADE;
+constexpr uint32_t LIGHT_GRID_BUFFER_SIZE = CELLS_PER_CASCADE * MAX_CASCADES * MAX_LIGHTS_PER_CELL;
+
+}  // namespace light_grid
 
 struct GpuSceneView {
     /* Direction pointing towards the sun. */
@@ -59,6 +74,12 @@ struct SceneView {
     uint32_t next_uuid = 1u;
     std::vector<Entity> entities {};
     bool render_outlines = false;
+
+    /* Light acc structure */
+    Buffer cascades_bitmasks {}; /* Filled on the CPU. Stores light bitmask per cascade. */
+    Buffer light_grid {};        /* Filled on the GPU, using the cascades_bitmasks. Stores light indices per cascade cell. */
+    glm::vec3 light_grid_center = { 0.0f, 0.0f, 0.0f };
+    bool update_light_grid_center = true;
 
     /* Any objects before this distance will be fully opaque. */
     float object_opaque_distance = 128.0f;

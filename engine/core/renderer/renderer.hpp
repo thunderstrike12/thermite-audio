@@ -21,6 +21,7 @@ enum class DisplayMode : uint32_t {
     ILLUMINANCE,   /* Visualize illuminance from the cache. */
     CACHE,         /* Visualize cache info. */
     MOTIONVECTORS, /* Visualize motion vectors. */
+    LIGHTS,        /* Visualize light cascades and heatmap. */
 };
 
 /* Shading rate. */

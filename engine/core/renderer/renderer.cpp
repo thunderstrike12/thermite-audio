@@ -133,6 +133,22 @@ void Renderer::update() {
         render_view.update_gpu_view(render_graph, debug_camera, debug_transform);
     }
 
+    /* Light Culling Pass */
+    {
+        render_graph.add_compute_pass("light grid clear counts pass", "lightgrid/clear_counts.cs")
+            .write(scene_view.light_grid)
+            .group_size(64)
+            .work_size(light_grid::CASCADES_RESOLUTION * light_grid::CASCADES_RESOLUTION * light_grid::CASCADES_RESOLUTION * light_grid::MAX_CASCADES);
+
+        render_graph.add_compute_pass("light culling pass", "lightgrid/cull.cs")
+            .read(scene_view.cascades_bitmasks)
+            .read(scene_view.lights_data)
+            .write(scene_view.light_grid)
+            .push_constants(&scene_view.light_grid_center, 0, sizeof(glm::vec3))
+            .group_size(4, 4, 4)
+            .work_size(light_grid::CASCADES_RESOLUTION, light_grid::CASCADES_RESOLUTION, light_grid::CASCADES_RESOLUTION * light_grid::MAX_CASCADES);
+    }
+
     /* Enqueue pipelines */
     geometry_pipeline.enqueue(render_graph, render_view, scene_view);
     di_pipeline.enqueue(render_graph, render_view, scene_view);
@@ -146,7 +162,7 @@ void Renderer::update() {
             .work_size(render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y);
     }
 
-    if (engine.renderer.display_mode == DisplayMode::DEFAULT) {
+    if (engine.renderer.display_mode == DisplayMode::DEFAULT || engine.renderer.display_mode == DisplayMode::LIGHTS) {
         post_process_pipeline.enqueue(render_graph, render_view);
     }
 
@@ -160,6 +176,17 @@ void Renderer::update() {
             .group_size(16, 8)
             .work_size(render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y);
         /* clang-format on */
+    }
+
+    if (engine.renderer.display_mode == DisplayMode::LIGHTS) {
+        render_graph.add_compute_pass("[debug] lights pass", "debug/lights.cs")
+            .read(render_view.render_view_buffer)
+            .read(scene_view.object_data)
+            .read(render_view.vbuffer.image)
+            .read(scene_view.light_grid)
+            .write(render_view.get_render_image())
+            .group_size(16, 8)
+            .work_size(render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y);
     }
 
     polyline_pipeline.enqueue(render_graph, render_view);

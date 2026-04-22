@@ -70,6 +70,33 @@ public [ForceInline] float evaluate_weight(const float3 p, const float3 n, const
     return 1.0f; // + luminance * distance_attenuation(src_dist, light.culling_radius);
 }
 
+/* Perform fine culling for a light source against a sphere. */
+public [ForceInline] bool fine_cull_light(const Light light, const float3 c, const float r) {
+    const float3 v = c - light.origin;
+    const float dist_sq = dot(v, v);
+    const float max_dist = light.culling_radius + r;
+
+    /* Cull radius early out */
+    if (dist_sq > max_dist * max_dist) return false;
+
+    /* Cull beam angle for spot lights */
+    if (light.type == LightType::SPOT_LIGHT) {
+        const float sin_beam_angle = sqrt(1.0 - light.cos_beam_angle * light.cos_beam_angle);
+        const float vdotd = dot(v, light.direction);
+
+        if (vdotd < 0.0f) {
+            /* Behind apex, only intersects if sphere contains the apex */
+            return dist_sq <= r * r;
+        }
+
+        /* Calculate signed distance from sphere center to cone */
+        const float perp_dist = sqrt(dist_sq - vdotd * vdotd);
+        const float cone_dist = light.cos_beam_angle * perp_dist - sin_beam_angle * vdotd;
+        if (cone_dist > r) return false;
+    }
+    return true;
+}
+
 /* Light source sample. */
 public struct LightSample {
     public float3 dir;

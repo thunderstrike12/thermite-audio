@@ -16,6 +16,8 @@
         22,
         23,
         24,
+        25,
+        26,
         1048576,
         1048577,
         1048578,
@@ -26,7 +28,10 @@
         1048583,
         1048584,
         1048585,
-        1048597
+        1048603,
+        1048604,
+        1048605,
+        1048606
     ],
     "Name": {
         "10": {
@@ -54,7 +59,7 @@
             "name": "TestWall"
         },
         "18": {
-            "name": "TestLight"
+            "name": "l1"
         },
         "19": {
             "name": "Environment"
@@ -73,6 +78,12 @@
         },
         "24": {
             "name": "root"
+        },
+        "25": {
+            "name": "Test UI"
+        },
+        "26": {
+            "name": "Sponza"
         },
         "1048576": {
             "name": "Camera"
@@ -104,8 +115,17 @@
         "1048585": {
             "name": "Asteroid8"
         },
-        "1048597": {
-            "name": "Test UI"
+        "1048603": {
+            "name": "_light1"
+        },
+        "1048604": {
+            "name": "_light4"
+        },
+        "1048605": {
+            "name": "_light2"
+        },
+        "1048606": {
+            "name": "_light3"
         }
     },
     "Transform": {
@@ -193,18 +213,18 @@
             "local_position": {
                 "x": -20.90081024169922,
                 "y": 48.80633544921875,
-                "z": 94.17949676513672
+                "z": 94.3593521118164
             },
             "local_rotation": {
-                "w": 0.8136083483695984,
-                "x": 0.11243993043899536,
-                "y": 0.5088412761688232,
-                "z": -0.25783571600914
+                "w": 0.6615249514579773,
+                "x": 0.044796720147132874,
+                "y": 0.6951702237129211,
+                "z": -0.2776983380317688
             },
             "local_scale": {
-                "x": 0.999997079372406,
-                "y": 0.9999963045120239,
-                "z": 0.9999980330467224
+                "x": 0.999995768070221,
+                "y": 0.9999946355819702,
+                "z": 0.9999982714653015
             },
             "parent": 4294967295,
             "children": []
@@ -409,6 +429,46 @@
             "parent": 4294967295,
             "children": []
         },
+        "25": {
+            "local_position": {
+                "x": 18.50146484375,
+                "y": -74.99996948242188,
+                "z": -0.890625
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "26": {
+            "local_position": {
+                "x": 139.61477661132813,
+                "y": 36.5,
+                "z": -318.64697265625
+            },
+            "local_rotation": {
+                "w": 0.70710688829422,
+                "x": -0.7071066498756409,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 20.0,
+                "y": 19.99979591369629,
+                "z": 19.99979591369629
+            },
+            "parent": 4294967295,
+            "children": []
+        },
         "1048576": {
             "local_position": {
                 "x": 0.0,
@@ -609,11 +669,71 @@
             "parent": 4294967295,
             "children": []
         },
-        "1048597": {
+        "1048603": {
             "local_position": {
-                "x": 18.50146484375,
-                "y": -74.99996948242188,
-                "z": -0.890625
+                "x": 70.81517028808594,
+                "y": -178.53054809570313,
+                "z": -351.54559326171875
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048604": {
+            "local_position": {
+                "x": 95.59957122802734,
+                "y": -179.72625732421875,
+                "z": -282.1877746582031
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048605": {
+            "local_position": {
+                "x": 177.1248779296875,
+                "y": -180.92364501953125,
+                "z": -316.18597412109375
+            },
+            "local_rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "local_scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "parent": 4294967295,
+            "children": []
+        },
+        "1048606": {
+            "local_position": {
+                "x": 141.75877380371094,
+                "y": -155.34596252441406,
+                "z": -346.62890625
             },
             "local_rotation": {
                 "w": 1.0,
@@ -629,6 +749,9 @@
             "parent": 4294967295,
             "children": []
         }
+    },
+    "Disable": {
+        "25": {}
     },
     "Voxel Renderer": {
         "17": {
@@ -686,6 +809,20 @@
             },
             "opacity": 1.0,
             "distance_culling": true
+        },
+        "26": {
+            "resource": {
+                "file_location": {
+                    "sub_location": "PROJECT",
+                    "relative_path": "sponza.vengi"
+                },
+                "data": {},
+                "constructor_args": [
+                    "00000000-0000-0000-0000-000000000000"
+                ]
+            },
+            "opacity": 1.0,
+            "distance_culling": false
         },
         "1048577": {
             "resource": {
@@ -967,8 +1104,8 @@
             "light": {
                 "index": 1,
                 "value": {
-                    "source_angle": 0.06632251292467117,
-                    "luminous_intensity": 0.0
+                    "source_angle": 0.1745329201221466,
+                    "luminous_intensity": 1.0
                 }
             }
         },
@@ -1022,6 +1159,74 @@
                     "source_radius": 0.10000000149011612,
                     "attenuation_radius": 10.0,
                     "luminous_flux": 750.0
+                }
+            }
+        },
+        "1048603": {
+            "color": {
+                "x": 0.7108880877494812,
+                "y": 0.3341267704963684,
+                "z": 0.0521748885512352
+            },
+            "temperature": 4760.0,
+            "type": "SPHERE_LIGHT",
+            "light": {
+                "index": 0,
+                "value": {
+                    "source_radius": 0.10000000149011612,
+                    "attenuation_radius": 22.899999618530273,
+                    "luminous_flux": 75000.0
+                }
+            }
+        },
+        "1048604": {
+            "color": {
+                "x": 0.9281165599822998,
+                "y": 0.9204145073890686,
+                "z": 0.12227830290794373
+            },
+            "temperature": 4760.0,
+            "type": "SPHERE_LIGHT",
+            "light": {
+                "index": 0,
+                "value": {
+                    "source_radius": 0.10000000149011612,
+                    "attenuation_radius": 24.399999618530273,
+                    "luminous_flux": 75000.0
+                }
+            }
+        },
+        "1048605": {
+            "color": {
+                "x": 0.3277578353881836,
+                "y": 0.06306031346321106,
+                "z": 0.8812011480331421
+            },
+            "temperature": 4760.0,
+            "type": "SPHERE_LIGHT",
+            "light": {
+                "index": 0,
+                "value": {
+                    "source_radius": 0.10000000149011612,
+                    "attenuation_radius": 24.799999237060547,
+                    "luminous_flux": 75000.0
+                }
+            }
+        },
+        "1048606": {
+            "color": {
+                "x": 0.6889858245849609,
+                "y": 0.22444625198841095,
+                "z": 0.4227480888366699
+            },
+            "temperature": 4760.0,
+            "type": "SPHERE_LIGHT",
+            "light": {
+                "index": 0,
+                "value": {
+                    "source_radius": 0.10000000149011612,
+                    "attenuation_radius": 65.19999694824219,
+                    "luminous_flux": 75000.0
                 }
             }
         }
@@ -1126,7 +1331,7 @@
         }
     },
     "UIComponent": {
-        "1048597": {
+        "25": {
             "size": {
                 "x": 1175.9984130859375,
                 "y": 274.00006103515625
@@ -1147,7 +1352,7 @@
         }
     },
     "ImageRenderer": {
-        "1048597": {
+        "25": {
             "texture": {
                 "file_location": {
                     "sub_location": "PROJECT",
@@ -1164,7 +1369,7 @@
         }
     },
     "TextRenderer": {
-        "1048597": {
+        "25": {
             "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
             "font": {
                 "file_location": {
