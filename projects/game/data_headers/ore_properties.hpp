@@ -17,7 +17,7 @@ class OreProperties : public tmt::GameComponent<OreProperties> {
         float value = 1.0f;
         float toughness = 1.0f;
         float weight = 1.0f;
-        uint32_t resource_per_voxel = 1u;
+        float resource_per_voxel = 1.0f;
         OreResources ore_resource = OreResources::NONE;
     };
 
