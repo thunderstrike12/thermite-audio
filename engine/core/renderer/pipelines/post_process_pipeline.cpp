@@ -74,7 +74,7 @@ void PostProcessPipeline::enqueue(RenderGraph& render_graph, RenderView render_v
 
         /* Apply exposure to luminance buffer */
         render_graph.add_compute_pass("AutoX Apply", "lighting/autox_apply.cs")
-            .read(render_view.vbuffer.image)
+            .read(render_view.dbuffer.image)
             .write(render_view.lbuffer.image)
             .read(autox_image)
             .push_constants(&autox_constants, 0u, sizeof(AutoXConstants))

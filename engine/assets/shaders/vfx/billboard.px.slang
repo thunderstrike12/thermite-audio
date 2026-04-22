@@ -19,6 +19,12 @@ struct FragmentOutput {
 
 [shader("fragment")]
 FragmentOutput main(BillboardVertexOutput input) {
+    const float noise = r1(blue_noise1d.Sample(point_sampler, input.pos.xy / (512.0f * input.dither_scale)).r, gpu_view.frame_index % 1024u);
+
+    // skip texture fetch if opacity fails dither test
+    if (input.opacity <= noise)
+        discard;
+
     Texture2D<float4> tex = bindless::texture_sampled<Texture2D<float4>>(input.tex_index);
 
     const float frame = floor(input.current_frame);
@@ -26,14 +32,8 @@ FragmentOutput main(BillboardVertexOutput input) {
 
     const float4 tex_sample = tex.Sample(point_sampler, anim_uv);
 
-    const float2 screen_pos = input.pos.xy;
-    const bool partial_transparent = tex_sample.a > 0.0f && tex_sample.a < 1.0f;
-    const bool should_dither = input.opacity <= 0.99f || partial_transparent;
-
-    const float dither = should_dither ? r1(blue_noise1d.Sample(point_sampler, screen_pos / (512.0f * input.dither_scale)).r, gpu_view.frame_index % 1024u) : 0.0f;
-
     // dither when alpha is above 0.0f but below 1.0f
-    if (tex_sample.a * input.opacity <= dither)
+    if (tex_sample.a * input.opacity <= noise)
         discard;
 
     FragmentOutput output;
