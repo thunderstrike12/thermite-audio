@@ -1,26 +1,26 @@
-#include "level_editor.hpp"
+#ifdef THERMITE_EDITOR
 
-#include "editor/editor.hpp"
-#include "editor/windows/viewport.hpp"
-#include "engine/core/renderer/renderer.hpp"
-#include "engine/core/components/cell_grouper_tag.hpp"
-#include "engine/engine.hpp"
-#include "imgui.h"
-#include "engine/core/polyline.hpp"
-#include "engine/tools/random.hpp"
-#include "engine/core/logger.hpp"
-#include "engine/tools/prefab_helper.hpp"
-#include "engine/core/scenes.hpp"
-#include "editor/core/systems/undo_redo/level_editor_diff.hpp"
-#include "editor/imgui/types/all.hpp"
-#include <ImReflect.hpp>
+    #include "level_editor.hpp"
+    #include "editor/editor.hpp"
+    #include "editor/windows/viewport.hpp"
+    #include "engine/core/renderer/renderer.hpp"
+    #include "engine/engine.hpp"
+    #include "imgui.h"
+    #include "engine/core/polyline.hpp"
+    #include "engine/tools/random.hpp"
+    #include "engine/core/logger.hpp"
+    #include "engine/tools/prefab_helper.hpp"
+    #include "engine/core/scenes.hpp"
+    #include "level_editor_diff.hpp"
+    #include "projects/game/components/world_gen/generation_component.hpp"
+    #include <ImReflect.hpp>
+    #include "editor/core/systems/pop_up/pop_up.hpp"
 
 namespace tmt {
 
 void tmt::LevelEditor::on_inspect() {
-    const std::string& scene_name = engine.scenes.get_active_scene_info().name;
-    auto& pickable_cell_templates = scene_pickable_cell_templates[scene_name];
-    auto& cells = scene_cells[scene_name];
+    auto& pickable_cell_templates = level_configuration.scene_pickable_cell_templates;
+    auto& cells = level_configuration.scene_cells;
 
     window_displayed = true;
 
@@ -28,8 +28,9 @@ void tmt::LevelEditor::on_inspect() {
 
     ImGui::Checkbox("Enable level editing", &enable_editing);
     ImGui::Checkbox("Mirror X", &mirror_x);
-    ImGui::DragFloat("Cell size", &cell_size);
-    ImGui::DragFloat3("Global field offset", &global_field_offset[0]);
+    ImGui::DragFloat("Cell size", &level_configuration.cell_size);
+    ImGui::DragFloat("Cell margin", &level_configuration.cell_margin, 1.f, 0.f, level_configuration.cell_size * 0.5f);
+    ImGui::DragFloat3("Global field offset", &level_configuration.global_field_offset[0]);
 
     static const char* brush_previews[static_cast<int>(Brush::MAX)] = { "PLACE", "REMOVE", "REPLACE" };
     if (ImGui::BeginCombo("Brush Mode", brush_previews[selected_brush_mode])) {
@@ -86,59 +87,85 @@ void tmt::LevelEditor::on_inspect() {
         }
     }
 
-    if (ImGui::Button("Generate cells")) {
-        auto view = engine.ecs.view<LevelCellGrouperTag>();
-        tmt::Entity grouper_entity;
+    if (ImGui::Button("Generate preview level (not persistent)")) {
+        auto view = engine.ecs.view<game::GenerationComponent>();
+        tmt::Entity grouper_entity = entt::null;
+
+        auto config_str = IO::read_text_file({ IO::Location::PROJECT, "level/config.json" });
+        if (config_str.empty()) {
+            tmt::Log::warn(tmt::Log::Scope::ENGINE, "No level configuration present yet, please generate one via Level Editor");
+            Notification::create().severity(tmt::Severity::WARNING).message("No level configuration present yet, please generate one via Level Editor");
+            return;
+        }
+
         if (view.begin() == view.end()) {
             grouper_entity = engine.ecs.create_entity("Level Cell Objects");
-            engine.ecs.add_component<LevelCellGrouperTag>(grouper_entity);
+            engine.ecs.add_component<game::GenerationComponent>(grouper_entity);
         } else {
-            grouper_entity = view.front();
+            grouper_entity = view.front().entity;
         }
 
-        auto& grouper_trans = engine.ecs.get_component<Transform>(grouper_entity);
-        if (grouper_trans.has_children()) {
-            for (auto ent : grouper_trans.get_children()) {
-                engine.ecs.destroy_entity(ent);
+        if (grouper_entity != entt::null) {
+            auto& grouper_trans = engine.ecs.get_component<Transform>(grouper_entity);
+            if (grouper_trans.has_children()) {
+                for (auto ent : grouper_trans.get_children()) {
+                    engine.ecs.destroy_entity(ent);
+                }
+            }
+
+            for (auto& cell_template : pickable_cell_templates) {
+                cell_template.field.size = { level_configuration.cell_size, cell_template.height, level_configuration.cell_size };
+            }
+
+            for (auto& [coord, cell] : cells) {
+                auto& cell_template = pickable_cell_templates[cell.template_index];
+
+                cell_template.field.size = { level_configuration.cell_size - level_configuration.cell_margin * 2.f, cell_template.height,
+                                             level_configuration.cell_size - level_configuration.cell_margin * 2.f };
+
+                if (cell_template.random_seed)
+                    Random::set_seed(Random::irand());
+                else
+                    Random::set_seed(cell_template.seed);
+
+                auto local_points = tmt::get_poisson_points(cell_template.field);
+
+                glm::vec3 cell_pos = coord_to_world(coord);
+
+                // spawning
+                for (auto& point : local_points) {
+                    auto spawnables = cell_template.field.layer_entries[point.entry_idx].spawnables;
+                    // float size_factor = cell_template.field.layer_entries[point.entry_idx].radius_factor;
+                    int obj_idx = static_cast<int>(Random::rand_range(0.f, static_cast<float>(spawnables.size()) - 0.0001f));
+
+                    const auto& spawn_obj = spawnables[obj_idx];
+
+                    float pitch = Random::rand_range(0.f, 360.f);
+                    float yaw = Random::rand_range(0.f, 360.f);
+                    float roll = Random::rand_range(0.f, 360.f);
+
+                    auto instantiated = tmt::PrefabHelper::instantiate_prefab(spawn_obj->file_location, grouper_entity);
+
+                    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(instantiated);
+
+                    glm::vec3 min = cell_pos - glm::vec3(level_configuration.cell_size * 0.5f, cell_template.height * 0.5f, level_configuration.cell_size * 0.5f) +
+                                    glm::vec3(level_configuration.cell_margin, 0.f, level_configuration.cell_margin);
+
+                    transform.set_local_position(min + point.pos);
+                    transform.set_local_rotation(glm::vec3(pitch, yaw, roll));
+                }
             }
         }
+    }
+    if (ImGui::Button("Save level config")) {
+        tmt::json config_json = Serializer::serialize(level_configuration);
+        IO::write_text_file({ IO::Location::PROJECT, "level/config.json" }, config_json.dump(4));
+        Notification::create().severity(tmt::Severity::INFO).message("Level config saved!");
 
-        for (auto& cell_template : pickable_cell_templates) {
-            cell_template.field.size = { cell_size, cell_template.height, cell_size };
-        }
-
-        for (auto& [coord, cell] : cells) {
-            auto& cell_template = pickable_cell_templates[cell.template_index];
-
-            cell_template.field.size = { cell_size, cell_template.height, cell_size };
-
-            if (cell_template.random_seed)
-                Random::set_seed(Random::irand());
-            else
-                Random::set_seed(cell_template.seed);
-
-            auto local_points = tmt::get_poisson_points(cell_template.field);
-
-            glm::vec3 cell_pos = coord_to_world(coord);
-
-            // spawning
-            for (auto& point : local_points) {
-                auto spawn_obj = cell_template.field.layer_entries[point.entry_idx].spawnable;
-                // float size_factor = cell_template.field.layer_entries[point.entry_idx].radius_factor;
-
-                float pitch = Random::rand_range(0.f, 360.f);
-                float yaw = Random::rand_range(0.f, 360.f);
-                float roll = Random::rand_range(0.f, 360.f);
-
-                auto instantiated = tmt::PrefabHelper::instantiate_prefab(spawn_obj->file_location, grouper_entity);
-
-                auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(instantiated);
-
-                glm::vec3 min = cell_pos - glm::vec3(cell_size * 0.5f, cell_template.height * 0.5f, cell_size * 0.5f);
-
-                transform.set_local_position(min + point.pos);
-                transform.set_local_rotation(glm::vec3(pitch, yaw, roll));
-            }
+        auto view = engine.ecs.view<game::GenerationComponent>();
+        if (view.begin() == view.end()) {
+            tmt::Entity grouper_entity = engine.ecs.create_entity("Level Cell Objects");
+            engine.ecs.add_component<game::GenerationComponent>(grouper_entity);
         }
     }
 
@@ -199,7 +226,24 @@ void tmt::LevelEditor::on_inspect() {
     }
 }
 
-void tmt::LevelEditor::on_editor_start() {};
+void tmt::LevelEditor::on_editor_start() {
+    auto config_str = IO::read_text_file({ IO::Location::PROJECT, "level/config.json" });
+    if (config_str.empty()) {
+        tmt::Log::warn(tmt::Log::Scope::ENGINE, "No level configuration present yet");
+        Notification::create().severity(tmt::Severity::WARNING).message("No level configuration present yet");
+        return;
+    }
+
+    tmt::json json_obj;
+    try {
+        json_obj = tmt::json::parse(config_str);
+    } catch (const std::exception& e) {
+        tmt::Log::error(tmt::Log::Scope::ENGINE, "Failed to parse level config.json: {}", e.what());
+        return;
+    }
+
+    tmt::Serializer::deserialize(json_obj, level_configuration);
+};
 
 void tmt::LevelEditor::on_editor_update(const tmt::FrameData& time) {
     auto& viewport = editor.systems[Editor::Mode::SCENE].get<Viewport>();
@@ -212,7 +256,7 @@ void tmt::LevelEditor::on_editor_update(const tmt::FrameData& time) {
 
         auto view = glm::inverse(camera_transform.get_world_matrix());
         float aspect = viewport.get_width() / viewport.get_height();
-        auto project = glm::perspective(glm::radians(camera.fov), aspect, 0.01f, 1000.f);
+        auto project = glm::perspectiveLH(glm::radians(camera.fov), aspect, 0.01f, 1000.f);
         auto mouse_pos = viewport.get_mouse_pos();
 
         viewport_context.height = viewport.get_height();
@@ -248,7 +292,7 @@ void tmt::LevelEditor::on_editor_update(const tmt::FrameData& time) {
 }
 
 void LevelEditor::draw_cell(ImDrawList* draw_list, glm::vec3 pos, const Cell& cell, const std::vector<CellTemplate>& pickable_cell_templates, glm::vec4 col) {
-    float extent = cell_size * 0.5f;
+    float extent = level_configuration.cell_size * 0.5f;
     float height_extent = pickable_cell_templates[cell.template_index].height * 0.5f;
     glm::vec3 local_vertices[8] = { glm::vec3(-extent, -height_extent, -extent), glm::vec3(extent, -height_extent, -extent), glm::vec3(extent, height_extent, -extent),
                                     glm::vec3(-extent, height_extent, -extent),  glm::vec3(-extent, -height_extent, extent), glm::vec3(extent, -height_extent, extent),
@@ -298,22 +342,29 @@ void LevelEditor::draw_cell(ImDrawList* draw_list, glm::vec3 pos, const Cell& ce
     engine.polyline.use_color(edge_color);
     engine.polyline.use_line_width(5.f);
     engine.polyline.draw_aabb(pos - glm::vec3(extent, height_extent, extent), { pos + glm::vec3(extent, height_extent, extent) });
+    engine.polyline.use_line_width(1.f);
+    engine.polyline.draw_aabb(
+        pos - glm::vec3(extent - level_configuration.cell_margin, height_extent, extent - level_configuration.cell_margin),
+        { pos + glm::vec3(extent - level_configuration.cell_margin, height_extent, extent - level_configuration.cell_margin) }
+    );
 }
 
 glm::vec3 LevelEditor::coord_to_world(glm::ivec2 coord) {
-    return global_field_offset + glm::vec3(coord.x * cell_size + cell_size * 0.5f, 0.f, coord.y * cell_size + cell_size * 0.5f);
+    return level_configuration.global_field_offset +
+           glm::vec3(coord.x * level_configuration.cell_size + level_configuration.cell_size * 0.5f, 0.f, coord.y * level_configuration.cell_size + level_configuration.cell_size * 0.5f);
 }
 
 glm::ivec2 LevelEditor::world_to_coord(glm::vec3 pos) {
-    pos -= global_field_offset;
-    return glm::ivec2(glm::floor(pos.x / cell_size), glm::floor(pos.z / cell_size));
+    pos -= level_configuration.global_field_offset;
+    return glm::ivec2(glm::floor(pos.x / level_configuration.cell_size), glm::floor(pos.z / level_configuration.cell_size));
 }
 
 void tmt::LevelEditor::on_editor_end() {}
 
-std::unordered_map<glm::ivec2, LevelEditor::Cell>& LevelEditor::get_cells() {
-    const std::string& scene_name = engine.scenes.get_active_scene_info().name;
-    return scene_cells[scene_name];
+std::unordered_map<glm::ivec2, Cell>& LevelEditor::get_cells() {
+    return level_configuration.scene_cells;
 }
 
 }  // namespace tmt
+
+#endif

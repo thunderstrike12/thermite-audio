@@ -1,4 +1,5 @@
 #include "sell_ore_component.hpp"
+#include "engine/core/components/button.hpp"
 
 namespace game {
 

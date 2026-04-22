@@ -17,7 +17,6 @@
 #include "engine/core/components/prefab.hpp"
 #include "engine/core/components/light.hpp"
 #include "engine/core/components/emitter.hpp"
-#include "engine/core/components/cell_grouper_tag.hpp"
 #include "engine/core/components/ui_component.hpp"
 #include "engine/core/components/image_renderer.hpp"
 #include "engine/core/components/text_renderer.hpp"
@@ -41,7 +40,6 @@ using SerializeComponents = ComponentRegistry<
 	Name,
 	Transform, 
 	DisableFlag,
-	tmt::LevelCellGrouperTag,
 	VoxelRenderer, 
 	Environment,
 	Camera,

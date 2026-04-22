@@ -12,7 +12,7 @@ struct PoissonPoint {
 };
 
 struct LayerEntry {
-    tmt::ResourceRef<tmt::Json> spawnable;
+    std::vector<tmt::ResourceRef<tmt::Json>> spawnables;
 
     float radius_factor = 1.f;
     float spawn_weight = 1.f;
@@ -48,5 +48,5 @@ std::vector<PoissonPoint> get_poisson_points(const PoissonField& layer);
 bool point_valid(glm::vec3 point, float radius, float max_radius, const SpatialLookupGrid& grid, const std::vector<PoissonPoint>& points);
 
 }  // namespace tmt
-TMT_OBJECT(tmt::LayerEntry, (spawnable, radius_factor, spawn_weight, belt_bias));
+TMT_OBJECT(tmt::LayerEntry, (spawnables, radius_factor, spawn_weight, belt_bias));
 TMT_OBJECT(tmt::PoissonField, (layer_entries, rejection_samples, spacing_radius));
