@@ -12,10 +12,6 @@
 #include <cstdlib>
 
 void Flee::on_start(tmt::Entity enemy_entity) {
-    for (const auto& [CamEntity, camera] : tmt::engine.ecs.view<tmt::Camera>().each()) {
-        player = CamEntity;
-        break;
-    }
     auto& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
     enemy.back_off_distance = 99999999.9f;
 }

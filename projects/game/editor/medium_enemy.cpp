@@ -39,6 +39,17 @@ void tag_invoke(ImReflect::ImInput_t, const char* name, game::MediumEnemy& value
 
     ImGui::Spacing();
 
+    /* ── Projectile Layers ────────────────────────── */
+    if (ImGui::TreeNodeEx("Projectile Masks", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImReflect::Input("Projectile Layer Mask", value.projectile_mask, type_settings, type_response);
+        help("Mask that only excludes enemy projectiles, so they don't collide with themselves");
+        ImReflect::Input("Projectile Layer", value.projectile_layer, type_settings, type_response);
+        help("Layer all projectiles are put on");
+        ImGui::TreePop();
+    }
+
+    ImGui::Spacing();
+
     /* ── Attacks ─────────────────────────────────────── */
     if (ImGui::TreeNodeEx("Attacks", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Indent();
@@ -49,11 +60,15 @@ void tag_invoke(ImReflect::ImInput_t, const char* name, game::MediumEnemy& value
             ImReflect::Input("Stomp Cooldown", value.stomp_cooldown, type_settings, type_response);
             ImReflect::Input("Stomp Windup", value.stomp_windup, type_settings, type_response);
             ImReflect::Input("Stomp Radius", value.stomp_radius, type_settings, type_response);
+            ImReflect::Input("Stomp Damage", value.stomp_damage, type_settings, type_response);
             ImGui::TreePop();
         }
 
         /* Missiles */
         if (ImGui::TreeNode("Missiles")) {
+            ImReflect::Input("Stencil", value.stencil, type_settings, type_response);
+            help("Stencil used for subtracting shapes from asteroids when missiles hit an asteroid");
+            ImReflect::Input("Missile Voxel Body", value.missile_voxel_object, type_settings, type_response);
             ImReflect::Input("Missile Cooldown", value.missile_cooldown, type_settings, type_response);
             ImReflect::Input("Missile Burst", value.missile_burst, type_settings, type_response);
             help("Number of missiles launched in one burst");
@@ -61,6 +76,11 @@ void tag_invoke(ImReflect::ImInput_t, const char* name, game::MediumEnemy& value
             help("Time between missiles in a burst");
             ImReflect::Input("Max Randomness", value.missile_max_randomness, type_settings, type_response);
             help("Maximum random offset added to each missile's trajectory during launching");
+            ImReflect::Input("Target Offset", value.target_offset, type_settings, type_response);
+            help("Offset from player");
+            ImReflect::Input("Rotation Speed", value.missile_rotation_speed, type_settings, type_response);
+            help("Speed at which missiles turn towards the direction they're going in");
+            ImReflect::Input("Explosion Radius", value.missile_explosion_radius, type_settings, type_response);
 
             ImGui::Spacing();
             ImGui::TextDisabled("Per-Missile Settings");
@@ -74,17 +94,25 @@ void tag_invoke(ImReflect::ImInput_t, const char* name, game::MediumEnemy& value
             help("Maximum speed the missile will reach when homing. home speed will start at 0 and reach it's maximum at the end of the missiles lifetime");
             ImReflect::Input("Start Homing After", value.start_homing_after, type_settings, type_response);
             help("Amount of time after the missile was created before the missile starts homing towards the player");
+            ImReflect::Input("Slow Homing Accuracy After", value.slow_homing_accuracy_after, type_settings, type_response);
+            help("Time after which the homing will start becoming less effective");
             ImReflect::Input("Lifetime", value.life_time, type_settings, type_response);
             ImGui::TreePop();
         }
 
         /* Laser */
         if (ImGui::TreeNode("Laser")) {
+            ImReflect::Input("Laser Charge Voxel Body", value.laser_charge_voxel_object, type_settings, type_response);
+            ImReflect::Input("Laser Voxel Body", value.laser_voxel_object, type_settings, type_response);
             ImReflect::Input("Laser Range", value.laser_range, type_settings, type_response);
             ImReflect::Input("Laser Cooldown", value.laser_cooldown, type_settings, type_response);
             ImReflect::Input("Laser Firing Time", value.laser_firing_time, type_settings, type_response);
             ImReflect::Input("Laser Sitting Down Time", value.laser_sitting_down_time, type_settings, type_response);
             ImReflect::Input("Laser Winding Up Time", value.laser_winding_up_time, type_settings, type_response);
+            ImReflect::Input("Laser Damage Per Second", value.laser_damage, type_settings, type_response);
+            ImReflect::Input("Laser Damage Radius", value.laser_damage_radius, type_settings, type_response);
+            ImReflect::Input("Laser Target Offset", value.laser_target_offset, type_settings, type_response);
+            help("Offset from player, purely visual. The point that is used to check if damage should be done to the player, is also moved using the same offset.");
 
             ImGui::Spacing();
             ImGui::TextDisabled("Laser Advanced Settings");
@@ -100,6 +128,7 @@ void tag_invoke(ImReflect::ImInput_t, const char* name, game::MediumEnemy& value
             help("Max randomness is the maximum random offset added to the laser's initial direction when firing");
             ImReflect::Input("Prediction Length", value.laser_prediction_length, type_settings, type_response);
             help("Length of the offset added to the laser's target position, in the direction the player is moving");
+            ImReflect::Input("Laser Velocity Smoothing", value.laser_vel_smoothing, type_settings, type_response);
 
             ImGui::TreePop();
         }

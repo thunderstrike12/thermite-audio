@@ -12,10 +12,6 @@
 #include <cstdlib>
 
 void GetInLaserRange::on_start(tmt::Entity enemy_entity) {
-    for (const auto& [CamEntity, camera] : tmt::engine.ecs.view<tmt::Camera>().each()) {
-        player = CamEntity;
-        break;
-    }
 }
 
 void GetInLaserRange::on_tick(tmt::Entity enemy_entity, float dt) {

@@ -12,8 +12,6 @@ class FireMissiles : public tmt::GoapAction {
         cost = 5.f;
     }
 
-    tmt::Entity player = entt::null;
-
     int missiles = 0;
     float interval_timer = 0.0f;
 
@@ -23,4 +21,5 @@ class FireMissiles : public tmt::GoapAction {
     void on_tick(tmt::Entity agent, float dt) override;
     bool is_done(tmt::Entity agent) const override;
     void on_finished(tmt::Entity) override {}
+    void on_interrupt(tmt::Entity) override;
 };

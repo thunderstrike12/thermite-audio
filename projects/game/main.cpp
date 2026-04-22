@@ -26,6 +26,7 @@
 
 // Enemies
 #include "components/gameplay_functionality_components/enemy_components/medium_enemy.hpp"
+#include "components/gameplay_functionality_components/enemy_components/missile.hpp"
 #include "components/gameplay_functionality_components/enemy_components/small_enemy.hpp"
 
 // Animation
@@ -147,6 +148,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.component_registry.register_component<game::MenuController>();
     tmt::engine.component_registry.register_component<game::FuelComponent>();
     tmt::engine.component_registry.register_component<game::MediumEnemy>();
+    tmt::engine.component_registry.register_component<game::Missile>();
     tmt::engine.component_registry.register_component<game::SmallEnemy>();
     tmt::engine.component_registry.register_component<game::OreProperties>();
     tmt::engine.component_registry.register_component<game::OreManager>();

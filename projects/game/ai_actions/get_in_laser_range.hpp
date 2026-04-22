@@ -10,8 +10,6 @@ class GetInLaserRange : public tmt::GoapAction {
         cost = 1.f;
     }
 
-    tmt::Entity player = entt::null;
-
     std::string get_id() const override { return "a_GetInLaserRange"; };
 
     void on_start(tmt::Entity) override;

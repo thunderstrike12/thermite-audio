@@ -7,6 +7,9 @@
 
 #include "engine/systems/ai/goap/goap_system.hpp"
 #include "engine/systems/ai/navigation/nav_mesh.hpp"
+#include "engine/systems/physics/physics_system.hpp"
+
+#include "engine\core\components\voxel_renderer.hpp"
 
 void game::MediumEnemy::start() {
     for (const auto& [CamEntity, camera] : tmt::engine.ecs.view<tmt::Camera>().each()) {
@@ -14,6 +17,13 @@ void game::MediumEnemy::start() {
         break;
     }
 
+    // Set ore manager
+    auto ore_manager_view = tmt::engine.ecs.view<OreManager>();
+    if (!ore_manager_view.empty()) {
+        ore_manager = tmt::engine.ecs.try_get_component<OreManager>(ore_manager_view.front().entity);
+    } else {
+        tmt::Log::warn("No ore manager found in scene, missiles wont explode");
+    }
     auto& dispatcher = tmt::engine.ecs.get_dispatcher();
     dispatcher.sink<game::GamePausedEvent>().connect<&MediumEnemy::on_game_paused>(this);
     dispatcher.sink<game::GameUnpausedEvent>().connect<&MediumEnemy::on_game_unpaused>(this);
@@ -30,8 +40,10 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
     tmt::engine.polyline.use_depth_testing(false);
     tmt::Transform& walking_transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
+    tmt::engine.polyline.draw_sphere(walking_transform.get_world_position(), 0.5f, 16);
+
     // world state update
-    auto ws = tmt::engine.ecs.try_get_component<tmt::WorldState>(entity);
+    auto* ws = tmt::engine.ecs.try_get_component<tmt::WorldState>(entity);
     if (!ws) return;
     const auto& player_pos = tmt::engine.ecs.get_component<tmt::Transform>(player).get_world_position();
     float dist = glm::length(player_pos - walking_transform.get_world_position());
@@ -79,16 +91,14 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
 
     // height correction
     auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(walkable_asteroid);
-    auto nodes = nav_mesh.nodes_mesh;
+    auto* nodes = nav_mesh.nodes_mesh;
     if (nodes->empty()) return;
     int closest_node = nav_mesh.find_closest_node(walking_transform.get_world_position());
 
     auto& normal = (*nodes)[closest_node].normal;
 
-    tmt::Ray ray;
-    ray.origin = walking_transform.get_world_position() + normal * 0.5f;
-    ray.dir = glm::normalize(-normal);
-    const tmt::Hit hit = tmt::engine.renderer.trace_ray(ray);
+    const tmt::Ray ray = tmt::Ray(walking_transform.get_world_position() + normal * 0.5f, glm::normalize(-normal));
+    const tmt::Hit hit = tmt::engine.ecs.systems.get<tmt::Physics>().raycast(ray, projectile_mask);
 
     glm::vec3 move_to = ray.origin + ray.dir * hit.distance - ray.dir * (height_above_ground + height_above_ground_offset);
     glm::vec3 desired_velocity = glm::normalize(move_to - walking_transform.get_world_position()) * walk_speed * 0.5f;
@@ -124,13 +134,6 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
         rotation = glm::slerp(rotation, rot_velocity, glm::clamp(t, 0.0f, 1.0f));
         rotation = glm::normalize(rotation);
         walking_transform.set_world_rotation(rotation);
-    }
-
-    // missile update
-    for (int i = missiles.size() - 1; i >= 0; i--) {
-        if (missiles[i].update(time.delta_time, ground_up, player_pos)) {
-            missiles.erase(missiles.begin() + i);
-        }
     }
 }
 
@@ -172,38 +175,4 @@ void game::MediumEnemy::on_game_paused(const game::GamePausedEvent&) {
 
 void game::MediumEnemy::on_game_unpaused(const game::GameUnpausedEvent&) {
     paused = false;
-}
-
-bool Missile::update(float dt, glm::vec3 ground_up, glm::vec3 player_pos) {
-    tmt::engine.polyline.draw_sphere(position, 0.1f);
-    life_time += dt;
-    if (life_time > max_life_time) return true;
-
-    // fades from full launch down to zero
-    float launch_t = glm::clamp((life_time / stop_launching_after), 0.0f, 1.0f);
-    glm::vec3 launch_contribution = glm::mix(ground_up * launch_speed, glm::vec3(0.0f), launch_t);
-
-    // fades from zero up to full homing speed
-    glm::vec3 home_contribution(0.0f);
-    if (life_time > start_homing_after) {
-        float max_home_time = max_life_time - start_homing_after;
-        float home_time = life_time - start_homing_after;
-        float home_t = glm::clamp(home_time / max_home_time, 0.0f, 1.0f);  // was inverted
-
-        glm::vec3 to_player = player_pos - position;
-        if (glm::dot(to_player, to_player) > 0.0001f) {
-            home_contribution = glm::normalize(to_player) * home_speed * home_t;
-        }
-    }
-
-    auto added_vel = launch_contribution + home_contribution;
-    float length = glm::length(added_vel);
-    if (length > 0.0001f && life_time < start_homing_after) {
-        added_vel += offset;
-        added_vel = glm::normalize(added_vel) * length;
-    }
-    velocity += added_vel;
-    velocity *= 0.7f;
-    position += velocity * dt;
-    return false;
 }

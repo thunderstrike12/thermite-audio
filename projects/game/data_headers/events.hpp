@@ -65,6 +65,10 @@ struct PlayerEnergyChanged {
 struct EndRun {
     bool player_dead;
 };
+
+struct ThermiteExplosionEvent {
+};
+
 struct GamePausedEvent {};
 
 struct GameUnpausedEvent {};

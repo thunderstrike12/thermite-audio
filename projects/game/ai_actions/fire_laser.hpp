@@ -18,7 +18,8 @@ class FireLaser : public tmt::GoapAction {
         FIRING,
     } state = SITTING_DOWN;
 
-    tmt::Entity player = entt::null;
+    tmt::Entity laser_entity = entt::null;
+    std::vector<tmt::Entity> laser_charge_entities;
 
     float time = 0.0f;
     float original_height = 0.0f;
@@ -27,11 +28,15 @@ class FireLaser : public tmt::GoapAction {
     glm::vec3 target_pos = glm::vec3(0, 0, 0);
     glm::vec3 last_player_pos = glm::vec3(0, 0, 0);
     glm::vec3 last_to_player_dir = glm::vec3(0, 0, 0);
+    glm::vec3 smoothed_player_vel = glm::vec3(0, 0, 0);
 
     std::string get_id() const override { return "a_FireLaser"; }
+
+    void cleanup(tmt::Entity enemy_entity);
 
     void on_start(tmt::Entity) override;
     void on_tick(tmt::Entity agent, float dt) override;
     bool is_done(tmt::Entity agent) const override;
     void on_finished(tmt::Entity) override {}
+    void on_interrupt(tmt::Entity) override;
 };

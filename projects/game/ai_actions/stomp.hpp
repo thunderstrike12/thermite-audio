@@ -11,8 +11,6 @@ class Stomp : public tmt::GoapAction {
         cost = 2.f;
     }
 
-    tmt::Entity player = entt::null;
-
     float time = 0.0f;
 
     std::string get_id() const override { return "a_Stomp"; }
