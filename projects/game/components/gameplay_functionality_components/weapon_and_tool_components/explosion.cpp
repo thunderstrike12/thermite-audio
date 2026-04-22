@@ -5,6 +5,7 @@
 #include "projects/game/components/development_tools/debug_line_helper.hpp"
 #include "projects/game/components/managers/ore_manager.hpp"
 #include "projects/game/data_headers/ore_properties.hpp"
+#include <engine/systems/physics/destruction_system.hpp>
 
 void game::Explosion::explode() const {
     // for thermite explosions
@@ -35,10 +36,18 @@ void game::Explosion::explode() const {
     // iterate over all hits and check their toughness
     const auto hits = tmt::engine.ecs.systems.get<tmt::Physics>().overlap_sphere(get_position(), param.radius, param.mask);
     for (const auto& [voxel_entity, voxels] : hits) {
+        // If the entity is not valid anymore skip it
+        if (!tmt::engine.ecs.valid(voxel_entity) || !tmt::engine.ecs.is_enabled(voxel_entity)) return;
+
         auto* resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(voxel_entity).resource.resource.get();
 
         for (const auto& [sqr_distance, voxel_coord] : voxels) {
             auto* voxel_material = resource->blas->get_voxel(voxel_coord.x, voxel_coord.y, voxel_coord.z);
+
+            if (voxel_material == nullptr) {
+                continue;
+            }
+
             const auto ore_type = voxel_material->type;
             const auto ore_toughness = ore_database.at(ore_type).toughness;
 
@@ -57,7 +66,8 @@ void game::Explosion::explode() const {
                     float t = sqr_distance / (radius * radius);
                     auto power = (1.0f - param.distance_strength_curve.eval(t)) * param.explosion_power;
                     if (ore_toughness < power) {
-                        resource->blas->remove_voxel(voxel_coord.x, voxel_coord.y, voxel_coord.z);
+                        // resource->blas->remove_voxel(voxel_coord.x, voxel_coord.y, voxel_coord.z);
+                        tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxel(voxel_entity, voxel_coord);
                     }
                 } break;
             }

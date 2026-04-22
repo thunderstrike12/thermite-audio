@@ -13,6 +13,18 @@
 
 namespace tmt {
 
+// -X, +X, -Y, +Y, -Z, +Z
+constexpr glm::ivec3 dirs[6] = { { -1, 0, 0 }, { 1, 0, 0 }, { 0, -1, 0 }, { 0, 1, 0 }, { 0, 0, -1 }, { 0, 0, 1 } };
+
+constexpr uint64_t edge_masks[6] {
+    0x1111111111111111ULL,  // -X
+    0x8888888888888888ULL,  // +X
+    0x000000000000FFFFULL,  // -Y
+    0xFFFF000000000000ULL,  // +Y
+    0x000F000F000F000FULL,  // -Z
+    0xF000F000F000F000ULL   // +Z
+};
+
 void Destruction::on_start() {}
 
 void Destruction::on_update(const FrameData&) {
@@ -23,55 +35,64 @@ void Destruction::on_update(const FrameData&) {
         generate_connection_graph(des, vr.resource->blas.get());
     }
 
-    // for (const auto& [entity, des, vb] : engine.ecs.view<Destructable, VoxelBody>().each()) {
-    //     engine.polyline.use_depth_testing(false);
-    //     // engine.polyline.use_color(0.1f, 0.3f, 0.9f);
-    //     for (DestructionNode& node : des.nodes) {
-    //         if (node.level == 10) continue;
+    for (const auto& [entity, des, vb] : engine.ecs.view<Destructible, VoxelBody>().each()) {
+        if (!des.initialized || !des.debug_view) continue;
 
-    //        const glm::vec3 half_scale = glm::vec3(vb.width, vb.height, vb.depth) * 0.5f;
-    //        const uint32_t node_size = (1u << (node.level * 2u));
-    //        const glm::vec3 pos = (glm::vec3)(node.global_position + (node_size / 2)) * UNITS_PER_VOXEL + vb.position + 0.05f - half_scale;
+        engine.polyline.use_depth_testing(false);
+        // engine.polyline.use_color(0.1f, 0.3f, 0.9f);
+        for (DestructionNode& node : des.nodes) {
+            if (node.level == 10) continue;
 
-    //        // uint32_t voxel_count = vb.resource.resource.get()->blas.get()->voxel_count;
-    //        // Log::info("voxels %u", vb.resource.resource.get()->blas.get()->voxel_count);
+            const glm::vec3 half_scale = glm::vec3(vb.width, vb.height, vb.depth) * 0.5f;
+            const uint32_t node_size = (1u << (node.level * 2u));
+            const glm::vec3 local_pos = vb.position - ((glm::vec3)(node.global_position + (node_size / 2)) * UNITS_PER_VOXEL + vb.position + 0.05f - half_scale);
 
-    //        srand((unsigned int)(node.flood_id << 5u));
+            // Rotate
+            const glm::vec3 rot_local = vb.rotation * local_pos;
+            const glm::vec3 pos = rot_local + vb.position;
 
-    //        if (node.flood_id == 0)
-    //            engine.polyline.use_color(0.0f, 0.0f, 0.0f);
-    //        else
-    //            engine.polyline.use_color(((float)rand() / (float)RAND_MAX), ((float)rand() / (float)RAND_MAX), ((float)rand() / (float)RAND_MAX));
+            // uint32_t voxel_count = vb.resource.resource.get()->blas.get()->voxel_count;
+            // Log::info("voxels %u", vb.resource.resource.get()->blas.get()->voxel_count);
 
-    //        // Draw connections to neighbors
-    //        for (size_t i = 0; i < 6; i++) {
-    //            for (size_t j = 0; j < node.connections[i].node_indices.size(); j++) {
-    //                uint32_t node_index = node.connections[i].node_indices[j];
+            srand((unsigned int)(node.flood_id << 5u));
 
-    //                if (des.nodes[node_index].level == 0) continue;
+            if (node.flood_id == 0)
+                engine.polyline.use_color(0.0f, 0.0f, 0.0f);
+            else
+                engine.polyline.use_color(((float)rand() / (float)RAND_MAX), ((float)rand() / (float)RAND_MAX), ((float)rand() / (float)RAND_MAX));
 
-    //                const uint32_t conn_node_size = (1u << (des.nodes[node_index].level * 2u));
-    //                const glm::vec3 connection_pos = (glm::vec3)(des.nodes[node_index].global_position + (conn_node_size / 2)) * UNITS_PER_VOXEL + vb.position + 0.05f - half_scale;
+            // Draw connections to neighbors
+            for (size_t i = 0; i < 6; i++) {
+                for (size_t j = 0; j < node.connections[i].node_indices.size(); j++) {
+                    uint32_t node_index = node.connections[i].node_indices[j];
 
-    //                const glm::vec3 p1 = pos * 0.75f + connection_pos * 0.25f;
-    //                const glm::vec3 p2 = connection_pos * 0.75f + pos * 0.25f;
-    //                // const glm::vec3 diff = connection_pos - pos;
-    //                // const glm::vec3 dir = glm::normalize(connection_pos - pos);
+                    if (des.nodes[node_index].level == 0) continue;
 
-    //                // engine.polyline.draw_arrow(p1, dir, glm::length(diff) * 0.5f);
-    //                engine.polyline.draw_line(p1, p2);
-    //            }
-    //        }
+                    const uint32_t conn_node_size = (1u << (des.nodes[node_index].level * 2u));
+                    const glm::vec3 connection_local_pos =
+                        vb.position - ((glm::vec3)(des.nodes[node_index].global_position + (conn_node_size / 2)) * UNITS_PER_VOXEL + vb.position + 0.05f - half_scale);
+                    const glm::vec3 connection_rot_local = vb.rotation * connection_local_pos;
+                    const glm::vec3 connection_pos = connection_rot_local + vb.position;
 
-    //        engine.polyline.draw_circle(pos, 0.033f * (1 << node.level));
+                    const glm::vec3 p1 = pos * 0.75f + connection_pos * 0.25f;
+                    const glm::vec3 p2 = connection_pos * 0.75f + pos * 0.25f;
+                    // const glm::vec3 diff = connection_pos - pos;
+                    // const glm::vec3 dir = glm::normalize(connection_pos - pos);
 
-    //        // if (node.level == 0) {
-    //        //     engine.polyline.draw_circle(pos, 0.033f);
-    //        // } else {
-    //        //     engine.polyline.draw_circle(pos, 0.033f * 4.0f);
-    //        // }
-    //    }
-    //}
+                    // engine.polyline.draw_arrow(p1, dir, glm::length(diff) * 0.5f);
+                    engine.polyline.draw_line(p1, p2);
+                }
+            }
+
+            engine.polyline.draw_circle(pos, 0.033f * (1 << node.level));
+
+            // if (node.level == 0) {
+            //     engine.polyline.draw_circle(pos, 0.033f);
+            // } else {
+            //     engine.polyline.draw_circle(pos, 0.033f * 4.0f);
+            // }
+        }
+    }
 }
 
 void Destruction::on_fixed_update(const FrameData&) {}
@@ -141,19 +162,19 @@ uint64_t flood_fill_64(uint64_t seed, uint64_t solid_mask) {
     while (true) {
         uint64_t expanded = filled;
 
-        // +X: shift right by 1, mask out voxels that wrapped across X boundary
+        // +X shift right by 1, mask out voxels that wrapped across the x boundary
         expanded |= (filled << 1) & 0xEEEEEEEEEEEEEEEEULL;  // x != 0 mask
-        // -X: shift left by 1
+        // -X shift left by 1
         expanded |= (filled >> 1) & 0x7777777777777777ULL;  // x != 3 mask
 
-        // +Z: shift by 4 (z is bits [2:3]), mask out z boundary wraps
+        // +Z
         expanded |= (filled << 4) & 0xFFF0FFF0FFF0FFF0ULL;  // z != 0 mask
-        // -Z:
+        // -Z
         expanded |= (filled >> 4) & 0x0FFF0FFF0FFF0FFFULL;  // z != 3 mask
 
-        // +Y: shift by 16 (y is bits [4:5])
+        // +Y shift by 16
         expanded |= (filled << 16) & 0xFFFFFFFFFFFF0000ULL;  // y != 0 mask
-        // -Y:
+        // -Y
         expanded |= (filled >> 16) & 0x0000FFFFFFFFFFFFULL;  // y != 3 mask
 
         // Only keep solid voxels
@@ -170,14 +191,20 @@ uint64_t flood_fill_64(uint64_t seed, uint64_t solid_mask) {
 void Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
     TMT_ZONE_SCOPED_N("Destruction")
 
+    // If the entity does not exist anymore (got destroyed this frame already)
+    if (engine.ecs.try_get_component<Delete>(entity) != nullptr) return;
+
     // Get voxel body & destructable components
     VoxelRenderer* vr = engine.ecs.try_get_component<VoxelRenderer>(entity);
     VoxelBody* vb = engine.ecs.try_get_component<VoxelBody>(entity);
     Destructible* des = engine.ecs.try_get_component<Destructible>(entity);
     if (vr == nullptr || des == nullptr) return;
 
-    // Subtract voxels from BLAS
+    // Check if the voxel is already empty
     auto* resource = vr->resource.resource.get();
+    if (resource->blas->get_voxel(pos.x, pos.y, pos.z) == nullptr) return;
+
+    // Subtract voxels from BLAS
     resource->blas->remove_voxel(pos.x, pos.y, pos.z);
     resource->set_dirty();
 
@@ -203,6 +230,9 @@ void Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
     // Recalculate the normals around the voxel that has been destroyed
     Physics::recalculate_edge_normals(resource->blas.get(), neighbors);
 
+    // Update destruction graph
+    // update_connection_graph_at(*des, resource->blas.get(), pos);
+
     // Adjust mass
     // Remove voxel contribution from center of mass
     const float voxel_mass = std::powf(UNITS_PER_VOXEL, 3) * vb->density;
@@ -212,54 +242,20 @@ void Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
     // World position of the removed voxels center in local space
     const glm::vec3 voxel_local_pos = ((glm::vec3)pos + 0.5f) * UNITS_PER_VOXEL;
 
-    // Weighted average
+    // Update center of mass through a weighted average
     vb->com_local_offset = (vb->com_local_offset * old_mass - voxel_local_pos * voxel_mass) / new_mass;
     vb->inv_mass = 1.0f / new_mass;
 
-    {
-        TMT_ZONE_SCOPED_N("Early Out")
-
-        // If we have 0 or 1 neighbor, skip destruction
-        if (neighbors.size() <= 1) {
-            return;
-        }
-
-        // Create solid mask (3x3x3 area of surrounding solid voxels)
-        uint64_t solid_mask = 0;
-        for (int ly = 0; ly <= 2; ly++) {
-            for (int lz = 0; lz <= 2; lz++) {
-                for (int lx = 0; lx <= 2; lx++) {
-                    // Get neighboring position
-                    glm::ivec3 wp = (glm::ivec3)pos + glm::ivec3(lx - 1, ly - 1, lz - 1);
-
-                    // Skip voxel that we just destroyed
-                    if (lx == 1 && ly == 1 && lz == 1) continue;
-
-                    // Bounds check
-                    if (wp.x < 0 || wp.y < 0 || wp.z < 0) continue;
-                    if (wp.x >= (int)resource->size.x || wp.y >= (int)resource->size.y || wp.z >= (int)resource->size.z) continue;
-
-                    // Add to the mask if its solid
-                    if (resource->blas->get_voxel((uint32_t)wp.x, (uint32_t)wp.y, (uint32_t)wp.z) != nullptr) solid_mask |= 1ULL << (lx + lz * 4 + ly * 16);
-                }
-            }
-        }
-
-        // Get index of neighbor 0 as a mask
-        glm::ivec3 s = (glm::ivec3)neighbors[0] - (glm::ivec3)pos + glm::ivec3(1, 1, 1);
-        uint64_t seed = 1ULL << (s.x + s.z * 4 + s.y * 16);
-
-        // Do a floodfill on 4^3 grid of bits
-        uint64_t fill = flood_fill_64(seed, solid_mask);
-
-        // If the solid_mask != the fill, some parts are unreachable
-        if (fill == solid_mask) return;
+    // Early out
+    if (seperation_early_out(resource, pos, neighbors)) {
+        return;
     }
 
-    // NOTE: Replace this with custom recalculate graph function for a single voxel
-    // Clear the graph and generate it a new one (to slow)
-    des->clear();
-    generate_connection_graph(*des, resource->blas.get());
+    //// NOTE: Replace this with custom recalculate graph function for a single voxel
+    //// NOTE: This might need to happen before the early out
+    //// Clear the graph and generate it a new one (to slow)
+    // des->clear();
+    // generate_connection_graph(*des, resource->blas.get());
 
     // Find where the objects separate and creates new entities for each part
     std::vector<Entity> seperated_entities = find_seperations(entity, neighbors, *des);
@@ -268,10 +264,154 @@ void Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
     for (Entity seperate_entity : seperated_entities) {
         if (!engine.ecs.get_registry().valid(seperate_entity)) continue;
 
+        // If its the original entity
+        if (seperate_entity == entity) {
+            // Clear the graph and generate it a new one (slow)
+            des->clear();
+            generate_connection_graph(*des, resource->blas.get());
+            continue;
+        }
+
         VoxelBody& seperate_vb = engine.ecs.get_component<VoxelBody>(seperate_entity);
         VoxelRenderer& seperate_vr = engine.ecs.get_component<VoxelRenderer>(seperate_entity);
         Physics::initialize_voxel_body(seperate_vb, *seperate_vr.resource.resource.get());
     }
+}
+
+bool Destruction::seperation_early_out(VoxelVolume* resource, const glm::uvec3& pos, const std::vector<glm::uvec3>& neighbors) {
+    TMT_ZONE_SCOPED_N("Early Out")
+
+    if (neighbors.size() <= 1) return true;
+
+    // 0 = center, 1-6 = cardinal directions
+    Svt64Node* nodes[7] = {};  // Nodes
+    uint64_t filled[7] = {};   // Flood fill results for each node
+
+    // Get center node and flood from the deleted voxel's position
+    nodes[0] = resource->blas->get_leaf(pos.x, pos.y, pos.z);
+
+    // NOTE: This is not neccecarily right
+    if (nodes[0] == nullptr) return false;
+
+    // Set the seed bit as the first neighbor of the deleted voxel
+    const glm::uvec3 seed_local = neighbors[0] % 4u;
+    const uint64_t seed_bit = 1ULL << (seed_local.x + seed_local.z * 4 + seed_local.y * 16);
+
+    // Flood fill on the node
+    filled[0] = flood_fill_64(seed_bit, nodes[0]->child_mask);
+
+    // Propagate 1 layer to all 6 neighboring nodes
+    for (int d = 0; d < 6; d++) {
+        // Get a position in the neighboring node
+        glm::ivec3 neighbor_node_pos = (glm::ivec3)(pos / 4u * 4u) + dirs[d] * 4;
+
+        // Bounds check
+        if (neighbor_node_pos.x < 0 || neighbor_node_pos.y < 0 || neighbor_node_pos.z < 0) continue;
+        if (neighbor_node_pos.x >= (int)resource->size.x || neighbor_node_pos.y >= (int)resource->size.y || neighbor_node_pos.z >= (int)resource->size.z) continue;
+
+        // Get neighboring node, and check if its valid
+        nodes[d + 1] = resource->blas->get_leaf((uint32_t)neighbor_node_pos.x, (uint32_t)neighbor_node_pos.y, (uint32_t)neighbor_node_pos.z);
+        if (nodes[d + 1] == nullptr || nodes[d + 1]->child_mask == 0) continue;
+
+        // Check if center flood reached the edge facing this direction
+        if ((filled[0] & edge_masks[d]) == 0) continue;
+
+        // Flip edge mask to seed into neighbor node
+        uint64_t edge_mask = filled[0] & edge_masks[d];
+        const uint8_t axis = (uint8_t)d / 2;
+        if (axis == 0) {
+            edge_mask = ((edge_mask & 0x1111111111111111ULL) << 3) | ((edge_mask & 0x2222222222222222ULL) << 1) | ((edge_mask & 0x4444444444444444ULL) >> 1) |
+                        ((edge_mask & 0x8888888888888888ULL) >> 3);
+        } else if (axis == 1) {
+            edge_mask = ((edge_mask & 0x000000000000FFFFULL) << 48) | ((edge_mask & 0x00000000FFFF0000ULL) << 16) | ((edge_mask & 0x0000FFFF00000000ULL) >> 16) |
+                        ((edge_mask & 0xFFFF000000000000ULL) >> 48);
+        } else if (axis == 2) {
+            edge_mask = ((edge_mask & 0x000F000F000F000FULL) << 12) | ((edge_mask & 0x00F000F000F000F0ULL) << 4) | ((edge_mask & 0x0F000F000F000F00ULL) >> 4) |
+                        ((edge_mask & 0xF000F000F000F000ULL) >> 12);
+        }
+        edge_mask &= edge_masks[d ^ 1u];
+
+        // Flood fill on the neighboring node
+        filled[d + 1] = flood_fill_64(edge_mask, nodes[d + 1]->child_mask);
+    }
+
+    // Stores which neighbors will most likely have seperated
+    std::vector<glm::uvec3> unfilled_neighbors;
+
+    // Check all neighbors are touched by the flood
+    for (const glm::uvec3& n : neighbors) {
+        // Find which of the 7 nodes this neighbor belongs to
+        const glm::ivec3 node_dir = (glm::ivec3)(n / 4u) - (glm::ivec3)(pos / 4u);
+        const glm::uvec3 n_local = n % 4u;
+        const uint64_t n_bit = 1ULL << (n_local.x + n_local.z * 4 + n_local.y * 16);
+
+        int slot = 0;  // default center
+        // Check which neighbor node this belongs to
+        for (int d = 0; d < 6; d++) {
+            if (dirs[d] == node_dir) {
+                slot = d + 1;
+                break;
+            }
+        }
+
+        // Check if the bit is set in the flood result for this node
+        if (!(filled[slot] & n_bit)) {
+            unfilled_neighbors.push_back(n);
+        }
+    }
+
+    // Mini floodfill on unfilled neighbors to check if they are connected (to get rid of the case where only a few voxels get seperated)
+    for (const glm::uvec3& n : unfilled_neighbors) {
+        // Store visited voxel positions
+        std::vector<glm::uvec3> visited;
+
+        // Store positions to visit
+        std::queue<glm::uvec3> to_visit;
+
+        // Skip if the voxel is not solid anymore
+        if (resource->blas->get_voxel((uint32_t)n.x, (uint32_t)n.y, (uint32_t)n.z) == nullptr) continue;
+
+        // Add first neighbor
+        to_visit.push(n);
+        visited.push_back(n);
+
+        while (!to_visit.empty()) {
+            if (visited.size() > 5) break;
+
+            glm::uvec3 cur = to_visit.front();
+            to_visit.pop();
+
+            for (int d = 0; d < 6; d++) {
+                const glm::ivec3 next = (glm::ivec3)cur + dirs[d];
+
+                // Bounds check
+                if (next.x < 0 || next.y < 0 || next.z < 0) continue;
+                if (next.x >= (int)resource->size.x || next.y >= (int)resource->size.y || next.z >= (int)resource->size.z) continue;
+
+                const glm::uvec3 next_u = (glm::uvec3)next;
+
+                // Skip if the voxel is empty
+                if (resource->blas->get_voxel(next_u.x, next_u.y, next_u.z) == nullptr) continue;
+
+                // Skip if already visited
+                if (std::find(visited.begin(), visited.end(), next_u) != visited.end()) continue;
+
+                visited.push_back(next_u);
+                to_visit.push(next_u);
+            }
+        }
+
+        // If we visited only a few voxels, we can simply destroy them and skip the separation
+        if (visited.size() <= 4) {
+            for (const glm::uvec3& v : visited) {
+                resource->blas->remove_voxel(v.x, v.y, v.z);
+            }
+        } else {  // else we probably have a proper seperation
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void Destruction::fill_edge_indices(std::vector<glm::uvec3>& edge_indices, Entity entity, const Stencil* stencil, glm::ivec3 offset) {
@@ -281,7 +421,7 @@ void Destruction::fill_edge_indices(std::vector<glm::uvec3>& edge_indices, Entit
     auto* resource = vr.resource.resource.get();
     Svt64* tree = resource->blas.get();
 
-    const glm::ivec3 dirs[] = { { -1, 0, 0 }, { 1, 0, 0 }, { 0, -1, 0 }, { 0, 1, 0 }, { 0, 0, -1 }, { 0, 0, 1 } };
+    // const glm::ivec3 dirs[] = { { -1, 0, 0 }, { 1, 0, 0 }, { 0, -1, 0 }, { 0, 1, 0 }, { 0, 0, -1 }, { 0, 0, 1 } };
 
     // Loop over the stencil and find all voxels where destruction happened next to
     for (uint32_t local_z = 0; local_z < stencil->size.z; local_z++) {
@@ -332,18 +472,6 @@ void Destruction::fill_edge_indices(std::vector<glm::uvec3>& edge_indices, Entit
         }
     }
 }
-
-// -X, +X, -Y, +Y, -Z, +Z
-constexpr glm::ivec3 dirs[6] = { { -1, 0, 0 }, { 1, 0, 0 }, { 0, -1, 0 }, { 0, 1, 0 }, { 0, 0, -1 }, { 0, 0, 1 } };
-
-constexpr uint64_t edge_masks[6] {
-    0x1111111111111111ULL,  // -X
-    0x8888888888888888ULL,  // +X
-    0x000000000000FFFFULL,  // -Y
-    0xFFFF000000000000ULL,  // +Y
-    0x000F000F000F000FULL,  // -Z
-    0xF000F000F000F000ULL   // +Z
-};
 
 Svt64Node* get_tree_node_and_mark(uint32_t x, uint32_t y, uint32_t z, Svt64* tree, Destructible& graph, std::vector<uint64_t>& tree_masks, uint64_t mask) {
     TMT_ZONE_SCOPED
@@ -421,10 +549,6 @@ Svt64Node* get_tree_node_at_position(uint32_t x, uint32_t y, uint32_t z, Svt64* 
 
     return node;
 }
-
-// Forward declare function
-// void separation_flood(Destructable& graph, DestructionNode& current_node, uint8_t id, Svt64* tree);
-// , std::vector<Destruction::FloodStackEntry>& stack
 
 void low_level_separation_flood(
     Destructible& graph, DestructionNode& current_node, uint8_t id, uint64_t overlap_mask, Svt64* tree, std::vector<Destruction::FloodStackEntry>& stack, std::vector<uint64_t>& tree_masks
@@ -530,7 +654,6 @@ void low_level_separation_flood(
         // low_level_separation_flood(graph, connected_node, id, edge_mask, tree);
         stack.push_back({ connected_node.id, edge_mask });
     }
-    //}
 }
 
 void separation_flood(Destructible& graph, DestructionNode& current_node, uint8_t id, Svt64* tree, std::vector<Destruction::FloodStackEntry>& stack, std::vector<uint64_t>& tree_masks) {
@@ -648,7 +771,6 @@ void fill_volumes(const Svt64* original_tree, const std::vector<uint64_t>& tree_
 
         transform.set_world_position(vb.position);
         transform.set_world_rotation(vb.rotation);
-        // vb.position += rotated_pos;  //((glm::vec3)offset - (glm::vec3)diff) * 0.5f * UNITS_PER_VOXEL;
 
         // Update tree size
         vr.resource->size = max;
@@ -658,12 +780,23 @@ void fill_volumes(const Svt64* original_tree, const std::vector<uint64_t>& tree_
 
     for (size_t i = 0; i < entities.size(); i++) {
         VoxelRenderer& vr = engine.ecs.get_component<VoxelRenderer>(entities[i]);
+        VoxelBody& vb = engine.ecs.get_component<VoxelBody>(entities[i]);
         Svt64* tree = vr.resource.resource->blas.get();
         // Destroy very small objects
-        if (tree->voxel_count < 4) {
+        if (tree->voxel_count <= 4) {
             engine.ecs.disable(entities[i], true);
             // engine.ecs.destroy_entity(entities[i]);
             continue;
+        } else if (tree->voxel_count > 10'000) {  // Big objects should be static
+            vb.velocity = glm::vec3(0);
+            vb.angular_velocity = glm::vec3(0);
+            vb.type = VoxelBody::Type::STATIC;
+        } else {
+            vb.type = VoxelBody::Type::DYNAMIC;
+
+            // Add a small random velocity to separated pieces
+            vb.velocity += glm::vec3(((float)(rand() % 100) / 100.0f - 0.5f), ((float)(rand() % 100) / 100.0f - 0.5f), ((float)(rand() % 100) / 100.0f - 0.5f)) * 1.0f;
+            vb.angular_velocity += glm::vec3(((float)(rand() % 100) / 100.0f - 0.5f), ((float)(rand() % 100) / 100.0f - 0.5f), ((float)(rand() % 100) / 100.0f - 0.5f));
         }
     }
 }
@@ -683,7 +816,8 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const std::vect
 
     // Loop over edge indices
     for (const glm::uvec3& edge_pos : edge_indices) {
-        DestructionNode* current_node = nullptr;
+        // In case we only have a 4x4x4 tree, depth is going to be 1 so we skip the for loop
+        DestructionNode* current_node = &graph.nodes[0];
 
         tmt::Svt64Node* node = &tree->nodes[0];
         glm::uvec3 global_pos = glm::uvec3(0);
@@ -786,29 +920,32 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const std::vect
     std::vector<Entity> entities;
     entities.resize(flood_id);
 
+    // Get name of original entity
     std::string original_name = engine.ecs.get_component<Name>(entity).name;
 
     for (size_t i = 0; i < entities.size(); i++) {
-        entities[i] = engine.ecs.create_entity(std::format("{} part {}", original_name, (int)i));
-        // engine.ecs.add_component<VoxelRenderer>(entities[i]);
-        // engine.ecs.add_component<VoxelBody>(entities[i]);
+        // Create  the entity with the name based on the original name
+        std::string new_name = std::format("{}{}", original_name, i);
+        entities[i] = engine.ecs.create_entity(new_name);
 
+        // Add a voxel rendrer and create an empty resource
         VoxelRenderer& new_vr = engine.ecs.add_component<VoxelRenderer>(entities[i]);
         new_vr.resource = { {}, std::make_shared<VoxelVolume>() };
         new_vr.resource.resource->size = vr.resource->size;
 
-        // Transform& new_transform = engine.ecs.add_component<Transform>(entities[i]);
-
+        // Add destructible component
         engine.ecs.add_component<Destructible>(entities[i]);
+
+        // Add voxel body as it was in the original entity (that will be used in fill_volumes())
         VoxelBody& new_vb = engine.ecs.add_component<VoxelBody>(entities[i]);
         new_vb.position = vb.position;
         new_vb.rotation = vb.rotation;
         new_vb.gravity = 0.0f;
-        // if (i == 1) vb.gravity = 9.0f;
-        new_vb.type = VoxelBody::DYNAMIC;
-        // vr.resource = { {}, std::make_shared<tmt::VoxelVolume>() };
+        new_vb.velocity = vb.velocity;
+        new_vb.angular_velocity = vb.angular_velocity;
     }
 
+    // Fill the entities with the voxels from the original entities
     fill_volumes(tree, tree_masks, entities, graph);
 
     engine.ecs.destroy_entity(entity);
@@ -1271,7 +1408,7 @@ void Destruction::regenerate_connection_graph(Destructible& graph, Svt64* tree, 
     TMT_ZONE_SCOPED
 
     // recurse_regenerate_connection(graph, tree, 0, 0, (1u << (tree->depth * 2u)), 0, 0, 0, (glm::uvec3)offset, (glm::uvec3)offset + stencil->size);
-    //
+
     glm::uvec3 min = (glm::uvec3)offset;
     glm::uvec3 max = (glm::uvec3)offset + stencil->size;
     uint16_t node_count = (uint16_t)graph.nodes.size();
@@ -1349,6 +1486,84 @@ void Destruction::generate_connection_graph(Destructible& graph, Svt64* tree) {
     // Scale of the root node in voxels
     const uint32_t node_scale = (1u << (tree->depth * 2u));
     recurse_generate_connection(graph, tree, 0, 0, node_scale, 0, 0, 0);
+}
+
+void Destruction::update_connection_graph_at(Destructible& graph, Svt64* tree, const glm::uvec3& pos) {
+    // Get the leaf node from the tree and check if we just destroyed the last voxel in the node
+    Svt64Node* leaf = tree->get_leaf(pos.x, pos.y, pos.z);
+    DestructionNode* node = nullptr;
+    if (leaf != nullptr) {
+        return;
+        // Log::error("Trying to ");
+        //  The node is still alive, but we might have to update the connection graph
+        //  Check nodes top down until we find the connection node
+
+        // for (uint32_t level = 1u; level <= tree->depth; ++level) {
+        //      const uint32_t global_x = pos.x & (~3u << ((tree->depth - level) * 2u));
+        //      const uint32_t global_y = pos.y & (~3u << ((tree->depth - level) * 2u));
+        //      const uint32_t global_z = pos.z & (~3u << ((tree->depth - level) * 2u));
+
+        //     node = graph.get_node(global_x, global_y, global_z);
+
+        //     // If we found a node
+        //     if (node != nullptr) {
+        //         if ()
+
+        //         set_highest_level_neighbors(graph, *node, tree, );
+        //         break;
+        //     }
+        //}
+
+        //// Get global node position
+        // const uint32_t global_x = pos.x & ~3u;
+        // const uint32_t global_y = pos.y & ~3u;
+        // const uint32_t global_z = pos.z & ~3u;
+
+        // node = graph.get_node(global_x, global_y, global_z);
+
+        //// TODO: Check all levels of the graph to find the node, remove it, and add nodes for all parts of that node
+        //// If we don't find a node, return for now
+        // if (node == nullptr) return;
+
+        // the tree node exists,
+
+        // set_highest_level_neighbors()
+    } else {
+        // Get global node position
+        const uint32_t global_x = pos.x & ~3u;
+        const uint32_t global_y = pos.y & ~3u;
+        const uint32_t global_z = pos.z & ~3u;
+
+        node = graph.get_node(global_x, global_y, global_z);
+
+        // TODO: Check all levels of the graph to find the node, remove it, and add nodes for all parts of that node
+        // If we don't find a node, return for now
+        if (node == nullptr) {
+            Log::error("Trying to find node in graph that is not on the leaf level (this case is not implemented yet)");
+            return;
+        }
+
+        Log::info("Removing node");
+
+        // Remove all connections from this node to its neighbors
+        for (size_t i = 0; i < 6; i++) {
+            for (size_t j = 0; j < node->connections[i].node_indices.size(); j++) {
+                uint32_t connection_node_index = node->connections[i].node_indices[j];
+                // Get connection node
+                DestructionNode& neighbor_node = graph.nodes[connection_node_index];
+                // Remove connection to this node from the neighbor
+                for (size_t k = 0; k < neighbor_node.connections[i ^ 1].node_indices.size(); k++) {
+                    if (neighbor_node.connections[i ^ 1].node_indices[k] == node->id) {
+                        neighbor_node.connections[i ^ 1].node_indices.erase(neighbor_node.connections[i ^ 1].node_indices.begin() + k);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Remove node from hashmap
+        graph.nodes_map.erase(Destruction::pos_to_node_id(node->global_position.x, node->global_position.y, node->global_position.z));
+    }
 }
 
 }  // namespace tmt

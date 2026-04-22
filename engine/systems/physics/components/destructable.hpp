@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/core/reflection.hpp"
 #include "engine/shared/svt64.hpp"
 
 namespace tmt {
@@ -35,6 +36,7 @@ struct DestructionNode {
 
 struct Destructible {
     bool initialized = false;
+    bool debug_view = false;
     uint32_t node_count = 0;
 
     // svt64 tree node index to destruction node index
@@ -67,3 +69,7 @@ struct Destructible {
 };
 
 }  // namespace tmt
+TMT_COMPONENT(tmt::Destructible, "Destructible", (debug_view));
+// TMT_COMPONENT_NAME(tmt::Destructible, "Destructible");
+// TMT_COMPONENT_SERIALIZE_EMPTY(tmt::Destructible);
+// TMT_COMPONENT_INSPECT_EMPTY(tmt::Destructible);

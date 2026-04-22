@@ -89,6 +89,9 @@ class Svt64 {
     /* @returns True if the given voxel coordinate is empty. */
     bool is_empty(const uint32_t x, const uint32_t y, const uint32_t z);
 
+    /* @returns A pointer to the leaf node containing the given coordinate, returns nullptr if no leaf node exists */
+    Svt64Node* get_leaf(const uint32_t x, const uint32_t y, const uint32_t z);
+
     /* @returns A pointer to the material of a voxel at the given coordinate. (nullptr if the voxel is empty) */
     Material* get_voxel(const uint32_t x, const uint32_t y, const uint32_t z);
     /* @returns A pointer to the physics data of a voxel at the given coordinate. (nullptr if the voxel is empty) */

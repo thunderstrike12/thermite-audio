@@ -142,13 +142,13 @@ void MainScene::on_update(const tmt::FrameData& time) {
         const float draw_radius = 1.0f * UNITS_PER_VOXEL;
         tmt::engine.polyline.draw_circle(mouse_ray.origin + mouse_ray.dir * (hit.distance - draw_radius), draw_radius);
 
-        // if (tmt::engine.input.is_mouse_button_pressed(tmt::MouseButton::LEFT)) {
-        //     tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxel(hit.entity, hit.coord);
-        // }
-
-        if (tmt::engine.input.is_mouse_button_just_pressed(tmt::MouseButton::LEFT)) {
-            tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxels(hit.entity, stencil.resource.get(), (glm::ivec3)hit.coord - glm::ivec3(20));
+        if (tmt::engine.input.is_mouse_button_pressed(tmt::MouseButton::LEFT)) {
+            tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxel(hit.entity, hit.coord);
         }
+
+        // if (tmt::engine.input.is_mouse_button_just_pressed(tmt::MouseButton::LEFT)) {
+        //     tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxels(hit.entity, stencil.resource.get(), (glm::ivec3)hit.coord - glm::ivec3(20));
+        // }
     }
 
     // Use to test the logging please
