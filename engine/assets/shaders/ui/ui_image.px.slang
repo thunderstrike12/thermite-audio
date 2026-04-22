@@ -17,6 +17,10 @@ float4 main(VertexOutput input) : SV_Target {
 
     const Texture2D<float4> sampler = bindless::texture_sampled<Texture2D<float4>>(image_index);
 
+    /* Compute flipbook UVs */
+    const float frame = floor(instance.flipbook_frame());
+    const float2 anim_uv = float2((frame + input.uvs.x) / instance.flipbook_frames(), input.uvs.y);
+
     /* Sampler the texture */
-    return sampler.SampleLevel(image_sampler, input.uvs, 0) * instance.color();
+    return sampler.SampleLevel(image_sampler, anim_uv, 0) * instance.color();
 }
