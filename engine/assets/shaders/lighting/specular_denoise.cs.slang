@@ -111,8 +111,8 @@ Sample fetch_sample(const int2 vpixel, const int2 lpixel) {
 [numthreads(16, 8, 1)]
 void main(int2 thread_id: SV_DispatchThreadID) {
     /* Bounds check */
-    const int2 pixel_id = rate_to_full(thread_id, render_view.spec_shading_rate);
-    if (any(thread_id >= rated_resolution(render_view.resolution, render_view.spec_shading_rate))) return;
+    const int2 spec_resolution = rated_resolution(render_view.resolution, render_view.spec_shading_rate);
+    if (any(thread_id >= spec_resolution)) return;
 
     /* Fetch the center data */
     float3 color, normal, point;
@@ -132,6 +132,7 @@ void main(int2 thread_id: SV_DispatchThreadID) {
     [ForceUnroll] for (uint i = 0u; i < 9u; ++i) {
         /* Sample neighbour */
         const int2 lpixel = thread_id + offsets[i] * step_size;
+        if (any(lpixel < 0) || any(lpixel >= spec_resolution)) continue;
         const int2 vpixel = rate_to_full(lpixel, render_view.spec_shading_rate);
         const Sample sample = fetch_sample(vpixel, lpixel);
         if (dot(sample.normal, normal) <= 0.01f) continue;
