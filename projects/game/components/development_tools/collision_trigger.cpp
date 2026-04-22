@@ -35,8 +35,3 @@ void game::CollisionTrigger::draw_debug_lines() const {
     auto max_aabb = world_abb.max_bounds;
     tmt::engine.polyline.draw_aabb(min_aabb, max_aabb);
 }
-
-void game::TransformTween::start() {
-    rotate_tween->rotate().offset(offset_rotation);
-    Tweening::tween(rotate_tween);
-}

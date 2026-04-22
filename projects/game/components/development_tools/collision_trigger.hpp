@@ -29,20 +29,5 @@ class CollisionTrigger : public tmt::GameComponent<CollisionTrigger> {
    private:
 };
 
-class TransformTween : public tmt::GameComponent<TransformTween> {
-   public:
-    using GameComponent::GameComponent;
-    static std::string_view get_name() { return "TransformTween"; }
-
-    void start() override;
-    void update(const tmt::FrameData& time) override {}
-    void fixed_update(const tmt::FrameData& time) override {};
-    void end() override {};
-
-    glm::vec3 offset_rotation { 0.f, 0.f, 0.f };
-    Tweening::TypedTween<tmt::Entity, tmt::Transform> rotate_tween;
-};
-
 }  // namespace game
 TMT_OBJECT(game::CollisionTrigger, (collision_shape, line_config, layer_mask));
-TMT_OBJECT(game::TransformTween, (offset_rotation, rotate_tween));

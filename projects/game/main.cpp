@@ -59,6 +59,7 @@
 // Development tools
 #include "components/development_tools/collision_trigger.hpp"
 #include "components/development_tools/attach_component.hpp"
+#include "components/development_tools/transform_tween.hpp";
 // World generation
 #include "components/world_gen/asteroid_field_component.hpp"
 #include "components/world_gen/random_prefab_spawner.hpp"
