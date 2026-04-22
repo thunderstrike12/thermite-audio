@@ -62,7 +62,7 @@ endif()
 target_compile_definitions(thermite-engine PUBLIC BUILD_VERSION="${BUILD_VERSION}")
 
 # Find and add projects
-include(scripts/cmake/code_modules.cmake) 
+include(scripts/cmake/code_modules.cmake)
 find_and_add_targets()
 
 # Add unit tests
