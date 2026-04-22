@@ -100,7 +100,7 @@ std::filesystem::path IO::get_exec_path() {
 }
 
 std::pair<bool, std::filesystem::path> IO::find_root(const std::filesystem::path& exe_dir) {
-    auto has_marker = [](const std::filesystem::path& p) { return (std::filesystem::exists(p / "engine/assets") && std::filesystem::exists(p / "editor/assets")); };
+    auto has_marker = [](const std::filesystem::path& p) { return (std::filesystem::exists(p / "engine/assets")); };
 
     // iterates backward through parent paths to find signature file structure
     for (auto p = exe_dir; p != p.parent_path(); p = p.parent_path())
@@ -110,6 +110,7 @@ std::pair<bool, std::filesystem::path> IO::find_root(const std::filesystem::path
     if (std::filesystem::exists(exe_dir.parent_path() / "assets/engine")) return std::make_pair(true, exe_dir.parent_path());
 
     // Root not found - throw an error as this is an unrecoverable state
+    Log::error(Log::Scope::ENGINE, "Failed to find IO asset mounting locations!");
     throw std::runtime_error("Could not find root directory - neither development nor packaged mode detected!");
 }
 
