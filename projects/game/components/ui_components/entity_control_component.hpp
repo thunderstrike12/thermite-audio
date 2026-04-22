@@ -14,13 +14,9 @@ class EntityControlComponent : public tmt::GameComponent<EntityControlComponent>
     void start() override;
     void update(const tmt::FrameData& time) override;
     void end() override;
-    /*
+
     std::vector<tmt::Entity> entities_to_disable = { entt::null };
     std::vector<tmt::Entity> entities_to_enable = { entt::null };
-    */
-
-    tmt::Entity entity_to_disable = entt::null;
-    tmt::Entity entity_to_enable = entt::null;
 
    private:
     void button_functionality(tmt::Button::Context context);
@@ -30,4 +26,4 @@ class EntityControlComponent : public tmt::GameComponent<EntityControlComponent>
 
 }  // namespace game
 
-TMT_OBJECT(game::EntityControlComponent, (entity_to_disable, entity_to_enable));
+TMT_OBJECT(game::EntityControlComponent, (entities_to_disable, entities_to_enable));

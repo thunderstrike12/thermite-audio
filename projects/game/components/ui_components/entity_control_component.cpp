@@ -20,16 +20,12 @@ void game::EntityControlComponent::end() {
 
 void game::EntityControlComponent::button_functionality(tmt::Button::Context context) {
     if (context.disabled) return;
-    /*
     for (auto currett : entities_to_enable) {
         enable(currett);
     }
     for (auto currett : entities_to_disable) {
         disable(currett);
     }
-    */
-    enable(entity_to_enable);
-    disable(entity_to_disable);
 }
 
 void game::EntityControlComponent::disable(tmt::Entity ett_to_dis) {
