@@ -840,8 +840,11 @@ Svt64::Svt64(const Svt64& src) {
     nodes_capacity = src.nodes_capacity;
     voxels_capacity = src.voxels_capacity;
     depth = src.depth;
+    delete[] nodes;
     nodes = new Svt64Node[node_count + SVT64_BUFFER_MEMORY];
+    delete[] materials;
     materials = new MaterialIndex[voxel_count + SVT64_BUFFER_MEMORY];
+    delete[] physics_data;
     physics_data = new PhysicsVoxel[voxel_count + SVT64_BUFFER_MEMORY];
     memcpy(nodes, src.nodes, node_count * sizeof(Svt64Node));
     memcpy(materials, src.materials, voxel_count * sizeof(MaterialIndex));
@@ -858,8 +861,11 @@ Svt64& Svt64::operator=(const Svt64& src) {
     nodes_capacity = src.nodes_capacity;
     voxels_capacity = src.voxels_capacity;
     depth = src.depth;
+    delete[] nodes;
     nodes = new Svt64Node[node_count + SVT64_BUFFER_MEMORY];
+    delete[] materials;
     materials = new MaterialIndex[voxel_count + SVT64_BUFFER_MEMORY];
+    delete[] physics_data;
     physics_data = new PhysicsVoxel[voxel_count + SVT64_BUFFER_MEMORY];
     memcpy(nodes, src.nodes, node_count * sizeof(Svt64Node));
     memcpy(materials, src.materials, voxel_count * sizeof(MaterialIndex));
