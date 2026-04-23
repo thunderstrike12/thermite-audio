@@ -16,6 +16,7 @@
 #include "engine/core/renderer/renderer.hpp"
 #include "engine/core/renderer/scene_view.hpp"
 
+#include "engine/core/components/all.hpp"
 #include "engine/core/components/name.hpp"
 #include "engine/core/components/transform.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
@@ -437,14 +438,7 @@ bool Hierarchy::display_entity(const HierarchyState& state, uint32_t& row) {
 
     const bool filtering = filter.empty() == false;
     if (filtering) {
-        /* Lower case everything */
-        std::string name_lower = state.name.name;
-        std::string filter_lower = filter;
-        std::transform(name_lower.begin(), name_lower.end(), name_lower.begin(), ::tolower);
-        std::transform(filter_lower.begin(), filter_lower.end(), filter_lower.begin(), ::tolower);
-        if (name_lower.find(filter_lower) == std::string::npos) {
-            return false;
-        }
+        if (contains_filter(state) == false) return false;
     } else {
         const bool root_indent = state.depth() == 0;
         const bool has_parent = state.transform.has_parent();
@@ -611,6 +605,61 @@ bool Hierarchy::display_entity(const HierarchyState& state, uint32_t& row) {
 
     ImGui::TreePop();
     return true;
+}
+
+bool Hierarchy::contains_filter(const tmt::Hierarchy::HierarchyState& state) {
+    /* Lower case everything */
+    std::string filter_lower = filter;
+    std::transform(filter_lower.begin(), filter_lower.end(), filter_lower.begin(), ::tolower);
+
+    const bool component_filtering = filter_lower.starts_with("comp:");
+    if (component_filtering) {
+        bool has_component = false;
+        InspectComponents::for_each([&](auto tag) {
+            if (has_component) return;
+
+            using T = typename decltype(tag)::type;  // Extract type from tag
+            constexpr const char* NAME = tmt::Component<T>::get_name();
+
+            std::string name_lower = NAME;
+            std::transform(name_lower.begin(), name_lower.end(), name_lower.begin(), ::tolower);
+
+            std::string comp_filter = "comp:" + name_lower;
+            if (comp_filter.starts_with(filter_lower)) {
+                has_component = engine.ecs.has_component<T>(state.entity);
+                if (has_component) {
+                    return;
+                }
+            }
+        });
+
+        if (has_component) return true;
+
+        if (has_component == false) {
+            const auto& registered_component = engine.component_registry.get_registered_components();
+            for (const auto& [componend_index, component_info] : registered_component) {
+                auto name_lower = component_info.name;
+                std::transform(name_lower.begin(), name_lower.end(), name_lower.begin(), ::tolower);
+                const std::string comp_filter = "comp:" + name_lower;
+                if (comp_filter.starts_with(filter_lower)) {
+                    const auto* component_collection = engine.ecs.try_get_component<ComponentCollection>(state.entity);
+                    if (component_collection) {
+                        has_component = component_collection->has_component(componend_index);
+                        if (has_component) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    std::string name_lower = state.name.name;
+    std::transform(name_lower.begin(), name_lower.end(), name_lower.begin(), ::tolower);
+    if (name_lower.find(filter_lower) != std::string::npos) {
+        return true;
+    }
+    return false;
 }
 
 bool Hierarchy::drag_drop_source(const Entity dragged_entity) const {

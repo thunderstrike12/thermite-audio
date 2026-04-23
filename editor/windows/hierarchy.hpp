@@ -128,6 +128,7 @@ class Hierarchy : public IWindow<>, public OnGameEnd, public OnPreUnloadScene {
 
     void start_section();
     bool display_entity(const HierarchyState& state, uint32_t& row);
+    bool contains_filter(const tmt::Hierarchy::HierarchyState& state);
     void end_section();
 
     void context_menu(const Entity hovered_entity);
