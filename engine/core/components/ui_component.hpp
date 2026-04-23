@@ -31,6 +31,7 @@ struct UIComponent {
     AspectMode aspect_mode = AspectMode::STRETCH;
     glm::vec2 aspect_ratio = glm::vec2(1.0f, 1.0f); /* 1:1 */
     Anchor anchor = Anchor::MIDDLE_CENTER;
+    bool synced_from_image = false;
 };
 
 }  // namespace tmt

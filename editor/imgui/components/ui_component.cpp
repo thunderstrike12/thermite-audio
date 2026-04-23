@@ -4,9 +4,48 @@
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
 
+#include "engine/core/components/image_renderer.hpp"
+
+/* clang-format off */
+
+struct Known { float r; glm::vec2 aspect; };
+static constexpr Known table[] = {
+    { 16.0f / 9.0f,  {16, 9}  },
+    { 4.0f  / 3.0f,  {4,  3}  },
+    { 21.0f / 9.0f,  {21, 9}  },
+    { 1.0f,          {1,  1}  },
+    { 3.0f  / 2.0f,  {3,  2}  },
+    { 16.0f / 10.0f, {16, 10} },
+};
+
+/* clang-format on */
+
 void tag_invoke(ImReflect::ImInput_t, const char*, tmt::UIComponent& value, ImSettings& settings, ImResponse& response) {
     auto& type_settings = settings.get<tmt::UIComponent>();
     auto& type_response = response.get<tmt::UIComponent>();
+
+    const tmt::Entity entity = tmt::engine.ecs.get_entity(value);
+    auto image = tmt::engine.ecs.try_get_component<tmt::ImageRenderer>(entity);
+
+    /* If ImageRenderer is present, then set the UI Component Size to Image Size */
+    if (value.synced_from_image != true) {
+        if (image != nullptr && image->texture != nullptr) {
+            const float w = (float)image->texture->width;
+            const float h = (float)image->texture->height;
+
+            /* Snap to a known aspect ratio, fall back to 1:1 */
+            const float ratio = w / h;
+            value.aspect_ratio = { 1.0f, 1.0f };
+            for (const auto& k : table) {
+                if (std::abs(ratio - k.r) < 0.01f) {
+                    value.aspect_ratio = k.aspect;
+                    break;
+                }
+            }
+
+            value.synced_from_image = true;
+        }
+    }
 
     ImReflect::Input("Size", value.size, type_settings, type_response);
     {
@@ -25,7 +64,19 @@ void tag_invoke(ImReflect::ImInput_t, const char*, tmt::UIComponent& value, ImSe
     ImReflect::Input("Aspect Ratio", value.aspect_ratio, type_settings, type_response);
     ImResponse anchor_response = ImReflect::Input("Anchor", value.anchor);
 
-    const tmt::Entity entity = tmt::engine.ecs.get_entity(value);
+    // Uniform resize: one slider, both X and Y follow the aspect ratio
+    if (value.aspect_ratio.x > 0.0f && value.aspect_ratio.y > 0.0f) {
+        // Pick the larger component as the reference so scale stays stable
+        const bool use_x = value.aspect_ratio.x >= value.aspect_ratio.y;
+        float scale = use_x ? value.size.x / value.aspect_ratio.x : value.size.y / value.aspect_ratio.y;
+
+        if (ImGui::DragFloat("Uniform Size", &scale, 1.0f, 0.0f, FLT_MAX, "%.1f")) {
+            value.size.x = value.aspect_ratio.x * scale;
+            value.size.y = value.aspect_ratio.y * scale;
+            type_response.changed();
+        }
+    }
+
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     if (anchor_response.get<tmt::Anchor>().is_changed()) {
