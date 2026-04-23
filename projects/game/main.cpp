@@ -87,27 +87,15 @@
 #include <bitset>
 
 class Game : public tmt::Application {
-   public:
-    Game(const tmt::ApplicationSpecs& specs) : Application(specs) {}
-
-    void on_start() override {
-        //// player
-        // tmt::engine.player_data.get<game::PlayerStat>(game::PLAYER_HEALTH_DATA);
-        // tmt::engine.player_data.get<game::PlayerStat>(game::PLAYER_ENERGY_DATA);
-        // tmt::engine.player_data.get<game::PlayerMovement>(game::PLAYER_MOVEMENT_DATA);
-        // tmt::engine.player_data.get<game::PlayerRecharge>(game::PLAYER_RECHARGE_DATA);
-
-        //// barge
-
-        // tmt::engine.player_data.get<game::FuelData>(game::FUEL_DATA);
-        // tmt::engine.player_data.get<float>(game::BARGE_MOVE_DATA);
-
-        //// resources
-        // tmt::engine.player_data.get<game::Currencies>(game::PERSISTENT_RESOURCES);
-        //// tmt::engine.player_data.get<std::b>>(game::UPGRADES);
+public:
+    Game(const tmt::ApplicationSpecs& specs) : Application(specs) {
     }
+
+    void on_start() override;
     void on_update(const tmt::FrameData& time) override;
-    void on_end() override {};
+
+    void on_end() override {
+    };
 };
 
 std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs& args) {
@@ -172,9 +160,9 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.component_registry.register_component<game::ResourceLimitChecker>();
     tmt::engine.component_registry.register_component<game::CompassIcon>();
 
-#if THERMITE_EDITOR
+    #if THERMITE_EDITOR
     tmt::editor.systems[tmt::Editor::Mode::SCENE].add<tmt::LevelEditor>();
-#endif
+    #endif
 
     /* Register Goap Components */
     {
@@ -291,6 +279,13 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     }
 
     return std::make_unique<Game>(specs);
+}
+
+void Game::on_start() {
+    #ifdef THERMITE_EDITOR
+    #else
+    tmt::engine.window.fullscreen_window(true);
+    #endif
 }
 
 void Game::on_update(const tmt::FrameData&) {

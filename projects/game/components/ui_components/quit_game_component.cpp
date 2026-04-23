@@ -24,6 +24,7 @@ void QuitGameComponent::end() {
 void QuitGameComponent::quit_game(tmt::Button::Context context) {
     if (context.disabled) return;
     tmt::engine.game_controller.end_game();
+    tmt::engine.set_is_running(false);
 }
 
 }  // namespace game
