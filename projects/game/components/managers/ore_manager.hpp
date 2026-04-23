@@ -57,7 +57,7 @@ class OreManager : public tmt::GameComponent<OreManager> {
    private:
     std::unordered_set<std::pair<tmt::Entity, glm::uvec3>> thermite_to_explode;
     std::unordered_set<std::pair<tmt::Entity, glm::uvec3>> new_thermite_to_explode;
-    OreProperties* ore_properties;
+    tmt::Entity ore_properties_entity = entt::null;
     std::unordered_map<tmt::Material::Type, OreProperties::MiningOre> ore_database;
     float thermite_ore_explosion_cooldown_timer = 0.0f;
     void process_thermite_ore_explosion(tmt::Entity voxel_entity, glm::uvec3 explosion_center);
