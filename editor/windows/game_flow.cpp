@@ -34,9 +34,10 @@ void GameFlow::start_game(const bool fullscreen_) {
     if (fullscreen_) {
         open_windows_before = editor.save_data.open_windows;
 
-        const auto& viewport_name = editor.systems[editor.editor_mode].get<Viewport>().get_title();
         for (auto& [name, open] : editor.save_data.open_windows) {
-            if (name != viewport_name) {
+            if (name.find("Viewport") != std::string::npos) {
+                open = true;
+            } else {
                 open = false;
             }
         }
