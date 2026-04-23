@@ -131,7 +131,6 @@ class Player : public tmt::GameComponent<Player> {
     float acceleration_calculated = acceleration;
 
     bool boost_was_applied = false;
-    bool boost_available = false;
     float previous_max_health = health.max_value;
     float previous_health = health.value;
     float previous_max_energy = energy.max_value;

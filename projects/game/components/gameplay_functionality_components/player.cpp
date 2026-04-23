@@ -319,16 +319,11 @@ void Player::update(const tmt::FrameData& time) {
     switch (state) {
         case game::PlayerState::FREEMOVING:
             // Handle player movement boost (initial cost)
-            if (energy.value > boost_initial_cost) {
-                boost_available = true;
-            } else {
-                boost_available = false;
-            }
 
-            if (input.is_action_just_pressed(action::BOOST) && boost_available) {
+            if (input.is_action_just_pressed(action::BOOST)) {
                 energy.value = glm::min(energy.max_value, energy.value - boost_initial_cost);
             }
-            if (input.is_action_pressed(action::BOOST) && boost_available) {
+            if (input.is_action_pressed(action::BOOST)) {
                 apply_boost();
             } else {
                 reset_boost(time.delta_time);
@@ -388,7 +383,7 @@ void Player::update(const tmt::FrameData& time) {
     previous_health = health.value;
     // Update UI
     if (tmt::engine.ecs.valid(hp_bar_current)) {
-        if (auto component_curr_hp = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_current)) component_curr_hp->size.x = health.value;
+        if (auto component_curr_hp = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_current)) component_curr_hp->size.x = std::clamp(health.value, 0.0f, health.max_value);
     }
 
     // Fire event max energy changed
@@ -408,7 +403,8 @@ void Player::update(const tmt::FrameData& time) {
     previous_energy = energy.value;
     // Update UI
     if (tmt::engine.ecs.valid(energy_bar_current)) {
-        if (auto component_curr_energy = tmt::engine.ecs.try_get_component<tmt::UIComponent>(energy_bar_current)) component_curr_energy->size.x = energy.value;
+        if (auto component_curr_energy = tmt::engine.ecs.try_get_component<tmt::UIComponent>(energy_bar_current))
+            component_curr_energy->size.x = std::clamp(energy.value, 0.0f, energy.max_value);
     }
 
     // --- Energy low pop up ---
@@ -483,7 +479,7 @@ void Player::update(const tmt::FrameData& time) {
 
     // UI boost availability
     if (tmt::engine.ecs.valid(boost_availability)) {
-        if (!boost_available || boost_was_applied) {
+        if (boost_was_applied) {
             tmt::engine.ecs.disable(boost_availability);
         } else {
             tmt::engine.ecs.enable(boost_availability);
