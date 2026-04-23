@@ -654,16 +654,6 @@ void RigStateController::list_conditions(const Entity entity, RigController& con
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                 ImGui::DragInt("##Parameter", &std::get<int>(condition.compare_value));
-                if (ImGui::IsItemActivated()) {
-                    diff_util = std::make_shared<ComponentDiff<RigController>>(entity);
-                    diff_util->before();
-                }
-                if (ImGui::IsItemDeactivatedAfterEdit()) {
-                    diff_util->after();
-
-                    IUndoRedo::send_to_manager(std::move(*diff_util), "Condition value edited");
-                    diff_util.reset();
-                }
                 break;
             case 2: {  // bool
                 auto& value = std::get<bool>(condition.compare_value);
