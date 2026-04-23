@@ -16,3 +16,9 @@ constexpr float UNITS_PER_VOXEL = 1.0f / VOXELS_PER_UNIT;
 constexpr float VOXEL_SIZE_HALF = 0.5f / VOXELS_PER_UNIT;
 /* Size of a voxel in world-space units squared. */
 constexpr float VOXEL_SIZE_SQR = UNITS_PER_VOXEL * UNITS_PER_VOXEL;
+
+/*Cardinal directions. */
+constexpr glm::vec3 NORTH { 0.0f, 0.0f, 1.0f };
+constexpr glm::vec3 EAST { 1.0f, 0.0f, 0.0f };
+constexpr glm::vec3 SOUTH { 0.0f, 0.0f, -1.0f };
+constexpr glm::vec3 WEST { -1.0f, 0.0f, 0.0f };
