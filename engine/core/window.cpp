@@ -37,6 +37,21 @@ void Window::init(const ApplicationSpecs&) {
     }
 }
 
+void Window::fullscreen_window(bool value) {
+    if (value == fullscreen) return;
+    if (!SDL_SetWindowFullscreen(window, value)) {
+        Log::error(Log::Scope::ENGINE, "Couldn't set fullscreen mode: %s", SDL_GetError());
+        return;
+    }
+
+    fullscreen = value;
+    SDL_SyncWindow(window);
+}
+
+void Window::toggle_fullscreen() {
+    fullscreen_window(!fullscreen);
+}
+
 void* Window::get_window_handle() const {
     const SDL_PropertiesID props = SDL_GetWindowProperties(window);
 

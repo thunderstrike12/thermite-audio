@@ -25,7 +25,14 @@ class Window {
 
     void init(const ApplicationSpecs& specs);
 
+    void fullscreen_window(bool value);
+    void toggle_fullscreen();
+    bool is_fullscreen() const { return fullscreen; }
+
     void* get_window_handle() const;
+
+   private:
+    bool fullscreen = false;
 };
 
 }  // namespace tmt
