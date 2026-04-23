@@ -7,6 +7,7 @@
 #include "engine/systems/ai/steering/components/steering_mode.hpp"
 #include "engine/systems/ai/steering/components/steering_agent.hpp"
 #include "engine/systems/ai/steering/steering_system.hpp"
+#include "engine/systems/animation/rig_model.hpp"
 #include "../gameplay_functionality_components/player.hpp"
 #include "../gameplay_functionality_components/enemy_components/small_enemy.hpp"
 
@@ -42,6 +43,22 @@ void SteerToPlayer::on_start(tmt::Entity agent) {
     }
 
     registry.emplace_or_replace<tmt::SteeringRequest>(agent, request);
+
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(agent);
+    std::set<tmt::Entity> children = transform.get_all_children();
+
+    for (tmt::Entity child : children) {
+        if (!tmt::engine.ecs.valid(child)) continue;
+
+        if (tmt::engine.ecs.try_get_component<tmt::RigModel>(child)) {
+            auto* rig = tmt::engine.ecs.try_get_component<tmt::RigModel>(child);
+            if (rig) {
+                if (rig->get_current_animation() != "SmallEnemy_chase") {
+                    rig->play_animation("SmallEnemy_chase", 0.15f, true);
+                }
+            }
+        }
+    }
 }
 
 void SteerToPlayer::on_fixed_tick(tmt::Entity agent, float /*dt*/) {

@@ -43,6 +43,22 @@ void Explode::on_start(tmt::Entity agent) {
 
     live_charge_time = 0.0f;
     exploded = false;
+
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(agent);
+    std::set<tmt::Entity> children = transform.get_all_children();
+
+    for (tmt::Entity child : children) {
+        if (!tmt::engine.ecs.valid(child)) continue;
+
+        if (tmt::engine.ecs.try_get_component<tmt::RigModel>(child)) {
+            auto* rig = tmt::engine.ecs.try_get_component<tmt::RigModel>(child);
+            if (rig) {
+                if (rig->get_current_animation() != "SmallEnemy_detonate") {
+                    rig->play_animation("SmallEnemy_detonate", 0.15f, true);
+                }
+            }
+        }
+    }
 }
 
 void Explode::on_tick(tmt::Entity agent, float dt) {
@@ -193,6 +209,23 @@ bool Explode::is_done(tmt::Entity agent) const {
 
 void Explode::on_finished(tmt::Entity agent) {}
 
-void Explode::on_interrupt(tmt::Entity agent) {}
+void Explode::on_interrupt(tmt::Entity agent) {
+    // if interrupted we need to go back to chasing animation?
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(agent);
+    std::set<tmt::Entity> children = transform.get_all_children();
+
+    for (tmt::Entity child : children) {
+        if (!tmt::engine.ecs.valid(child)) continue;
+
+        if (tmt::engine.ecs.try_get_component<tmt::RigModel>(child)) {
+            auto* rig = tmt::engine.ecs.try_get_component<tmt::RigModel>(child);
+            if (rig) {
+                if (rig->get_current_animation() != "SmallEnemy_chase") {
+                    rig->play_animation("SmallEnemy_chase", 0.15f, true);
+                }
+            }
+        }
+    }
+}
 
 }  // namespace game
