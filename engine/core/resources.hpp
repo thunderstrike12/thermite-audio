@@ -4,6 +4,7 @@
 
 #include "resource.hpp"
 #include "logger.hpp"
+#include "engine/tools/profiler.hpp"
 
 namespace tmt {
 
@@ -35,6 +36,7 @@ class Resources {
     template <ResourceType T, typename... Args>
     requires std::constructible_from<T, const IO::FileLocation&, Args...>
     ResourceRef<T> load_resource(const IO::FileLocation& file_location, Args&&... args) {
+        TMT_ZONE_SCOPED_N("Resources::load_resource");
         // duplicate checking
         if (resources.contains(file_location)) {
             auto& collection = resources.at(file_location);

@@ -565,16 +565,17 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
         }
     }
 
+    /* Gather all already existing prefabs in scene */
+    std::unordered_set<tmt::Prefab> existing_prefab_instances;
+    std::unordered_map<tmt::PrefabInstanceID, tmt::Prefab> prefab_instance_ids;
+
     {
         TMT_ZONE_SCOPED_N("Ecs::deserialize_scene::prepare_prefabs")
-        /* Gather all already existing prefabs in scene */
-        std::unordered_set<tmt::Prefab> existing_prefab_instances;
         auto view = state.ecs.view<tmt::Prefab>();
         for (const auto&& [entity, prefab_comp] : view.each()) {
             existing_prefab_instances.insert(prefab_comp);
         }
 
-        std::unordered_map<tmt::PrefabInstanceID, tmt::Prefab> prefab_instance_ids;
         for (const auto& [new_entity, old_entity] : new_to_old) {
             constexpr auto PREFAB_COMPONENT_NAME = tmt::Component<tmt::Prefab>::get_name();
             auto prefab_entry = state.json.component_value(PREFAB_COMPONENT_NAME, old_entity);
@@ -634,38 +635,39 @@ static void deserialize_scene(std::set<tmt::Entity>& new_entities, tmt::Deserial
             state.add_mapping(instance_id, old_entity, new_entity);
             state.add_mapping(instance_id, prefab_comp.source_entity, new_entity);
         }
+    }
+    /* Deserialize Prefabs */
+    deserialize_component<tmt::Prefab>(state);
+    /* for each prefab instance */
+    {
+        TMT_ZONE_SCOPED_N("Ecs::deserialize_scene::deserialize_prefab_instances")
+        for (const auto& [prefab_instance_id, prefab_info] : prefab_instance_ids) {
+            auto original_prefab_json = tmt::engine.resources.load_resource<tmt::Json>(prefab_info.source_location);
+            if (original_prefab_json == nullptr) {
+                tmt::Log::error(
+                    tmt::Log::Scope::ENGINE, "[Serialization] Failed to load prefab JSON for deserialization. PrefabInstanceID: {}, SourceLocation: {}", prefab_instance_id,
+                    prefab_info.source_location
+                );
+                continue;
+            }
+            tmt::SceneJson prefab_scene_json(original_prefab_json->get_parsed_json());
 
-        /* Deserialize Prefabs */
-        deserialize_component<tmt::Prefab>(state);
+            tmt::DeserializeState prefab_state { state.ecs, prefab_scene_json };
 
-        /* for each prefab instance */
-        {
-            TMT_ZONE_SCOPED_N("Ecs::deserialize_scene::deserialize_prefab_instances")
-            for (const auto& [prefab_instance_id, prefab_info] : prefab_instance_ids) {
-                auto original_prefab_json = tmt::engine.resources.load_resource<tmt::Json>(prefab_info.source_location);
-                if (original_prefab_json == nullptr) {
-                    tmt::Log::error(
-                        tmt::Log::Scope::ENGINE, "[Serialization] Failed to load prefab JSON for deserialization. PrefabInstanceID: {}, SourceLocation: {}", prefab_instance_id,
-                        prefab_info.source_location
-                    );
-                    continue;
-                }
-                tmt::SceneJson prefab_scene_json(original_prefab_json->get_parsed_json());
-
-                tmt::DeserializeState prefab_state { state.ecs, prefab_scene_json };
-
+            {
+                TMT_ZONE_SCOPED_N("Ecs::deserialize_scene::deserialize_prefab_instances::setup_state")
                 prefab_state.current_prefab_instance_id = prefab_instance_id;
                 prefab_state.current_root_entity = prefab_info.root_entity;
                 prefab_state.current_prefab_location = prefab_info.source_location;
-                prefab_state.entity_mappings = state.entity_mappings;   /* Inherit mappings from parent prefab */
-                prefab_state.deleted_entities = state.deleted_entities; /* Inherit deleted entities from parent prefab */
-
-                std::set<tmt::Entity> prefab_entities;
-                deserialize_scene(prefab_entities, prefab_state);
-                state.entity_mappings = prefab_state.entity_mappings;   /* Update mappings after deserializing prefab instance */
-                state.deleted_entities = prefab_state.deleted_entities; /* Update deleted entities after deserializing prefab instance */
-                new_entities.insert(prefab_entities.begin(), prefab_entities.end());
+                prefab_state.entity_mappings = std::move(state.entity_mappings);   /* Inherit mappings from parent prefab */
+                prefab_state.deleted_entities = std::move(state.deleted_entities); /* Inherit deleted entities from parent prefab */
             }
+
+            std::set<tmt::Entity> prefab_entities;
+            deserialize_scene(prefab_entities, prefab_state);
+            state.entity_mappings = std::move(prefab_state.entity_mappings);   /* Update mappings after deserializing prefab instance */
+            state.deleted_entities = std::move(prefab_state.deleted_entities); /* Update deleted entities after deserializing prefab instance */
+            new_entities.insert(prefab_entities.begin(), prefab_entities.end());
         }
     }
 
