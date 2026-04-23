@@ -224,6 +224,9 @@ void AssetBrowser::on_inspect() {
         }
         ImGui::EndDisabled();
 
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 10.0f);
+        ImGui::InputTextWithHint("##FileSearch", ICON_MS_SEARCH " Search file...", &filter);
+
         ImGui::EndMenuBar();
     }
 
@@ -377,7 +380,7 @@ void AssetBrowser::move_location_stacks(std::stack<IO::FileLocation>& from, std:
 void AssetBrowser::display_directory_bar() {
     static std::string viewing_dir_name;
 
-    const float margin_width = ImGui::CalcTextSize(ICON_MS_BOOKMARK).x + (ImGui::GetWindowWidth() / 5.0f);
+    const float margin_width = ImGui::CalcTextSize(ICON_MS_BOOKMARK).x + (ImGui::GetWindowWidth() / 4.0f);
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - margin_width);
     ImGui::SetNextItemAllowOverlap();
@@ -578,8 +581,18 @@ void AssetBrowser::display_viewing_location() {
 
     const bool is_playing = engine.game_controller.is_playing();
 
+    std::string filter_lower = filter;
+    std::transform(filter_lower.begin(), filter_lower.end(), filter_lower.begin(), ::tolower);
+
     ImS64 i = 0;
     for (const IO::FileLocation& location : viewing_locations) {
+        /* check filter */
+        if (filter_lower.empty() == false) {
+            std::string location_name_lower = location.relative_path.filename().generic_string();
+            std::transform(location_name_lower.begin(), location_name_lower.end(), location_name_lower.begin(), ::tolower);
+            if (location_name_lower.find(filter_lower) == std::string::npos) continue;
+        }
+
         const bool location_is_directory = is_directory(location.get_relative_path());
         const std::string location_name = (location_is_directory ? ICON_MS_FOLDER " " : ICON_MS_DESCRIPTION " ") + location.relative_path.filename().generic_string();
 

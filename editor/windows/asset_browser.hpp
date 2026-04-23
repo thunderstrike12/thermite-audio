@@ -52,6 +52,8 @@ class AssetBrowser : public internal::OnSdlEvent, public IWindow<> {
     std::vector<Bookmark> default_bookmarks;
     std::vector<Bookmark> bookmarks;
 
+    std::string filter;
+
     // Handle file drop events to import a file.
     void on_sdl_event(internal::SdlEvent& event) override;
 
