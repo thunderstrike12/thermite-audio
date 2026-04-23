@@ -411,6 +411,52 @@ void Player::update(const tmt::FrameData& time) {
         if (auto component_curr_energy = tmt::engine.ecs.try_get_component<tmt::UIComponent>(energy_bar_current)) component_curr_energy->size.x = energy.value;
     }
 
+    // --- Energy low pop up ---
+    {
+        float energy_percent = energy.value / energy.max_value;
+
+        // First warning
+        // Trigger when crossing from above to below
+        if (was_above_threshold && energy_percent <= low_energy_threshold) {
+            set_hud_enabled(low_energy_hud, true);
+
+            low_energy_timer = low_energy_duration;
+            low_energy_active = true;
+        }
+
+        // Handle timer
+        if (low_energy_active) {
+            low_energy_timer -= time.delta_time;
+
+            if (low_energy_timer <= 0.0f) {
+                set_hud_enabled(low_energy_hud, false);
+                low_energy_active = false;
+            }
+        }
+
+        // Update state for next frame
+        was_above_threshold = (energy_percent > low_energy_threshold);
+
+        // Second wanrning
+        if (use_second_warning) {
+            if (was_above_threshold_2 && energy_percent <= low_energy_threshold_2) {
+                set_hud_enabled(low_energy_hud, true);
+                low_energy_timer_2 = low_energy_duration_2;
+                low_energy_active_2 = true;
+            }
+
+            if (low_energy_active_2) {
+                low_energy_timer_2 -= time.delta_time;
+                if (low_energy_timer_2 <= 0.0f) {
+                    set_hud_enabled(low_energy_hud, false);
+                    low_energy_active_2 = false;
+                }
+            }
+
+            was_above_threshold_2 = (energy_percent > low_energy_threshold_2);
+        }
+    }
+
     // Death handling logic
 
     // Energy death (timer)
