@@ -168,6 +168,23 @@ void tmt::LevelEditor::on_inspect() {
             engine.ecs.add_component<game::GenerationComponent>(grouper_entity);
         }
     }
+    if(ImGui::Button("Clear preview objects"))
+    {
+        auto view = engine.ecs.view<game::GenerationComponent>();
+
+        if (view.begin() == view.end()) {
+            tmt::Log::warn(tmt::Log::Scope::ENGINE, "No objects to delete!");
+        } else {
+            tmt::Entity grouper_entity = view.front().entity;
+
+            auto& grouper_trans = engine.ecs.get_component<Transform>(grouper_entity);
+            if (grouper_trans.has_children()) {
+                for (auto ent : grouper_trans.get_children()) {
+                    engine.ecs.destroy_entity(ent);
+                }
+            }
+        }
+    }
 
     ImDrawList* draw_list = viewport.get_drawlist();
 
