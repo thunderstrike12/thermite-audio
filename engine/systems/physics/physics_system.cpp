@@ -24,8 +24,8 @@ void Physics::on_start() {
         vb.rotation = transform.get_world_rotation();
 
         if (vb.type == VoxelBody::DYNAMIC) {
-            // initialize_voxel_body(vb, *renderer.resource.resource);
-            recalculate_physics_data(vb, *renderer.resource.resource);
+            initialize_voxel_body(vb, *renderer.resource.resource);
+            // recalculate_physics_data(vb, *renderer.resource.resource);
             if (vb.gravity <= 0.0f) {
                 vb.type = VoxelBody::SLEEPING;
                 vb.accumulated_forces = 0.0f;
@@ -112,6 +112,7 @@ void Physics::on_update(const FrameData&) {
     engine.polyline.use_line_width(0.25f);
 
     for (const auto& [entity, vb, transform, vr] : engine.ecs.view<VoxelBody, Transform, VoxelRenderer>().each()) {
+        if (engine.ecs.is_disabled(entity)) continue;
         // if (!transform.is_enabled()) continue;
 
         if (vb.initialized == false) {
@@ -134,6 +135,17 @@ void Physics::on_update(const FrameData&) {
 
             vb.initialized = true;
         }
+
+        //engine.polyline.use_color(1.0f, 0.3f, 0.3f);
+        //engine.polyline.use_depth_testing(false);
+        //engine.polyline.use_line_width(0.3f);
+        //engine.polyline.draw_sphere(vb.center_of_mass, 0.1f, 16u);
+
+        //// Debug draw bounding box
+        //engine.polyline.use_color(0.2f, 1.0f, 0.3f);
+        //engine.polyline.use_depth_testing(true);
+        //engine.polyline.use_line_width(0.2f);
+        //engine.polyline.draw_obb(vb.position, glm::vec3(vb.width, vb.height, vb.depth) * 0.5f, vb.rotation);
     }
 }
 

@@ -5,6 +5,7 @@
 #include "engine/shared/svt64.hpp"
 #include "engine/core/reflection.hpp"
 #include "engine/tools/uuid.hpp"
+#include "engine/systems/physics/components/destructable.hpp"
 
 namespace tmt {
 
@@ -12,6 +13,8 @@ namespace tmt {
 struct VoxelSceneNode {
     /* 128 bit unique identifier. */
     UUID uuid { NULL_UUID };
+
+    Destructible destructible {};
 
     /* Voxel acceleration structure. */
     std::unique_ptr<Svt64> tree {};
@@ -29,6 +32,8 @@ struct VoxelSceneNode {
     /* Returns true if this node is a voxel volume. */
     inline bool is_volume() const { return tree != nullptr; }
 };
+
+VoxelSceneNode* find_model_by_uuid(VoxelSceneNode& node, const UUID& uuid);
 
 /* Voxel scene resource, loaded from a `.vengi` file. */
 class VoxelScene : public tmt::FileResource {

@@ -29,6 +29,8 @@ class Destruction : public ISystem {
 
     static uint32_t pos_to_node_id(uint32_t x, uint32_t y, uint32_t z) { return (x + (y << 10) + (z << 20)); };
 
+    static void generate_connection_graph(Destructible& graph, Svt64* tree);
+
    private:
     // Returns true if we can skip separation
     bool seperation_early_out(VoxelVolume* volume, const glm::uvec3& pos, const std::vector<glm::uvec3>& neighbors);
@@ -37,7 +39,6 @@ class Destruction : public ISystem {
     // std::vector<Entity> find_seperations(Entity entity, const std::vector<glm::uvec3>& edge_indices, const Stencil* stencil, glm::ivec3 offset);
     std::vector<Entity> find_seperations(Entity entity, const std::vector<glm::uvec3>& edge_indices, Destructible& graph);
     void regenerate_connection_graph(Destructible& graph, Svt64* tree, const Stencil* stencil, glm::ivec3 offset);
-    void generate_connection_graph(Destructible& graph, Svt64* tree);
     void update_connection_graph_at(Destructible& graph, Svt64* tree, const glm::uvec3& pos);
     // FloodStackEntry separation_flood(Destructable& graph, DestructionNode& current_node, uint8_t id, Svt64* tree);
 };

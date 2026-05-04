@@ -13,6 +13,7 @@
 #include "engine/tools/svh_format.hpp"
 #include "engine/tools/uuid.hpp"
 #include "engine/shared/colorspace.hpp"
+#include "engine/systems/physics/destruction_system.hpp"
 
 #include <queue>
 #include <omp.h>
@@ -47,6 +48,17 @@ bool recurse_get_node_matrix(const tmt::VoxelSceneNode& node, const tmt::UUID& u
 }  // namespace
 
 namespace tmt {
+
+VoxelSceneNode* find_model_by_uuid(VoxelSceneNode& node, const UUID& uuid) {
+    if (node.uuid == uuid) return &node;
+
+    for (VoxelSceneNode& child : node.children) {
+        VoxelSceneNode* return_node = find_model_by_uuid(child, uuid);
+        if (return_node != nullptr) return return_node;
+    }
+
+    return nullptr;
+}
 
 void compute_physics_data(RawVoxels& voxels) {
     TMT_ZONE_SCOPED
