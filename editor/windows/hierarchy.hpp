@@ -38,6 +38,8 @@ class Hierarchy : public IWindow<>, public OnGameEnd, public OnPreUnloadScene {
 
         start_section();
 
+        hierarchy_hovered = ImGui::IsWindowHovered();
+
         uint32_t index = 0;
         uint32_t row = 0;
         for (auto [entity, transform, name] : view.each()) {
@@ -102,6 +104,7 @@ class Hierarchy : public IWindow<>, public OnGameEnd, public OnPreUnloadScene {
     Entity selection_parent = entt::null;
 
     std::string filter = "";
+    bool hierarchy_hovered = false;
 
     static inline bool is_between(const glm::uvec2& value, const glm::uvec2& begin, const glm::uvec2& end) {
         if (begin == NULL_INDEX || end == NULL_INDEX) return false;

@@ -557,7 +557,7 @@ bool Hierarchy::display_entity(const HierarchyState& state, uint32_t& row) {
     const bool is_between_begin_above = Hierarchy::is_between(state.position, selected_index_end_above, selected_index_begin);
     const bool is_between_begin_below = Hierarchy::is_between(state.position, selected_index_begin, selected_index_end_below);
     const bool is_between = same_parent && (is_between_begin_above || is_between_begin_below);
-    if (is_between) {
+    if (is_between && hierarchy_hovered) {
         selected_entities.insert(state.entity);
     }
 
