@@ -309,13 +309,13 @@ void Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
         VoxelRenderer& seperate_vr = engine.ecs.get_component<VoxelRenderer>(seperate_entity);
         Physics::initialize_voxel_body(seperate_vb, *seperate_vr.resource.resource.get());
 
-        //glm::vec3 tensor_0 = glm::vec3(seperate_vb.inv_inertia[0][0], seperate_vb.inv_inertia[0][1], seperate_vb.inv_inertia[0][2]);
-        //glm::vec3 tensor_1 = glm::vec3(seperate_vb.inv_inertia[1][0], seperate_vb.inv_inertia[1][1], seperate_vb.inv_inertia[1][2]);
-        //glm::vec3 tensor_2 = glm::vec3(seperate_vb.inv_inertia[2][0], seperate_vb.inv_inertia[2][1], seperate_vb.inv_inertia[2][2]);
+        // glm::vec3 tensor_0 = glm::vec3(seperate_vb.inv_inertia[0][0], seperate_vb.inv_inertia[0][1], seperate_vb.inv_inertia[0][2]);
+        // glm::vec3 tensor_1 = glm::vec3(seperate_vb.inv_inertia[1][0], seperate_vb.inv_inertia[1][1], seperate_vb.inv_inertia[1][2]);
+        // glm::vec3 tensor_2 = glm::vec3(seperate_vb.inv_inertia[2][0], seperate_vb.inv_inertia[2][1], seperate_vb.inv_inertia[2][2]);
 
-        //Log::info("inertia tensor 0: [{}, {}, {}]", tensor_0.x, tensor_0.y, tensor_0.z);
-        //Log::info("inertia tensor 1: [{}, {}, {}]", tensor_1.x, tensor_1.y, tensor_1.z);
-        //Log::info("inertia tensor 2: [{}, {}, {}]", tensor_2.x, tensor_2.y, tensor_2.z);
+        // Log::info("inertia tensor 0: [{}, {}, {}]", tensor_0.x, tensor_0.y, tensor_0.z);
+        // Log::info("inertia tensor 1: [{}, {}, {}]", tensor_1.x, tensor_1.y, tensor_1.z);
+        // Log::info("inertia tensor 2: [{}, {}, {}]", tensor_2.x, tensor_2.y, tensor_2.z);
     }
 }
 
@@ -772,22 +772,9 @@ void shrink_tree(Svt64* tree, Svt64Node& current_node, glm::uvec3& offset) {
     }
 }
 
-void fill_volumes(const Svt64* original_tree, const std::vector<uint64_t>& tree_masks, std::vector<Entity>& entities, const Destructible& graph, Entity) {
-    //VoxelRenderer& original_vr = engine.ecs.get_component<VoxelRenderer>(original);
-    //VoxelBody& original_vb = engine.ecs.get_component<VoxelBody>(original);
-
-    //uint32_t max_voxels = 0;
-    //size_t biggest_index = 0;
-
+void fill_volumes(const Svt64* original_tree, const std::vector<uint64_t>& tree_masks, std::vector<Entity>& entities, const Destructible& graph) {
     for (size_t i = 0; i < entities.size(); i++) {
-        // VoxelRenderer vr {};
-        // engine.ecs.add_component<VoxelRenderer>(entities[i]);
-        //vr.resource = { {}, std::make_shared<VoxelVolume>() };
-        //vr.resource.resource->size = original_vr.resource->size;
-
-        //VoxelBody vb {};
-        //Transform transform {};
-
+        // Get components
         VoxelRenderer& vr = engine.ecs.get_component<VoxelRenderer>(entities[i]);
         VoxelBody& vb = engine.ecs.get_component<VoxelBody>(entities[i]);
         Transform& transform = engine.ecs.get_component<Transform>(entities[i]);
@@ -817,8 +804,7 @@ void fill_volumes(const Svt64* original_tree, const std::vector<uint64_t>& tree_
         // Get max bounds
         glm::uvec3 max = tree->get_max() + glm::uvec3(1);
 
-        // Transform position of new object
-        glm::uvec3 diff = vr.resource->size - max;
+        // Transform position of the new object based on the change in size
         glm::vec3 offset = ((glm::vec3)vr.resource->size - (glm::vec3)max) * UNITS_PER_VOXEL * 0.5f;
         glm::vec3 rotated_pos = vb.rotation * ((glm::vec3)tree_offset * UNITS_PER_VOXEL - offset);
 
@@ -829,23 +815,8 @@ void fill_volumes(const Svt64* original_tree, const std::vector<uint64_t>& tree_
 
         // Update tree size
         vr.resource->size = max;
-
         vr.resource->set_dirty();
-
-        //// Get the biggest object
-        //if (tree->voxel_count > max_voxels) {
-        //    max_voxels = tree->voxel_count;
-        //    biggest_index = i;
-        //}
     }
-
-    //for (size_t i = 0; i < entities.size(); i++) {
-    //    if (i == biggest_index) {
-    //        // only copy tree
-    //        //original_vr
-    //        continue;
-    //    }
-    //}
 
     for (size_t i = 0; i < entities.size(); i++) {
         VoxelRenderer& vr = engine.ecs.get_component<VoxelRenderer>(entities[i]);
@@ -880,11 +851,18 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const std::vect
     size_t max_depth = 0;
     uint8_t flood_id = 0;
 
+    // To keep track of which objects is the biggest (so we can make it the original)
+    uint8_t biggest_id = 0;
+    uint32_t biggest_count = 0;
+
     std::vector<uint64_t> tree_masks;
     tree_masks.resize(tree->node_count);
 
     // Loop over edge indices
     for (const glm::uvec3& edge_pos : edge_indices) {
+        // To keep track of the biggest objects
+        uint32_t next_count = 0;
+
         // In case we only have a 4x4x4 tree, depth is going to be 1 so we skip the for loop
         DestructionNode* current_node = &graph.nodes[0];
 
@@ -972,14 +950,21 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const std::vect
             if (graph.nodes[stack_entry.node_index].cleared) continue;
 
             if (stack_entry.edge_mask != 0) {
+                next_count++;
                 // Bit level floodfill
                 low_level_separation_flood(graph, graph.nodes[stack_entry.node_index], flood_id - 1u, stack_entry.edge_mask, tree, stack, tree_masks);
             } else {
+                next_count += 64;  // Estimate (its 64 minimum)
                 // Graph level floodfill
                 separation_flood(graph, graph.nodes[stack_entry.node_index], flood_id - 1u, tree, stack, tree_masks);
             }
         }
 
+        // Update biggest object
+        if (next_count > biggest_count) {
+            biggest_count = next_count;
+            biggest_id = flood_id - 1u;
+        }
         // flood_id++;
     }
 
@@ -988,11 +973,21 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const std::vect
 
     std::vector<Entity> entities;
     entities.resize(flood_id);
+    entities[biggest_id] = entity;
 
     // Get name of original entity
     std::string original_name = engine.ecs.get_component<Name>(entity).name;
+    glm::uvec3 resource_size = vr.resource->size;
+
+    // Create new resources for the original entity
+    vr.resource = { {}, std::make_shared<VoxelVolume>() };
+    vr.resource.resource->size = resource_size;
 
     for (size_t i = 0; i < entities.size(); i++) {
+        if (i == biggest_id) {
+            continue;
+        }
+
         // Create  the entity with the name based on the original name
         std::string new_name = std::format("{}{}", original_name, i);
         entities[i] = engine.ecs.create_entity(new_name);
@@ -1000,7 +995,7 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const std::vect
         // Add a voxel rendrer and create an empty resource
         VoxelRenderer& new_vr = engine.ecs.add_component<VoxelRenderer>(entities[i]);
         new_vr.resource = { {}, std::make_shared<VoxelVolume>() };
-        new_vr.resource.resource->size = vr.resource->size;
+        new_vr.resource.resource->size = resource_size;
 
         // Add destructible component
         engine.ecs.add_component<Destructible>(entities[i]);
@@ -1015,9 +1010,7 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const std::vect
     }
 
     // Fill the entities with the voxels from the original entities
-    fill_volumes(tree, tree_masks, entities, graph, entity);
-
-    engine.ecs.destroy_entity(entity);
+    fill_volumes(tree, tree_masks, entities, graph);
 
     return entities;
 }
