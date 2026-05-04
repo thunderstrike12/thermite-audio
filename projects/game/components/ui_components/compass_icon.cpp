@@ -2,25 +2,25 @@
 
 #include "engine/core/polyline.hpp"
 #include "projects/game/components/gameplay_functionality_components/player.hpp"
-void game::CompassIcon::update(const tmt::FrameData& time) {
-    // movement related
+void game::CompassIcon::follow_relative_transform(const glm::vec3 relative_vector) const {
+    const auto& player_transform { tmt::engine.ecs.get_component<tmt::Transform>(game::Player::get().entity) };
+    const auto player_forward { player_transform.get_forward() };
 
-    if (relative_entity == entt::null) {
-        return;
-    }
-    auto& relative_transform { tmt::engine.ecs.get_component<tmt::Transform>(relative_entity) };
-
-    auto& player_transform { tmt::engine.ecs.get_component<tmt::Transform>(game::Player::get().entity) };
-    auto player_forward { player_transform.get_forward() };
-
-    auto relative_vector { glm::normalize(relative_transform.get_world_position() - player_transform.get_world_position()) };
-    auto forward_factor { glm::dot(player_forward, relative_vector) };
-    auto cross = glm::cross(player_forward, relative_vector);
-    float signed_cross { glm::dot(cross, { 0.0, 1.0f, 0.0f }) };
+    const auto to_direction { glm::normalize(relative_vector - player_transform.get_world_position()) };
+    const auto forward_factor { glm::dot(player_forward, to_direction) };
+    const auto cross { glm::cross(player_forward, to_direction) };
+    const float signed_cross { glm::dot(cross, { 0.0, 1.0f, 0.0f }) };
     move_to_position(glm::atan(signed_cross, forward_factor));
     // change image when above or below
-    bool below_barge { player_transform.get_world_position().y < relative_transform.get_world_position().y };
+    const bool below_barge { relative_vector.y < player_transform.get_world_position().y };
     tmt::Entity disable;
+
+    if (enable_below != entt::null) {
+        tmt::engine.ecs.enable(enable_below);
+    }
+    if (enable_above != entt::null) {
+        tmt::engine.ecs.enable(enable_above);
+    }
 
     if (below_barge) {
         disable = enable_below;
@@ -29,6 +29,25 @@ void game::CompassIcon::update(const tmt::FrameData& time) {
     }
     if (disable != entt::null) {
         tmt::engine.ecs.disable(disable);
+    }
+}
+void game::CompassIcon::follow_world_direction(glm::vec3 world_dir) const {
+    const auto& player_transform { tmt::engine.ecs.get_component<tmt::Transform>(game::Player::get().entity) };
+    const auto player_forward { player_transform.get_forward() };
+
+    const auto to_direction { glm::normalize(world_dir) };
+    const auto forward_factor { glm::dot(player_forward, to_direction) };
+    const auto cross { glm::cross(player_forward, to_direction) };
+    const float signed_cross { glm::dot(cross, glm::vec3 { 0.0f, 1.0f, 0.0f }) };
+
+    move_to_position(glm::atan(signed_cross, forward_factor));
+}
+void game::CompassIcon::update(const tmt::FrameData&) {
+    // movement related, if we have a relative target we use it, otherwise default to the user provided value
+    if (relative_entity != entt::null) {
+        follow_relative_transform(tmt::engine.ecs.get_component<tmt::Transform>(relative_entity).get_world_position());
+    } else {
+        follow_world_direction(glm::vec3 { default_placement.x, 0.0f, default_placement.y });
     }
 }
 void game::CompassIcon::move_to_position(float factor) const {
