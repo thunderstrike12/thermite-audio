@@ -56,6 +56,7 @@ BillboardVertexOutput main(VertexInput input, uint32_t instance_id: SV_InstanceI
     output.flipbook_frames = particle.flipbook_frames;
     output.current_frame = particle.current_frame;
     output.dither_scale = particle.dither_scale;
+    output.emission = particle.emission;
 
     return output;
 }

@@ -751,7 +751,8 @@
         }
     },
     "Disable": {
-        "25": {}
+        "25": {},
+        "26": {}
     },
     "Voxel Renderer": {
         "17": {
@@ -1235,7 +1236,7 @@
         "20": {
             "effects": [
                 {
-                    "particle_lifetime": 1.0,
+                    "particle_lifetime": 3.0,
                     "pos_offset": {
                         "x": 0.0,
                         "y": 0.0,
@@ -1246,8 +1247,8 @@
                         "y": 0.0,
                         "z": 0.0
                     },
-                    "cone_angle": 40.0,
-                    "spawn_count": 10,
+                    "cone_angle": 20.0,
+                    "spawn_count": 1,
                     "spawn_interval": 0.0,
                     "start_speed": {
                         "min": 1.0,
@@ -1271,8 +1272,8 @@
                         "max": 256.0
                     },
                     "end_size": {
-                        "min": 1.0,
-                        "max": 1.0
+                        "min": 256.0,
+                        "max": 256.0
                     },
                     "size_curve": {
                         "values": [
@@ -1288,8 +1289,8 @@
                         "max": 1.0
                     },
                     "end_opacity": {
-                        "min": 1.0,
-                        "max": 1.0
+                        "min": 0.0,
+                        "max": 0.0
                     },
                     "opacity_curve": {
                         "values": [
@@ -1306,9 +1307,10 @@
                     },
                     "pos_jitter": {
                         "min": 0.0,
-                        "max": 1.0
+                        "max": 0.0
                     },
                     "jitter_speed": 1.0,
+                    "emission": 1.0,
                     "active": true,
                     "texture": {
                         "file_location": {

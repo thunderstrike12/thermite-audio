@@ -10,6 +10,12 @@ SamplerState linear_sampler;
 Texture2D<float2> mbuffer;
 /* Depth buffer. */
 Texture2D<float> dbuffer;
+/* Current stencil buffer. */
+[vk::image_format("unknown")]
+Texture2D<uint32_t> stencil_buffer;
+/* Previous frame stencil buffer. */
+[vk::image_format("unknown")]
+Texture2D<uint32_t> prev_stencil_buffer;
 /* Luminance buffer. */
 RWTexture2D<float3> lbuffer;
 /* History buffers. */
@@ -35,7 +41,7 @@ float3 clip_aabb(float3 aabb_min, float3 aabb_max, float3 history) {
 void main(int2 thread_id: SV_DispatchThreadID) {
     float3 curr_luminance = lbuffer[thread_id];
 
-    if (taa_flag != 1) {
+    if (taa_flag != 1u) {
         lbuffer[thread_id] = curr_luminance;
         return;
     }
@@ -66,11 +72,14 @@ void main(int2 thread_id: SV_DispatchThreadID) {
         }
     }
 
+    /* Check for stenciled particles */
+    const uint32_t curr_stencil = stencil_buffer[thread_id];
+
     /* Variance clipping (build tighter aabb) */
     /* https://alextardif.com/TAA.html */
     const float3 mu = m1 / 9.0f;
     const float3 sigma = sqrt(abs(m2 / 9.0f - mu * mu));
-    const float gamma = 1.0f;
+    const float gamma = curr_stencil == 1u ? 2.0f : 1.0f; /* Allow higher color range for particles (widden the aabb) */
     const float3 var_min = max(mu - gamma * sigma, neighbour_min);
     const float3 var_max = min(mu + gamma * sigma, neighbour_max);
 
@@ -84,7 +93,11 @@ void main(int2 thread_id: SV_DispatchThreadID) {
 
     /* Reject off-screen */
     const bool valid = all(uv_last >= 0.0f) && all(uv_last <= 1.0f);
-    const float blend = valid ? 0.95f : 0.0f;
+    float blend = valid ? 0.95f : 0.0f;
+
+    /* Use less of previous frame if we reproject particles */
+    const uint32_t prev_stencil = prev_stencil_buffer.SampleLevel(point_sampler, uv_last, 0.0f);
+    blend = curr_stencil == prev_stencil ? blend : 0.1f;
             
     output = lerp(curr_luminance, prev_luminance, blend);
 

@@ -56,6 +56,7 @@ void main(uint3 thread_id: SV_DispatchThreadID) {
     p.rot_speed = lerp(effect.rotation_speed.min, effect.rotation_speed.max, rand_float(seed));
     p.rotation = 0.0f;
     p.pos_jitter = lerp(effect.pos_jitter.min, effect.pos_jitter.max, rand_float(seed)) * effect.jitter_speed;
+    p.emission = effect.emission;
 
     p.size_curve = effect.size_curve;
     p.opacity_curve = effect.opacity_curve;

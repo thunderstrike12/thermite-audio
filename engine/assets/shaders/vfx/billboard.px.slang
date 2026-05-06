@@ -38,7 +38,7 @@ FragmentOutput main(BillboardVertexOutput input) {
 
     FragmentOutput output;
 
-    output.color = float4(cs::r709_to_acescg(cs::linearize(tex_sample.rgb)), 1.0f);
+    output.color = float4(cs::r709_to_acescg(cs::linearize(tex_sample.rgb * (1.0f + input.emission))), 1.0f);
     output.motion = input.motion_vec;
 
     return output;

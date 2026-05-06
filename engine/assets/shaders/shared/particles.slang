@@ -11,6 +11,7 @@ public struct BillboardVertexOutput {
     public uint32_t flipbook_frames : FRAMES0;
     public float dither_scale : DITHERSCALE0;
     public float2 motion_vec : MOTIONVEC;
+    public float emission : EMISSION;
 };
 
 public struct ParticleEffect {
@@ -42,6 +43,7 @@ public struct ParticleEffect {
 
     public uint32_t spawn_count;
     public uint32_t tex_index;
+    public float emission;
 };
 
 public struct ParticleEmitter {
@@ -81,6 +83,7 @@ public struct Particle {
     public uint32_t flipbook_frames;
     public float anim_speed;
     public float dither_scale;
+    public float emission;
 
     public float3 prev_pos;
 };

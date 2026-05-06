@@ -69,8 +69,21 @@ class Renderer {
     RenderView render_view {};
     SceneView scene_view {};
 
+    /* Samplers */
     Sampler linear_sampler {};
     Sampler point_sampler {};
+    Sampler down_sampler {};
+    Sampler up_sampler {};
+
+    /* Partial AutoX texture (256x256) */
+    Texture autox_partial_texture {};
+    Image autox_partial_image {};
+    /* Tiny AutoX texture (16x16) */
+    Texture autox_tiny_texture {};
+    Image autox_tiny_image {};
+    /* Final AutoX texture (1x1) */
+    Texture autox_texture {};
+    Image autox_image {};
 
     /* Display mode for debugging */
     DisplayMode display_mode = DisplayMode::DEFAULT;

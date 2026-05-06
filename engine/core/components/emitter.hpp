@@ -43,6 +43,8 @@ struct ParticleEffect {
     float anim_speed = 1.0f;
     float dither_scale = 1.0f;
 
+    float emission = 0.0f;
+
     bool active = true;
     bool should_burst = false;
 
@@ -66,7 +68,7 @@ struct ParticleEmitter {
 TMT_OBJECT(tmt::Range, (min, max));
 TMT_OBJECT(
     tmt::ParticleEffect, (particle_lifetime, pos_offset, dir, cone_angle, spawn_count, spawn_interval, start_speed, end_speed, speed_curve, start_size, end_size, size_curve, start_opacity,
-                          end_opacity, opacity_curve, rotation_speed, pos_jitter, jitter_speed, active, texture, name, name_color)
+                          end_opacity, opacity_curve, rotation_speed, pos_jitter, jitter_speed, emission, active, texture, name, name_color)
 );
 
 TMT_COMPONENT(tmt::ParticleEmitter, "ParticleEmitter", (effects, active));

@@ -52,7 +52,8 @@ struct GpuParticleEffect {
 
     uint32_t spawn_count {};
     uint32_t tex_index {};
-    glm::vec2 pad {};
+    float emission {};
+    float pad {};
 };
 
 struct GpuEmitter {
@@ -95,10 +96,10 @@ struct GpuParticle {
     uint32_t flipbook_frames {};
     float anim_speed {};
     float dither_scale {};
-    float pad3 {};
+    float emission {};
 
     glm::vec3 prev_pos {};
-    float pad4 {};
+    float pad3 {};
 };
 
 struct Counters {
