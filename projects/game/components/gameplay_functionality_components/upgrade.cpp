@@ -126,23 +126,23 @@ void Upgrade::modify_upgrade_entities() const {
 }
 
 bool Upgrade::apply_upgrade() {
-    auto& currencies { tmt::engine.player_data.get<Currencies>(PERSISTENT_RESOURCES) };
+    auto* wallet_component = tmt::engine.ecs.try_get_component<Wallet>(game::Player::get().entity);
 
     for (auto& [resource, cost] : new_upgrade_costs) {
-        if (currencies.resource_counts[resource] < cost) {
+        if (wallet_component->currencies.resource_counts[resource] < cost) {
             tmt::Log::info("Unable to buy upgrade, insufficient {}.", magic_enum::enum_name(resource));
             return false;
         }
     }
-    if (currencies.dollars <= dollar_cost) {
-        tmt::Log::info("Unable to buy upgrade, insufficient {} dollars", currencies.dollars);
+    if (wallet_component->currencies.dollars <= dollar_cost) {
+        tmt::Log::info("Unable to buy upgrade, insufficient {} dollars", wallet_component->currencies.dollars);
         return false;
     }
 
     for (auto& [resource, cost] : new_upgrade_costs) {
-        currencies.resource_counts[resource] -= cost;
+        wallet_component->currencies.resource_counts[resource] -= cost;
     }
-    currencies.dollars -= dollar_cost;
+    wallet_component->currencies.dollars -= dollar_cost;
 
     modify_upgrade_entities();
 

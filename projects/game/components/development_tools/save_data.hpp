@@ -33,16 +33,19 @@ static void apply_multiplier(Currencies& currencies, float multiplier) {
 static void save_resources_on_run(float multiplier_percentage) {
     auto* player_wallet = get_wallet<Player>("Player");
     if (player_wallet == nullptr) return;
+    auto* barge_wallet = get_wallet<OreCollector>("Barger");
+    if (barge_wallet == nullptr) return;
 
     tmt::Log::info("Penalty of {:.2f}, applied when saving current run resources", multiplier_percentage);
 
-    apply_multiplier(player_wallet->currencies, multiplier_percentage);
+    apply_multiplier(barge_wallet->currencies, multiplier_percentage);
+    // debugging
+    barge_wallet->currencies.print_values();
     player_wallet->currencies.print_values();
-
+    player_wallet->currencies += barge_wallet->currencies;
+    // saving
     auto& persistent_curr = tmt::engine.player_data.get<Currencies>(PERSISTENT_RESOURCES);
-    persistent_curr += player_wallet->currencies;
-    player_wallet->currencies = Currencies {};
-
+    persistent_curr = player_wallet->currencies;
     player_wallet->currencies = persistent_curr;
 }
 

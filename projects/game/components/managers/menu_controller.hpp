@@ -22,6 +22,7 @@ class MenuController : public tmt::GameComponent<MenuController> {
     entt::entity end_run_menu_entity = entt::null;
     entt::entity death_menu_entity = entt::null;
     entt::entity player_entity = entt::null;
+    entt::entity barge_entity = entt::null;
     float penalty_percentage = 0.6f;
 
     void enable_pause_menu() const;
@@ -32,6 +33,7 @@ class MenuController : public tmt::GameComponent<MenuController> {
 
     void enable_upgrade_menu() const;
     void disable_upgrade_menu() const;
+    void handle_saving(const EndRun& event) const;
 
     void enable_end_of_game_menu(const EndRun& event) const;
 
@@ -42,4 +44,4 @@ class MenuController : public tmt::GameComponent<MenuController> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::MenuController, (pause_menu_entity, inventory_menu_entity, upgrade_menu_entity, end_run_menu_entity, death_menu_entity, player_entity, penalty_percentage));
+TMT_OBJECT(game::MenuController, (pause_menu_entity, inventory_menu_entity, upgrade_menu_entity, end_run_menu_entity, death_menu_entity, player_entity, penalty_percentage, barge_entity));

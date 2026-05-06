@@ -74,7 +74,9 @@ void MenuController::end() {
     tmt::engine.ecs.get_dispatcher().sink<EndRun>().disconnect<&MenuController::enable_end_of_game_menu>(this);
 
     if (!Player::get().player_ended_run) {
-        enable_end_of_game_menu({ true });
+        handle_saving({ true });
+    } else {
+        handle_saving({ false });
     }
 }
 
@@ -179,6 +181,14 @@ void MenuController::disable_upgrade_menu() const {
     tmt::engine.ecs.disable(upgrade_menu_entity);
 }
 
+void MenuController::handle_saving(const EndRun& event) const {
+    // this run
+    float multiplier = 1.0f;
+    if (event.player_dead) {
+        multiplier = penalty_percentage;
+    }
+    save_resources_on_run(multiplier);
+}
 void MenuController::enable_end_of_game_menu(const EndRun& event) const {
     if (pause_menu_entity != entt::null) {
         tmt::engine.ecs.disable(pause_menu_entity);
@@ -207,12 +217,6 @@ void MenuController::enable_end_of_game_menu(const EndRun& event) const {
         unlock_mouse();
         tmt::engine.ecs.enable(end_run_menu_entity);
     }
-    // this run
-    float multiplier = 1.0f;
-    if (event.player_dead) {
-        multiplier = penalty_percentage;
-    }
-    save_resources_on_run(multiplier);
 }
 
 void MenuController::lock_mouse() const {
