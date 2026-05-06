@@ -142,7 +142,7 @@ public struct Material {
     const float wh_sintheta_2 = 1.0f - wh_costheta_2;
     const float wh_tantheta_2 = wh_sintheta_2 / wh_costheta_2;
     const float e = a2 + wh_tantheta_2;
-    const float d = 1.0f; // a2 / (PI_F32 * wh_costheta_4 * e * e);
+    const float d = a2 / (PI_F32 * wh_costheta_4 * e * e);
 
     /* Trowbridge-Reitz masking and shadowing function */
     const float wi_sintheta_2 = 1.0f - wi_costheta * wi_costheta;
@@ -160,7 +160,7 @@ public struct Material {
     if (metallic > 0.0f) f += metallic * conductor_fresnel(wo_dot_wh, m.albedo(), m.edge_tint());
 
     /* Torrance–Sparrow BRDF */
-    return (d * g * f) / (4.0f * wo_costheta * wi_costheta);
+    return f; // (4.0f * wo_costheta * wi_costheta);
 }
 
 /* Torrance–Sparrow Microfacet BRDF. */

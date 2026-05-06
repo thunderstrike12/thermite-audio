@@ -82,6 +82,23 @@ void DiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, Sce
             .push_constants(&scene_view.light_grid_center, 0, sizeof(glm::vec3))
             .group_size(16, 8)
             .work_size(rate.x, rate.y);
+
+        render_graph.add_compute_pass("ambient pass", "lighting/ambient.cs")
+            /* Render & Scene view */
+            .read(render_view.render_view_buffer)
+            .read(scene_view.scene_view)
+            /* Noise texture */
+            .read(render_view.blue_noise2d->image)
+            /* Ray-tracing buffers */
+            .read(scene_view.bvh_nodes)
+            .read(scene_view.object_indices)
+            .read(scene_view.object_data)
+            /* Visibility buffer & Output buffer */
+            .read(render_view.vbuffer.image)
+            .write(diff_buffer)
+            .read(engine.renderer.linear_sampler)
+            .group_size(16, 8)
+            .work_size(rate.x, rate.y);
     }
 
     { /* Specular illumination pass */

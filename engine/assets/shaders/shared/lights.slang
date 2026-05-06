@@ -102,6 +102,7 @@ public struct LightSample {
     public float3 dir;
     public float rcp_pdf;
     public float tmax;
+    public uint index;
 };
 
 /* Generate a sample for the sun light source. */

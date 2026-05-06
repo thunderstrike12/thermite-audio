@@ -107,7 +107,7 @@ void main(int2 thread_id: SV_DispatchThreadID) {
     } else {
         if (scene_view.envmap_filtered_handle != 0u) {
             const float2 uv = dir_to_latlong(wi);
-            luminance = bindless::texture_sampled<Texture2D<float4>>(scene_view.envmap_filtered_handle) .SampleLevel(envmap_sampler, uv, 0) .rgb * PI_F32 * 2.0f;
+            luminance = bindless::texture_sampled<Texture2D<float4>>(scene_view.envmap_filtered_handle).SampleLevel(envmap_sampler, uv, 0).rgb * PI_F32 * 2.0f;
         }
     }
     specular[thread_id] = luminance * bsdf;
