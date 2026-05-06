@@ -1,5 +1,8 @@
 #pragma once
 #include <cstdint>
+#if THERMITE_EDITOR
+    #include "../editor/layer_mask.hpp"
+#endif
 
 namespace game {
 
