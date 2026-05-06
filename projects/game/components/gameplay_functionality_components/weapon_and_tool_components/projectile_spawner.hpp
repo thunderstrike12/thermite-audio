@@ -16,6 +16,7 @@ class ProjectileSpawner : public tmt::GameComponent<ProjectileSpawner> {
 
    private:
     void on_shoot(const WeaponFiredEvent& e) const;
+    tmt::Entity player_entity = entt::null;
 };
 
 }  // namespace game

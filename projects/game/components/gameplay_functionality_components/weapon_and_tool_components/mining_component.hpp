@@ -81,6 +81,8 @@ class MiningComponent : public tmt::GameComponent<MiningComponent> {
 
     // Ore manager for custom behaviour of mined ore
     OreManager* ore_manager = nullptr;
+
+    tmt::Entity player_entity = entt::null;
 };
 
 }  // namespace game

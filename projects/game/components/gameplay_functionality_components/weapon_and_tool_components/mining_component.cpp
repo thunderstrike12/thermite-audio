@@ -15,6 +15,8 @@
 #include <engine/tools/fmt/glm.hpp>
 #include <glm/detail/_noise.hpp>
 
+#include "../player.hpp"
+
 #include <cmath>
 
 using namespace game;
@@ -70,6 +72,10 @@ void MiningComponent::start() {
             weapon->primary_fire_rate.shots_per_second = mining_data->rays_per_second;
         }
     }
+
+    if (!tmt::engine.ecs.valid(player_entity)) {
+        player_entity = tmt::engine.ecs.view<Player>(entt::exclude_t {}).front().entity;  // Assuming there's only one player entity in the game
+    }
 }
 
 void MiningComponent::update(const tmt::FrameData& time) {
@@ -110,6 +116,11 @@ void MiningComponent::end() {
 
 void MiningComponent::on_weapon_fired(const WeaponFiredEvent& e) {
     if (e.weapon_entity != entity) return;
+
+    auto* player = tmt::engine.ecs.try_get_component<Player>(player_entity);
+    if (player) {
+        player->add_camera_shake(player->camera_shake_settings.drill_intensity);
+    }
 
     mine(e.direction);
 }

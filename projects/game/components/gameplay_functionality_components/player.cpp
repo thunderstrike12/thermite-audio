@@ -23,6 +23,22 @@
 // TODO before we have a serializer for input, you can add all the needed keybindings here.
 //  TODO we still have to add the gamepad inputs here
 
+static glm::vec2 hash_noise(float t) {
+    glm::vec2 n;
+    n.x = glm::fract(std::sin(t * 12.9898f) * 43758.5453f);
+    n.y = glm::fract(std::sin((t + 1.0f) * 78.233f) * 43758.5453f);
+
+    return n * 2.0f - 1.0f;  // range [-1, 1]
+}
+
+static float move_towards(float current, float target, float max_delta) {
+    float delta = target - current;
+
+    if (glm::abs(delta) <= max_delta) return target;
+
+    return current + glm::sign(delta) * max_delta;
+}
+
 namespace game {
 
 void setup_inputs(tmt::InputMap& input_map) {
@@ -127,6 +143,7 @@ void Player::start() {
         tmt::engine.ecs.get_dispatcher().sink<AttachEvent>().connect<&Player::on_attach>(this);
     }
     load_upgrades();
+    set_crosshair(rifle_crosshair);
 }
 void Player::end() {
     tmt::engine.ecs.get_dispatcher().sink<AttachEvent>().disconnect<&Player::on_attach>(this);
@@ -136,37 +153,64 @@ void Player::end() {
 void Player::look_camera() {
     auto& input = tmt::engine.input;
 
-    // Guard for camera existence
     auto camera = tmt::engine.ecs.try_get_component<tmt::Camera>(entity);
     if (!camera) {
         state = PlayerState::PAUSED;
+
         if (input.is_mouse_locked()) {
             input.lock_mouse(false);
             input.set_mouse_relative_to_window(false);
         }
         return;
     }
-    const bool mouse_locked = input.is_mouse_locked();
-    if (!mouse_locked) return;
+
+    if (!input.is_mouse_locked()) return;
 
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
-    // Mouse look
     const float dx = input.get_mouse_delta_x();
     const float dy = input.get_mouse_delta_y();
 
-    camera->yaw -= dx * camera_sensitivity;
-    camera->pitch -= dy * camera_sensitivity;
+    base_yaw -= dx * camera_sensitivity;
+    base_pitch -= dy * camera_sensitivity;
 
-    camera->pitch = glm::clamp(camera->pitch, -89.0f, 89.0f);
+    base_pitch = glm::clamp(base_pitch, -89.0f, 89.0f);
 
-    glm::vec3 front = {};
+    float yaw = base_yaw;
+    float pitch = base_pitch;
 
-    front.x = cos(glm::radians(camera->yaw)) * cos(glm::radians(camera->pitch));
-    front.y = sin(glm::radians(camera->pitch));
-    front.z = sin(glm::radians(camera->yaw)) * cos(glm::radians(camera->pitch));
+    if (camera_shake_settings.enabled) {
+        yaw += recoil_offset.x;
+        pitch += recoil_offset.y;
+    }
+
+    glm::vec3 front;
+
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
     front = glm::normalize(front);
-    transform.look_at(transform.get_world_position() + front, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    glm::vec3 shake_offset(0.0f);
+
+    if (camera_shake_settings.enabled && current_shake > 0.0f) {
+        glm::vec2 n = hash_noise(tmt::engine.frame_data().elapsed_time);
+
+        glm::vec3 right = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
+        glm::vec3 up = glm::normalize(glm::cross(right, front));
+
+        glm::vec3 target_shake = right * n.x * current_shake + up * n.y * current_shake;
+
+        float smooth = 12.0f * tmt::engine.frame_data().delta_time;
+
+        static glm::vec3 shake_current(0.0f);
+        shake_current = glm::mix(shake_current, target_shake, smooth);
+
+        shake_offset = shake_current;
+    }
+
+    transform.look_at(transform.get_world_position() + front + shake_offset, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 tmt::Hit Player::check_collision() const {
@@ -313,8 +357,32 @@ void Player::prevent_camera_clip() const {
         transform.set_world_position(pos - forward * pushback);
     }
 }
+
 void Player::update(const tmt::FrameData& time) {
     auto& input = tmt::engine.input;
+
+    update_shake(time.delta_time);
+
+    // --- Recoil recovery ---
+    float dt = glm::min(time.delta_time, 1.0f / 30.0f);
+
+    // how fast it returns
+    float return_speed = camera_shake_settings.recoil_return_speed;
+
+    // move back toward zero at a constant speed
+    recoil_offset.x = move_towards(recoil_offset.x, 0.0f, return_speed * dt);
+    recoil_offset.y = move_towards(recoil_offset.y, 0.0f, return_speed * dt);
+
+    // Swapping crosshair
+    if (input.is_action_just_pressed(action::SWITCH_RIFLE)) {
+        set_crosshair(rifle_crosshair);
+    }
+    if (input.is_action_just_pressed(action::SWITCH_GRAVITY)) {
+        set_crosshair(gravity_crosshair);
+    }
+    if (input.is_action_just_pressed(action::SWITCH_MINING)) {
+        set_crosshair(mine_crosshair);
+    }
 
     switch (state) {
         case game::PlayerState::FREEMOVING:
@@ -325,6 +393,8 @@ void Player::update(const tmt::FrameData& time) {
             }
             if (input.is_action_pressed(action::BOOST)) {
                 apply_boost();
+
+                add_camera_shake(camera_shake_settings.boost_intensity);
             } else {
                 reset_boost(time.delta_time);
             }
@@ -486,6 +556,7 @@ void Player::update(const tmt::FrameData& time) {
         }
     }
 }
+
 void Player::draw_debug_lines() const {
     const auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
     const auto& physics = tmt::engine.ecs.systems.get<tmt::Physics>();
@@ -662,6 +733,55 @@ void Player::set_hud_enabled(tmt::Entity hud_root, bool enabled) {
     for (auto child : transform.get_all_children()) {
         set_hud_enabled(child, enabled);
     }
+}
+
+void Player::add_camera_shake(float intensity) {
+    if (!camera_shake_settings.enabled) return;
+
+    current_shake = glm::min(camera_shake_settings.max_intensity, current_shake + intensity);
+}
+
+void Player::update_shake(float dt) {
+    current_shake -= dt * camera_shake_settings.decay_speed;
+    current_shake = glm::max(0.0f, current_shake);
+}
+
+void Player::add_recoil() {
+    recoil_offset.y += camera_shake_settings.recoil_strength;
+
+    float rand_x = (rand() / (float)RAND_MAX - 0.5f) * 2.0f;
+    recoil_offset.x += rand_x * camera_shake_settings.recoil_horizontal;
+}
+
+void Player::set_crosshair(tmt::Entity active) {
+    auto& ecs = tmt::engine.ecs;
+
+    auto toggle = [&](auto&& self, tmt::Entity e, bool enabled) -> void {
+        if (!ecs.valid(e)) return;
+
+        // Toggle this entity
+        if (enabled) {
+            ecs.remove_component<tmt::Disable>(e);
+        } else {
+            ecs.add_or_get_component<tmt::Disable>(e);
+        }
+
+        // Toggle children
+        if (!ecs.has_component<tmt::Transform>(e)) return;
+
+        auto& transform = ecs.get_component<tmt::Transform>(e);
+        for (auto child : transform.get_all_children()) {
+            self(self, child, enabled);
+        }
+    };
+
+    // Disable all crosshairs
+    toggle(toggle, rifle_crosshair, false);
+    toggle(toggle, gravity_crosshair, false);
+    toggle(toggle, mine_crosshair, false);
+
+    // Enable selected crosshair
+    toggle(toggle, active, true);
 }
 
 }  // namespace game

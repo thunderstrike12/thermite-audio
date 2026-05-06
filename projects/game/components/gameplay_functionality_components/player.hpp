@@ -30,6 +30,19 @@ struct RayCollisionCheck {
     float camera_near_distance = 0.3f;
 };
 enum class PlayerState { FREEMOVING, ATTACHED, PAUSED };
+struct CameraShakeSettings {
+    // Camera shake
+    bool enabled = true;          // global toggle for designers
+    float max_intensity = 0.25f;  // absolute clamp
+    float boost_intensity = 0.015f;
+    float drill_intensity = 0.05f;
+    float decay_speed = 5.0f;
+
+    // recoil
+    float recoil_strength = 2.0f;      // how high it kicks UP
+    float recoil_return_speed = 5.0f;  // how fast it goes DOWN
+    float recoil_horizontal = 0.2f;    // side randomness
+};
 
 class Player : public tmt::GameComponent<Player> {
    public:
@@ -109,12 +122,28 @@ class Player : public tmt::GameComponent<Player> {
 
     tmt::Entity boost_availability = entt::null;
 
+    // Crosshair entities
+    tmt::Entity rifle_crosshair = entt::null;
+    tmt::Entity gravity_crosshair = entt::null;
+    tmt::Entity mine_crosshair = entt::null;
+
     // Barge point
     tmt::Entity barge = entt::null;
 
     float recharge_distance = 20.0f;
     RayCollisionCheck ray_check;
     bool player_ended_run = false;
+
+    void add_camera_shake(float intensity);
+    void add_recoil();
+
+    // screen shake
+    CameraShakeSettings camera_shake_settings;
+    float current_shake = 0.0f;
+
+    float base_yaw = 0.0f;
+    float base_pitch = 0.0f;
+    glm::vec2 recoil_offset = glm::vec2(0.0f);
 
    private:
     void refill(float delta);
@@ -123,6 +152,8 @@ class Player : public tmt::GameComponent<Player> {
     void apply_boost();
     void reset_boost(float delta_time);
     void set_hud_enabled(tmt::Entity hud_root, bool enabled);
+    void update_shake(float dt);
+    void set_crosshair(tmt::Entity active);
 
     PlayerState state = PlayerState::FREEMOVING;
     glm::vec3 velocity = { 0.0f, 0.0f, 0.0f };
@@ -143,9 +174,10 @@ TMT_OBJECT(game::PlayerStat, (max_value, value, increase_multiplier));
 TMT_OBJECT(game::PlayerMovement, (acceleration, max_speed, boost_max_speed_multiplier));
 TMT_OBJECT(game::PlayerRecharge, (recharge_distance, out_of_energy_time_till_death));
 TMT_OBJECT(game::RayCollisionCheck, (collision_layer, player_radius, collision_speed_damping, camera_near_distance));
+TMT_OBJECT(game::CameraShakeSettings, (enabled, max_intensity, boost_intensity, drill_intensity, decay_speed, recoil_strength, recoil_return_speed, recoil_horizontal));
 TMT_OBJECT(
     game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, boost_max_speed_multiplier, boost_acceleration_multiplier, boost_deceleration_factor,
                    boost_cost_per_second_per_additional_speed_above_max, boost_initial_cost, boost_availability, health, energy, energy_drain_per_second, out_of_energy_time_till_death,
                    hp_bar_max, hp_bar_current, energy_bar_max, energy_bar_current, low_energy_threshold, low_energy_duration, use_second_warning, low_energy_threshold_2, low_energy_duration_2,
-                   player_hud, barge_hud, low_energy_hud, barge, recharge_distance, ray_check)
+                   player_hud, barge_hud, low_energy_hud, rifle_crosshair, gravity_crosshair, mine_crosshair, barge, recharge_distance, ray_check, camera_shake_settings)
 );
