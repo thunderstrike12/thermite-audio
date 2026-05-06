@@ -24,6 +24,14 @@ void game::WeaponManager::switch_to(WeaponType weapon_slot) {
         unsubscribe_weapon(current_weapon);
     }
 
+    auto* rig_controller = tmt::engine.ecs.try_get_component<tmt::RigController>(tool_rig);
+    if (rig_controller) {
+        rig_controller->set_parameter_int("ToolType", static_cast<int>(weapon_slot));
+        rig_controller->set_parameter_trigger("SwitchTool");
+    } else {
+        tmt::Log::error("[WeaponManager] Weapon entity is not set, can't animate transitions!");
+    }
+
     // the new subscription happens when the switching is done
     switching_remaining_time = switching_time;
     pending_weapon = weapon_slot;
@@ -88,10 +96,6 @@ void game::WeaponManager::end() {
 }
 
 void game::WeaponManager::on_overheat(const game::WeaponFiredEvent& event) {
-    auto weapon_entity = weapons.at(current_weapon).entity;
-    if (event.weapon_entity != weapon_entity) {
-        return;
-    }
     // Here as an example we overheat after a secondary shot, so we cannot do anything for less than a second
     if (event.secondary_shot) {
         overheat_remaining_time = overheat_time;
@@ -360,7 +364,7 @@ void game::WeaponManager::update_procedural_motion(float dt) {
         recoil_impulse.translation = pos_state.current_state;
     }
 
-    auto* root_eff_transform = tmt::engine.ecs.try_get_component<tmt::Transform>(weapon_procanim_data.root);
+    auto* root_eff_transform = tmt::engine.ecs.try_get_component<tmt::Transform>(tool_rig);
     if (root_eff_transform) {
         auto aa_rottrans = animate_antioverlap();
         auto sway_rottrans = animate_sway(aa_rottrans, root_eff_transform, weapon_procanim_data);

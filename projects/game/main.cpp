@@ -119,6 +119,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.scenes.register_scene<AnneTestScene>();
     tmt::engine.scenes.register_scene<WeaponMotionTest>();
     tmt::engine.scenes.register_scene<BogdanulTestScene>();
+    tmt::engine.scenes.register_scene<JaedenTestScene>();
 
     /* Register Game Components */
     tmt::engine.component_registry.register_component<game::Player>();

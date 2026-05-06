@@ -71,6 +71,7 @@ class WeaponManager : public tmt::GameComponent<WeaponManager> {
     float switching_time = .5f;
 
     WeaponType last_used_weapon = WeaponType::RIFLE;  // default ?
+    tmt::Entity tool_rig = entt::null;
 
    private:
     void complete_switch();
@@ -122,4 +123,4 @@ TMT_OBJECT(
 );
 TMT_OBJECT(game::WeaponManager::WeaponProcAnimData, (root, anti_overlap, sway, recoil));
 TMT_OBJECT(game::WeaponManager::WeaponEntry, (proc_anim_data, entity));
-TMT_OBJECT(game::WeaponManager, (weapons, starting_weapon, shooting_entity, overheat_time, switching_time));
+TMT_OBJECT(game::WeaponManager, (tool_rig, weapons, starting_weapon, shooting_entity, overheat_time, switching_time));
