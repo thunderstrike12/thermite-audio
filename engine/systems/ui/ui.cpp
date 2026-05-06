@@ -13,7 +13,13 @@ void UI::on_update(const FrameData&) {
 
     auto view = engine.ecs.get_registry().view<UIComponent, const Transform>();
     for (const auto& [entity, ui_component, transform] : view.each()) {
-        if (transform.has_parent()) continue;
+        if (transform.has_parent()) {
+            const Entity parent_entity = transform.get_parent();
+            if (engine.ecs.has_component<UIComponent>(parent_entity)) {
+                /* Parent UI will drive this one, so skip it. */
+                continue;
+            }
+        }
         set_size(ui_component, transform, screen_size);
     }
 }
