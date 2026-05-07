@@ -64,7 +64,7 @@
 // Development tools
 #include "components/development_tools/collision_trigger.hpp"
 #include "components/development_tools/attach_component.hpp"
-#include "components/development_tools/transform_tween.hpp";
+#include "components/development_tools/transform_tween.hpp"
 // World generation
 #include "components/world_gen/generation_component.hpp"
 #include "components/world_gen/random_prefab_spawner.hpp"
@@ -72,7 +72,8 @@
 #include "data_headers/scene_list.hpp"
 #include "data_headers/wallet.hpp"
 #include "data_headers/ore_properties.hpp"
-
+// Game Settings
+#include "components/game_settings/audio_volume_change.hpp"
 // Goap Components
 #include "components/gameplay_functionality_components/weapon_and_tool_components/explosion.hpp"
 #include "engine/systems/ai/goap/goap_system.hpp"
@@ -87,15 +88,13 @@
 #include <bitset>
 
 class Game : public tmt::Application {
-public:
-    Game(const tmt::ApplicationSpecs& specs) : Application(specs) {
-    }
+   public:
+    Game(const tmt::ApplicationSpecs& specs) : Application(specs) {}
 
     void on_start() override;
     void on_update(const tmt::FrameData& time) override;
 
-    void on_end() override {
-    };
+    void on_end() override {};
 };
 
 std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs& args) {
@@ -160,10 +159,12 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.component_registry.register_component<game::SellOreComponent>();
     tmt::engine.component_registry.register_component<game::ResourceLimitChecker>();
     tmt::engine.component_registry.register_component<game::CompassIcon>();
+    /* Register Game Settings */
+    tmt::engine.component_registry.register_component<game::AudioVolumeChangeComponent>();
 
-    #if THERMITE_EDITOR
+#if THERMITE_EDITOR
     tmt::editor.systems[tmt::Editor::Mode::SCENE].add<tmt::LevelEditor>();
-    #endif
+#endif
 
     /* Register Goap Components */
     {
@@ -283,10 +284,10 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
 }
 
 void Game::on_start() {
-    #ifdef THERMITE_EDITOR
-    #else
+#ifdef THERMITE_EDITOR
+#else
     tmt::engine.window.fullscreen_window(true);
-    #endif
+#endif
 }
 
 void Game::on_update(const tmt::FrameData&) {
