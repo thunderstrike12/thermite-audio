@@ -19,17 +19,23 @@ class Explosion : public tmt::GameComponent<Explosion> {
 
     void explode() const;
     void start() override;
-    void update(const tmt::FrameData& time) override {};
+    void update(const tmt::FrameData& time) override;
     void end() override {};
     void draw_debug_lines() const override;
 
     // this would be private, but I still want it in the inspector
     ExplosionParameters param;
 
+    tmt::Entity explosion = entt::null;
+
+    float explosion_lifetime = 1.f;
+
    private:
     glm::vec3 get_position() const;
+
+    float explode_time = 0.f;
 };
 
 }  // namespace game
 TMT_OBJECT(game::ExplosionParameters, (radius, explosion_power, distance_strength_curve, mask));
-TMT_OBJECT(game::Explosion, (param));
+TMT_OBJECT(game::Explosion, (param, explosion, explosion_lifetime));

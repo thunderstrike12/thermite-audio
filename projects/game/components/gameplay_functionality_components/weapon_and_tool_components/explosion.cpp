@@ -6,6 +6,7 @@
 #include "projects/game/components/managers/ore_manager.hpp"
 #include "projects/game/data_headers/ore_properties.hpp"
 #include <engine/systems/physics/destruction_system.hpp>
+#include "engine/core/components/emitter.hpp"
 
 void game::Explosion::explode() const {
     // for thermite explosions
@@ -75,11 +76,25 @@ void game::Explosion::explode() const {
         resource->set_dirty();
     }
 
-    tmt::engine.ecs.destroy_entity(entity);
+    // tmt::engine.ecs.destroy_entity(entity);
 }
 void game::Explosion::start() {
+    explode_time = 0.f;
+
+    if (tmt::engine.ecs.valid(explosion)) {
+        if (tmt::engine.ecs.try_get_component<tmt::ParticleEmitter>(explosion)) {
+            auto& particles = tmt::engine.ecs.get_component<tmt::ParticleEmitter>(explosion);
+            particles.should_burst = true;
+        }
+    }
+
     explode();
 }
+void game::Explosion::update(const tmt::FrameData& time) {
+    explode_time += time.delta_time;
+    if (explode_time >= explosion_lifetime) tmt::engine.ecs.destroy_entity(entity);
+}
+
 void game::Explosion::draw_debug_lines() const {
     DebugLineConfig cfg {};
 
