@@ -23,6 +23,7 @@ class GravityManipulationComponent : public tmt::GameComponent<GravityManipulati
     float push_strength = 10.0f;           // how fast objects should be pushed away
     float attraction_acceleration = 0.5f;  // how quickly objects accelerate when they enter the gravity zone
     entt::entity attraction_point_entity;  // point of attraction
+    entt::entity animated_tool_entity;     // entity with the animation state machine to animate
 
    private:
     std::vector<entt::entity> currently_manipulated_entities;
@@ -33,4 +34,4 @@ class GravityManipulationComponent : public tmt::GameComponent<GravityManipulati
 };
 
 }  // namespace game
-TMT_OBJECT(game::GravityManipulationComponent, (range, max_mass, pull_strength, push_strength, attraction_acceleration, attraction_point_entity));
+TMT_OBJECT(game::GravityManipulationComponent, (range, max_mass, pull_strength, push_strength, attraction_acceleration, attraction_point_entity, animated_tool_entity));

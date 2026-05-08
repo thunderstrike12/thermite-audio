@@ -34,6 +34,12 @@ void GravityManipulationComponent::on_weapon_fired(const WeaponFiredEvent& e) {
         grav_attract();
     } else {
         grav_shoot();
+
+        // Get the animated rig for the tool animations
+        auto* rig_controller = tmt::engine.ecs.try_get_component<tmt::RigController>(animated_tool_entity);
+        if (rig_controller) {
+            rig_controller->set_parameter_trigger("Shoot");
+        }
     }
 }
 

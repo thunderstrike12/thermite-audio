@@ -32,6 +32,13 @@ void ProjectileSpawner::on_shoot(const WeaponFiredEvent& e) const {
     if (e.weapon_entity != entity) {
         return;
     }
+
+    // Get the animated rig for the tool animations
+    auto* rig_controller = tmt::engine.ecs.try_get_component<tmt::RigController>(animated_tool_entity);
+    if (rig_controller) {
+        rig_controller->set_parameter_trigger("Shoot");
+    }
+
     auto& spawner = tmt::engine.ecs.get_component<Spawner>(entity);
 
     auto bullet_entity = spawner.spawn();
