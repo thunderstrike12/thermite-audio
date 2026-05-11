@@ -60,6 +60,18 @@ void main(int2 thread_id: SV_DispatchThreadID) {
 
         mbuffer[thread_id] = motion_vector;
     } else {
-        mbuffer[thread_id] = float2(0.0f, 0.0f);
+        const float4 hit_pos = float4(ray.origin + ray.dir * hit.t, 1.0f);
+
+        float4 curr_clip = mul(render_view.world_to_clip, hit_pos);
+        float2 curr_ndc = curr_clip.xy / curr_clip.w;
+
+        float4 prev_clip = mul(render_view.prev_world_to_clip, hit_pos);
+        float2 prev_ndc = prev_clip.xy / prev_clip.w;
+
+        curr_ndc -= render_view.jitter;
+        prev_ndc -= render_view.prev_jitter;
+
+        float2 motion_vector = (prev_ndc - curr_ndc) * float2(0.5f, 0.5f);
+        mbuffer[thread_id] = motion_vector;
     }
 }
