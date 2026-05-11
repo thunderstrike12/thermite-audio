@@ -141,6 +141,8 @@ void Player::start() {
     }
     load_upgrades();
     set_crosshair(rifle_crosshair);
+    // attach player to component
+    tmt::engine.ecs.get_dispatcher().trigger<AttachAttemptEvent>({ .entity = entity });
 }
 void Player::end() {
     tmt::engine.ecs.get_dispatcher().sink<AttachEvent>().disconnect<&Player::on_attach>(this);

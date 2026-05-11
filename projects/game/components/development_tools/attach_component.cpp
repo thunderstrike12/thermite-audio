@@ -42,8 +42,9 @@ void game::AttachComponent::update(const tmt::FrameData& time) {
     }
 
     // if we have been pressing for a while trigger it, if we keep pressing after the fact ignore
-    if (has_started_pressing == true && input.get_action_duration(action::TRIGGER_BARGE_MOVEMENT) > time_to_start_stop_barge_movement) {
+    if (firstFrame || (has_started_pressing == true && input.get_action_duration(action::TRIGGER_BARGE_MOVEMENT) > time_to_start_stop_barge_movement)) {
         is_moving = !is_moving;
+        firstFrame = false;
         has_started_pressing = false;
         tmt::Log::info("Movement is {}", is_moving);
     }

@@ -30,6 +30,7 @@ class AttachComponent : public tmt::GameComponent<AttachComponent> {
     bool is_attached = false;
     bool is_moving = false;
     bool has_started_pressing = false;
+    bool firstFrame = true;
 };
 
 }  // namespace game
