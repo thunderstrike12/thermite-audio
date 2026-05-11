@@ -494,7 +494,7 @@ bool Hierarchy::display_entity(const HierarchyState& state, uint32_t& row) {
     const bool is_right_clicked = is_hovered && is_right_mouse_released;
     const bool is_ctrl_held = ImGui::GetIO().KeyCtrl;
     const bool is_shift_held = ImGui::GetIO().KeyShift;
-    const bool same_parent = selection_parent == parent;
+    const bool same_parent = selection_parent == parent || filtering;
 
     /* Checks if hovering the arrow part of the tree node */
     const bool hover_arrow = is_hovered && (ImGui::GetMousePos().x - ImGui::GetItemRectMin().x) <= ImGui::GetTreeNodeToLabelSpacing();
