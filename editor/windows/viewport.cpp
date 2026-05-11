@@ -409,11 +409,24 @@ void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const glm::ve
         if (not_multiple_select_modifier) hierarchy.clear_selection();
 
         if (engine.renderer.ui_pipeline.render_ui_pipeline) {
-            auto view = engine.ecs.view<UIComponent>();
-            for (auto [entity, ui_comp] : view.each()) {
+            auto view = engine.ecs.view<UIComponent, Transform>();
+
+            std::vector<std::tuple<Entity, UIComponent, float>> ui_entities;
+            ui_entities.reserve(view.size_hint());
+
+            for (auto [entity, ui_comp, transform] : view.each()) {
+                const float z_distance = transform.get_world_position().z;
+                ui_entities.emplace_back(entity, ui_comp, z_distance);
+            }
+
+            std::sort(ui_entities.begin(), ui_entities.end(), [](const std::tuple<Entity, UIComponent, float>& a, const std::tuple<Entity, UIComponent, float>& b) {
+                return std::get<2>(a) > std::get<2>(b);
+            });
+
+            for (const auto& [entity, ui_comp, z_distance] : ui_entities) {
                 if (AnchorHelper::is_inside(entity, { mouse_pos.x, mouse_pos.y })) {
                     hierarchy.add_entity_to_selection(entity);
-                    return;
+                    break;
                 }
             }
         }
