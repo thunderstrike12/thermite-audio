@@ -33,15 +33,7 @@ void tag_invoke(ImReflect::ImInput_t, const char*, tmt::UIComponent& value, ImSe
             const float w = (float)image->texture->width;
             const float h = (float)image->texture->height;
 
-            /* Snap to a known aspect ratio, fall back to 1:1 */
-            const float ratio = w / h;
-            value.aspect_ratio = { 1.0f, 1.0f };
-            for (const auto& k : table) {
-                if (std::abs(ratio - k.r) < 0.01f) {
-                    value.aspect_ratio = k.aspect;
-                    break;
-                }
-            }
+            value.aspect_ratio = { w, h };
 
             value.synced_from_image = true;
         }
