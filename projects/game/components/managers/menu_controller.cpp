@@ -30,18 +30,18 @@ void MenuController::start() {
 void MenuController::update(const tmt::FrameData& time) {
     auto& input = tmt::engine.input;
 
-    if (input.is_action_just_pressed(action::OPEN_INVENTORY)) {
-        if (inventory_menu_entity == entt::null) {
-            tmt::Log::error("No inventory menu entity has been set, cannot open inventory.");
-            return;
-        }
-
-        if (tmt::engine.ecs.is_disabled(inventory_menu_entity)) {
-            enable_inventory_menu();
-        } else {
-            disable_inventory_menu();
-        }
-    }
+    // if (input.is_action_just_pressed(action::OPEN_INVENTORY)) {
+    //     if (inventory_menu_entity == entt::null) {
+    //         tmt::Log::error("No inventory menu entity has been set, cannot open inventory.");
+    //         return;
+    //     }
+    //
+    //     if (tmt::engine.ecs.is_disabled(inventory_menu_entity)) {
+    //         enable_inventory_menu();
+    //     } else {
+    //         disable_inventory_menu();
+    //     }
+    // }
 
     if (input.is_action_just_pressed(action::OPEN_PAUSE_MENU)) {
         if (pause_menu_entity == entt::null) {
@@ -56,18 +56,18 @@ void MenuController::update(const tmt::FrameData& time) {
         }
     }
 
-    if (input.is_action_just_pressed(action::OPEN_UPGRADE_MENU)) {
-        if (upgrade_menu_entity == entt::null) {
-            tmt::Log::error("No upgrade menu entity has been set, cannot open upgrade menu.");
-            return;
-        }
-
-        if (tmt::engine.ecs.is_disabled(upgrade_menu_entity)) {
-            enable_upgrade_menu();
-        } else {
-            disable_upgrade_menu();
-        }
-    }
+    // if (input.is_action_just_pressed(action::OPEN_UPGRADE_MENU)) {
+    //     if (upgrade_menu_entity == entt::null) {
+    //         tmt::Log::error("No upgrade menu entity has been set, cannot open upgrade menu.");
+    //         return;
+    //     }
+    //
+    //     if (tmt::engine.ecs.is_disabled(upgrade_menu_entity)) {
+    //         enable_upgrade_menu();
+    //     } else {
+    //         disable_upgrade_menu();
+    //     }
+    // }
 }
 
 void MenuController::end() {
