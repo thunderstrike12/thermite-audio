@@ -80,7 +80,7 @@ void GeometryPipeline::enqueue(RenderGraph& render_graph, RenderView& render_vie
         .read(render_view.vbuffer.image, ShaderStages::Pixel)
         .read(scene_view.object_data, ShaderStages::Pixel)
         .load_op_depth(LoadOp::Clear) /* Clear the depth buffer */
-        .depth_stencil(frame_flag ? render_view.dbuffer.image : render_view.prev_dbuffer.image , true, true)
+        .depth_stencil(frame_flag ? render_view.dbuffer.image : render_view.prev_dbuffer.image, true, true)
         .raster_extent(render_res.x, render_res.y);
     transfer_pass.draw(NULL_BUFFER, 3u);
 }

@@ -53,6 +53,7 @@ void PolylinePipeline::enqueue(RenderGraph& render_graph, RenderView& render_vie
     const glm::uvec2 render_res = render_view.gpu_view.resolution;
 
     /* Polyline render pass */
+    const uint32_t frame_flag = (render_view.frame_counter & 1) == 0;
     RasterNode& line_pass = render_graph.add_raster_pass("polyline pass", "polyline.vx", "polyline.px")
         .topology(Topology::TriangleList)
         .attribute(AttrFormat::XYZ32_SFloat)  /* Begin */
@@ -64,7 +65,7 @@ void PolylinePipeline::enqueue(RenderGraph& render_graph, RenderView& render_vie
         .alpha_blending(true)
         .read(render_view.render_view_buffer, ShaderStages::Vertex)
         .attach(render_image)
-        .depth_stencil(render_view.dbuffer.image)
+        .depth_stencil(frame_flag ? render_view.dbuffer.image : render_view.prev_dbuffer.image)
         .raster_extent(render_res.x, render_res.y);
     line_pass.draw(line_buffer, 6u, 0u, line_segment_count, 0u);
 
