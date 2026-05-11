@@ -66,11 +66,17 @@ struct EndRun {
     bool player_dead;
 };
 
-struct ThermiteExplosionEvent {
-};
+struct ThermiteExplosionEvent {};
 
 struct GamePausedEvent {};
 
 struct GameUnpausedEvent {};
+
+struct IconTransitionEvent {
+    tmt::Entity icon_entity;
+    float current_value;
+    float min_value;
+    float max_value;
+};
 
 }  // namespace game

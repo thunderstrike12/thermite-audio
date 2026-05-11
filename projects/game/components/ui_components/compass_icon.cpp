@@ -1,8 +1,11 @@
 #include "compass_icon.hpp"
-
 #include "engine/core/polyline.hpp"
+#include "glm/ext/matrix_common.hpp"
 #include "projects/game/components/gameplay_functionality_components/player.hpp"
-void game::CompassIcon::follow_relative_transform(const glm::vec3 relative_vector) const {
+
+#include <extern/type_tween/type_tween.hpp>
+
+void game::CompassIcon::follow_relative_transform(const glm::vec3 relative_vector) {
     const auto& player_transform { tmt::engine.ecs.get_component<tmt::Transform>(game::Player::get().entity) };
     const auto player_forward { player_transform.get_forward() };
 
@@ -31,7 +34,7 @@ void game::CompassIcon::follow_relative_transform(const glm::vec3 relative_vecto
         tmt::engine.ecs.disable(disable);
     }
 }
-void game::CompassIcon::follow_world_direction(glm::vec3 world_dir) const {
+void game::CompassIcon::follow_world_direction(glm::vec3 world_dir) {
     const auto& player_transform { tmt::engine.ecs.get_component<tmt::Transform>(game::Player::get().entity) };
     const auto player_forward { player_transform.get_forward() };
 
@@ -50,6 +53,13 @@ void game::CompassIcon::update(const tmt::FrameData&) {
         follow_world_direction(glm::vec3 { default_placement.x, 0.0f, default_placement.y });
     }
 }
-void game::CompassIcon::move_to_position(float factor) const {
-    tmt::engine.ecs.get_component<tmt::Transform>(entity).set_local_position({ factor * radius, 0.0f, 0.0f });
+void game::CompassIcon::move_to_position(float factor) {
+    // between 0 and 1
+    auto close_to_edge { glm::abs(factor) / max_threshold };
+    // get the alpha
+
+    tmt::engine.ecs.get_dispatcher().trigger(IconTransitionEvent { entity, close_to_edge, min_threshold });
+
+    auto increment { glm::round(factor / move_increments) * move_increments };
+    tmt::engine.ecs.get_component<tmt::Transform>(entity).set_local_position({ increment * radius, 0.0f, 0.0f });
 }
