@@ -19,7 +19,13 @@ function(find_and_add_targets)
             )
 
             # Add executable
-            add_executable(${target_name} ${PROJECT_SOURCES})
+            if (THERMITE_EDITOR_BUILD)
+                set(target_rc_file "${CMAKE_CURRENT_SOURCE_DIR}/engine.rc")
+            else ()
+                set(target_rc_file "${CMAKE_CURRENT_SOURCE_DIR}/game.rc")
+            endif ()
+            
+            add_executable(${target_name} ${PROJECT_SOURCES} ${target_rc_file})
 
             # Generate a small config source file that the engine can access to know where the current relative project assets live
             set(gen_dir "${CMAKE_CURRENT_BINARY_DIR}/generated/${target_name}")
