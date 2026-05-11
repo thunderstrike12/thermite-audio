@@ -25,7 +25,7 @@ namespace {
 
 struct FileDropState {
     bool is_dropping { false };
-    std::vector<tmt::IO::FileLocation> dropped_files;
+    std::unordered_set<tmt::IO::FileLocation, tmt::IO::FileLocationHash> dropped_files;
 } file_drop_state;
 
 std::atomic_flag block_import_atomic {};
@@ -146,7 +146,7 @@ void AssetBrowser::on_sdl_event(internal::SdlEvent& event) {
             break;
 
         case SDL_EVENT_DROP_FILE:
-            file_drop_state.dropped_files.push_back(IO::path_to_file_location(drop_event.data));
+            file_drop_state.dropped_files.emplace(IO::path_to_file_location(drop_event.data));
             break;
 
         case SDL_EVENT_DROP_COMPLETE:
