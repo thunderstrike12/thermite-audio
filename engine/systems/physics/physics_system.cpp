@@ -136,16 +136,16 @@ void Physics::on_update(const FrameData&) {
             vb.initialized = true;
         }
 
-        //engine.polyline.use_color(1.0f, 0.3f, 0.3f);
-        //engine.polyline.use_depth_testing(false);
-        //engine.polyline.use_line_width(0.3f);
-        //engine.polyline.draw_sphere(vb.center_of_mass, 0.1f, 16u);
+        // engine.polyline.use_color(1.0f, 0.3f, 0.3f);
+        // engine.polyline.use_depth_testing(false);
+        // engine.polyline.use_line_width(0.3f);
+        // engine.polyline.draw_sphere(vb.center_of_mass, 0.1f, 16u);
 
         //// Debug draw bounding box
-        //engine.polyline.use_color(0.2f, 1.0f, 0.3f);
-        //engine.polyline.use_depth_testing(true);
-        //engine.polyline.use_line_width(0.2f);
-        //engine.polyline.draw_obb(vb.position, glm::vec3(vb.width, vb.height, vb.depth) * 0.5f, vb.rotation);
+        // engine.polyline.use_color(0.2f, 1.0f, 0.3f);
+        // engine.polyline.use_depth_testing(true);
+        // engine.polyline.use_line_width(0.2f);
+        // engine.polyline.draw_obb(vb.position, glm::vec3(vb.width, vb.height, vb.depth) * 0.5f, vb.rotation);
     }
 }
 

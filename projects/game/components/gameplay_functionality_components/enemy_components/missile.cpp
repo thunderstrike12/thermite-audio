@@ -127,8 +127,7 @@ void game::Missile::update(const tmt::FrameData& time) {
     }
 }
 
-void game::Missile::end() {
-}
+void game::Missile::end() {}
 
 void game::Missile::explode() {
     auto& enemy = tmt::engine.ecs.get_component<MediumEnemy>(enemy_entity);

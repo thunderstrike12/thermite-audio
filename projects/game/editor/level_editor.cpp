@@ -168,8 +168,7 @@ void tmt::LevelEditor::on_inspect() {
             engine.ecs.add_component<game::GenerationComponent>(grouper_entity);
         }
     }
-    if(ImGui::Button("Clear preview objects"))
-    {
+    if (ImGui::Button("Clear preview objects")) {
         auto view = engine.ecs.view<game::GenerationComponent>();
 
         if (view.begin() == view.end()) {

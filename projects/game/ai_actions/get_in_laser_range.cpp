@@ -11,8 +11,7 @@
 
 #include <cstdlib>
 
-void GetInLaserRange::on_start(tmt::Entity enemy_entity) {
-}
+void GetInLaserRange::on_start(tmt::Entity enemy_entity) {}
 
 void GetInLaserRange::on_tick(tmt::Entity enemy_entity, float dt) {
     auto& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);

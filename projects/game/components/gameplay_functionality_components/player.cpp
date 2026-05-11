@@ -441,41 +441,21 @@ void Player::update(const tmt::FrameData& time) {
         tmt::engine.ecs.get_dispatcher().trigger(PlayerMaxHealthChanged { entity, health.max_value, previous_max_health });
     }
     previous_max_health = health.max_value;
-    // Update UI
-    if (tmt::engine.ecs.valid(hp_bar_max)) {
-        if (auto component_hp_max = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_max)) component_hp_max->size.x = health.max_value + 2.0f;
-    }
-
     // Fire event health changed
     if (previous_health != health.value) {
         tmt::engine.ecs.get_dispatcher().trigger(PlayerHealthChanged { entity, health.value, previous_health });
     }
     previous_health = health.value;
-    // Update UI
-    if (tmt::engine.ecs.valid(hp_bar_current)) {
-        if (auto component_curr_hp = tmt::engine.ecs.try_get_component<tmt::UIComponent>(hp_bar_current)) component_curr_hp->size.x = std::clamp(health.value, 0.0f, health.max_value);
-    }
-
     // Fire event max energy changed
     if (previous_max_energy != energy.max_value) {
         tmt::engine.ecs.get_dispatcher().trigger(PlayerMaxEnergyChanged { entity, energy.max_value, previous_max_energy });
     }
     previous_max_energy = energy.max_value;
-    // Update UI
-    if (tmt::engine.ecs.valid(energy_bar_max)) {
-        if (auto component_energy_max = tmt::engine.ecs.try_get_component<tmt::UIComponent>(energy_bar_max)) component_energy_max->size.x = energy.max_value + 2.0f;
-    }
-
     // Fire event energy changed
     if (previous_energy != energy.value) {
-        tmt::engine.ecs.get_dispatcher().trigger(PlayerMaxHealthChanged { entity, energy.value, previous_energy });
+        tmt::engine.ecs.get_dispatcher().trigger(PlayerEnergyChanged { entity, energy.value, previous_energy });
     }
     previous_energy = energy.value;
-    // Update UI
-    if (tmt::engine.ecs.valid(energy_bar_current)) {
-        if (auto component_curr_energy = tmt::engine.ecs.try_get_component<tmt::UIComponent>(energy_bar_current))
-            component_curr_energy->size.x = std::clamp(energy.value, 0.0f, energy.max_value);
-    }
 
     // --- Energy low pop up ---
     {

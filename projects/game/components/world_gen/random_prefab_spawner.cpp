@@ -30,8 +30,7 @@ void game::RandomPrefabSpawner::update(const tmt::FrameData& time) {
     }
 }
 
-void game::RandomPrefabSpawner::end() {
-}
+void game::RandomPrefabSpawner::end() {}
 
 void game::RandomPrefabSpawner::spawn_random_prefab() {
     if (prefabs.empty()) {

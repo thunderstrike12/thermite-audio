@@ -16,7 +16,6 @@
 #include "engine/systems/physics/physics_system.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"
 
-
 void FireLaser::cleanup(tmt::Entity enemy_entity) {
     game::MediumEnemy& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
     if (tmt::engine.ecs.valid(laser_entity)) {
@@ -174,7 +173,7 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
             // deal damage to player and cutoff laser
             if (distance_to_player < enemy.laser_damage_radius) {
                 tmt::engine.ecs.get_component<game::Player>(enemy.player).health.value -= enemy.laser_damage * dt;
-                //end_pos = closest_point;
+                // end_pos = closest_point;
             }
 
             // scale laser voxel object between laser hit and laser pos

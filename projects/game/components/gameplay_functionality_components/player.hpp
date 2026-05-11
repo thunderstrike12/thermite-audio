@@ -91,13 +91,6 @@ class Player : public tmt::GameComponent<Player> {
     tmt::Camera& get_camera() const { return tmt::engine.ecs.get_component<tmt::Camera>(entity); }
     void set_state(PlayerState new_state) { state = new_state; };
 
-    // UI
-    tmt::Entity hp_bar_max = entt::null;
-    tmt::Entity hp_bar_current = entt::null;
-
-    tmt::Entity energy_bar_max = entt::null;
-    tmt::Entity energy_bar_current = entt::null;
-
     // HUD entities
     tmt::Entity player_hud = entt::null;
     tmt::Entity barge_hud = entt::null;
@@ -178,6 +171,6 @@ TMT_OBJECT(game::CameraShakeSettings, (enabled, max_intensity, boost_intensity, 
 TMT_OBJECT(
     game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, boost_max_speed_multiplier, boost_acceleration_multiplier, boost_deceleration_factor,
                    boost_cost_per_second_per_additional_speed_above_max, boost_initial_cost, boost_availability, health, energy, energy_drain_per_second, out_of_energy_time_till_death,
-                   hp_bar_max, hp_bar_current, energy_bar_max, energy_bar_current, low_energy_threshold, low_energy_duration, use_second_warning, low_energy_threshold_2, low_energy_duration_2,
+                   low_energy_threshold, low_energy_duration, use_second_warning, low_energy_threshold_2, low_energy_duration_2,
                    player_hud, barge_hud, low_energy_hud, rifle_crosshair, gravity_crosshair, mine_crosshair, barge, recharge_distance, ray_check, camera_shake_settings)
 );
