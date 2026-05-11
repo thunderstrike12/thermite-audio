@@ -477,7 +477,7 @@ inline void evict_node(Svt64Node* node, Svt64Node* root_node, const uint32_t pos
 }
 
 /* Remove child node from node without corrupting child indices. */
-inline void evict_voxel(Svt64Node* node, MaterialIndex* material_data, PhysicsVoxel* physics_data, const uint32_t pos, const uint32_t idx) {
+inline void evict_voxel(Svt64* tree, Svt64Node* node, MaterialIndex* material_data, PhysicsVoxel* physics_data, const uint32_t pos, const uint32_t idx) {
     /* Find the number of children present in the node */
     const uint32_t child_count = popcnt(node->child_mask);
 
@@ -489,6 +489,7 @@ inline void evict_voxel(Svt64Node* node, MaterialIndex* material_data, PhysicsVo
     const uint32_t ptr = node->abs_ptr() + idx;
     memmove(material_data + ptr, material_data + ptr + 1, (child_count - idx) * sizeof(MaterialIndex));
     memmove(physics_data + ptr, physics_data + ptr + 1, (child_count - idx) * sizeof(PhysicsVoxel));
+    tree->voxels_wasted++;
 }
 
 void Svt64::subtract(const Stencil* stencil, glm::ivec3 offset) {
@@ -530,7 +531,7 @@ void Svt64::subtract_recursive(uint32_t node_id, glm::ivec3 node_pos, uint32_t n
 
             const uint32_t child_id = (uint32_t)__popcnt64(node.child_mask & ((1ull << voxel_pos) - 1u));
             // Remove voxel from this node
-            evict_voxel(&node, materials, physics_data, voxel_pos, child_id);
+            evict_voxel(this, &node, materials, physics_data, voxel_pos, child_id);
         }
 
         return;
@@ -637,7 +638,7 @@ void Svt64::remove_voxel(const uint32_t x, const uint32_t y, const uint32_t z) {
 
         /* If we're at the bottom level we're done traversing down */
         if (level == 0u) {
-            evict_voxel(node, materials, physics_data, child_pos, child_ptr);
+            evict_voxel(this, node, materials, physics_data, child_pos, child_ptr);
             break;
         }
 

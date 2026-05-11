@@ -141,6 +141,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     systems[Mode::PREFAB].add<UndoRedoManager>();
     systems[Mode::PREFAB].add<UIEditor>();
     systems[Mode::PREFAB].add<DebugLines>();
+    systems[Mode::PREFAB].add<RigStateController>();
 
     for (auto& [mode, collection] : systems) {
         for (const auto& system : collection) {

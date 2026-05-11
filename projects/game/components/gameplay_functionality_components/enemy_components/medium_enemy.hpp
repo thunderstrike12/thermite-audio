@@ -2,13 +2,20 @@
 #include "engine/systems/gameplay/game_component.hpp"
 #include "engine/core/entity.hpp"
 #include "../../../editor/all.hpp"
-#include "engine/core/resources/stencil.hpp"
 #include "projects/game/data_headers/events.hpp"
+#include "engine/core/components/rig_controller.hpp"
 
 #include "projects/game/components/managers/ore_manager.hpp"
 #include "projects/game/data_headers/layer_mask.hpp"
 
 namespace game {
+
+struct AvailablePosEntry {
+    tmt::Entity entity = entt::null;
+    float height_offset = 0.0f;
+    tmt::Entity reference_entity = entt::null;
+    glm::vec3 stored_offset_from_ref_entity = glm::vec3(0, 0, 0);
+};
 
 class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
    public:
@@ -27,14 +34,21 @@ class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
     void on_game_unpaused(const game::GameUnpausedEvent&);
 
     bool paused = false;
+    bool core_destroyed = false;
 
     tmt::Entity player = entt::null;
     tmt::Entity walkable_asteroid = entt::null;
+    tmt::Entity core = entt::null;
+    uint32_t core_voxels = 0u;
+    tmt::Entity rig_controller = entt::null;
+    std::array<AvailablePosEntry, 4> available_positions;
     tmt::Entity missile_origin = entt::null;
     tmt::Entity laser_origin = entt::null;
     game::OreManager* ore_manager;
     LayerMask projectile_mask {};
+    LayerMask enemy_mask {};
     int projectile_layer = 4;
+    int enemy_layer = 2;
 
     glm::vec3 velocity = glm::vec3(0, 0, 0);
     glm::quat rotation = glm::quat(1, 0, 0, 0);
@@ -48,7 +62,6 @@ class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
     float laser_range = 30.0f;
     float stomp_range = 5.0f;
 
-    tmt::ResourceRef<tmt::Stencil> stencil;
     tmt::IO::FileLocation missile_voxel_object;
 
     float stop_launching_after = 0.5f;
@@ -94,11 +107,13 @@ class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
 
 }  // namespace game
 
+TMT_OBJECT(game::AvailablePosEntry, (entity, height_offset, reference_entity, stored_offset_from_ref_entity));
+
 TMT_OBJECT(
-    game::MediumEnemy,
-    (walkable_asteroid, laser_origin, missile_origin, stencil, missile_voxel_object, projectile_mask, projectile_layer, rotation_speed, height_above_ground, walk_speed, aggro_range,
-     laser_range, stomp_range, missile_cooldown, stop_launching_after, start_homing_after, slow_homing_accuracy_after, launch_speed, home_speed, life_time, missile_rotation_speed,
-     target_offset, missile_burst, burst_interval, missile_max_randomness, missile_explosion_radius, laser_cooldown, laser_charge_voxel_object, laser_voxel_object, laser_firing_time,
-     laser_sitting_down_time, laser_winding_up_time, laser_damage, laser_damage_radius, laser_target_offset, laser_linear_speed, laser_exponential_speed, laser_linear_threshold,
-     laser_max_randomness, laser_prediction_length, laser_vel_smoothing, stomp_cooldown, stomp_timer, stomp_windup, stomp_radius, stomp_damage)
+    game::MediumEnemy, (walkable_asteroid, laser_origin, missile_origin, core, rig_controller, available_positions, missile_voxel_object, projectile_mask, enemy_mask, projectile_layer,
+                        enemy_layer, rotation_speed, height_above_ground, walk_speed, aggro_range, laser_range, stomp_range, missile_cooldown, stop_launching_after, start_homing_after,
+                        slow_homing_accuracy_after, launch_speed, home_speed, life_time, missile_rotation_speed, target_offset, missile_burst, burst_interval, missile_max_randomness,
+                        missile_explosion_radius, laser_cooldown, laser_charge_voxel_object, laser_voxel_object, laser_firing_time, laser_sitting_down_time, laser_winding_up_time,
+                        laser_damage, laser_damage_radius, laser_target_offset, laser_linear_speed, laser_exponential_speed, laser_linear_threshold, laser_max_randomness,
+                        laser_prediction_length, laser_vel_smoothing, stomp_cooldown, stomp_timer, stomp_windup, stomp_radius, stomp_damage)
 );

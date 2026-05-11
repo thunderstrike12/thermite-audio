@@ -16,6 +16,37 @@
 
 namespace tmt {
 
+Entity try_find_rig_entity(Entity start) {
+    auto& transform = engine.ecs.get_component<Transform>(start);
+    for (auto parent : transform.get_all_parents()) {
+        auto rig_model_comp = engine.ecs.try_get_component<RigModel>(parent);
+        if (rig_model_comp) {
+            return parent;
+        }
+    }
+    return entt::null;
+}
+
+void RigModelManager::on_start() {
+    for (const auto&& [entity, rig] : engine.ecs.view<RigModel>().each()) {
+        for (const Entity bone_entity : rig.bone_entities) {
+            if (!engine.ecs.valid(bone_entity)) continue;  // Check if the bone entity is actually valid (we'd prefer the list is guaranteed to be accurate, but this works fine.).
+
+            auto& transform = engine.ecs.get_component<Transform>(bone_entity);
+
+            rig.bone_keyframes[bone_entity] = { .translation = transform.get_local_position(), .rotation = transform.get_local_rotation(), .scale = transform.get_local_scale() };
+        }
+    }
+
+    // for now check for constraints and add constrained rig
+    for (const auto&& [entity, transform, two_bone_constraint] : engine.ecs.view<Transform, AnimConstraints::TwoBoneIKConstraint>().each()) {
+        Entity rig_ent = try_find_rig_entity(entity);
+
+        if (rig_ent != entt::null) {
+            two_bone_constraint.constrained_rig_ent = rig_ent;
+        }
+    }
+}
 void RigModelManager::on_update(const FrameData& time) {
     for (const auto&& [entity, rig, controller] : engine.ecs.view<RigModel, RigController>().each()) {
         const std::string& current_state = controller.current_state;
@@ -117,14 +148,16 @@ void RigModelManager::on_update(const FrameData& time) {
         for (const Entity bone_entity : rig.bone_entities) {
             if (!engine.ecs.valid(bone_entity)) continue;  // Check if the bone entity is actually valid (we'd prefer the list is guaranteed to be accurate, but this works fine.).
 
-            auto& transform = engine.ecs.get_component<Transform>(bone_entity);
+                                                           // auto& transform = engine.ecs.get_component<Transform>(bone_entity);
 
             const BoneComp& bone_comp_id = engine.ecs.get_component<BoneComp>(bone_entity);
             Bone& bone = rig.data->bones[bone_comp_id.id];
 
-            rig.animate_translation(transform, bone);
-            rig.animate_rotation(transform, bone);
-            rig.animate_scale(transform, bone);
+            auto& local_keyframe = rig.bone_keyframes[bone_entity];
+
+            rig.animate_translation(local_keyframe, bone);
+            rig.animate_rotation(local_keyframe, bone);
+            rig.animate_scale(local_keyframe, bone);
         }
     }
 }
@@ -167,6 +200,11 @@ void RigModelManager::on_draw_lines() const {
 }
 
 void tmt::AnimationConstraintSystem::on_start() {
+    for (const auto&& [rig_ent, rig_model] : engine.ecs.view<RigModel>().each()) {
+        auto& constrained_rig = engine.ecs.add_component<ConstrainedRig>(rig_ent);
+        constrained_rig.initial_reference_poses = rig_model.bone_keyframes;
+    }
+
     for (const auto&& [entity, transform, damped_constraint] : engine.ecs.view<Transform, AnimConstraints::DampedTransformConstraint>().each()) {
         damped_constraint.local_rest_pose.bone_entity = entity;
         AnimConstraints::DampedTransform::set_local_rest_pose(transform, damped_constraint.local_rest_pose);
@@ -174,6 +212,35 @@ void tmt::AnimationConstraintSystem::on_start() {
     for (const auto&& [entity, transform, two_bone_constraint] : engine.ecs.view<Transform, AnimConstraints::TwoBoneIKConstraint>().each()) {
         two_bone_constraint.root = entity;
         two_bone_constraint.parent = transform.get_parent();
+
+        auto* root_transform = engine.ecs.try_get_component<Transform>(two_bone_constraint.root);
+        auto* mid_transform = engine.ecs.try_get_component<Transform>(two_bone_constraint.mid);
+        auto* end_transform = engine.ecs.try_get_component<Transform>(two_bone_constraint.tip);
+
+        if (!root_transform || !mid_transform || !end_transform) {
+            tmt::Log::error("[AnimationConstraintSystem] Please set all entities in the chain to prevent unwanted behaviour");
+        } else {
+            auto& constrained_rig = engine.ecs.get_component<ConstrainedRig>(two_bone_constraint.constrained_rig_ent);
+            auto& rig = engine.ecs.get_component<RigModel>(two_bone_constraint.constrained_rig_ent);
+
+            constrained_rig.constrained_poses[two_bone_constraint.root] = rig.bone_keyframes[two_bone_constraint.root];
+            constrained_rig.constrained_poses[two_bone_constraint.mid] = rig.bone_keyframes[two_bone_constraint.mid];
+            constrained_rig.constrained_poses[two_bone_constraint.tip] = rig.bone_keyframes[two_bone_constraint.tip];
+
+            glm::vec3 root_axis = glm::normalize(mid_transform->get_local_position());
+            glm::vec3 mid_axis = glm::normalize(end_transform->get_local_position());
+
+            glm::quat solved_swing;
+            AnimConstraints::TwoBoneIK::decompose_swing_twist(root_transform->get_local_rotation(), root_axis, solved_swing, two_bone_constraint.twist_rest_pose_root);
+            AnimConstraints::TwoBoneIK::decompose_swing_twist(mid_transform->get_local_rotation(), root_axis, solved_swing, two_bone_constraint.twist_rest_pose_mid);
+
+            if (two_bone_constraint.parent != entt::null) {
+                constrained_rig.constrained_poses[two_bone_constraint.parent] = rig.bone_keyframes[two_bone_constraint.parent];
+
+                auto& parent_transform = engine.ecs.get_component<Transform>(two_bone_constraint.parent);
+                two_bone_constraint.foot_parent_rest_rotation = glm::inverse(parent_transform.get_world_rotation()) * end_transform->get_world_rotation();
+            }
+        }
     }
 }
 void tmt::AnimationConstraintSystem::on_update(const tmt::FrameData& time) {
@@ -205,10 +272,31 @@ void tmt::AnimationConstraintSystem::on_update(const tmt::FrameData& time) {
         input_data.effector = target_position_transform.get_world_position();
         input_data.bend_pos = bend_target_transform.get_world_position();
 
+        input_data.root_orig_twist = two_bone_constraint.twist_rest_pose_root;
+        input_data.mid_orig_twist = two_bone_constraint.twist_rest_pose_mid;
+        input_data.foot_parent_reference = two_bone_constraint.foot_parent_rest_rotation;
+
         auto output = AnimConstraints::TwoBoneIK::solve_two_bone_ik(input_data);
 
-        root_transform.set_local_rotation(output.root_rot);
-        mid_transform.set_local_rotation(output.mid_rot);
+        if (two_bone_constraint.constrained_rig_ent != entt::null) {
+            auto& constrained_rig = engine.ecs.get_component<ConstrainedRig>(two_bone_constraint.constrained_rig_ent);
+            auto& rig_model = engine.ecs.get_component<RigModel>(two_bone_constraint.constrained_rig_ent);
+
+            constrained_rig.constrained_poses[two_bone_constraint.parent] = rig_model.bone_keyframes[two_bone_constraint.parent];
+
+            auto& local_keyframe_root = constrained_rig.constrained_poses[two_bone_constraint.root];
+            auto& local_keyframe_mid = constrained_rig.constrained_poses[two_bone_constraint.mid];
+            auto& local_keyframe_tip = constrained_rig.constrained_poses[two_bone_constraint.tip];
+
+            local_keyframe_root.rotation = output.root_rot;
+            local_keyframe_mid.rotation = output.mid_rot;
+            if (two_bone_constraint.obey_foot_bind_pose) local_keyframe_tip.rotation = output.end_rot;
+        } else {
+            // just set it directly
+            root_transform.set_local_rotation(output.root_rot);
+            mid_transform.set_local_rotation(output.mid_rot);
+            if (two_bone_constraint.obey_foot_bind_pose) tip_transform.set_local_rotation(output.end_rot);
+        }
     }
     for (const auto&& [entity, transform, walk_cycle] : engine.ecs.view<Transform, AnimConstraints::EffectorWalkCycle>().each()) {
         walk_cycle.step_timer += time.delta_time;
@@ -301,6 +389,35 @@ void tmt::AnimationConstraintSystem::on_end() {}
 
 std::string tmt::AnimationConstraintSystem::get_name() {
     return std::string();
+}
+void AnimationPoseEvaluator::on_update(const tmt::FrameData&) {
+    for (const auto&& [entity, rig] : engine.ecs.view<RigModel>().each()) {
+        for (const Entity bone_entity : rig.bone_entities) {
+            auto& transform = engine.ecs.get_component<Transform>(bone_entity);
+
+            const auto& local_pose = rig.bone_keyframes[bone_entity];
+            transform.set_local_position(local_pose.translation);
+            transform.set_local_rotation(local_pose.rotation);
+            transform.set_local_scale(local_pose.scale);
+        }
+    }
+
+    for (const auto&& [entity, rig, constrained_rig] : engine.ecs.view<RigModel, ConstrainedRig>().each()) {
+        for (const auto& [constr_ent, pose] : constrained_rig.constrained_poses) {
+            auto& transform = engine.ecs.get_component<Transform>(constr_ent);
+
+            const auto& local_keyframe_pose = rig.bone_keyframes[constr_ent];
+            const auto& local_constrained_pose = constrained_rig.constrained_poses[constr_ent];
+
+            glm::vec3 blend_pose_position = glm::mix(local_keyframe_pose.translation, local_constrained_pose.translation, constrained_rig.blend);
+            glm::quat blend_pose_rotation = glm::slerp(local_keyframe_pose.rotation, local_constrained_pose.rotation, constrained_rig.blend);
+            glm::vec3 blend_pose_scale = glm::mix(local_keyframe_pose.scale, local_constrained_pose.scale, constrained_rig.blend);
+
+            transform.set_local_position(blend_pose_position);
+            transform.set_local_rotation(blend_pose_rotation);
+            transform.set_local_scale(blend_pose_scale);
+        }
+    }
 }
 
 }  // namespace tmt

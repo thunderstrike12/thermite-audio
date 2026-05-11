@@ -65,6 +65,7 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
 
     switch (state) {
         case SITTING_DOWN: {
+            tmt::engine.ecs.get_component<tmt::RigController>(enemy.rig_controller).set_parameter_bool("laser", true);
             enemy.height_above_ground_offset = -enemy.height_above_ground + enemy.laser_sitting_down_height_offset;
             if (time > enemy.laser_sitting_down_time) {
                 state = WINDING_UP;
@@ -91,6 +92,10 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
                 auto& voxel_renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(laser_entity);
                 auto ref = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(enemy.laser_voxel_object);
                 voxel_renderer.resource = ref;
+
+                auto& constrained_rig = tmt::engine.ecs.get_component<tmt::ConstrainedRig>(enemy.rig_controller);
+                constrained_rig.copy_reference_pose_from_keyframe(tmt::engine.ecs.get_component<tmt::RigModel>(enemy.rig_controller));
+
                 // auto& voxel_body = tmt::engine.ecs.add_component<tmt::VoxelBody>(laser_entity);
                 // voxel_body.layer = enemy.projectile_layer;
                 // voxel_body.type = tmt::VoxelBody::STATIC;
@@ -149,13 +154,14 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
             direction = target_dir;
 
             if (time > enemy.laser_firing_time) {
+                tmt::engine.ecs.get_component<tmt::RigController>(enemy.rig_controller).set_parameter_bool("laser", false);
                 cleanup(enemy_entity);
                 return;
             }
 
             // scaling laser and checking for player collision
             const tmt::Ray ray_cast = tmt::Ray(laser_pos, glm::normalize(direction));
-            const tmt::Hit laser_hit = tmt::engine.ecs.systems.get<tmt::Physics>().raycast(ray_cast, enemy.projectile_mask);
+            const tmt::Hit laser_hit = tmt::engine.ecs.systems.get<tmt::Physics>().raycast(ray_cast, enemy.enemy_mask);
             auto hit_pos = laser_pos + direction * laser_hit.distance;
 
             const float MAX_RANGE = 50.0f;
@@ -199,5 +205,7 @@ bool FireLaser::is_done(tmt::Entity /*enemy_entity*/) const {
 }
 
 void FireLaser::on_interrupt(tmt::Entity enemy_entity) {
+    auto& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
+    tmt::engine.ecs.get_component<tmt::RigController>(enemy.rig_controller).set_parameter_bool("laser", false);
     cleanup(enemy_entity);
 }

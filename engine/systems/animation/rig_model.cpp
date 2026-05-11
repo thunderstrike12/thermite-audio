@@ -161,7 +161,7 @@ void tmt::RigModel::set_animation_speed(float s) {
     animation_speed = s;
 }
 
-void RigModel::animate_translation(Transform& t, Bone& b) const {
+void RigModel::animate_translation(Pose& t, Bone& b) const {
     const auto& keyframes = b.animations[get_current_animation()].keyframes_pos;
     if (keyframes.empty()) return;
 
@@ -173,7 +173,7 @@ void RigModel::animate_translation(Transform& t, Bone& b) const {
         }
     }
     if (current_frame >= (int)keyframes.size() - 1) {
-        t.set_local_position(keyframes[current_frame].position);
+        t.translation = (keyframes[current_frame].position);
         return;
     }
 
@@ -187,13 +187,13 @@ void RigModel::animate_translation(Transform& t, Bone& b) const {
     if (is_transferring()) {
         interp_time = transfer_time / transfer_threshold;
         new_position = glm::mix(b.animations[get_current_animation()].keyframes_pos[current_frame].position, b.animations[get_next_animation()].keyframes_pos[0].position, interp_time);
-        new_position = glm::mix(glm::mix(t.get_local_position(), b.animations[get_next_animation()].keyframes_pos[0].position, interp_time), new_position, 0.4f);
+        new_position = glm::mix(glm::mix(t.translation, b.animations[get_next_animation()].keyframes_pos[0].position, interp_time), new_position, 0.4f);
     }
 
-    t.set_local_position(new_position);
+    t.translation = (new_position);
 }
 
-void RigModel::animate_rotation(Transform& t, Bone& b) const {
+void RigModel::animate_rotation(Pose& t, Bone& b) const {
     const auto& keyframes = b.animations[get_current_animation()].keyframes_rot;
     if (keyframes.empty()) return;
 
@@ -206,7 +206,7 @@ void RigModel::animate_rotation(Transform& t, Bone& b) const {
     }
 
     if (current_frame >= (int)keyframes.size() - 1) {
-        t.set_local_rotation(keyframes[current_frame].rotation);
+        t.rotation = (keyframes[current_frame].rotation);
         return;
     }
 
@@ -220,14 +220,14 @@ void RigModel::animate_rotation(Transform& t, Bone& b) const {
     if (is_transferring()) {
         interp_time = transfer_time / transfer_threshold;
         new_rotation = glm::slerp(b.animations[get_current_animation()].keyframes_rot[current_frame].rotation, b.animations[get_next_animation()].keyframes_rot[0].rotation, interp_time);
-        new_rotation = glm::slerp(glm::slerp(t.get_local_rotation(), b.animations[get_next_animation()].keyframes_rot[0].rotation, interp_time), new_rotation, 0.4f);
+        new_rotation = glm::slerp(glm::slerp(t.rotation, b.animations[get_next_animation()].keyframes_rot[0].rotation, interp_time), new_rotation, 0.4f);
     }
 
     assert(!glm::any(glm::isnan(new_rotation)));
-    t.set_local_rotation(new_rotation);
+    t.rotation = (new_rotation);
 }
 
-void RigModel::animate_scale(Transform& t, Bone& b) const {
+void RigModel::animate_scale(Pose& t, Bone& b) const {
     const auto& keyframes = b.animations[get_current_animation()].keyframes_scale;
     if (keyframes.empty()) return;
 
@@ -240,7 +240,7 @@ void RigModel::animate_scale(Transform& t, Bone& b) const {
     }
 
     if (current_frame >= (int)keyframes.size() - 1) {
-        t.set_local_scale(keyframes[current_frame].scale);
+        t.scale = (keyframes[current_frame].scale);
         return;
     }
 
@@ -253,10 +253,22 @@ void RigModel::animate_scale(Transform& t, Bone& b) const {
     // transfer from current frame to first frame of new animation
     if (is_transferring()) {
         interp_time = transfer_time / transfer_threshold;
-        new_scale = glm::mix(t.get_local_scale(), b.animations[get_next_animation()].keyframes_scale[0].scale, interp_time);
+        new_scale = glm::mix(t.scale, b.animations[get_next_animation()].keyframes_scale[0].scale, interp_time);
     }
 
-    t.set_local_scale(new_scale);
+    t.scale = (new_scale);
+}
+
+void ConstrainedRig::copy_reference_pose_from_keyframe(RigModel& rig_model) {
+    for (auto& [ent, pose] : constrained_poses) {
+        pose = rig_model.bone_keyframes[ent];
+    }
+}
+
+void ConstrainedRig::restore_reference_poses_from_keyframe() {
+    for (auto& [ent, pose] : constrained_poses) {
+        pose = initial_reference_poses[ent];
+    }
 }
 
 }  // namespace tmt

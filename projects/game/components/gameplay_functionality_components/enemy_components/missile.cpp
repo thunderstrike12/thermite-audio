@@ -137,6 +137,7 @@ void game::Missile::explode() {
     auto& voxel_body = tmt::engine.ecs.get_component<tmt::VoxelBody>(entity);
     voxel_body.layer = 0;
     voxel_body.type = tmt::VoxelBody::DYNAMIC;
+    voxel_body.gravity = 0.0f;
     voxel_body.velocity = velocity;
     voxel_body.position = missile_trans.get_world_position();
     voxel_body.rotation = missile_trans.get_world_rotation();

@@ -76,7 +76,7 @@ size_t load_editor(char* data, void* user_pointer) {
 namespace tmt {
 
 void RigStateController::on_inspect() {
-    const Entity selected = editor.systems[Editor::Mode::SCENE].get<Hierarchy>().get_first_selected_entity();
+    const Entity selected = editor.systems[editor.editor_mode].get<Hierarchy>().get_first_selected_entity();
     auto [model, controller] = engine.ecs.get_registry().try_get<RigModel, RigController>(selected);
 
     const bool valid_controller = (model != nullptr && controller != nullptr && model->data);

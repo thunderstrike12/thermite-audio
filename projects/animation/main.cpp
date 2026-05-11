@@ -43,7 +43,7 @@ class AnimationScene : public tmt::Scene<AnimationScene> {
     tmt::Entity walker_entity;
 
     tmt::Entity arm_entities[3];
-    tmt::AnimConstraints::TwoBoneIK::EffectorWalkCycle walk_cycles[3];
+    // tmt::AnimConstraints::TwoBoneIK::EffectorWalkCycle walk_cycles[3];
 };
 
 std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs& args) {

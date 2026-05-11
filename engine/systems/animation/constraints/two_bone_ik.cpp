@@ -92,89 +92,61 @@ TwoBoneIKSolverOutput solve_two_bone_ik(const TwoBoneInputData& input_data) {
 
     // compute the rotation delta between old and new root bone orientations
     glm::vec3 to_mid_new = output.mid - in_root;
-    glm::quat root_delta_rotation = glm::rotation(glm::normalize(to_mid), glm::normalize(to_mid_new));
+    glm::quat root_delta_rotation = glm::normalize(glm::rotation(glm::normalize(to_mid), glm::normalize(to_mid_new)));
 
     // add to current root rotation, and result is in world space so transform it back into local space
-    glm::quat root_local_rot = glm::inverse(in_parent_rot) * (root_delta_rotation * in_root_rot);
-    output.root_rot = root_local_rot;
+    glm::quat root_local_rot = glm::normalize(glm::inverse(in_parent_rot) * glm::normalize((root_delta_rotation * in_root_rot)));
+
+    glm::vec3 root_bone_local_axis = glm::normalize(input_data.mid->get_local_position());
+
+    glm::quat solved_root_swing, solved_root_twist;
+    decompose_swing_twist(root_local_rot, root_bone_local_axis, solved_root_swing, solved_root_twist);
+
+    output.root_rot = glm::normalize(solved_root_swing * input_data.root_orig_twist);
 
     // figure out the delta rotation of the middle bone, its downstream so we do need to take into account the root delta rotation
     // fuck this shit
+    glm::vec3 in_mid_with_root_rotation = in_root + root_delta_rotation * (in_mid - in_root);
     glm::vec3 in_end_with_root_rotation = in_root + root_delta_rotation * (in_end - in_root);
-    glm::vec3 mid_to_end_old = in_end_with_root_rotation - output.mid;
+    glm::vec3 mid_to_end_old = in_end_with_root_rotation - in_mid_with_root_rotation;
     glm::vec3 mid_to_end_new = output.end - output.mid;
     glm::quat mid_delta_rotation = glm::rotation(glm::normalize(mid_to_end_old), glm::normalize(mid_to_end_new));
 
     // add it to the current rotation and transform back into local space
-    glm::quat mid_local_rot = glm::inverse(in_root_rot) * (mid_delta_rotation * in_mid_rot);
-    output.mid_rot = mid_local_rot;
+    glm::quat mid_local_rot = glm::inverse(glm::normalize(in_parent_rot * output.root_rot)) * glm::normalize((mid_delta_rotation * in_mid_rot));
+
+    glm::vec3 mid_bone_local_axis = glm::normalize(input_data.end->get_local_position());
+
+    glm::quat mid_swing, mid_twist;
+    decompose_swing_twist(mid_local_rot, mid_bone_local_axis, mid_swing, mid_twist);
+
+    output.mid_rot = glm::normalize(mid_swing * input_data.mid_orig_twist);
+
+    // output.mid_rot = mid_local_rot;
 
     output.bend_angle = glm::pi<float>() - glm::angle(glm::rotation(glm::normalize(in_root - output.mid), glm::normalize(output.end - output.mid)));
+
+    glm::quat new_root_world_rot = glm::normalize(in_parent_rot * output.root_rot);
+    glm::quat new_mid_world_rot = glm::normalize(new_root_world_rot * output.mid_rot);
+
+    glm::quat desired_foot_world_rot = in_parent_rot * input_data.foot_parent_reference;
+    output.end_rot = glm::inverse(new_mid_world_rot) * desired_foot_world_rot;
 
     return output;
 }
 
-glm::vec3 EffectorWalkCycle::do_walk_cycle(float dt, const WalkCycleUpdateVariables& walk_cycle_vars) {
-    step_timer += dt;
+void decompose_swing_twist(const glm::quat& rotation, const glm::vec3& twist_axis, glm::quat& out_swing, glm::quat& out_twist) {
+    glm::vec3 ra(rotation.x, rotation.y, rotation.z);
+    glm::vec3 proj = glm::dot(ra, twist_axis) * twist_axis;
 
-    glm::vec3 point_velocity = (walk_cycle_vars.continuous_available_pos - last_continuous_pos) / dt;
-    last_continuous_pos = walk_cycle_vars.continuous_available_pos;
+    out_twist = glm::normalize(glm::quat(rotation.w, proj.x, proj.y, proj.z));
 
-    if (step_timer >= step_time + cycle_offset && !stepping_effector) {
-        step_timer -= step_time;
-
-        stepping_effector = true;
-
-        initial_pos = effector;
+    // if twist became invalid, fall back to identity
+    if (!std::isfinite(out_twist.x) || !std::isfinite(out_twist.y) || !std::isfinite(out_twist.z) || !std::isfinite(out_twist.w)) {
+        out_twist = glm::quat(1.f, 0.f, 0.f, 0.f);
     }
 
-    // predict based on positional change
-    glm::vec3 prediction_vec = (point_velocity * dt) * step_prediction_strength;
-    glm::vec3 subtraction_vec = prediction_vec * walk_cycle_vars.up;
-    prediction_vec -= subtraction_vec;
-
-    /* if (glm::length(prediction_vec) > 0.5f) {
-        prediction_vec = glm::normalize(prediction_vec) * 0.5f;
-    }*/
-
-    desired_pos = walk_cycle_vars.continuous_available_pos + prediction_vec;
-
-    if (walk_cycle_vars.grounded) {
-        if (!became_grounded) {
-            became_grounded = true;
-            initial_pos = walk_cycle_vars.continuous_available_pos + walk_cycle_vars.up * step_height;
-            desired_pos = walk_cycle_vars.continuous_available_pos;
-            stepping_effector = true;
-        }
-
-        if (stepping_effector) {
-            float distance_height_factor = glm::clamp(glm::distance(initial_pos, walk_cycle_vars.continuous_available_pos), 0.f, 1.f);
-
-            glm::vec3 mix_step = glm::mix(initial_pos, desired_pos, step_interp);
-            float height_step = sinf(glm::pi<float>() * step_interp) * step_height * distance_height_factor * static_cast<float>(walk_cycle_vars.grounded);
-
-            glm::vec3 heightvec = walk_cycle_vars.up * height_step;
-            mix_step += heightvec;
-
-            effector = mix_step;
-
-            step_interp += dt * (1.f / step_duration);
-
-            if (step_interp >= 1.f) {
-                step_interp = 0.f;
-
-                stepping_effector = false;
-            }
-        }
-    } else {
-        effector = glm::mix(effector, walk_cycle_vars.continuous_available_pos + walk_cycle_vars.up * step_height, 20.f * dt);
-        became_grounded = false;
-    }
-    return effector;
-}
-
-void EffectorWalkCycle::set_offset(float offset) {
-    cycle_offset = offset;
+    out_swing = glm::normalize(rotation * glm::inverse(out_twist));
 }
 
 }  // namespace TwoBoneIK

@@ -95,6 +95,7 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     ecs.systems.add<Destruction>();
     ecs.systems.add<RigModelManager>();
     ecs.systems.add<AnimationConstraintSystem>();
+    ecs.systems.add<AnimationPoseEvaluator>();
     Goap* goap = ecs.systems.try_get<Goap>();
     if (!goap) ecs.systems.add<Goap>();
     ecs.systems.add<NavigationSystem>();

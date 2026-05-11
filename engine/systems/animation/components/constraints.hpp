@@ -26,13 +26,20 @@ struct TwoBoneIKConstraint {
     // automatically set
     tmt::Entity parent = entt::null;
     // automatically set
-    tmt::Entity root;
+    tmt::Entity root = entt::null;
 
-    tmt::Entity mid;
-    tmt::Entity tip;
+    tmt::Entity mid = entt::null;
+    tmt::Entity tip = entt::null;
 
-    tmt::Entity target_position_entity;
-    tmt::Entity bend_position_entity;
+    tmt::Entity target_position_entity = entt::null;
+    tmt::Entity bend_position_entity = entt::null;
+
+    glm::quat twist_rest_pose_root;
+    glm::quat twist_rest_pose_mid;
+    glm::quat foot_parent_rest_rotation;
+
+    tmt::Entity constrained_rig_ent = entt::null;
+    bool obey_foot_bind_pose = false;
 };
 struct EffectorWalkCycle {
     // step after how much time?
@@ -47,11 +54,11 @@ struct EffectorWalkCycle {
     bool grounded;
 
     // the continuously available position
-    tmt::Entity desired_target_entity;
+    tmt::Entity desired_target_entity = entt::null;
 
-    tmt::Entity effector_entity;
+    tmt::Entity effector_entity = entt::null;
 
-    tmt::Entity ground_entity;
+    tmt::Entity ground_entity = entt::null;
 
     // the timing offset of the internal step timer
     float cycle_offset = 0.f;
@@ -78,7 +85,7 @@ struct EffectorWalkCycle {
 }  // namespace AnimConstraints
 }  // namespace tmt
 TMT_COMPONENT(tmt::AnimConstraints::DampedTransformConstraint, "Damped Transform Constraint", (damp));
-TMT_COMPONENT(tmt::AnimConstraints::TwoBoneIKConstraint, "Two Bone IK Constraint", (mid, tip, target_position_entity, bend_position_entity));
+TMT_COMPONENT(tmt::AnimConstraints::TwoBoneIKConstraint, "Two Bone IK Constraint", (mid, tip, target_position_entity, bend_position_entity, obey_foot_bind_pose));
 TMT_COMPONENT(
     tmt::AnimConstraints::EffectorWalkCycle, "Effector Walk Cycle",
     (step_time, step_duration, step_height, desired_target_entity, effector_entity, ground_entity, cycle_offset, grounded, step_prediction_strength, stepping_curve, height_curve)

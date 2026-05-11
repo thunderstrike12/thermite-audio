@@ -44,6 +44,11 @@ class LoekTestScene : public tmt::Scene<LoekTestScene> {
     static constexpr std::string_view scene_name() { return "LoekTestScene"; }
 };
 
+class LoekTestScene2 : public tmt::Scene<LoekTestScene2> {
+   public:
+    static constexpr std::string_view scene_name() { return "LoekTestScene2"; }
+};
+
 class AnneTestScene : public tmt::Scene<AnneTestScene> {
    public:
     static constexpr std::string_view scene_name() { return "AnneTestScene"; }

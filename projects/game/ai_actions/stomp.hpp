@@ -19,4 +19,5 @@ class Stomp : public tmt::GoapAction {
     void on_tick(tmt::Entity agent, float dt) override;
     bool is_done(tmt::Entity agent) const override;
     void on_finished(tmt::Entity) override {}
+    void on_interrupt(tmt::Entity) override;
 };

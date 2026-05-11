@@ -27,13 +27,23 @@ void game::MediumEnemy::start() {
     auto& dispatcher = tmt::engine.ecs.get_dispatcher();
     dispatcher.sink<game::GamePausedEvent>().connect<&MediumEnemy::on_game_paused>(this);
     dispatcher.sink<game::GameUnpausedEvent>().connect<&MediumEnemy::on_game_unpaused>(this);
+
+    auto resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(core).resource;
+    core_voxels = resource->blas->voxel_count - resource->blas->voxels_wasted;
+
+    tmt::engine.ecs.get_component<tmt::RigController>(rig_controller).set_parameter_bool("walk", true);
+
+    auto pos = tmt::engine.ecs.get_component<tmt::Transform>(entity).get_world_position();
+    for (int i = 0; i < 4; i++) {
+        if (available_positions[i].entity == entt::null) continue;
+        if (available_positions[i].reference_entity == entt::null) continue;
+        auto ref_pos = tmt::engine.ecs.get_component<tmt::Transform>(available_positions[i].reference_entity).get_world_position();
+        available_positions[i].stored_offset_from_ref_entity = ref_pos - pos;
+    }
 }
 
 void game::MediumEnemy::update(const tmt::FrameData& time) {
-    if (paused) return;
-
-    // check core, if none, enemy dies
-    // if (this->core == entt::null) die();
+    if (paused || core_destroyed) return;
 
     tmt::engine.polyline.use_color(1.0f, 0.0f, 0.0f);
     tmt::engine.polyline.use_line_width(2.0f);
@@ -47,6 +57,20 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
     if (!ws) return;
     const auto& player_pos = tmt::engine.ecs.get_component<tmt::Transform>(player).get_world_position();
     float dist = glm::length(player_pos - walking_transform.get_world_position());
+
+    // get core entity resource
+    auto resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(core).resource;
+    uint32_t current_core_voxels = resource->blas->voxel_count - resource->blas->voxels_wasted;
+    if (current_core_voxels != core_voxels) {
+        core_destroyed = true;
+        tmt::engine.ecs.get_component<tmt::RigController>(rig_controller).set_parameter_bool("walk", false);
+        ws->set_fact(tmt::FactId("m_laser_intact"), false);
+        ws->set_fact(tmt::FactId("m_missiles_intact"), false);
+        // while (true) {
+        //
+        // }
+        return;
+    }
 
     // ranges
     if (dist > aggro_range) {
@@ -98,7 +122,7 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
     auto& normal = (*nodes)[closest_node].normal;
 
     const tmt::Ray ray = tmt::Ray(walking_transform.get_world_position() + normal * 0.5f, glm::normalize(-normal));
-    const tmt::Hit hit = tmt::engine.ecs.systems.get<tmt::Physics>().raycast(ray, projectile_mask);
+    const tmt::Hit hit = tmt::engine.ecs.systems.get<tmt::Physics>().raycast(ray, enemy_mask);
 
     glm::vec3 move_to = ray.origin + ray.dir * hit.distance - ray.dir * (height_above_ground + height_above_ground_offset);
     glm::vec3 desired_velocity = glm::normalize(move_to - walking_transform.get_world_position()) * walk_speed * 0.5f;
@@ -130,10 +154,34 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
     }
 
     if (glm::dot(velocity, velocity) > 0.5f) {
+        tmt::engine.ecs.get_component<tmt::RigController>(rig_controller).set_parameter_bool("walk", true);
         float t = time.delta_time * rotation_speed;
         rotation = glm::slerp(rotation, rot_velocity, glm::clamp(t, 0.0f, 1.0f));
         rotation = glm::normalize(rotation);
         walking_transform.set_world_rotation(rotation);
+    } else {
+        tmt::engine.ecs.get_component<tmt::RigController>(rig_controller).set_parameter_bool("walk", false);
+    }
+
+    // leg available pos update
+    for (int i = 0; i < 4; i++) {
+        if (available_positions[i].entity == entt::null) continue;
+        if (available_positions[i].reference_entity == entt::null) continue;
+        auto& pos_transform = tmt::engine.ecs.get_component<tmt::Transform>(available_positions[i].entity);
+        auto world_matrix = walking_transform.get_world_matrix();
+        auto ref_pos = glm::vec3(world_matrix * glm::vec4(available_positions[i].stored_offset_from_ref_entity, 1.0f));
+        tmt::Ray ray = tmt::Ray();
+        // normal = (*nodes)[nav_mesh.find_closest_node(pos_transform.get_world_position())].normal;
+        ray.dir = -normal;
+        ray.dir = glm::normalize(ray.dir);
+        ray.origin = ref_pos + normal * 1.0f;
+        tmt::engine.polyline.draw_arrow(ray.origin, ray.dir, 1.0f);
+        tmt::Hit hit = tmt::engine.ecs.systems.get<tmt::Physics>().raycast(ray, enemy_mask);
+        float ground_distance = hit.distance - 1.0f;
+        float move_distance = ground_distance - available_positions[i].height_offset > 10.0f ? 10.0f : ground_distance - available_positions[i].height_offset;
+        pos_transform.set_world_position(ref_pos + ray.dir * move_distance);
+        tmt::engine.polyline.draw_sphere(pos_transform.get_world_position(), 0.1f, 8);
+        tmt::engine.polyline.draw_sphere(ref_pos, 0.2f, 8);
     }
 }
 
