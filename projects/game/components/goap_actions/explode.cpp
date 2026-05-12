@@ -126,13 +126,6 @@ void Explode::on_tick(tmt::Entity agent, float dt) {
         auto& explosion_transform = ecs.get_component<tmt::Transform>(explosion_entity);
         explosion_transform.set_world_position(explosion_center);
 
-        // Explosion component
-        // auto& explosion = ecs.add_component<Explosion>(explosion_entity);
-
-        // Copy params from agent
-        // explosion.param = small_enemy->explosion_parameters;
-        // explosion.explode();
-
         // Get everything (with voxel body) within radius and push away
         float radius = small_enemy->logic_paramaters.push_radius;
         float force = small_enemy->logic_paramaters.explosion_force;
@@ -190,11 +183,15 @@ void Explode::on_tick(tmt::Entity agent, float dt) {
             }
         }
 
+        // Explosion component
+        auto& explosion = ecs.add_component<Explosion>(explosion_entity);
+
+        // Copy params from agent
+        explosion.param = small_enemy->explosion_parameters;
+        explosion.explode();
+
         // destroy core entity & explosion
         ecs.destroy_entity(thermite);
-
-        // remove GOAP so it doesn't keep acting
-        ecs.remove_component<tmt::GoapAgent>(agent);
 
         exploded = true;
     }

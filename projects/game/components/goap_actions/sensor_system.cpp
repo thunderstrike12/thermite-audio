@@ -55,6 +55,15 @@ void SensorsSystem::on_update(const tmt::FrameData& /*time*/) {
         auto& steering_agent = registry.get<SteeringAgent>(agent);
         auto* small_enemy = tmt::engine.ecs.try_get_component<SmallEnemy>(agent);
 
+        // try get small enemy component, and the core entity, if no core enemy dies
+        if (!small_enemy || small_enemy->core_destroyed) {
+            // remove GOAP so it doesn't keep acting
+            tmt::engine.ecs.remove_component<tmt::GoapAgent>(agent);
+            // tmt::engine.ecs.remove_component<SteeringAgent>(agent); // if I keep the other enemies will avoid flying into it
+
+            return;  // nothing to explode
+        }
+
         // check world states
         auto* agent_transform = ecs.try_get_component<tmt::Transform>(agent);
         if (!agent_transform) return;

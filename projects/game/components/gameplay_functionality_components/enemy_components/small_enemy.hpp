@@ -32,21 +32,26 @@ class SmallEnemy : public tmt::GameComponent<SmallEnemy> {
     static std::string_view get_name() { return "Small Enemy"; }
 
     void start() override;
-    void update(const tmt::FrameData& time) override {}
+    void update(const tmt::FrameData& time) override;
     void end() override {}
 
     void die();
 
-    tmt::Entity thermite = entt::null;
-    // tmt::Entity core = entt::null;
+    tmt::Entity core = entt::null;
     tmt::Entity explosion = entt::null;
+    tmt::Entity thermite = entt::null;
 
     ExplosionParameters explosion_parameters;
     LogicParameters logic_paramaters;
     MovementParameters movement_paramaters;
+
+    bool core_destroyed = false;
+
+   private:
+    uint32_t core_voxels = 0u;
 };
 
 }  // namespace game
 TMT_OBJECT(game::LogicParameters, (min_explosion_range, max_explosion_range, charge_time, explosion_damage, explosion_force, activation_range, push_radius));
 TMT_OBJECT(game::MovementParameters, (max_speed, max_force, arrive_radius, wander_radius_limit));
-TMT_OBJECT(game::SmallEnemy, (thermite, explosion /*, core*/, explosion_parameters, logic_paramaters, movement_paramaters));
+TMT_OBJECT(game::SmallEnemy, (core, explosion, thermite, explosion_parameters, logic_paramaters, movement_paramaters));
