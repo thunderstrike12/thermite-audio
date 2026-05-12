@@ -26,6 +26,8 @@ struct CellTemplate {
     float height = 10.f;
     PoissonField field;
     RGBA color { glm::vec4(1.f, 0.f, 0.f, 1.f) };
+
+    std::vector<RGBA> possible_light_colors;
 };
 
 struct LevelConfiguration {
@@ -38,6 +40,6 @@ struct LevelConfiguration {
 };
 
 }  // namespace tmt
-TMT_OBJECT(tmt::CellTemplate, (name, random_seed, seed, height, field, color));
+TMT_OBJECT(tmt::CellTemplate, (name, random_seed, seed, height, field, color, possible_light_colors));
 TMT_OBJECT(tmt::Cell, (template_index));
 TMT_OBJECT(tmt::LevelConfiguration, (cell_size, cell_margin, global_field_offset, scene_cells, scene_pickable_cell_templates));
