@@ -11,16 +11,7 @@
 
 namespace tmt {
 
-void SteeringSystem::on_start() {
-    /*Log::info("Steering on_start");
-
-    overrides().load();
-
-    auto view = engine.ecs.view<SteeringAgent>();
-    for (auto [entity, agent] : view.each()) {
-        agent.params = &overrides().params;
-    }*/
-}
+void SteeringSystem::on_start() {}
 
 /**
  * Main per-frame physics update for steering agents.
@@ -37,7 +28,8 @@ void SteeringSystem::on_fixed_update(const FrameData& time) {
         if (!agent.active) continue;
 
         body.type = VoxelBody::DYNAMIC;
-        if (body.type != VoxelBody::DYNAMIC) continue;
+
+        check_completion(agent, request, transform, body);
 
         if (request.mode == SteeringMode::NONE) continue;
 
@@ -48,6 +40,10 @@ void SteeringSystem::on_fixed_update(const FrameData& time) {
         }
 
         glm::vec3 steering = calculate_force(agent, request, transform, body, time.delta_time);
+
+        // separating from other steering agents
+        glm::vec3 position = transform.get_world_position();
+        steering += separation(entity, agent, position);
 
         // Clamp steering acceleration
         float len = glm::length(steering);
@@ -64,23 +60,23 @@ void SteeringSystem::on_fixed_update(const FrameData& time) {
         glm::vec3 desired_forward = body.velocity;
         desired_forward.y = 0.0f;
 
-        if (glm::length2(desired_forward) > 0.0001f) {
-            desired_forward = glm::normalize(desired_forward);
-
-            glm::quat target_rot = glm::quatLookAt(desired_forward, glm::vec3(0, 1, 0));
-
-            // you may need this depending on your model orientation
-            target_rot *= glm::angleAxis(glm::radians(180.0f), glm::vec3(0, 1, 0));
-
-            glm::quat current_rot = body.rotation;
-
-            float turn_speed = 5.0f;
-            glm::quat new_rot = glm::slerp(current_rot, target_rot, turn_speed * time.delta_time);
-
-            body.rotation = new_rot;
+        // Ignore tiny unstable velocities caused by collisions/explosions
+        if (glm::length2(desired_forward) < 0.05f) {
+            continue;
         }
 
-        check_completion(agent, request, transform, body);
+        desired_forward = glm::normalize(desired_forward);
+
+        glm::quat target_rot = glm::quatLookAt(-desired_forward, glm::vec3(0, 1, 0));
+
+        target_rot *= glm::angleAxis(glm::radians(180.0f), glm::vec3(0, 1, 0));
+
+        glm::quat current_rot = body.rotation;
+
+        float turn_speed = 5.0f;
+        glm::quat new_rot = glm::slerp(current_rot, target_rot, turn_speed * time.delta_time);
+
+        body.rotation = new_rot;
     }
 }
 
@@ -215,6 +211,45 @@ glm::vec3 SteeringSystem::collision_avoidance(const SteeringAgent& agent, const 
     }
 
     return total_avoid;
+}
+
+/**
+ * Returns a force to avoid other small enemies.
+ *
+ * Steps:
+ *  - Find other steering agent, and get their position.
+ *  - Mov away from the enemy with a force which is stronger the closer you are.
+ */
+glm::vec3 SteeringSystem::separation(entt::entity self, const SteeringAgent& agent, const glm::vec3& position) {
+    glm::vec3 force(0.0f);
+
+    auto view = engine.ecs.view<SteeringAgent, Transform>();
+
+    const float desired_distance = 3.0f;
+    const float desired_distance2 = desired_distance * desired_distance;
+
+    for (auto [other, other_agent, other_transform] : view.each()) {
+        // exclude self using entity id
+        if (other == self) continue;
+
+        glm::vec3 diff = position - other_transform.get_world_position();
+
+        float dist2 = glm::length2(diff);
+
+        if (dist2 < 0.0001f) continue;
+
+        // only affect nearby agents
+        if (dist2 < desired_distance2) {
+            float dist = sqrt(dist2);
+
+            // stronger push when closer
+            glm::vec3 dir = diff / dist;
+
+            force += dir / dist;
+        }
+    }
+
+    return force * agent.max_force;
 }
 
 /**

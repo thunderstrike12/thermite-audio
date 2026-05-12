@@ -51,6 +51,11 @@ class SteeringSystem : public ISystem {
     glm::vec3 collision_avoidance(const SteeringAgent& agent, const glm::vec3& position, const VoxelBody& body);
 
     /**
+     * Calculate collision avoidance force between small enemies.
+     */
+    glm::vec3 separation(entt::entity self, const SteeringAgent& agent, const glm::vec3& position);
+
+    /**
      * Calculate total steering force based on current request and obstacle avoidance.
      */
     glm::vec3 calculate_force(const SteeringAgent& agent, const SteeringRequest& request, const Transform& transform, const VoxelBody& body, float dt);

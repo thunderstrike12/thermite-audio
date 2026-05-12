@@ -32,7 +32,7 @@ void SensorsSystem::on_start() {
 void SensorsSystem::on_update(const tmt::FrameData& /*time*/) {
     auto& ecs = tmt::engine.ecs;
 
-    ecs.view<tmt::WorldState, tmt::GoapAgent>().each([&](tmt::Entity agent_entity, tmt::WorldState& ws, tmt::GoapAgent& agent) {
+    ecs.view<tmt::WorldState, tmt::GoapAgent>().each([&](tmt::Entity /*agent_entity*/, tmt::WorldState& ws, tmt::GoapAgent& agent) {
         // propagate world state change to agent
         if (ws.needs_replan) {
             agent.needs_replan = true;
@@ -55,18 +55,6 @@ void SensorsSystem::on_update(const tmt::FrameData& /*time*/) {
         auto& steering_agent = registry.get<SteeringAgent>(agent);
         auto* small_enemy = tmt::engine.ecs.try_get_component<SmallEnemy>(agent);
 
-        // try get small enemy component, and the core entity, if no core enemy dies
-        /*if (!small_enemy || !tmt::engine.ecs.valid(small_enemy->core)) {
-            // call die on the small_enemy so it shows it died?
-            small_enemy->die();
-
-            // remove GOAP so it doesn't keep acting
-            tmt::engine.ecs.remove_component<tmt::GoapAgent>(agent);
-            tmt::engine.ecs.remove_component<SteeringAgent>(agent);
-
-            return;  // nothing to explode
-        }*/
-
         // check world states
         auto* agent_transform = ecs.try_get_component<tmt::Transform>(agent);
         if (!agent_transform) return;
@@ -84,11 +72,6 @@ void SensorsSystem::on_update(const tmt::FrameData& /*time*/) {
             ws->set_fact(tmt::FactId("s_ready_to_explode"), false);
         }
     });
-
-    // update medium enemy to check the core
-    /*ecs.view<MediumEnemy>().each([&](tmt::Entity agent, MediumEnemy& medium_enemy) {
-
-    });*/
 }
 
 void SensorsSystem::on_end() {

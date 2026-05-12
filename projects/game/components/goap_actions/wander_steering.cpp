@@ -3,6 +3,7 @@
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
 #include "engine/core/logger.hpp"
+#include "engine/core/components/rig_controller.hpp"
 
 #include "engine/systems/ai/steering/steering_system.hpp"
 #include "engine/systems/ai/steering/components/steering_mode.hpp"
@@ -48,13 +49,11 @@ void WanderSteering::on_start(tmt::Entity agent) {
     for (tmt::Entity child : children) {
         if (!tmt::engine.ecs.valid(child)) continue;
 
-        if (tmt::engine.ecs.try_get_component<tmt::RigModel>(child)) {
-            auto* rig = tmt::engine.ecs.try_get_component<tmt::RigModel>(child);
-            if (rig) {
-                if (rig->get_current_animation() != "SmallEnemy_idle") {
-                    rig->play_animation("SmallEnemy_idle", 0.15f, true);
-                }
-            }
+        if (tmt::engine.ecs.try_get_component<tmt::RigController>(child)) {
+            auto* rig_controller = tmt::engine.ecs.try_get_component<tmt::RigController>(child);
+            rig_controller->set_parameter_bool("Wandering", true);
+            rig_controller->set_parameter_bool("Chasing", false);
+            rig_controller->set_parameter_bool("ChargingExplosion", false);
         }
     }
 }
@@ -68,7 +67,8 @@ bool WanderSteering::is_done(tmt::Entity /*agent*/) const {
 void WanderSteering::on_finished(tmt::Entity agent) {
     auto& registry = tmt::engine.ecs.get_registry();
     if (registry.any_of<tmt::SteeringRequest>(agent)) {
-        registry.remove<tmt::SteeringRequest>(agent);
+        auto& req = registry.get<tmt::SteeringRequest>(agent);
+        req.mode = SteeringMode::NONE;
     }
 }
 

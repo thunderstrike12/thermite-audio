@@ -66,7 +66,8 @@ bool PrepareExplode::is_done(tmt::Entity agent) const {
 void PrepareExplode::on_finished(tmt::Entity agent) {
     auto& registry = tmt::engine.ecs.get_registry();
     if (registry.any_of<tmt::SteeringRequest>(agent)) {
-        registry.remove<tmt::SteeringRequest>(agent);
+        auto& req = registry.get<tmt::SteeringRequest>(agent);
+        req.mode = SteeringMode::NONE;
     }
 }
 

@@ -456,7 +456,6 @@ void Goap::update_action(Entity entity, GoapAgent& agent, WorldState& ws) {
 
         action->apply_effects(ws);
         action->on_finished(entity);
-        action->is_running = false;
         agent.current_action = nullptr;
 
         agent.current_index++;

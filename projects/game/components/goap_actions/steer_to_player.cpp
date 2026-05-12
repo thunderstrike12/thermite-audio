@@ -50,13 +50,11 @@ void SteerToPlayer::on_start(tmt::Entity agent) {
     for (tmt::Entity child : children) {
         if (!tmt::engine.ecs.valid(child)) continue;
 
-        if (tmt::engine.ecs.try_get_component<tmt::RigModel>(child)) {
-            auto* rig = tmt::engine.ecs.try_get_component<tmt::RigModel>(child);
-            if (rig) {
-                if (rig->get_current_animation() != "SmallEnemy_chase") {
-                    rig->play_animation("SmallEnemy_chase", 0.15f, true);
-                }
-            }
+        if (tmt::engine.ecs.try_get_component<tmt::RigController>(child)) {
+            auto* rig_controller = tmt::engine.ecs.try_get_component<tmt::RigController>(child);
+            rig_controller->set_parameter_bool("Chasing", true);
+            rig_controller->set_parameter_bool("Wandering", false);
+            rig_controller->set_parameter_bool("ChargingExplosion", false);
         }
     }
 }
@@ -73,6 +71,8 @@ void SteerToPlayer::on_fixed_tick(tmt::Entity agent, float /*dt*/) {
     if (!player_transform) return;
 
     request.target_position = player_transform->get_world_position();
+
+    glm::vec3 player_pos = player_transform->get_world_position();
 }
 
 bool SteerToPlayer::is_done(tmt::Entity agent) const {
@@ -99,7 +99,8 @@ bool SteerToPlayer::is_done(tmt::Entity agent) const {
 void SteerToPlayer::on_finished(tmt::Entity agent) {
     auto& registry = tmt::engine.ecs.get_registry();
     if (registry.any_of<tmt::SteeringRequest>(agent)) {
-        registry.remove<tmt::SteeringRequest>(agent);
+        auto& req = registry.get<tmt::SteeringRequest>(agent);
+        req.mode = SteeringMode::NONE;
     }
 }
 

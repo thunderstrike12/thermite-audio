@@ -50,13 +50,11 @@ void Explode::on_start(tmt::Entity agent) {
     for (tmt::Entity child : children) {
         if (!tmt::engine.ecs.valid(child)) continue;
 
-        if (tmt::engine.ecs.try_get_component<tmt::RigModel>(child)) {
-            auto* rig = tmt::engine.ecs.try_get_component<tmt::RigModel>(child);
-            if (rig) {
-                if (rig->get_current_animation() != "SmallEnemy_detonate") {
-                    rig->play_animation("SmallEnemy_detonate", 0.15f, true);
-                }
-            }
+        if (tmt::engine.ecs.try_get_component<tmt::RigController>(child)) {
+            auto* rig_controller = tmt::engine.ecs.try_get_component<tmt::RigController>(child);
+            rig_controller->set_parameter_bool("ChargingExplosion", true);
+            rig_controller->set_parameter_bool("Chasing", false);
+            rig_controller->set_parameter_bool("Wandering", false);
         }
     }
 }
@@ -80,10 +78,7 @@ void Explode::on_tick(tmt::Entity agent, float dt) {
 
     if (glm::length2(dir) > 0.0001f) {
         dir = glm::normalize(dir);
-
         glm::quat target_rot = glm::quatLookAt(-dir, glm::vec3(0, 1, 0));
-
-        // optional model correction (VERY likely needed in your engine)
         target_rot *= glm::angleAxis(glm::radians(180.0f), glm::vec3(0, 1, 0));
 
         // choose correct rotation owner
@@ -132,10 +127,11 @@ void Explode::on_tick(tmt::Entity agent, float dt) {
         explosion_transform.set_world_position(explosion_center);
 
         // Explosion component
-        auto& explosion = ecs.add_component<Explosion>(explosion_entity);
+        // auto& explosion = ecs.add_component<Explosion>(explosion_entity);
 
         // Copy params from agent
-        explosion.param = small_enemy->explosion_parameters;
+        // explosion.param = small_enemy->explosion_parameters;
+        // explosion.explode();
 
         // Get everything (with voxel body) within radius and push away
         float radius = small_enemy->logic_paramaters.push_radius;
@@ -155,7 +151,8 @@ void Explode::on_tick(tmt::Entity agent, float dt) {
 
                 glm::vec3 explosion_velocity = normal * force * strength;
 
-                // apply an impulse
+                // apply an impulse, not for enemies
+                // if (body.layer != (1 << 2))
                 body.velocity += explosion_velocity;
             }
         }
@@ -203,7 +200,7 @@ void Explode::on_tick(tmt::Entity agent, float dt) {
     }
 }
 
-bool Explode::is_done(tmt::Entity agent) const {
+bool Explode::is_done(tmt::Entity /*agent*/) const {
     return exploded;
 }
 
