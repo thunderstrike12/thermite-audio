@@ -14,7 +14,7 @@ class ProjectileSpawner : public tmt::GameComponent<ProjectileSpawner> {
     void update(const tmt::FrameData& time) override;
     void end() override;
 
-    entt::entity animated_tool_entity;   // entity with the animation state machine to animate
+    entt::entity animated_tool_entity;  // entity with the animation state machine to animate
 
    private:
     void on_shoot(const WeaponFiredEvent& e) const;
