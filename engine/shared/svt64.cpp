@@ -980,8 +980,8 @@ void Svt64::defrag() {
     voxel_count = voxels_wasted = nodes_wasted = 0u;
 
     /* Non-recursive */
-    uint32_t old_stack[128] {};
-    uint32_t new_stack[128] {};
+    std::vector<uint32_t> old_stack(64 * depth);
+    std::vector<uint32_t> new_stack(64 * depth);
     uint32_t stack_ptr = 0u;
     uint32_t old_node_index = 0u;
     uint32_t new_node_index = 0u;
