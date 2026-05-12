@@ -136,8 +136,29 @@ uint jenkins32(uint a) {
     return a;
 }
 
+uint hash_combine(uint seed, uint v) {
+    v *= 0xcc9e2d51u;
+    v = (v << 15) | (v >> 17);
+    v *= 0x1b873593u;
+    seed ^= v;
+    seed = (seed << 13) | (seed >> 19);
+    return seed * 5u + 0xe6546b64u;
+}
+
+uint fmix32(uint h) {
+    h ^= h >> 16;
+    h *= 0x85ebca6bu;
+    h ^= h >> 13;
+    h *= 0xc2b2ae35u;
+    h ^= h >> 16;
+    return h;
+}
+
 public inline uint voxel_hash(const uint voxel_index, const uint object_index, const uint face_index) {
-    return jenkins32(voxel_index) ^ jenkins32(object_index | (face_index << 16));
+    uint h = hash_combine(0u, voxel_index);
+    h = hash_combine(h, object_index);
+    h = hash_combine(h, face_index);
+    return jenkins32(h);
 }
 
 public inline uint voxel_hash(const uint64_t packed) {

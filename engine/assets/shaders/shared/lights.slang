@@ -13,10 +13,10 @@ public enum LightType : uint {
 
 /* Universal light descriptor. */
 public struct Light {
-    float4 type_origin;
-    float4 luminance_source;
-    float4 attenuation_culling_beam_blend;
-    float4 direction_length;
+    public float4 type_origin;
+    public float4 luminance_source;
+    public float4 attenuation_culling_beam_blend;
+    public float4 direction_length;
 
     /* The kind of light source. */
     public property LightType type { get { return (LightType)asuint(type_origin.x); } }
@@ -43,32 +43,6 @@ public struct Light {
     /* Cosine of the angular radius of the spot light beam. (also used for fine culling) */
     public property float cos_beam_angle { get { return attenuation_culling_beam_blend.z; } }
 };
-
-/* Calculate distance attenuation. */
-public [ForceInline] float distance_attenuation(const float dist, const float radius) {
-    const float relative_dist = saturate(dist / radius);
-    const float inverse_dist = 1.0f - relative_dist * relative_dist;
-    return (inverse_dist * inverse_dist) / (1.0f + 4.0f * relative_dist);
-}
-
-/* For a given sample point and normal, evaluate the weight of a light source. */
-public [ForceInline] float evaluate_weight(const float3 p, const float3 n, const Light light) {
-    if (all(light.luminance <= 0.0f)) return 0.0f;
-
-    /* Calculate the local origin and distance to the light source */
-    const float3 src_local = light.origin - p;
-    const float src_dist = length(src_local);
-    if (src_dist >= light.culling_radius || src_dist <= 0.0f) return 0.0f; /* Out of range */
-
-    /* Calculate the direction and angle towards the light source */
-    const float3 src_dir = src_local / src_dist;
-    const float src_angle = dot(src_dir, -light.direction);
-    if (src_angle < light.cos_beam_angle) return 0.0f; /* Out of range */
-
-    /* Calculate the weight based on the perceived brightness of the light */
-    const float luminance = cs::acescg_luminance(light.luminance);
-    return 1.0f; // + luminance * distance_attenuation(src_dist, light.culling_radius);
-}
 
 /* Perform fine culling for a light source against a sphere. */
 public [ForceInline] bool fine_cull_light(const Light light, const float3 c, const float r) {
@@ -144,6 +118,13 @@ public [ForceInline] LightSample sample_light(const float3 point, const Light li
     const float light_dist = max(0.001f, distance(light_origin, point));
     const float sample_angle = sqrt(1.0f - pow(light.source_radius / light_dist, 2.0f));
 
+    /* Handle samples inside the light source radius */
+    if (light_dist <= light.source_radius) {
+        sample.tmax = 0.0f;
+        sample.rcp_pdf = 1.0f;
+        return sample;
+    }
+
     /* Generate a direction within a cone in local-space */
     const float cos_theta = 1.0f - r01.x * (1.0f - sample_angle);
     const float sin_theta = sqrt(1.0f - cos_theta * cos_theta);
@@ -165,4 +146,25 @@ public [ForceInline] LightSample sample_light(const float3 point, const Light li
     /* Calculate the PDF of the sample */
     sample.rcp_pdf = 2.0f * PI_F32 * (1.0f - sample_angle);
     return sample;
+}
+
+/* Calculate attenuation for a light and light sample at a given point. */
+public [ForceInline] float attenuate_light(const float3 point, const Light light, const LightSample sample) {
+    if (light.attenuation_radius <= 0.0f) return 0.0f;
+
+    /* Distance based attenuation */
+    const float relative_dist = saturate(sample.tmax / light.attenuation_radius);
+    const float inverse_dist = 1.0f - relative_dist * relative_dist;
+    float attenuation = (inverse_dist * inverse_dist) / (1.0f + 4.0f * relative_dist);
+
+    /* Spot based attenuation */
+    if (light.type == LightType::SPOT_LIGHT) {
+        const float3 light_dir = normalize(point - light.origin);
+        const float cos_theta = dot(light_dir, light.direction);
+        const float cos_inner = lerp(light.cos_beam_angle, 1.0f, light.spot_blend * 2.0f);
+        const float spot = saturate((cos_theta - light.cos_beam_angle) / (cos_inner - light.cos_beam_angle));
+        attenuation *= spot * spot;
+    }
+
+    return attenuation;
 }

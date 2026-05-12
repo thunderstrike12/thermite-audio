@@ -196,6 +196,11 @@ public float2 rand_float2(inout uint state) {
     return float2(rand_float(state), rand_float(state));
 }
 
+/* Random float3 in range [0, 1) */
+public float3 rand_float3(inout uint state) {
+    return float3(rand_float(state), rand_float(state), rand_float(state));
+}
+
 /* Generate a sample direction within a cone around a direction vector. */
 public float3 sample_cone(const float3 dir, const float half_angle, const float2 uv) {
     const float cos_theta = 1.0f - uv.x * (1.0f - half_angle);

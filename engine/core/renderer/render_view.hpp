@@ -26,6 +26,8 @@ struct GpuView {
     glm::mat4 clip_to_world = glm::mat4(1.f);
     /* Origin of the view in world-space. */
     glm::vec4 origin {};
+    /* Previous origin of the view in world-space. */
+    glm::vec4 prev_origin {};
     /* Resolution of the view in pixels. */
     glm::uvec2 resolution { 1, 1 };
     /* Index of the current frame. */
@@ -76,9 +78,6 @@ struct RenderView {
     /* Create a ray from this render view for a given pixel coordinate. */
     Ray pixel_ray(glm::ivec2 pixel) const;
 
-    /* Directional albedo look up texture (32x32) */
-    Texture diralbedo_lut_texture {};
-    Image diralbedo_lut {};
     /* Blue noise textures (512x512) */
     ResourceRef<Texture2D> blue_noise2d {};
     ResourceRef<Texture2D> blue_noise1d {};
@@ -97,6 +96,17 @@ struct RenderView {
     /* Intermediate specular & diffuse buffers */
     ScreenBuffer spec_buffer {};
     ScreenBuffer diff_buffer {};
+
+    /* Froxel volume */
+    Texture froxel_scatter_texture {};
+    Image froxel_scatter_image {};
+    Texture prev_froxel_scatter_texture {};
+    Image prev_froxel_scatter_image {};
+    Texture froxel_luminance_texture {};
+    Image froxel_luminance_image {};
+    Texture prev_froxel_luminance_texture {};
+    Image prev_froxel_luminance_image {};
+    Sampler froxel_sampler {};
 
     /* Stencil images */
     Image stencil_image {};

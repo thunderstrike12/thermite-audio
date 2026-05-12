@@ -49,7 +49,7 @@ public [ForceInline] uint cell_base(const uint cascade, const uint x, const uint
     return ((cascade * CASCADE_RESOLUTION3) + (z * CASCADE_RESOLUTION2) + (y * CASCADE_RESOLUTION) + x) * CELL_STRIDE;
 }
 
-/* Get the number of lights overlapping a given world-space point. */
+/* Get the number of lights overlapping a given view-space point. */
 public [ForceInline] uint light_occupancy(const StructuredBuffer<uint32_t> cascades, const float3 pos) {
     /* Find the cascade index */
     const CascadeIndex i = index_cascades(pos);

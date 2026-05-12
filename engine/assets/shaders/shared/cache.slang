@@ -11,7 +11,7 @@ public static const uint FUSE_LENGTH = 16u;
 /* Empty slot key. */
 public static const uint64_t EMPTY_KEY = 0xFFFFFFFFFFFFFFFFull;
 /* Number of inactive frames after which to free a slot. */
-public static const uint INACTIVE_THRESHOLD = 60u;
+public static const uint INACTIVE_THRESHOLD = 16u;
 /* Number of slots available in the cache. */
 public static const uint CAPACITY = 10000000u;
 
@@ -95,7 +95,7 @@ public struct Slot {
     /* Accumulate into the cache slot. */
     public [ForceInline] [mutating] void accumulate(const float3 diffuse_sample, const float3 specular_sample) {
         /* Avoid accumulating too many samples, we can only handle ~1.000.000 */
-        if (sample_count > 100000u) return;
+        if (sample_count > 512u) return;
 
         /* Convert to fixed point representation for atomics */
         const uint3 diffuse_fxp = uint3(diffuse_sample * QFACTOR);

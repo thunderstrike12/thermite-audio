@@ -38,6 +38,7 @@ BillboardVertexOutput main(VertexInput input, uint32_t instance_id: SV_InstanceI
     BillboardVertexOutput output;
     /* 6. Convert to clip space */
     output.pos = float4(ndc_pos * clip_pos.w, clip_pos.z, clip_pos.w);
+    output.world_pos = particle.pos;
 
     /* Motion Vectors */
     float2 curr_ndc = clip_pos.xy / clip_pos.w;

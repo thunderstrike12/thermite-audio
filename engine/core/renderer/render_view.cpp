@@ -116,6 +116,17 @@ void RenderView::init() {
     ).expect("failed to initialize motion vector buffer texture");
     mbuffer.image = bank.create_image("Motion Vector Buffer Image", mbuffer.texture).expect("failed to initialize motion vector buffer image.");
 
+    /* Froxel volume buffers */
+    froxel_scatter_texture = bank.create_texture("Froxel Scatter Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RGBA16Sfloat, {160, 90, 64}).expect("failed to create froxel texture.");
+    froxel_scatter_image = bank.create_image("Froxel Scatter Image", froxel_scatter_texture).expect("failed to create froxel image.");
+    prev_froxel_scatter_texture = bank.create_texture("Prev Froxel Scatter Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RGBA16Sfloat, {160, 90, 64}).expect("failed to create froxel texture.");
+    prev_froxel_scatter_image = bank.create_image("Prev Froxel Scatter Image", prev_froxel_scatter_texture).expect("failed to create froxel image.");
+    froxel_luminance_texture = bank.create_texture("Froxel Luminance Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RGBA16Sfloat, {160, 90, 64}).expect("failed to create froxel texture.");
+    froxel_luminance_image = bank.create_image("Froxel Luminance Image", froxel_luminance_texture).expect("failed to create froxel image.");
+    prev_froxel_luminance_texture = bank.create_texture("Prev Froxel Luminance Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RGBA16Sfloat, {160, 90, 64}).expect("failed to create froxel texture.");
+    prev_froxel_luminance_image = bank.create_image("Prev Froxel Luminance Image", prev_froxel_luminance_texture).expect("failed to create froxel image.");
+    froxel_sampler = bank.create_sampler("Froxel Volume Sampler", Filter::Linear, AddressMode::ClampToEdge).expect("failed to create froxel sampler.");
+
     /* Create the macrofacet cache */
     const uint64_t cache_size = 10'000'000u; /* 480 MB */
     macrofacet_cache = bank.create_buffer("Macrofacet Cache Buffer", BufferUsage::Storage, cache_size, 48ull /* bytes */).expect("failed to create macrofacet cache buffer.");
@@ -172,6 +183,7 @@ void RenderView::update_gpu_view(RenderGraph& render_graph, const Camera& camera
     gpu_view.world_to_clip = p * glm::inverse(world);  // p * v
     gpu_view.prev_world_to_clip = prev_world_to_clip;
     gpu_view.clip_to_world = glm::inverse(gpu_view.world_to_clip);
+    gpu_view.prev_origin = gpu_view.origin;
     gpu_view.origin = glm::vec4(transform.get_world_position(), 0.0f);
     gpu_view.frame_index = frame_counter;
     gpu_view.dt = engine.frame_data().delta_time;
@@ -227,6 +239,16 @@ void RenderView::deinit() {
     bank.destroy(mbuffer.texture);
     bank.destroy(viewport.image);
     bank.destroy(viewport.texture);
+
+    bank.destroy(froxel_scatter_image);
+    bank.destroy(froxel_scatter_texture);
+    bank.destroy(prev_froxel_scatter_image);
+    bank.destroy(prev_froxel_scatter_texture);
+    bank.destroy(froxel_luminance_image);
+    bank.destroy(froxel_luminance_texture);
+    bank.destroy(prev_froxel_luminance_image);
+    bank.destroy(prev_froxel_luminance_texture);
+    bank.destroy(froxel_sampler);
 
     bank.destroy(render_view_buffer);
     bank.destroy(render_target);

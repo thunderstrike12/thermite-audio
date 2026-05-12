@@ -4,6 +4,7 @@ import math;
 
 public struct BillboardVertexOutput {
     public float4 pos : SV_Position;
+    public float3 world_pos : WORLDPOS;
     public float2 uv : TEXCOORD0;
     public uint32_t tex_index : TEXINDEX0;
     public float opacity : OPACITY0;

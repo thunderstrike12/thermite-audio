@@ -43,15 +43,22 @@ inline Size3D rated_resolution(Size3D base, ShadingRate rate) {
 }
 
 struct RendererSettings {
+    /* Bloom settings */
     float bloom_radius = 0.5f;
     float bloom_threshold = 1.0f;
     float bloom_trail = 1.0f;
 
+    /* Auto exposure settings */
     float autox_key_value = 0.01f;
     float autox_lum_min = 0.001f;
     float autox_lum_max = 100.0f;
     float autox_response = 1.0f;
 
+    /* Fog/Volumetrics settings */
+    float fog_base_step_size = 0.1f;
+    uint32_t fog_step_count = 16u;
+
+    /* Shading rate settings */
     ShadingRate diff_shading_rate = ShadingRate::HALF_RATE;
     ShadingRate spec_shading_rate = ShadingRate::QUARTER_RATE;
 };
@@ -93,7 +100,7 @@ class Renderer {
 
     /* Pipelines */
     class GeometryPipeline& geometry_pipeline;
-    class DiPipeline& di_pipeline;
+    class LightingPipeline& lighting_pipeline;
     class PolylinePipeline& polyline_pipeline;
     class VfxPipeline& vfx_pipeline;
     class UiPipeline& ui_pipeline;

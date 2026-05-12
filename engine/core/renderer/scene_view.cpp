@@ -338,6 +338,10 @@ void SceneView::update_lights(RenderGraph& render_graph, const RenderView&) {
     object_opaque_distance = 128.0f;
     object_transparent_distance = 152.0f;
     object_opacity_transition = 10.0f;
+    fog_anisotropy = 0.6f;
+    fog_scatter_strength = 0.25f;
+    fog_absorption = glm::vec3(0.02f);
+    particle_reflectance = 0.1f;
 
     /* Iterate over all environments */
     for (auto&& [entity, env] : env_group.each()) {
@@ -348,6 +352,10 @@ void SceneView::update_lights(RenderGraph& render_graph, const RenderView&) {
             object_opaque_distance = env.object_opaque_distance;
             object_transparent_distance = env.object_transparent_distance;
             object_opacity_transition = env.object_opacity_transition;
+            fog_anisotropy = env.fog_anisotropy;
+            fog_scatter_strength = env.fog_scatter_strength;
+            fog_absorption = env.fog_absorption;
+            particle_reflectance = env.particle_reflectance;
             break;
         }
     }

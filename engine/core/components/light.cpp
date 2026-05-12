@@ -15,7 +15,7 @@ glm::vec3 Light::calculate_luminance(const glm::vec3 scale) const {
         /* Spherical area light */
         case LightType::SPHERE_LIGHT: {
             const tmt::SphereLight sphere_light = std::get<tmt::SphereLight>(light);
-            const float radius = sphere_light.source_radius;
+            const float radius = glm::max(0.001f, sphere_light.source_radius);
             const float area = 4.0f * glm::pi<float>() * radius * radius;
             luminance = sphere_light.luminous_flux / (glm::pi<float>() * area);
             break;
@@ -23,7 +23,7 @@ glm::vec3 Light::calculate_luminance(const glm::vec3 scale) const {
         /* Sun area light (disk) */
         case LightType::SUN_LIGHT: {
             const tmt::SunLight sun_light = std::get<tmt::SunLight>(light);
-            const float radius = glm::tan(sun_light.source_angle);
+            const float radius = glm::tan(glm::max(0.001f, sun_light.source_angle));
             const float area = glm::pi<float>() * radius * radius;
             luminance = sun_light.luminous_intensity / area;
             break;
@@ -31,7 +31,7 @@ glm::vec3 Light::calculate_luminance(const glm::vec3 scale) const {
         /* Spot light (disk at aperture) */
         case LightType::SPOT_LIGHT: {
             const tmt::SpotLight spot_light = std::get<tmt::SpotLight>(light);
-            const float radius = spot_light.source_radius;
+            const float radius = glm::max(0.001f, spot_light.source_radius);
             const float area = glm::pi<float>() * radius * radius;
             luminance = spot_light.luminous_intensity / area;
             break;
@@ -40,7 +40,7 @@ glm::vec3 Light::calculate_luminance(const glm::vec3 scale) const {
         case LightType::TUBE_LIGHT: {
             const tmt::TubeLight tube_light = std::get<tmt::TubeLight>(light);
             const float length = scale.z;
-            const float area = 2.0f * glm::pi<float>() * tube_light.source_radius * length;
+            const float area = 2.0f * glm::pi<float>() * glm::max(0.001f, tube_light.source_radius) * length;
             luminance = tube_light.luminous_flux / (glm::pi<float>() * area);
             break;
         }
