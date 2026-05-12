@@ -22,13 +22,18 @@ void ResourceLimitChecker::start() {
     }
 
     auto* button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity);
+    auto* interactable_component = tmt::engine.ecs.try_get_component<tmt::UIInteractable>(entity);
     if (!button_component) {
         tmt::Log::error("Entity {} has no Button component but is trying to use resource checker.", entity);
         return;
     }
+    if (!interactable_component) {
+        tmt::Log::error("Entity {} has no UIInteractable component but is trying to use resource checker.", entity);
+        return;
+    }
 
     if (!resource_check()) {
-        button_component->disabled = true;
+        interactable_component->disabled = true;
         tmt::Log::warn("Button on entity: {} was disabled due to insufficient resources!", entity);
     }
     button_component->on_click.add(this, &ResourceLimitChecker::button_click);
@@ -37,12 +42,15 @@ void ResourceLimitChecker::start() {
 void ResourceLimitChecker::update(const tmt::FrameData& time) {
     interval_counter += time.delta_time;
     if (interval_counter > check_interval) {
-        auto* button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity);
+        auto* interactable_component = tmt::engine.ecs.try_get_component<tmt::UIInteractable>(entity);
         interval_counter = 0.0f;
-        if (!button_component) return;
-        if (button_component->disabled) {
+        if (!interactable_component) {
+            tmt::Log::error("Entity {} has no Button or UIInteractable component but is trying to use resource checker.", entity);
+            return;
+        }
+        if (interactable_component->disabled) {
             if (resource_check()) {
-                button_component->disabled = false;
+                interactable_component->disabled = false;
             }
         }
     }
@@ -84,7 +92,7 @@ bool ResourceLimitChecker::resource_check() {
 }
 
 void ResourceLimitChecker::button_click(tmt::Button::Context context) {
-    auto* button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity);
+    auto* button_component = tmt::engine.ecs.try_get_component<tmt::UIInteractable>(entity);
     if (context.disabled) {
         if (resource_check()) {
             button_component->disabled = false;

@@ -9,6 +9,7 @@
 #include <ImReflect_macro.hpp>
 
 #include "engine/tools/serializer.hpp"
+#include "engine/tools/component_registry.hpp"
 
 #define EXPAND(...) __VA_ARGS__
 
@@ -87,3 +88,23 @@ struct Component {
 #define TMT_COMPONENT_INSPECT(Type, Fields) IMGUI_REFLECT(Type, EXPAND Fields)
 
 #define TMT_COMPONENT_INSPECT_EMPTY(Type) TMT_OBJECT_INSPECT_EMPTY(Type)
+
+namespace tmt {
+
+template <typename T>
+struct ComponentDependencies {
+    using Dependencies = ComponentRegistry<>;
+};
+
+}  // namespace tmt
+
+#define TMT_COMPONENT_DEPENDENCIES(Type, ...)                \
+    namespace tmt {                                          \
+                                                             \
+    template <>                                              \
+    struct ComponentDependencies<Type> {                     \
+        using Dependencies = ComponentRegistry<__VA_ARGS__>; \
+    };                                                       \
+                                                             \
+    }                                                        \
+    static_assert(true, "")

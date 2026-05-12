@@ -16,6 +16,11 @@ inline void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Button& button, I
         ImReflect::Input(enum_label.c_str(), button.colors[i], type_settings, type_response);
         ImGui::PopID();
     }
+}
+
+inline void tag_invoke(ImReflect::ImInput_t, const char*, tmt::UIInteractable& button, ImSettings& settings, ImResponse& response) {
+    auto& type_settings = settings.get<tmt::Button>();
+    auto& type_response = response.get<tmt::Button>();
 
     ImGui::SeparatorText("Button Flow");
     for (size_t i = 0; i < button.flow_direction.size(); ++i) {
@@ -25,5 +30,4 @@ inline void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Button& button, I
         ImReflect::Input(enum_label.c_str(), button.flow_direction[i], type_settings, type_response);
         ImGui::PopID();
     }
-    ImReflect::Detail::check_input_states(type_response);
 }

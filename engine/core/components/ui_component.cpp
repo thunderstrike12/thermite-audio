@@ -93,6 +93,36 @@ glm::vec2 AnchorHelper::calculate_anchor_offset(const Entity entity) {
     return rs_offset + calculate_anchor_offset(parent_entity);
 }
 
+Rect AnchorHelper::get_bounds(Entity entity) {
+    auto* ui_component = engine.ecs.try_get_component<UIComponent>(entity);
+    auto* transform = engine.ecs.try_get_component<Transform>(entity);
+
+    if (!ui_component || !transform) return Rect {};
+
+    const auto offset = calculate_anchor_offset(entity);
+    const glm::vec2 world_pos = transform->get_world_position();
+    const glm::vec2 world_scale = transform->get_world_scale();
+    const glm::vec3 world_rotation = glm::eulerAngles(transform->get_world_rotation());
+
+    const glm::vec2 scaled_size = ui_component->size * abs(world_scale);
+
+    // Reconstruct the same axes that contains() uses
+    const glm::vec3 cos_r(glm::cos(world_rotation));
+    const glm::vec3 sin_r(glm::sin(world_rotation));
+    glm::vec2 right(cos_r.y * cos_r.z, cos_r.y * sin_r.z);
+    glm::vec2 up(sin_r.x * sin_r.y * cos_r.z - cos_r.x * sin_r.z, sin_r.x * sin_r.y * sin_r.z + cos_r.x * cos_r.z);
+
+    if (world_scale.x < 0.0f) right = -right;
+    if (world_scale.y < 0.0f) up = -up;
+
+    // Apply the same pivot correction contains() does internally
+    const glm::vec2 local_pivot_offset = scaled_size * (ui_component->pivot - glm::vec2(0.5f));
+    const glm::vec2 rotated_pivot_offset = right * local_pivot_offset.x + up * local_pivot_offset.y;
+    const glm::vec2 rect_center = world_pos + offset - rotated_pivot_offset;
+
+    return Rect { rect_center, scaled_size };
+}
+
 bool AnchorHelper::is_inside(const Entity entity, const glm::vec2& viewport_point) {
     if (entity == entt::null) return false;
 

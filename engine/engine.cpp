@@ -102,7 +102,7 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     ecs.systems.add<SteeringSystem>();
     ecs.systems.add<UI>();
     ecs.systems.add<MotionMathSystem>();
-    ecs.systems.add<ButtonManager>();
+    ecs.systems.add<UIElementManager>();
     ecs.systems.add<Tweener>();
     ecs.systems.add<Gameplay>(); /* Should be last */
 

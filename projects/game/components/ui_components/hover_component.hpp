@@ -17,8 +17,8 @@ class HoverComponent : public tmt::GameComponent<HoverComponent> {
     tmt::Entity hover_entity = entt::null;
 
    private:
-    void disable(tmt::Button::Context context);
-    void enable(tmt::Button::Context context);
+    void disable(tmt::UIInteractable::Context context);
+    void enable(tmt::UIInteractable::Context context);
 };
 
 }  // namespace game

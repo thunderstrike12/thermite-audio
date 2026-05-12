@@ -14,10 +14,16 @@ enum class AspectMode {
     STRETCH  // Ignore aspect ratio
 };
 
+struct Rect {
+    glm::vec2 position;
+    glm::vec2 size;
+};
+
 class AnchorHelper {
    public:
     static glm::vec2 calculate_anchor_offset_in_rect(const glm::vec2 size, const Anchor anchor);
     static glm::vec2 calculate_anchor_offset(Entity entity);
+    static Rect get_bounds(Entity entity);
     static bool is_inside(Entity entity, const glm::vec2& viewport_point);
 };
 

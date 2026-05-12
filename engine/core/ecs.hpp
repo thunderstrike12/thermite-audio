@@ -156,6 +156,11 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
     decltype(auto) add_component(Entity entity) {
         constexpr size_t COUNT = sizeof...(Component);
         if constexpr (COUNT == 1) {
+            ComponentDependencies<Component...>::Dependencies::for_each([this, entity](auto type_tag) {
+                using Dependency = typename decltype(type_tag)::type;
+                add_or_get_component<Dependency>(entity);
+            });
+
             return EcsComponentTraits<Component...>::add(registry, entity);
         } else {
             return std::forward_as_tuple(add_component<Component>(entity)...);
@@ -209,6 +214,10 @@ class Ecs : public OnGameStart, public OnGameUpdate, public OnGameFixedUpdate, p
     decltype(auto) add_or_get_component(const Entity entity) {
         constexpr size_t COUNT = sizeof...(Component);
         if constexpr (COUNT == 1) {
+            ComponentDependencies<Component...>::Dependencies::for_each([this, entity](auto type_tag) {
+                using Dependency = typename decltype(type_tag)::type;
+                add_or_get_component<Dependency>(entity);
+            });
             return EcsComponentTraits<Component...>::add_or_get(registry, entity);
         } else {
             return std::forward_as_tuple(add_or_get_component<Component>(entity)...);

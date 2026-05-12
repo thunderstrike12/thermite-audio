@@ -61,21 +61,31 @@ struct ButtonCallback {
     void clear() { callbacks.clear(); }
 };
 
+struct UIInteractable {
+    struct Context {
+        const Entity entity;
+        const ButtonState state;
+        const bool disabled;
+    };
+    ButtonState state = ButtonState::IDLE;
+
+    bool disabled = false;
+
+    ButtonCallback<UIInteractable::Context> on_select = {};
+    ButtonCallback<UIInteractable::Context> on_selected = {};
+    ButtonCallback<UIInteractable::Context> on_deselect = {};
+
+    /* Navigation: which button to move to for each direction (indexed by Direction enum: NORTH, NORTH_EAST, EAST, ...) */
+    std::array<Entity, 8> flow_direction = { entt::null, entt::null, entt::null, entt::null, entt::null, entt::null, entt::null, entt::null };
+};
+
 struct Button {
-   public:
     struct Context {
         const Entity entity;
         const ButtonState state;
         const bool disabled;
     };
 
-    ButtonState state = ButtonState::IDLE;
-
-    bool disabled = false;
-
-    ButtonCallback<Button::Context> on_select = {};
-    ButtonCallback<Button::Context> on_selected = {};
-    ButtonCallback<Button::Context> on_deselect = {};
     ButtonCallback<Button::Context> on_click = {};
     ButtonCallback<Button::Context, float> on_hold = {};
     ButtonCallback<Button::Context> on_release = {};
@@ -91,11 +101,34 @@ struct Button {
         RGBA(glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
         RGBA(glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)),
     };
+};
 
-    /* Navigation: which button to move to for each direction (indexed by Direction enum: NORTH, NORTH_EAST, EAST, ...) */
-    std::array<Entity, 8> flow_direction = { entt::null, entt::null, entt::null, entt::null, entt::null, entt::null, entt::null, entt::null };
+struct Slider {
+    struct Context {
+        const Entity entity;
+        const ButtonState state;
+        const bool disabled;
+
+        float value;
+    };
+
+    ButtonCallback<Slider::Context> on_value_changed = {};
+
+    float value = 0.0f;  // Value between 0 and 1
+
+    float min = 0.0f;
+    float max = 1.0f;
+
+    float step = 0.01f;
+
+    Entity handle_entity = entt::null;
 };
 
 }  // namespace tmt
 
-TMT_COMPONENT(tmt::Button, "Button", (disabled, colors, flow_direction));
+TMT_COMPONENT_DEPENDENCIES(tmt::Button, tmt::UIInteractable);
+TMT_COMPONENT_DEPENDENCIES(tmt::Slider, tmt::UIInteractable);
+
+TMT_COMPONENT(tmt::UIInteractable, "UIInteractable", (disabled, flow_direction));
+TMT_COMPONENT(tmt::Button, "Button", (colors));
+TMT_COMPONENT(tmt::Slider, "Slider", (value, min, max, step, handle_entity));

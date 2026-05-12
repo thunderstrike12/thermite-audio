@@ -12,7 +12,7 @@ void game::HoverComponent::start() {
         return;
     }
 
-    if (auto* button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity)) {
+    if (auto* button_component = tmt::engine.ecs.try_get_component<tmt::UIInteractable>(entity)) {
         button_component->on_select.add(this, &HoverComponent::enable);
         button_component->on_deselect.add(this, &HoverComponent::disable);
     } else {
@@ -23,7 +23,7 @@ void game::HoverComponent::start() {
 void game::HoverComponent::update(const tmt::FrameData& time) {}
 
 void game::HoverComponent::end() {
-    if (auto* button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity)) {
+    if (auto* button_component = tmt::engine.ecs.try_get_component<tmt::UIInteractable>(entity)) {
         button_component->on_select.clear();
         button_component->on_deselect.clear();
     } else {
@@ -31,7 +31,7 @@ void game::HoverComponent::end() {
     }
 }
 
-void game::HoverComponent::enable(tmt::Button::Context) {
+void game::HoverComponent::enable(tmt::UIInteractable::Context) {
     if (hover_entity == entt::null) {
         tmt::Log::error("Hover entity not set for {}", entity);
         return;
@@ -45,7 +45,7 @@ void game::HoverComponent::enable(tmt::Button::Context) {
     tmt::engine.ecs.enable(hover_entity);
 }
 
-void game::HoverComponent::disable(tmt::Button::Context) {
+void game::HoverComponent::disable(tmt::UIInteractable::Context) {
     if (hover_entity == entt::null) {
         tmt::Log::error("Hover entity not set for {}", entity);
         return;
