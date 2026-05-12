@@ -173,8 +173,6 @@ void Player::look_camera() {
     base_yaw -= dx * camera_sensitivity;
     base_pitch -= dy * camera_sensitivity;
 
-    base_pitch = glm::clamp(base_pitch, -89.0f, 89.0f);
-
     float yaw = base_yaw;
     float pitch = base_pitch;
 
@@ -182,6 +180,9 @@ void Player::look_camera() {
         yaw += recoil_offset.x;
         pitch += recoil_offset.y;
     }
+
+    // Clamp after recoil
+    pitch = glm::clamp(pitch, -89.0f, 89.0f);
 
     glm::vec3 front;
 
@@ -201,7 +202,7 @@ void Player::look_camera() {
 
         glm::vec3 target_shake = right * n.x * current_shake + up * n.y * current_shake;
 
-        float smooth = 12.0f * tmt::engine.frame_data().delta_time;
+        float smooth = 1.0f - expf(-12.0f * tmt::engine.frame_data().delta_time);
 
         static glm::vec3 shake_current(0.0f);
         shake_current = glm::mix(shake_current, target_shake, smooth);
@@ -363,14 +364,14 @@ void Player::update(const tmt::FrameData& time) {
     update_shake(time.delta_time);
 
     // --- Recoil recovery ---
-    float dt = glm::min(time.delta_time, 1.0f / 30.0f);
+    float dt = time.delta_time;
 
     // how fast it returns
-    float return_speed = camera_shake_settings.recoil_return_speed;
+    float recovery = 1.0f - expf(-camera_shake_settings.recoil_return_speed * dt);
 
     // move back toward zero at a constant speed
-    recoil_offset.x = move_towards(recoil_offset.x, 0.0f, return_speed * dt);
-    recoil_offset.y = move_towards(recoil_offset.y, 0.0f, return_speed * dt);
+    recoil_offset.x = glm::mix(recoil_offset.x, 0.0f, recovery);
+    recoil_offset.y = glm::mix(recoil_offset.y, 0.0f, recovery);
 
     // Swapping crosshair
     if (input.is_action_just_pressed(action::SWITCH_RIFLE)) {
@@ -393,7 +394,7 @@ void Player::update(const tmt::FrameData& time) {
             if (input.is_action_pressed(action::BOOST)) {
                 apply_boost();
 
-                add_camera_shake(camera_shake_settings.boost_intensity);
+                add_camera_shake(camera_shake_settings.boost_intensity * dt);
             } else {
                 reset_boost(time.delta_time);
             }
