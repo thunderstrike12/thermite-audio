@@ -42,6 +42,19 @@ struct CameraShakeSettings {
     float recoil_strength = 2.0f;      // how high it kicks UP
     float recoil_return_speed = 5.0f;  // how fast it goes DOWN
     float recoil_horizontal = 0.2f;    // side randomness
+    float get_max_intensity() const { return max_intensity * multiplier; }
+    float get_recoil_return_speed() const { return recoil_return_speed * multiplier; }
+    float get_boost_intensity() const { return boost_intensity * multiplier; }
+    float get_decay_speed() const { return decay_speed * multiplier; }
+    float get_recoil_strength() const { return recoil_strength * multiplier; }
+    float get_recoil_horizontal() const { return recoil_horizontal * multiplier; }
+    float get_drill_intensity() const { return drill_intensity * multiplier; }
+
+    void set_multiplier(float _multiplier) { multiplier = _multiplier; }
+
+   private:
+    // loaded from the saved data
+    float multiplier { 1.0f };
 };
 
 class Player : public tmt::GameComponent<Player> {

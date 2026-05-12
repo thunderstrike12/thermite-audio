@@ -130,6 +130,8 @@ void Player::start() {
 
         return;
     }
+    auto& cam_shake { tmt::engine.player_data.get<float>(CAMERA_SHAKE) };
+    camera_shake_settings.set_multiplier(cam_shake);
     wallet->currencies = resources;
     if (tmt::engine.ecs.is_enabled(entity)) {
         tmt::engine.input.set_mouse_relative_to_window(true);
@@ -367,7 +369,7 @@ void Player::update(const tmt::FrameData& time) {
     float dt = time.delta_time;
 
     // how fast it returns
-    float recovery = 1.0f - expf(-camera_shake_settings.recoil_return_speed * dt);
+    float recovery = 1.0f - expf(-camera_shake_settings.get_recoil_return_speed() * dt);
 
     // move back toward zero at a constant speed
     recoil_offset.x = glm::mix(recoil_offset.x, 0.0f, recovery);
@@ -394,7 +396,7 @@ void Player::update(const tmt::FrameData& time) {
             if (input.is_action_pressed(action::BOOST)) {
                 apply_boost();
 
-                add_camera_shake(camera_shake_settings.boost_intensity * dt);
+                add_camera_shake(camera_shake_settings.get_boost_intensity() * dt);
             } else {
                 reset_boost(time.delta_time);
             }
@@ -722,15 +724,15 @@ void Player::add_camera_shake(float intensity) {
 }
 
 void Player::update_shake(float dt) {
-    current_shake -= dt * camera_shake_settings.decay_speed;
+    current_shake -= dt * camera_shake_settings.get_decay_speed();
     current_shake = glm::max(0.0f, current_shake);
 }
 
 void Player::add_recoil() {
-    recoil_offset.y += camera_shake_settings.recoil_strength;
+    recoil_offset.y += camera_shake_settings.get_recoil_strength();
 
     float rand_x = (rand() / (float)RAND_MAX - 0.5f) * 2.0f;
-    recoil_offset.x += rand_x * camera_shake_settings.recoil_horizontal;
+    recoil_offset.x += rand_x * camera_shake_settings.get_recoil_horizontal();
 }
 
 void Player::set_crosshair(tmt::Entity active) {

@@ -119,7 +119,7 @@ void MiningComponent::on_weapon_fired(const WeaponFiredEvent& e) {
 
     auto* player = tmt::engine.ecs.try_get_component<Player>(player_entity);
     if (player) {
-        player->add_camera_shake(player->camera_shake_settings.drill_intensity);
+        player->add_camera_shake(player->camera_shake_settings.get_drill_intensity());
     }
 
     mine(e.direction);

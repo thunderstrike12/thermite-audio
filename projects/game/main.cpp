@@ -60,6 +60,7 @@
 #include "components/ui_components/tutorial_button.hpp"
 #include "components/ui_components/resource_bar_current.hpp"
 #include "components/ui_components/opacity_fader.hpp"
+#include "components/game_settings/screen_shake_change.hpp"
 #include "components/ui_components/depth_tracker.hpp"
 
 // Managers
@@ -167,6 +168,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.component_registry.register_component<game::TutorialButton>();
     tmt::engine.component_registry.register_component<game::ResourceBarCurrentComponent>();
     tmt::engine.component_registry.register_component<game::OpacityFader>();
+    tmt::engine.component_registry.register_component<game::ScreenShakeChangeComponent>();
     tmt::engine.component_registry.register_component<game::DepthTracker>();
 
     /* Register Game Settings */

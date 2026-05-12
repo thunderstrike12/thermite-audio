@@ -94,14 +94,19 @@ void UIElementManager::update_states(const tmt::FrameData& time) {
                 break;
         }
 
+        const float image_width = ui_component.size.x;
+        const glm::vec3 slider_position = transform.get_world_position();
+
+        auto& handle_transform = engine.ecs.get_component<Transform>(slider.handle_entity);
+        const float handle_x = slider_position.x - image_width * 0.5f + (slider.value - slider.min) / (slider.max - slider.min) * image_width;
+
+        const glm::vec3 handle_position = handle_transform.get_world_position();
+        handle_transform.set_world_position({ handle_x, handle_position.y, handle_position.z });
+
         const auto allowed_states = { ButtonState::ON_CLICK, ButtonState::ON_HOLD };
         if (std::find(allowed_states.begin(), allowed_states.end(), interactable.state) == allowed_states.end()) {
             continue;
         }
-
-        const float image_width = ui_component.size.x;
-
-        const glm::vec3 slider_position = transform.get_world_position();
 
         const float relative_x = (mouse_world.x - (slider_position.x - image_width * 0.5f)) / image_width;
         float new_value = std::clamp(relative_x * (slider.max - slider.min) + slider.min, slider.min, slider.max);
@@ -110,12 +115,6 @@ void UIElementManager::update_states(const tmt::FrameData& time) {
 
         slider.value = new_value;
         slider.on_value_changed(context);
-
-        auto& handle_transform = engine.ecs.get_component<Transform>(slider.handle_entity);
-        const float handle_x = slider_position.x - image_width * 0.5f + (slider.value - slider.min) / (slider.max - slider.min) * image_width;
-
-        const glm::vec3 handle_position = handle_transform.get_world_position();
-        handle_transform.set_world_position({ handle_x, handle_position.y, handle_position.z });
     }
 }
 
