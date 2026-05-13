@@ -44,10 +44,11 @@ void main(int2 thread_id: SV_DispatchThreadID) {
         const float4 prev_pos = float4(mul(object.prev_local_to_world, local_pos).xyz, 1.0f);
 
         const float4 current_pos_clip = mul(render_view.world_to_clip, hit_pos);
-        float2 current_ndc = current_pos_clip.xy / current_pos_clip.w;
+        const float w_eps = 1e-6f;
+        float2 current_ndc = current_pos_clip.xy / max(abs(current_pos_clip.w), w_eps) * sign(current_pos_clip.w);
 
         const float4 prev_pos_clip = mul(render_view.prev_world_to_clip, prev_pos);
-        float2 prev_ndc = prev_pos_clip.xy / prev_pos_clip.w;
+        float2 prev_ndc = prev_pos_clip.xy / max(abs(prev_pos_clip.w), w_eps) * sign(prev_pos_clip.w);
 
         /* Subtract Jitter */
         current_ndc -= render_view.jitter;
@@ -63,10 +64,11 @@ void main(int2 thread_id: SV_DispatchThreadID) {
         const float4 hit_pos = float4(ray.origin + ray.dir * hit.t, 1.0f);
 
         float4 curr_clip = mul(render_view.world_to_clip, hit_pos);
-        float2 curr_ndc = curr_clip.xy / curr_clip.w;
+        const float w_eps = 1e-6f;
+        float2 curr_ndc = curr_clip.xy / max(abs(curr_clip.w), w_eps) * sign(curr_clip.w);
 
         float4 prev_clip = mul(render_view.prev_world_to_clip, hit_pos);
-        float2 prev_ndc = prev_clip.xy / prev_clip.w;
+        float2 prev_ndc = prev_clip.xy / max(abs(prev_clip.w), w_eps) * sign(prev_clip.w);
 
         curr_ndc -= render_view.jitter;
         prev_ndc -= render_view.prev_jitter;
