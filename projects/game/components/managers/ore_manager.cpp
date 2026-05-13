@@ -3,6 +3,7 @@
 #include <queue>
 
 #include "engine/core/components/voxel_renderer.hpp"
+#include "engine/systems/physics/destruction_system.hpp"
 #include "engine/systems/physics/physics_system.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"
 #include "projects/game/components/gameplay_functionality_components/player.hpp"
@@ -60,7 +61,7 @@ void OreManager::process_thermite_ore_explosion(tmt::Entity voxel_entity, glm::u
     int cy = static_cast<int>(explosion_center.y);
     int cz = static_cast<int>(explosion_center.z);
 
-    glm::vec3 explosion_center_local_pos = glm::vec3(explosion_center) / static_cast<float>(VOXELS_PER_UNIT);
+    glm::vec3 explosion_center_local_pos = (glm::vec3(explosion_center) - glm::vec3(vox_renderer->resource->size) / 2.0f) * UNITS_PER_VOXEL;
     glm::vec3 explosion_world_pos = glm::vec3(vox_entity_transform.get_world_matrix() * glm::vec4(explosion_center_local_pos, 1.0f));
 
     // check if player is within explosion
@@ -68,22 +69,25 @@ void OreManager::process_thermite_ore_explosion(tmt::Entity voxel_entity, glm::u
         tmt::engine.ecs.get_component<Player>(player_entity).health.value -= thermite_ore_settings.damage_explosion;
     }
     // remove initial voxel (explosion center)
-    vox_renderer->resource->blas->remove_voxel(cx, cy, cz);
-    vox_renderer->resource->set_dirty();
+    // vox_renderer->resource->blas->remove_voxel(cx, cy, cz);
+    // vox_renderer->resource->set_dirty();
+    tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxel(voxel_entity, explosion_center);
 
     // refactor: use sphere check instead
     auto sphere_check_result = tmt::engine.ecs.systems.get<tmt::Physics>().overlap_sphere(explosion_world_pos, thermite_ore_settings.radius_explosion, thermite_ore_settings.layer_mask);
-
     for (auto& result_pair : sphere_check_result) {
         auto result_entity_world_pos = tmt::engine.ecs.get_component<tmt::Transform>(result_pair.first).get_world_position();
         auto result_entity_local_pos = tmt::engine.ecs.get_component<tmt::Transform>(result_pair.first).get_local_position();
+
         // Guard for voxel renderer
         if (auto result_vox_renderer = tmt::engine.ecs.try_get_component<tmt::VoxelRenderer>(result_pair.first)) {
             // Loop over resulting voxels
             for (auto& result_voxel : result_pair.second) {
                 auto* curr_vox_material = result_vox_renderer->resource->blas->get_voxel(result_voxel.second.x, result_voxel.second.y, result_voxel.second.z);
                 // Skip voxels without a material
-                if (!curr_vox_material) continue;
+                if (!curr_vox_material) {
+                    continue;
+                }
                 auto curr_vox_type = curr_vox_material->type;
                 if (curr_vox_type == tmt::Material::Type::THERMITE) {
                     // Add to " new thermite to explode"
@@ -94,13 +98,11 @@ void OreManager::process_thermite_ore_explosion(tmt::Entity voxel_entity, glm::u
                     // Check for toughness
                     auto curr_vox_toughness = ore_database.at(curr_vox_type).toughness;
                     if (curr_vox_toughness <= thermite_ore_settings.explosion_strength) {
-                        result_vox_renderer->resource->blas->remove_voxel(result_voxel.second.x, result_voxel.second.y, result_voxel.second.z);
-                        result_vox_renderer->resource->set_dirty();
+                        tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxel(result_pair.first, result_voxel.second);
                     }
                 } else {
                     tmt::Log::warn("No ore properties found, will explode and remove all voxels on thermite explosion");
-                    result_vox_renderer->resource->blas->remove_voxel(result_voxel.second.x, result_voxel.second.y, result_voxel.second.z);
-                    result_vox_renderer->resource->set_dirty();
+                    tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxel(result_pair.first, result_voxel.second);
                 }
             }
         }

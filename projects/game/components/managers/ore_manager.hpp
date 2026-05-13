@@ -37,7 +37,7 @@ struct ThermiteOreSettings {
     float cooldown_explosion = 0.5f;
     // Determines the max toughness of ores that get destroyed by the explosion
     float explosion_strength = 20.0f;
-    LayerMask layer_mask;
+    LayerMask layer_mask {};
 };
 
 class OreManager : public tmt::GameComponent<OreManager> {

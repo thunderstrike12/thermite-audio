@@ -307,7 +307,7 @@ void Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
             seperate_vb.center_of_mass = vb->center_of_mass;  // seperate_vb.position + (seperate_vb.rotation * seperate_vb.com_local_offset);
             continue;
         }
-        
+
         Physics::initialize_voxel_body(seperate_vb, *seperate_vr.resource.resource.get());
 
         // glm::vec3 tensor_0 = glm::vec3(seperate_vb.inv_inertia[0][0], seperate_vb.inv_inertia[0][1], seperate_vb.inv_inertia[0][2]);
