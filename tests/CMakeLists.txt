@@ -33,7 +33,15 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy
             "${CMAKE_SOURCE_DIR}/extern/fmod/lib/fmodstudio${FMOD_POSTFIX}.dll"
             "${CMAKE_BINARY_DIR}/bin/fmodstudio${FMOD_POSTFIX}.dll"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/extern/steam/lib/steam_api64.dll"
+            "${CMAKE_BINARY_DIR}/bin/steam_api64.dll"
+
 )
+
+set(steam_appid_file "${CMAKE_BINARY_DIR}/bin/steam_appid.txt")
+file(WRITE "${steam_appid_file}" "4515200")
+
 set_target_properties(UnitTests PROPERTIES
      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )

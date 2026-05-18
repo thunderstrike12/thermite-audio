@@ -24,7 +24,7 @@ function(find_and_add_targets)
             else ()
                 set(target_rc_file "${CMAKE_CURRENT_SOURCE_DIR}/game.rc")
             endif ()
-            
+
             add_executable(${target_name} ${PROJECT_SOURCES} ${target_rc_file})
 
             # Generate a small config source file that the engine can access to know where the current relative project assets live
@@ -70,7 +70,19 @@ function(find_and_add_targets)
                     "${CMAKE_SOURCE_DIR}/extern/fmod/lib/fmodstudio${FMOD_POSTFIX}.dll"
                     "${CMAKE_BINARY_DIR}/bin/${target_name}/fmodstudio${FMOD_POSTFIX}.dll"
             )
+            # Copy over dll files for Steamworks SDK
+            add_custom_command(
+                    TARGET ${target_name} POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy
+                    "${CMAKE_SOURCE_DIR}/extern/steam/lib/steam_api64.dll"
+                    "${CMAKE_BINARY_DIR}/bin/${target_name}/steam_api64.dll"
+            )
 
+            # Steam appid file
+            if (NOT (CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT THERMITE_EDITOR_BUILD AND NOT THERMITE_DEBUG_BUILD))
+                set(steam_appid_file "${CMAKE_BINARY_DIR}/bin/${target_name}/steam_appid.txt")
+                file(WRITE "${steam_appid_file}" "4515200")
+            endif ()
             graphite_bundle_crash_diagnostics("${CMAKE_BINARY_DIR}/bin/${target_name}")
 
             # Copy over auxialliary assets for developer use
