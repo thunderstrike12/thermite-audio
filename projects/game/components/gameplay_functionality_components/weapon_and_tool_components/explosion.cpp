@@ -31,14 +31,15 @@ void game::Explosion::explode() const {
             return;
         }
     }
-
     auto& ore_database = ore_properties->ores;
 
     // iterate over all hits and check their toughness
     const auto hits = tmt::engine.ecs.systems.get<tmt::Physics>().overlap_sphere(get_position(), param.radius, param.mask);
     for (const auto& [voxel_entity, voxels] : hits) {
         // If the entity is not valid anymore skip it
-        if (!tmt::engine.ecs.valid(voxel_entity) || !tmt::engine.ecs.is_enabled(voxel_entity)) return;
+        if (!tmt::engine.ecs.valid(voxel_entity) || !tmt::engine.ecs.is_enabled(voxel_entity)) continue;
+
+        std::vector<glm::uvec3> voxel_list;
 
         auto* resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(voxel_entity).resource.resource.get();
 
@@ -68,12 +69,14 @@ void game::Explosion::explode() const {
                     auto power = (1.0f - param.distance_strength_curve.eval(t)) * param.explosion_power;
                     if (ore_toughness < power) {
                         // resource->blas->remove_voxel(voxel_coord.x, voxel_coord.y, voxel_coord.z);
-                        tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxel(voxel_entity, voxel_coord);
+                        // tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxel(voxel_entity, voxel_coord);
+                        voxel_list.push_back(voxel_coord);
                     }
                 } break;
             }
         }
         resource->set_dirty();
+        tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxels(voxel_entity, voxel_list);
     }
 
     // tmt::engine.ecs.destroy_entity(entity);

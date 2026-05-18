@@ -180,6 +180,70 @@ void Destruction::destroy_voxels(Entity entity, const Stencil* stencil, glm::ive
     }
 }
 
+void Destruction::destroy_voxels(Entity entity, const std::vector<glm::uvec3>& indices) {
+    TMT_ZONE_SCOPED_N("Destruction")
+
+    // Get voxel body & destructable components
+    VoxelRenderer* vr = engine.ecs.try_get_component<VoxelRenderer>(entity);
+    VoxelBody* vb = engine.ecs.try_get_component<VoxelBody>(entity);
+    Destructible* des = engine.ecs.try_get_component<Destructible>(entity);
+    if (vr == nullptr || des == nullptr) return;
+
+    // Subtract voxels from BLAS
+    auto* resource = vr->resource.resource.get();
+    for (const glm::uvec3& pos : indices) {
+        resource->blas->remove_voxel(pos.x, pos.y, pos.z);
+    }
+    resource->set_dirty();
+
+    // Get all the voxels positions of the empty voxels on the edge of destructed voxels
+    std::vector<glm::uvec3> edge_indices;
+    for (const glm::uvec3& pos : indices) {
+        for (size_t d = 0; d < 6; d++) {
+            glm::uvec3 neighbor_pos = (glm::ivec3)pos + dirs[d];
+            if (resource->blas->get_physics_voxel(neighbor_pos.x, neighbor_pos.y, neighbor_pos.z) != nullptr) {
+                edge_indices.push_back(neighbor_pos);
+            }
+        }
+    }
+
+    // Clear the graph and generate it a new one
+    des->clear();
+    generate_connection_graph(*des, resource->blas.get());
+
+    // Can be done before separating the objects, because the data will be transfered over
+    Physics::recalculate_edge_normals(resource->blas.get(), edge_indices);
+
+    // Find where the objects separate and creates new entities for each part
+    std::vector<Entity> seperated_entities = find_seperations(entity, edge_indices, *des);
+
+    // Recalculate physics data for all separate voxel bodies
+    for (Entity seperate_entity : seperated_entities) {
+        if (!engine.ecs.get_registry().valid(seperate_entity)) continue;
+
+        VoxelRenderer& seperate_vr = engine.ecs.get_component<VoxelRenderer>(seperate_entity);
+
+        // If its the original entity
+        if (seperate_entity == entity) {
+            // Clear the graph and generate it a new one (slow)
+            des->clear();
+            generate_connection_graph(*des, seperate_vr.resource->blas.get());
+            continue;
+        }
+
+        // NOTE: We still need to initialize the voxel body somehow, but we can make some assumtions when we have static objects
+        VoxelBody& seperate_vb = engine.ecs.get_component<VoxelBody>(seperate_entity);
+        if (seperate_vb.type == VoxelBody::STATIC) {
+            // Initialize the only neccecary values for static bodies
+            seperate_vb.com_local_offset = vb->com_local_offset;
+            seperate_vb.center_of_mass = vb->center_of_mass;  // seperate_vb.position + (seperate_vb.rotation * seperate_vb.com_local_offset);
+            continue;
+        }
+
+        Physics::initialize_voxel_body(seperate_vb, *seperate_vr.resource.resource.get());
+    }
+}
+
 uint64_t flood_fill_64(uint64_t seed, uint64_t solid_mask) {
     // Mask to only solid voxels
     uint64_t filled = seed & solid_mask;
@@ -309,14 +373,6 @@ void Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
         }
 
         Physics::initialize_voxel_body(seperate_vb, *seperate_vr.resource.resource.get());
-
-        // glm::vec3 tensor_0 = glm::vec3(seperate_vb.inv_inertia[0][0], seperate_vb.inv_inertia[0][1], seperate_vb.inv_inertia[0][2]);
-        // glm::vec3 tensor_1 = glm::vec3(seperate_vb.inv_inertia[1][0], seperate_vb.inv_inertia[1][1], seperate_vb.inv_inertia[1][2]);
-        // glm::vec3 tensor_2 = glm::vec3(seperate_vb.inv_inertia[2][0], seperate_vb.inv_inertia[2][1], seperate_vb.inv_inertia[2][2]);
-
-        // Log::info("inertia tensor 0: [{}, {}, {}]", tensor_0.x, tensor_0.y, tensor_0.z);
-        // Log::info("inertia tensor 1: [{}, {}, {}]", tensor_1.x, tensor_1.y, tensor_1.z);
-        // Log::info("inertia tensor 2: [{}, {}, {}]", tensor_2.x, tensor_2.y, tensor_2.z);
     }
 }
 
