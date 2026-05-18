@@ -143,13 +143,13 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     systems[Mode::PREFAB].add<DebugLines>();
     systems[Mode::PREFAB].add<RigStateController>();
 
+    save_data.load();
+
     for (auto& [mode, collection] : systems) {
         for (const auto& system : collection) {
             system->on_editor_start();
         }
     }
-
-    save_data.load();
 }
 
 void Editor::on_engine_update(const FrameData& time) {

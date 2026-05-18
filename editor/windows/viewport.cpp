@@ -23,8 +23,13 @@
 
 #include "editor/imgui/tools/buttons.hpp"
 #include "engine/core/components/text_renderer.hpp"
+#include "engine/tools/fps_limiter.hpp"
 
-void tmt::Viewport::on_editor_start() {}
+void tmt::Viewport::on_editor_start() {
+    if (auto value = editor.save_data.fps_limit) {
+        engine.fps_limiter.set_target_fps(*value);
+    }
+}
 
 void tmt::Viewport::on_editor_update(const tmt::FrameData& frame_data) {
     update_debug_camera(frame_data);
@@ -329,7 +334,12 @@ void tmt::Viewport::toolbar() {
     if (can_interact == false) ImGui::EndDisabled();
 
     /* ===== Right side: Display info ===== */
+    const bool is_unlimited = engine.fps_limiter.is_enabled() == false;
+    const float current_limit = is_unlimited ? -1.f : engine.fps_limiter.get_target_fps();
+
+    const std::string fps_display = ICON_MS_SPEED + std::string(" ") + (is_unlimited ? "Unlimited FPS" : std::to_string(static_cast<int>(current_limit)) + " FPS");
     float right_width = ImGui::CalcTextSize(ICON_MS_ASPECT_RATIO " 0000x0000").x + style.ItemSpacing.x + style.FramePadding.x;
+    right_width += ImGui::CalcTextSize(fps_display.c_str()).x + style.ItemSpacing.x + style.FramePadding.x;
 
     float avail = ImGui::GetContentRegionAvail().x;
     if (avail > right_width) {
@@ -340,6 +350,29 @@ void tmt::Viewport::toolbar() {
     char res_text[32];
     snprintf(res_text, sizeof(res_text), ICON_MS_ASPECT_RATIO " %dx%d", static_cast<int>(width), static_cast<int>(height));
     ImGui::Text("%s", res_text);
+
+    /* fps limit dropdown */
+    if (ImGui::BeginMenu(fps_display.c_str())) {
+        const float limits[] = { 30.f, 60.f, 120.f, 144.f, 240.f };
+
+        for (float limit : limits) {
+            std::string label = std::to_string(static_cast<int>(limit));
+            if (current_limit == limit) label = ICON_MS_CHECK " " + label;
+            if (ImGui::MenuItem(label.c_str())) {
+                engine.fps_limiter.set_target_fps(limit);
+                editor.save_data.fps_limit = limit;
+            }
+        }
+
+        std::string label = "Unlimited";
+        if (is_unlimited) label = ICON_MS_CHECK " " + label;
+        if (ImGui::MenuItem(label.c_str())) {
+            engine.fps_limiter.disable();
+            editor.save_data.fps_limit = std::nullopt;
+        }
+
+        ImGui::EndMenu();
+    }
 
     ImGui::PopStyleVar();  // Pop the FramePadding override
     ImGui::EndMenuBar();

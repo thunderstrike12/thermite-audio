@@ -14,13 +14,13 @@
 #define EXPAND(...) __VA_ARGS__
 
 /* Used to reflect regular objects */
-#define TMT_REFLECTION_IMPL(Type, ImguiFields, JsonFields) \
-    IMGUI_REFLECT(Type, EXPAND ImguiFields);               \
-    JSON_REFLECT(Type, EXPAND JsonFields)
+#define TMT_REFLECTION_IMPL(Type, JsonFields, ImguiFields) \
+    JSON_REFLECT(Type, EXPAND JsonFields);                 \
+    IMGUI_REFLECT(Type, EXPAND ImguiFields)
 
 #define TMT_OBJECT(Type, Fields) TMT_REFLECTION_IMPL(Type, Fields, Fields)
 
-#define TMT_OBJECT_EX(Type, JsonFields, ImguiFields) TMT_REFLECTION_IMPL(Type, ImguiFields, JsonFields)
+#define TMT_OBJECT_EX(Type, JsonFields, ImguiFields) TMT_REFLECTION_IMPL(Type, JsonFields, ImguiFields)
 
 #define TMT_OBJECT_SERIALIZE(Type, Fields) JSON_REFLECT(Type, Fields)
 
