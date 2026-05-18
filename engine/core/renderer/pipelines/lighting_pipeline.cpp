@@ -219,7 +219,7 @@ void LightingPipeline::enqueue(RenderGraph& render_graph, RenderView& render_vie
             .write(flip ? render_view.froxel_luminance_image : render_view.prev_froxel_luminance_image)
             .read(render_view.froxel_sampler)
             .push_constants(&froxel_p, 0u, sizeof(Fpc))
-            .group_size(4, 4, 4)
+            .group_size(16, 8, 1)
             .work_size(160, 90, 64);
 
         /* Froxel volumetric integration settings */

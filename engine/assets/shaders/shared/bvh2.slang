@@ -35,7 +35,7 @@ public [ForceInline] Hit trace_bvh2<let DEBUG : bool>(
     StructuredBuffer<float4> nodes,
     StructuredBuffer<uint> indices,
     StructuredBuffer<VoxelObject> prims,
-    Ray ray, float tmax = 1e30f, float dither = 0.0f
+    Ray ray, float tmax = BIG_F32, float dither = 0.0f
 ) {
     /* Check to make sure the root node of the BVH is valid */
     if (asuint(nodes[0].w) == 0u && asuint(nodes[3].w) == 0u) {
@@ -90,8 +90,8 @@ public [ForceInline] Hit trace_bvh2<let DEBUG : bool>(
         const float tminb = max(max(max(mintb.x, mintb.y), mintb.z), 0.0f);
         const float tmaxa = min(min(min(maxta.x, maxta.y), maxta.z), hit.t);
         const float tmaxb = min(min(min(maxtb.x, maxtb.y), maxtb.z), hit.t);
-        float dist1 = tmina > tmaxa ? 1e30f : tmina;
-        float dist2 = tminb > tmaxb ? 1e30f : tminb;
+        float dist1 = tmina > tmaxa ? BIG_F32 : tmina;
+        float dist2 = tminb > tmaxb ? BIG_F32 : tminb;
         if (DEBUG) hit.steps++;
 
         /* Swap traversal order to traverse nearest node first */
@@ -101,7 +101,7 @@ public [ForceInline] Hit trace_bvh2<let DEBUG : bool>(
         }
 
         /* If we missed both child nodes */
-        if (dist1 == 1e30f) {
+        if (dist1 >= hit.t) {
             /* Pop the node stack */
             if (stack_ptr == 0u) break;
             node_index = stack[--stack_ptr];
@@ -109,7 +109,7 @@ public [ForceInline] Hit trace_bvh2<let DEBUG : bool>(
             /* Continue with the closest child node */
             node_index = left;
             /* Push the 2nd child onto the node stack if we hit it */
-            if (dist2 != 1e30f) stack[stack_ptr++] = right;
+            if (dist2 < hit.t) stack[stack_ptr++] = right;
         }
     }
 
@@ -147,6 +147,7 @@ public [ForceInline] float occlusion_bvh2(
                 const uint index = indices[prim_index + i];
                 const VoxelObject prim = prims[index];
                 occlusion_voxel_object(ray, prim, index, t);
+                if (t < tmax) return t;
             }
 
             /* Pop the node stack */
@@ -178,12 +179,12 @@ public [ForceInline] float occlusion_bvh2(
 
         /* Swap traversal order to traverse nearest node first */
         if (dist1 > dist2) {
-            float t = dist1; dist1 = dist2; dist2 = t;
+            float tt = dist1; dist1 = dist2; dist2 = tt;
             uint i = left; left = right; right = i;
         }
 
         /* If we missed both child nodes */
-        if (dist1 == 1e30f) {
+        if (dist1 >= t) {
             /* Pop the node stack */
             if (stack_ptr == 0u) break;
             node_index = stack[--stack_ptr];
@@ -191,7 +192,7 @@ public [ForceInline] float occlusion_bvh2(
             /* Continue with the closest child node */
             node_index = left;
             /* Push the 2nd child onto the node stack if we hit it */
-            if (dist2 != 1e30f) stack[stack_ptr++] = right;
+            if (dist2 < t) stack[stack_ptr++] = right;
         }
     }
 

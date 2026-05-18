@@ -43,7 +43,7 @@ struct Pc {
 }
 
 [shader("compute")]
-[numthreads(4, 4, 4)]
+[numthreads(16, 8, 1)]
 void main(int3 thread_id: SV_DispatchThreadID) {
     /* Bounds check */
     if (any(thread_id >= iv::FROXEL_GRID_SIZE)) return;

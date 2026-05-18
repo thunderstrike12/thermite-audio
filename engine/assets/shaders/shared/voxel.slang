@@ -46,7 +46,8 @@ public [ForceInline] void trace_voxel_object<let DEBUG : bool>(Ray ray, VoxelObj
     const float3 t_max = max(t_to_min, t_to_max);
     const float t_near = max(max(max(t_min.x, t_min.y), t_min.z), 0.0f);
     const float t_far = min(min(min(t_max.x, t_max.y), t_max.z), hit.t);
-    if (t_near > t_far) return;
+    if (t_near >= t_far) return;
+    if (DEBUG) hit.steps += 1u;
 
     /* Calculate the ratio between the object size and its tree size */
     const float3 width_ratio = float3(object.size_rcp_width.xyz) * asfloat(object.size_rcp_width.w);
@@ -69,7 +70,7 @@ public [ForceInline] void trace_voxel_object<let DEBUG : bool>(Ray ray, VoxelObj
     const float3 hit_ndc = hit_uvw * 2.0f - 1.0f;
     const float3 hit_point = mul(object.local_to_world, float4(hit_ndc * half_extent, 1.0f)).xyz;
     const float hit_dist = distance(world_origin, hit_point);
-    if (hit_dist > hit.t) return;
+    if (hit_dist >= hit.t) return;
 
     /* Overwrite the current hit with the closer one */
     hit.t = hit_dist;

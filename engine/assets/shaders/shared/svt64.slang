@@ -105,7 +105,6 @@ public [ForceInline] Svt64Hit trace_svt64<let DEBUG : bool>(
 
     /* Mirror ray origin for more efficient ray-octant traversal */
     ray.origin = mirror_pos(ray.origin, ray.dir, true);
-    ray.rcp_dir = 1.0f / -abs(ray.dir);
 
     /* Mirror coordinates to simplify cell intersections */
     uint mirror_mask = 0x00u;
@@ -145,7 +144,7 @@ public [ForceInline] Svt64Hit trace_svt64<let DEBUG : bool>(
 
         /* Compute the next position by intersecting the max cell sides */
         const float3 cell_min = floor_scale(pos, sub_scale_exp);
-        side_dist = (cell_min - ray.origin) * ray.rcp_dir;
+        side_dist = (cell_min - ray.origin) / -max(0.0001f, abs(ray.dir));
         const float tmax = min(min(side_dist.x, side_dist.y), side_dist.z);
         const int3 neighbor_max = asint(cell_min) + select(side_dist == tmax, -1, (1 << sub_scale_exp) - 1);
         pos = min(ray.origin - abs(ray.dir) * tmax, asfloat(neighbor_max));
@@ -202,7 +201,6 @@ public [ForceInline] float3 occlusion_svt64(
 
     /* Mirror ray origin for more efficient ray-octant traversal */
     ray.origin = mirror_pos(ray.origin, ray.dir, true);
-    ray.rcp_dir = 1.0f / -abs(ray.dir);
 
     /* Mirror coordinates to simplify cell intersections */
     uint mirror_mask = 0x00u;
@@ -240,7 +238,7 @@ public [ForceInline] float3 occlusion_svt64(
 
         /* Compute the next position by intersecting the max cell sides */
         const float3 cell_min = floor_scale(pos, sub_scale_exp);
-        const float3 side_dist = (cell_min - ray.origin) * ray.rcp_dir;
+        const float3 side_dist = (cell_min - ray.origin) / -max(0.0001f, abs(ray.dir));
         const float tmax = min(min(side_dist.x, side_dist.y), side_dist.z);
         const int3 neighbor_max = asint(cell_min) + select(side_dist == tmax, -1, (1 << sub_scale_exp) - 1);
         pos = min(ray.origin - abs(ray.dir) * tmax, asfloat(neighbor_max));

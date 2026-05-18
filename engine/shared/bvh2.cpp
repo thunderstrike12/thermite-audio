@@ -102,10 +102,20 @@ void Bvh2<T>::build(const T* input_prims, const uint32_t input_count) {
                 }
             }
 
+            /* Compute centroid bounds */
+            glm::vec3 cmin(BIG_F32), cmax(-BIG_F32);
+            for (uint32_t i = 0u; i < node.prim_count; ++i) {
+                const glm::vec3 c = (bounds[indices[node.left_first + i]].min
+                                + bounds[indices[node.left_first + i]].max) * 0.5f;
+                cmin = glm::min(cmin, c);
+                cmax = glm::max(cmax, c);
+            }
+
             /* Scatter the primitives into the bins */
             uint32_t bin_count[3][BVH_BINS] {};
-            const glm::vec3 rpd3 = glm::vec3((float)BVH_BINS / (node.max_bounds - node.min_bounds));
-            const glm::vec3 nmin3 = node.min_bounds;
+            const glm::vec3 extent = glm::max(cmax - cmin, glm::vec3(1e-20f));
+            const glm::vec3 rpd3 = glm::vec3((float)BVH_BINS) / extent;
+            const glm::vec3 nmin3 = cmin;
             for (uint32_t i = 0u; i < node.prim_count; ++i) {
                 const Aabb& prim = bounds[indices[node.left_first + i]];
                 glm::ivec3 bi = glm::ivec3(((prim.min + prim.max) * 0.5f - nmin3) * rpd3);
@@ -159,13 +169,14 @@ void Bvh2<T>::build(const T* input_prims, const uint32_t input_count) {
                 break;
             }
 
-            /* Sort the primitve indices */
+            /* Partition primitives using split position (not bin re-index) */
+            const float split_pos = nmin3[best_axis]
+                + (extent[best_axis] / (float)BVH_BINS) * (float)(best_split + 1u);
             uint32_t j = node.left_first + node.prim_count, src = node.left_first;
-            const float rpd = rpd3[best_axis], nmin = nmin3[best_axis];
             for (uint32_t i = 0u; i < node.prim_count; ++i) {
                 const Aabb& prim = bounds[indices[src]];
-                const uint32_t bi = glm::clamp((uint32_t)(((prim.min[best_axis] + prim.max[best_axis]) * 0.5f - nmin) * rpd), 0u, BVH_BINS - 1u);
-                if (bi <= best_split) {
+                const float centroid = (prim.min[best_axis] + prim.max[best_axis]) * 0.5f;
+                if (centroid < split_pos) {
                     src++;
                 } else {
                     std::swap(indices[src], indices[--j]);

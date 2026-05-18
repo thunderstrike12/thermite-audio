@@ -155,7 +155,7 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
 
         /* Calculate object opacity based on distance from the camera */
         const float object_d = glm::distance(transform.get_world_position(), glm::vec3(engine.renderer.render_view.gpu_view.origin));
-        const float range_d = object_transparent_distance - object_opaque_distance;
+        const float range_d = glm::max(0.0001f, object_transparent_distance - object_opaque_distance);
         const float opacity_t = 1.0f - glm::clamp(object_d - object_opaque_distance, 0.0f, range_d) / range_d;
         const float opacity = (renderer.distance_culling ? (1.0f - powf(2.0f, -object_opacity_transition * opacity_t)) : 1.0f) * renderer.opacity;
         if (opacity <= 0.0f) continue; /* Skip fully transparent objects */
