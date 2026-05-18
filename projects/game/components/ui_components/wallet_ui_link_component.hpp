@@ -25,7 +25,7 @@ class WalletUiLink : public tmt::GameComponent<WalletUiLink> {
     void update(const tmt::FrameData& time) override;
     void end() override;
 
-    tmt::Entity entity_with_wallet = entt::null;
+    std::vector<tmt::Entity> entities_with_wallet = { entt::null };
     DisplayTextType resource_to_display = DisplayTextType::DOLLARS;
     DisplayType display_type = DisplayType::CURRENT;
 
@@ -33,10 +33,8 @@ class WalletUiLink : public tmt::GameComponent<WalletUiLink> {
     void change_text() const;
     void update_value();
     bool wallet_entity_check() const;
-    bool component_check() const;
-    int previous_value = -1;
     int current_value = 0;
 };
 
 }  // namespace game
-TMT_OBJECT(game::WalletUiLink, (entity_with_wallet, resource_to_display, display_type));
+TMT_OBJECT(game::WalletUiLink, (entities_with_wallet, resource_to_display, display_type));

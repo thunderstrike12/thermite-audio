@@ -26,7 +26,6 @@ void OreManager::start() {
         ore_database = ore_properties->ores;
     } else {
         tmt::Log::warn("No ore properties found, needed for ore toughness checks");
-        return;
     }
 }
 
@@ -52,7 +51,8 @@ void OreManager::initiate_thermite_explosion(tmt::Entity voxel_entity, glm::uvec
     thermite_to_explode.insert(std::make_pair(voxel_entity, voxel_position));
 }
 
-void OreManager::process_thermite_ore_explosion(tmt::Entity voxel_entity, glm::uvec3 explosion_center) {  // explosion center is uint voxel position relative to entity transform
+void OreManager::process_thermite_ore_explosion(tmt::Entity voxel_entity, glm::uvec3 explosion_center) {
+    // explosion center is uint voxel position relative to entity transform
     auto origin_entity_world_pos = tmt::engine.ecs.get_component<tmt::Transform>(voxel_entity).get_world_position();
     auto vox_renderer = tmt::engine.ecs.try_get_component<tmt::VoxelRenderer>(voxel_entity);
     if (!vox_renderer) return;
@@ -62,7 +62,7 @@ void OreManager::process_thermite_ore_explosion(tmt::Entity voxel_entity, glm::u
     int cz = static_cast<int>(explosion_center.z);
 
     glm::vec3 explosion_center_local_pos = (glm::vec3(explosion_center) - glm::vec3(vox_renderer->resource->size) / 2.0f) * UNITS_PER_VOXEL;
-    glm::vec3 explosion_world_pos = glm::vec3(vox_entity_transform.get_world_matrix() * glm::vec4(explosion_center_local_pos, 1.0f));
+    auto explosion_world_pos = glm::vec3(vox_entity_transform.get_world_matrix() * glm::vec4(explosion_center_local_pos, 1.0f));
 
     // check if player is within explosion
     if (glm::length(tmt::engine.ecs.get_component<tmt::Transform>(player_entity).get_world_position() - explosion_world_pos) <= thermite_ore_settings.radius_explosion) {
