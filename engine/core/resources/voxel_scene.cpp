@@ -432,13 +432,18 @@ VoxelSceneNode parse_hierarchy(const vengi::Node* file_node) {
 }
 
 Entity recurse_instantiate_scene(
-    const ResourceRef<VoxelScene>& voxel_scene, const VoxelSceneNode& node, const Entity parent_entity = entt::null, const glm::mat4& parent_matrix = glm::identity<glm::mat4>()
+    const ResourceRef<VoxelScene>& voxel_scene, const VoxelSceneNode& node, const Entity parent_entity = entt::null, const glm::mat4& parent_matrix = glm::identity<glm::mat4>(),
+    const bool in_world_space = true
 ) {
     const Entity entity = engine.ecs.create_entity(node.name);
 
     Transform& transform = engine.ecs.get_component<Transform>(entity);
     transform.set_parent(parent_entity);
-    transform.set_world_matrix(parent_matrix * node.transform);
+    if (in_world_space) {
+        transform.set_world_matrix(parent_matrix * node.transform);
+    } else {
+        transform.set_local_matrix(node.transform);
+    }
 
     if (node.tree != nullptr) {
         VoxelRenderer& renderer = engine.ecs.add_component<VoxelRenderer>(entity);
@@ -488,13 +493,13 @@ void VoxelScene::unload() {
     root_nodes.clear();
 }
 
-std::vector<Entity> VoxelScene::instantiate_entities() const {
+std::vector<Entity> VoxelScene::instantiate_entities(const tmt::Entity parent, const bool in_world_space) const {
     std::vector<Entity> root_entities;
     root_entities.reserve(root_nodes.size());
 
     const ResourceRef this_scene = engine.resources.load_resource<VoxelScene>(file_location);
     for (const VoxelSceneNode& root_node : root_nodes) {
-        root_entities.push_back(recurse_instantiate_scene(this_scene, root_node));
+        root_entities.push_back(recurse_instantiate_scene(this_scene, root_node, parent, glm::identity<glm::mat4>(), in_world_space));
     }
 
     return root_entities;

@@ -51,6 +51,7 @@ struct Transform {
     void look_at(const glm::vec3& target, const glm::vec3& up);
 
     /* Matrix */
+    void set_local_matrix(const glm::mat4& matrix);
     void set_world_matrix(const glm::mat4& matrix);
 
     const glm::mat4& get_world_matrix() const;

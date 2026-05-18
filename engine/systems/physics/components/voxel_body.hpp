@@ -39,7 +39,7 @@ struct VoxelBody {
     glm::vec3 angular_velocity = glm::vec3(0);
     float angular_drag = 0.4f;
 
-    float gravity = 9.8f;
+    float gravity = 0.0f;
     float density = 1.0f;
 
     glm::vec3 position = glm::vec3(0);

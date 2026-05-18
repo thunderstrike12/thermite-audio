@@ -43,7 +43,7 @@ class VoxelScene : public tmt::FileResource {
     bool load() override;
     void unload() override;
 
-    std::vector<Entity> instantiate_entities() const;
+    std::vector<Entity> instantiate_entities(const tmt::Entity parent = entt::null, const bool in_world_space = true) const;
     [[nodiscard]] std::vector<UUID> get_all_uuids() const;
     /* Tries to calculate the world matrix of the node with the given UUID. */
     glm::mat4 get_node_world_matrix(const UUID& uuid) const;

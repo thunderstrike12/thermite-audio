@@ -75,6 +75,7 @@
 // World generation
 #include "components/world_gen/generation_component.hpp"
 #include "components/world_gen/random_prefab_spawner.hpp"
+#include "components/world_gen/svh_spawner.hpp"
 // Data Headers
 #include "data_headers/scene_list.hpp"
 #include "data_headers/wallet.hpp"
@@ -160,6 +161,7 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     /* Register World Generation Components */
     tmt::engine.component_registry.register_component<game::GenerationComponent>();
     tmt::engine.component_registry.register_component<game::RandomPrefabSpawner>();
+    tmt::engine.component_registry.register_component<game::SVHSpawner>();
     /* Register Game UI Components */
     tmt::engine.component_registry.register_component<game::SceneSwitchComponent>();
     tmt::engine.component_registry.register_component<game::EntityControlComponent>();

@@ -200,6 +200,15 @@ void Transform::look_at(const glm::vec3& target, const glm::vec3& up) {
     set_world_rotation(rotation);
 }
 
+void Transform::set_local_matrix(const glm::mat4& matrix) {
+    /* unused */
+    glm::vec3 skew;
+    glm::vec4 perspective;
+    glm::decompose(matrix, local_scale, local_rotation, local_position, skew, perspective);
+    local_eulers = glm::eulerAngles(local_rotation);
+    mark_dirty();
+}
+
 void Transform::set_world_matrix(const glm::mat4& matrix) {
     if (has_parent()) {
         auto& parent_transform = engine.ecs.get_component<Transform>(parent);
