@@ -146,6 +146,13 @@ bool Upgrade::apply_upgrade() {
 
     modify_upgrade_entities();
 
+    for (tmt::Entity curr_entity : entities_to_disable) {
+        disable(curr_entity);
+    }
+
+    for (tmt::Entity curr_entity : entities_to_enable) {
+        enable(curr_entity);
+    }
     return true;
 }
 

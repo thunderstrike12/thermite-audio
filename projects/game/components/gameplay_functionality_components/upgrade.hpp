@@ -53,8 +53,22 @@ class Upgrade : public tmt::GameComponent<Upgrade> {
     void button_apply(tmt::Button::Context context);
     std::vector<tmt::Entity> required_upgrade_entities = {};
 
+    std::vector<tmt::Entity> entities_to_disable = { entt::null };
+    std::vector<tmt::Entity> entities_to_enable = { entt::null };
+
    private:
+    static void disable(tmt::Entity ett_to_dis) {
+        if (tmt::engine.ecs.valid(ett_to_dis)) {
+            tmt::engine.ecs.disable(ett_to_dis);
+        }
+    }
+
+    static void enable(tmt::Entity ett_to_en) {
+        if (tmt::engine.ecs.valid(ett_to_en)) {
+            tmt::engine.ecs.enable(ett_to_en);
+        }
+    }
 };
 
 }  // namespace game
-TMT_OBJECT(game::Upgrade, (upgrade_target, type, upgrade_to, dollar_cost, new_upgrade_costs, required_upgrade_entities));
+TMT_OBJECT(game::Upgrade, (upgrade_target, type, upgrade_to, dollar_cost, new_upgrade_costs, required_upgrade_entities, entities_to_disable, entities_to_enable));
