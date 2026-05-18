@@ -28,6 +28,19 @@ struct Currencies {
         result += other;
         return result;
     }
+    Currencies& operator-=(const Currencies& other) {
+        dollars -= other.dollars;
+        for (const auto& [ore, count] : other.resource_counts) {
+            resource_counts[ore] -= count;
+        }
+        return *this;
+    }
+
+    Currencies operator-(const Currencies& other) const {
+        Currencies result = *this;
+        result -= other;
+        return result;
+    }
 
     void print_values() {
         tmt::Log::info("Dollars: {}", dollars);
