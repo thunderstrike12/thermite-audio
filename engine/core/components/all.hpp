@@ -31,6 +31,7 @@
 #include "engine/systems/ai/goap/components/goap_action.hpp"
 #include "engine/systems/ai/goap/components/world_state.hpp"
 #include "engine/core/components/rig_controller.hpp"
+#include "engine/core/components/color_grading_component.hpp"
 
 namespace tmt {
 
@@ -43,6 +44,7 @@ using SerializeComponents = ComponentRegistry<
 	DisableFlag,
 	VoxelRenderer, 
 	Environment,
+	ColorGrading,
 	Camera,
 	VoxelBody,
 	Destructible,
@@ -83,6 +85,7 @@ using InspectComponents = ComponentRegistry<
 	Transform,
 	VoxelRenderer, 
 	Environment,
+	ColorGrading,
 	Camera,
 	VoxelBody,
 	Destructible,

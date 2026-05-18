@@ -44,6 +44,8 @@ public struct SceneView {
     public uint envmap_full_handle;
     /* Environment map (filtered) bindless handle. */
     public uint envmap_filtered_handle;
+    /* Color grading lut bindless handle. */
+    public uint lut_handle;
 };
 
 /* Represents a ray that can be traced. */

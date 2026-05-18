@@ -8,13 +8,16 @@
 #include "engine.hpp"
 #include "core/renderer/renderer.hpp"
 #include "tools/player_data.hpp"
-#include "core/input/input.hpp"
 
 namespace tmt {
 
-void PostProcessPipeline::init(GPUAdapter&) {}
+void PostProcessPipeline::init(GPUAdapter& gpu) {
+    /* Init 3D LUT Sampler */
+    VRAMBank& bank = gpu.get_vram_bank();
+    lut_sampler = bank.create_sampler("LUT Sampler", Filter::Linear, AddressMode::ClampToEdge).expect("failed to initialize lut sampler.");
+}
 
-void PostProcessPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
+void PostProcessPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view, SceneView& scene_view) {
     const glm::uvec2 shading_res = render_view.gpu_view.resolution;
 
     RendererSettings& settings = engine.player_data.get<RendererSettings>("RendererSettings");
@@ -101,14 +104,21 @@ void PostProcessPipeline::enqueue(RenderGraph& render_graph, RenderView render_v
     /* Bloom Addition, Color Grading and Tonemapping */
     /* clang-format off */
     render_graph.add_compute_pass("color grading and tonemapping", "cg_tonemap.cs")
+        .read(scene_view.scene_view)
         .read(render_view.lbuffer.image)
         .read(render_view.tbuffer.images[0])
         .write(render_view.get_render_image())
+        .read(lut_sampler)
+        .push_constants(&scene_view.lut_size, 0, sizeof(float))
         .group_size(16, 8)
         .work_size(render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y);
     /* clang-format on */
 }
 
-void PostProcessPipeline::deinit(GPUAdapter&) {}
+void PostProcessPipeline::deinit(GPUAdapter& gpu) {
+    VRAMBank& bank = gpu.get_vram_bank();
+
+    bank.destroy(lut_sampler);
+}
 
 }  // namespace tmt

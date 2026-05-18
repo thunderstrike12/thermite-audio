@@ -2,7 +2,8 @@
 
 #include <graphite/resources/handle.hh>
 
-#include "core/renderer/render_view.hpp"
+#include "engine/core/renderer/render_view.hpp"
+#include "engine/core/renderer/scene_view.hpp"
 
 class GPUAdapter;
 class RenderGraph;
@@ -18,8 +19,10 @@ class PostProcessPipeline {
     PostProcessPipeline& operator=(const PostProcessPipeline&) = delete;
 
     void init(GPUAdapter& gpu);
-    void enqueue(RenderGraph& render_graph, RenderView render_view);
+    void enqueue(RenderGraph& render_graph, RenderView& render_view, SceneView& scene_view);
     void deinit(GPUAdapter& gpu);
+
+    Sampler lut_sampler;
 };
 
 }  // namespace tmt

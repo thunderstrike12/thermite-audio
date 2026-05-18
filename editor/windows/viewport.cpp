@@ -103,7 +103,7 @@ void tmt::Viewport::on_inspect() {
 
     if (height <= 0.f) return;
 
-    engine.renderer.render_view.set_viewport_size(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+    if (!engine.renderer.screenshot_settings.request_capture) engine.renderer.render_view.set_viewport_size(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 
     ImGui::BeginChild("viewport_render", ImVec2(0, 0), 0, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove);
 

@@ -42,7 +42,7 @@ void RenderView::init() {
     /* clang-format off */
     /* Viewport Texture */
     viewport.texture = bank.create_texture("Viewport Texture", 
-        TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA8Unorm, 
+        TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage | TextureUsage::TransferSrc, TextureFormat::RGBA8Unorm, 
         { (uint32_t)engine.window.width, (uint32_t)engine.window.height, 0 }
     ).expect("failed to initialize attachment texture");
 

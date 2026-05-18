@@ -1,5 +1,11 @@
 #include "renderer.hpp"
 
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+#pragma warning(pop)
+
 #include <graphite/imgui.hh>
 #include <graphite/vram_bank.hh>
 #include <graphite/gpu_adapter.hh>
@@ -11,6 +17,7 @@
 #include "core/ecs.hpp"
 #include "core/window.hpp"
 #include "core/logger.hpp"
+#include "core/input/input.hpp"
 #include "core/components/camera.hpp"
 #include "core/components/transform.hpp"
 
@@ -25,6 +32,8 @@
 
 #include "tools/profiler.hpp"
 #include "tools/player_data.hpp"
+#include "tools/serializer.hpp"
+#include "tools/serializer/all.hpp"
 
 namespace tmt {
 
@@ -230,7 +239,7 @@ void Renderer::update() {
 
     /* Post Processing */
     if (engine.renderer.display_mode == DisplayMode::DEFAULT) {
-        post_process_pipeline.enqueue(render_graph, render_view);
+        post_process_pipeline.enqueue(render_graph, render_view, scene_view);
     }
 
     if (scene_view.render_outlines) {
@@ -257,7 +266,7 @@ void Renderer::update() {
 
     /* Polyline & UI */
     polyline_pipeline.enqueue(render_graph, render_view);
-    ui_pipeline.enqueue(render_graph, render_view);
+    if (screenshot_settings.include_ui) ui_pipeline.enqueue(render_graph, render_view);
 
 #ifdef THERMITE_EDITOR
     /* Add the immediate mode GUI to the render graph */
@@ -274,6 +283,27 @@ void Renderer::update() {
     if (const Result r = render_graph.dispatch(); r.is_err()) {
         Log::error(Log::Scope::RENDERER, "failed to dispatch render graph.\nreason: {}", r.unwrap_err());
     }
+
+    /* Don't capture on first frame, since we need a few frames to warm up. */
+    if (screenshot_settings.request_capture && !screenshot_settings.warming_up) {
+        screenshot_settings.request_capture = false;
+        capture_screenshot();
+    }
+
+    /* On first frame that screenshot capturing gets triggered, set internal res to desired screenshot res and begin warm up. */
+    if (screenshot_settings.request_capture) {
+        if (screenshot_settings.warmup_frames == 0u) render_view.set_viewport_size(screenshot_settings.width, screenshot_settings.height);
+
+        /* Increment warm up frames. */
+        screenshot_settings.warmup_frames += 1u;
+
+        /* Warming up done, signal next frame for screenshot capture. */
+        if (screenshot_settings.warmup_frames > 3u) {
+            screenshot_settings.warming_up = false;
+            screenshot_settings.warmup_frames = 0u;
+        }
+    }
+
     TMT_FRAME_MARK;
 }
 
@@ -307,6 +337,45 @@ void Renderer::end() {
     render_graph.deinit().expect("failed to destroy render graph.");
     bank.deinit().expect("failed to destroy vram bank.");
     gpu.deinit().expect("failed to destroy gpu adapter.");
+}
+
+void Renderer::capture_screenshot() {
+    /* Resolve the output path */
+    std::string name = screenshot_settings.filename;
+    name += ".png";
+    const auto path = std::filesystem::absolute(std::filesystem::path(screenshot_settings.directory) / name);
+
+    /* Ensure the output directory exists */
+    std::error_code ec;
+    std::filesystem::create_directories(path.parent_path(), ec);
+    if (ec) {
+        Log::error("failed to create screenshot directory '{}': {}", path.parent_path().string(), ec.message());
+    } else {
+        /* Readback and save */
+        void* data = nullptr;
+        int width, height, channels;
+        gpu.get_vram_bank().readback_texture(render_view.viewport.image, &data, &width, &height, &channels).expect("failed to readback viewport image");
+
+        if (stbi_write_png(path.string().c_str(), width, height, channels, data, width * channels) == 0) {
+            Log::error("failed to write screenshot to '{}'!", path.string());
+        } else {
+            Log::info("screenshot saved: {}", path.string());
+        }
+
+        free(data);
+    }
+}
+
+json RendererSerializer::serialize() const {
+    tmt::json result = json::object();
+    // result["post_process_pipeline"] = Serializer::serialize(engine.renderer.post_process_pipeline);
+    return result;
+}
+
+void RendererSerializer::deserialize(const json& /* value */) {
+    // if (value.contains("post_process_pipeline")) {
+    //     Serializer::deserialize(value["post_process_pipeline"], engine.renderer.post_process_pipeline);
+    // }
 }
 
 Hit Renderer::trace_ray(const Ray& ray) const {

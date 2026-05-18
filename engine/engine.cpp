@@ -110,6 +110,7 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     ecs.systems.add<MotionMathSystem>();
     ecs.systems.add<UIElementManager>();
     ecs.systems.add<Tweener>();
+    ecs.systems.add<RendererSerializer>();
     ecs.systems.add<Gameplay>(); /* Should be last */
 
     OnEngineInit::dispatch(app->specs);

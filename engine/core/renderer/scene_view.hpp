@@ -45,6 +45,8 @@ struct GpuSceneView {
     glm::uint envmap_full_handle = 0u;
     /* Environment map (filtered) bindless handle. */
     glm::uint envmap_filtered_handle = 0u;
+    /* Color grading lut bindless handle. */
+    glm::uint lut_handle = 0u;
 };
 
 /* View of the scene, containing all scene data required for rendering. */
@@ -93,6 +95,9 @@ struct SceneView {
     float fog_scatter_strength = 0.25f;
     glm::vec3 fog_absorption = glm::vec3(0.02f);
     float particle_reflectance = 0.1f;
+
+    /* Color grading LUT info */
+    float lut_size = 0.0f;
 
    private:
     /* Collect and upload all voxel objects in the scene. */
