@@ -1,12 +1,16 @@
 #pragma once
 #include "engine/core/entity.hpp"
+
 #include <glm/glm.hpp>
 
 namespace game {
 
+enum class WeaponType;
+
 struct ShootEvent {
     tmt::Entity shooting_entity;
     bool secondary_shot = false;
+    WeaponType type;
 };
 struct ReleaseShootEvent {
     tmt::Entity shooting_entity;
@@ -77,6 +81,13 @@ struct IconTransitionEvent {
     float current_value;
     float min_value;
     float max_value;
+};
+
+struct MineVoxelEvent {
+    tmt::Entity weapon_entity;
+};
+struct MineNothingEvent {
+    tmt::Entity weapon_entity;
 };
 
 }  // namespace game

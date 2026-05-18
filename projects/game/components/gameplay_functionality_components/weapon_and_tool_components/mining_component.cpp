@@ -127,6 +127,8 @@ void MiningComponent::on_weapon_fired(const WeaponFiredEvent& e) {
 void MiningComponent::on_stop_mining(const ReleaseShootEvent& e) {
     // TODO this will trigger no matter what the entity is for now
     stopped_mining = true;
+    tmt::engine.ecs.get_dispatcher().trigger<MineNothingEvent>({ entity });
+
     tmt::Log::info("Stopped mining, reset previous hits");
 }
 
@@ -166,7 +168,7 @@ void MiningComponent::handle_voxel(const VoxelID& voxel_id) {
             }
             break;
     }
-
+    tmt::engine.ecs.get_dispatcher().trigger<MineVoxelEvent>({ entity });
     has_drawn_debug = false;
 }
 void MiningComponent::mine(const glm::vec3& dir) {
@@ -187,7 +189,9 @@ void MiningComponent::mine(const glm::vec3& dir) {
             // handle_ore(hit);
         }
     }
-
+    if (new_mining_voxel_set.empty() == true) {
+        tmt::engine.ecs.get_dispatcher().trigger<MineNothingEvent>({ entity });
+    }
     // Comparing with the previous hit we get 3 options
     // we do not have a voxel that has previously been in the dictionary, but not in this frame of mining, meaning we have to remove it
 

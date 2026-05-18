@@ -109,7 +109,7 @@ void game::WeaponManager::check_trigger_shoot_event() {
         fired = true;
         upward_response = true;
 
-        tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, false });
+        tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, false, get_active_weapon() });
 
         auto* rig_controller = tmt::engine.ecs.try_get_component<tmt::RigController>(tool_rig);
         if (rig_controller) {

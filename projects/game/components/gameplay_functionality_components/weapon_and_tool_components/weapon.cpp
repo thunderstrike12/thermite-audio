@@ -1,7 +1,6 @@
 #include "weapon.hpp"
 
 #include "engine/tools/fmt/glm.hpp"
-
 void game::Weapon::start() {}
 void game::Weapon::update(const tmt::FrameData& time) {}
 void game::Weapon::end() {}

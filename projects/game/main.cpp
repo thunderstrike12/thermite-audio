@@ -47,6 +47,8 @@
 #include "components/gameplay_functionality_components/weapon_and_tool_components/weapon.hpp"
 #include "components/gameplay_functionality_components/weapon_and_tool_components/mining_component.hpp"
 #include "components/gameplay_functionality_components/weapon_and_tool_components/gravity_manipulation_component.hpp"
+#include "components/gameplay_functionality_components/weapon_and_tool_components/drill_vfx_spawner.hpp"
+
 // Ui
 #include "components/ui_components/text_component.hpp"
 #include "components/ui_components/scene_switch_component.hpp"
@@ -153,6 +155,8 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.component_registry.register_component<game::Explosion>();
     tmt::engine.component_registry.register_component<game::DestroyTimed>();
     tmt::engine.component_registry.register_component<game::TransformTween>();
+    tmt::engine.component_registry.register_component<game::DrillVFXSpawner>();
+
     /* Register World Generation Components */
     tmt::engine.component_registry.register_component<game::GenerationComponent>();
     tmt::engine.component_registry.register_component<game::RandomPrefabSpawner>();
