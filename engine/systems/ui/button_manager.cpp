@@ -58,7 +58,7 @@ void UIElementManager::update_states(const tmt::FrameData& time) {
                 break;
             case ButtonState::ON_RELEASE:
                 button.on_release(context);
-                interactable.state = ButtonState::SELECTED;
+                interactable.state = ButtonState::IDLE;
                 hold_time = 0.0f;
                 break;
         }
@@ -126,7 +126,10 @@ bool UIElementManager::select_button(const Entity button) {
     /* Deselect previous button */
     if (selected_entity != entt::null) {
         auto* prev_button = engine.ecs.try_get_component<UIInteractable>(selected_entity);
-        if (prev_button) prev_button->state = ButtonState::ON_DESELECT;
+        if (prev_button && prev_button->state == ButtonState::ON_HOLD) {
+            prev_button->state = ButtonState::ON_RELEASE;
+        } else if (prev_button)
+            prev_button->state = ButtonState::ON_DESELECT;
         previous_entity = selected_entity;
     }
 
