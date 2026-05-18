@@ -851,6 +851,8 @@ class TweenCollection {
 template <typename Context>
 struct Ctx {};
 
+struct Owned {};
+
 /* Main update */
 template <typename Context = Detail::Default>
 inline void update(const float delta_time_seconds) {
@@ -889,6 +891,29 @@ ITween<T, Args...>& tween(TypedTweenHandle<ITween<T, Args...>>& handle) {
     return tween(handle, Ctx<Detail::Default> {});
 }
 
+template <typename T, typename... Args, typename Context>
+requires Traits::HasITween<T, Args...>
+ITween<T, Args..., Owned>& tween_owned_impl(Ctx<Context>) {
+    using BareT = std::remove_cvref_t<T>;
+    using TweenT = ITween<BareT, Args..., Owned>;
+    auto ptr = std::make_shared<TweenT>();
+    Detail::TweenCollection<Context, BareT, Args..., Owned>::add_existing(ptr);
+    return *ptr;
+}
+
+/* Owned type entry */
+template <typename T, typename... Args, typename Context>
+requires Traits::HasITween<T, Args...>
+ITween<T, Args..., Owned>& tween_owned(Ctx<Context>) {
+    return tween_owned_impl<T, Args...>(Ctx<Context> {});
+}
+
+template <typename T, typename... Args>
+requires Traits::HasITween<T, Args...>
+ITween<T, Args..., Owned>& tween() {
+    return tween_owned_impl<T, Args...>(Ctx<Detail::Default> {});
+}
+
 /* Error fallback */
 template <typename... Args, typename T>
 void tween(T& value) {
@@ -924,8 +949,6 @@ struct ITween<T> : public ITween<T, ITween<T>> {
     static ITween create(T& value) { return ITween(&value); }
     static std::shared_ptr<ITween> make_shared_default() { return std::make_shared<ITween>(nullptr); }
 };
-
-struct Owned {};
 
 /* Default owned implemenation */
 template <typename T>

@@ -9,7 +9,7 @@ namespace game {
 struct Missile : public tmt::GameComponent<Missile> {
     using GameComponent::GameComponent;
 
-    static std::string_view get_name() { return "Medium Enemy"; }
+    static std::string_view get_name() { return "Missile"; }
 
     void start() override;
     void update(const tmt::FrameData& time) override;

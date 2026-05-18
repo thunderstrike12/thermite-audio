@@ -749,8 +749,7 @@ Svt64Hit Svt64::trace(const Ray& ray) const {
 
     /* Safety clamp */
     glm::vec3 pos = clamp(origin, 1.0f, 1.9999999f);
-    const glm::vec3 inv_dir = 1.0f / -glm::abs(dir);
-
+    const glm::vec3 abs_dir = glm::max(glm::vec3(0.0001f), glm::abs(dir));
     glm::vec3 side_dist = glm::vec3(0.0f);
     int i = 0;
 
@@ -778,10 +777,10 @@ Svt64Hit Svt64::trace(const Ray& ray) const {
         int sub_scale_exp = scale_exp;
         if ((node.child_mask >> (child_index & 0b101010) & 0x00330033) == 0) sub_scale_exp++;
 
-        // Compute next pos by intersecting with max cell sides
+        /* Compute next pos by intersecting with max cell sides */
         const glm::vec3 cell_min = floor_scale(pos, sub_scale_exp);
 
-        side_dist = (cell_min - origin) * inv_dir;
+        side_dist = (cell_min - origin) / -abs_dir;
         float tmax = fminf(fminf(side_dist.x, side_dist.y), side_dist.z);
 
         const glm::ivec3 cell_min_i = glm::ivec3((int&)cell_min.x, (int&)cell_min.y, (int&)cell_min.z);
@@ -792,7 +791,7 @@ Svt64Hit Svt64::trace(const Ray& ray) const {
         neighbor_max.z += side_dist.z == tmax ? -1 : (1 << sub_scale_exp) - 1;
 
         /* Move to the entry point of our neighbour */
-        pos = glm::min(origin - glm::abs(dir) * tmax, (glm::vec3&)neighbor_max);
+        pos = glm::min(origin - abs_dir * tmax, (glm::vec3&)neighbor_max);
 
         /* Find the first common ancestor node based on left-most carry bit */
         const glm::uvec3 diff_pos = glm::uvec3((uint32_t&)pos.x ^ (uint32_t&)cell_min.x, (uint32_t&)pos.y ^ (uint32_t&)cell_min.y, (uint32_t&)pos.z ^ (uint32_t&)cell_min.z);

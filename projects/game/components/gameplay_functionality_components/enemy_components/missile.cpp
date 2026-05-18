@@ -43,7 +43,7 @@ void game::Missile::start() {
 
     // initial missile rotation
     auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(enemy.walkable_asteroid);
-    if (nav_mesh.nodes_mesh->empty()) return;
+    if (!nav_mesh.nav_nodes_valid()) return;
     auto ground_up = (*nav_mesh.nodes_mesh)[nav_mesh.find_closest_node(enemy_pos)].normal;
     glm::vec3 forward = glm::normalize(ground_up);
     glm::vec3 up = (glm::abs(glm::dot(forward, ground_up)) < 0.99f) ? ground_up : glm::vec3(0.0f, 1.0f, 0.0f);
@@ -63,7 +63,7 @@ void game::Missile::update(const tmt::FrameData& time) {
     player_pos += enemy.target_offset;
     auto enemy_pos = tmt::engine.ecs.get_component<tmt::Transform>(enemy_entity).get_world_position();
     auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(enemy.walkable_asteroid);
-    if (nav_mesh.nodes_mesh->empty()) return;
+    if (!nav_mesh.nav_nodes_valid()) return;
     auto ground_up = (*nav_mesh.nodes_mesh)[nav_mesh.find_closest_node(enemy_pos)].normal;
 
     // fades from full launch down to zero

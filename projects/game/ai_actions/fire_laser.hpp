@@ -33,6 +33,7 @@ class FireLaser : public tmt::GoapAction {
     std::string get_id() const override { return "a_FireLaser"; }
 
     void cleanup(tmt::Entity enemy_entity);
+    void rotate_to_face_player(tmt::Entity enemy_entity, float dt);
 
     void on_start(tmt::Entity) override;
     void on_tick(tmt::Entity agent, float dt) override;

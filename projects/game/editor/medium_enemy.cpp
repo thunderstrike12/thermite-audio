@@ -111,6 +111,7 @@ void tag_invoke(ImReflect::ImInput_t, const char* name, game::MediumEnemy& value
             ImReflect::Input("Laser Cooldown", value.laser_cooldown, type_settings, type_response);
             ImReflect::Input("Laser Firing Time", value.laser_firing_time, type_settings, type_response);
             ImReflect::Input("Laser Sitting Down Time", value.laser_sitting_down_time, type_settings, type_response);
+            ImReflect::Input("Rotation speed during firing laser", value.rotation_speed_during_laser, type_settings, type_response);
             ImReflect::Input("Laser Winding Up Time", value.laser_winding_up_time, type_settings, type_response);
             ImReflect::Input("Laser Damage Per Second", value.laser_damage, type_settings, type_response);
             ImReflect::Input("Laser Damage Radius", value.laser_damage_radius, type_settings, type_response);

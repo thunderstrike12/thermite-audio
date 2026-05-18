@@ -18,6 +18,8 @@
 
 void FireLaser::cleanup(tmt::Entity enemy_entity) {
     game::MediumEnemy& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
+    enemy.set_stored_offsets_to_base();
+    tmt::engine.ecs.get_component<tmt::RigController>(enemy.rig_controller).set_parameter_bool("laser", false);
     if (tmt::engine.ecs.valid(laser_entity)) {
         tmt::engine.ecs.destroy_entity(laser_entity);
     }
@@ -30,8 +32,52 @@ void FireLaser::cleanup(tmt::Entity enemy_entity) {
     ws->set_fact(tmt::FactId("m_laser_ready"), false);
 }
 
+void FireLaser::rotate_to_face_player(tmt::Entity enemy_entity, float dt) {
+    game::MediumEnemy& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
+    glm::vec3 enemy_pos = tmt::engine.ecs.get_component<tmt::Transform>(enemy_entity).get_world_position();
+    auto player_pos = tmt::engine.ecs.get_component<tmt::Transform>(enemy.player).get_world_position();
+
+    auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(enemy.walkable_asteroid);
+    if (!nav_mesh.nav_nodes_valid()) return;
+
+    int closest_node = nav_mesh.find_closest_node(enemy_pos);
+    auto dir = nav_mesh.follow_path(enemy_pos, player_pos);
+
+    auto* nodes = nav_mesh.nodes_mesh;
+    auto& normal = (*nodes)[closest_node].normal;
+    glm::vec3 ground_up = glm::normalize(normal);
+    glm::quat rot_velocity = glm::quat(1, 0, 0, 0);
+    if (glm::dot(*dir, *dir) > 0.00001f) {
+        // project velocity onto tangent plane of the ground
+        glm::vec3 forward = *dir - ground_up * glm::dot(*dir, ground_up);
+
+        if (glm::dot(forward, forward) > 0.00001f) {
+            forward = glm::normalize(forward);
+            glm::vec3 right = glm::normalize(glm::cross(ground_up, forward));
+            glm::vec3 up = glm::cross(forward, right);
+
+            glm::mat3 basis(right, up, forward);
+            rot_velocity = glm::normalize(glm::quat_cast(basis));
+        }
+    }
+    float f = dt * enemy.rotation_speed_during_laser;
+    enemy.rotation = glm::slerp(enemy.rotation, rot_velocity, glm::clamp(f, 0.0f, 1.0f));
+    enemy.rotation = glm::normalize(enemy.rotation);
+    tmt::engine.ecs.get_component<tmt::Transform>(enemy_entity).set_world_rotation(enemy.rotation);
+}
+
 void FireLaser::on_start(tmt::Entity enemy_entity) {
     auto& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
+    Tweening::tween<float>()  //
+        .from(1.0f)
+        .to(0.0f)
+        .duration(0.2f)
+        .ease(Tweening::Ease::IN_OUT_QUAD)
+        .on_update([enemy_entity](float alpha, const float* value) {
+            //
+            auto& enemy_comp = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
+            tmt::engine.ecs.get_component<tmt::ConstrainedRig>(enemy_comp.rig_controller).blend = *value;
+        });
     state = SITTING_DOWN;
     time = 0.0f;
 
@@ -68,12 +114,27 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
             tmt::engine.ecs.get_component<tmt::RigController>(enemy.rig_controller).set_parameter_bool("laser", true);
             enemy.height_above_ground_offset = -enemy.height_above_ground + enemy.laser_sitting_down_height_offset;
             if (time > enemy.laser_sitting_down_time) {
+                // auto& constrained_rig = tmt::engine.ecs.get_component<tmt::ConstrainedRig>(enemy.rig_controller);
+                // constrained_rig.copy_reference_pose_from_keyframe(tmt::engine.ecs.get_component<tmt::RigModel>(enemy.rig_controller));
+                Tweening::tween<float>()  //
+                    .from(0.0f)
+                    .to(1.0f)
+                    .duration(0.2f)
+                    .ease(Tweening::Ease::IN_OUT_QUAD)
+                    .on_update([enemy_entity](float alpha, const float* value) {
+                        //
+                        auto& enemy_comp = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
+                        tmt::engine.ecs.get_component<tmt::ConstrainedRig>(enemy_comp.rig_controller).blend = *value;
+                    });
+                enemy.set_stored_offsets_to_ref_entity();
                 state = WINDING_UP;
                 time = 0.0f;
             }
             break;
         }
         case WINDING_UP: {
+            rotate_to_face_player(enemy_entity, dt);
+
             enemy.height_above_ground_offset = -enemy.height_above_ground + enemy.laser_sitting_down_height_offset;
             glm::vec3 target_dir = glm::normalize(target_pos - laser_pos);
             direction = target_dir;
@@ -92,9 +153,6 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
                 auto& voxel_renderer = tmt::engine.ecs.add_component<tmt::VoxelRenderer>(laser_entity);
                 auto ref = tmt::engine.resources.copy_resource<tmt::VoxelVolume>(enemy.laser_voxel_object);
                 voxel_renderer.resource = ref;
-
-                auto& constrained_rig = tmt::engine.ecs.get_component<tmt::ConstrainedRig>(enemy.rig_controller);
-                constrained_rig.copy_reference_pose_from_keyframe(tmt::engine.ecs.get_component<tmt::RigModel>(enemy.rig_controller));
 
                 // auto& voxel_body = tmt::engine.ecs.add_component<tmt::VoxelBody>(laser_entity);
                 // voxel_body.layer = enemy.projectile_layer;
@@ -118,6 +176,8 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
 
                 return;
             }
+
+            rotate_to_face_player(enemy_entity, dt);
 
             glm::vec3 raw_vel = (player_pos - last_player_pos) / dt;
             last_player_pos = player_pos;
@@ -154,7 +214,6 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
             direction = target_dir;
 
             if (time > enemy.laser_firing_time) {
-                tmt::engine.ecs.get_component<tmt::RigController>(enemy.rig_controller).set_parameter_bool("laser", false);
                 cleanup(enemy_entity);
                 return;
             }
@@ -205,7 +264,5 @@ bool FireLaser::is_done(tmt::Entity /*enemy_entity*/) const {
 }
 
 void FireLaser::on_interrupt(tmt::Entity enemy_entity) {
-    auto& enemy = tmt::engine.ecs.get_component<game::MediumEnemy>(enemy_entity);
-    tmt::engine.ecs.get_component<tmt::RigController>(enemy.rig_controller).set_parameter_bool("laser", false);
     cleanup(enemy_entity);
 }

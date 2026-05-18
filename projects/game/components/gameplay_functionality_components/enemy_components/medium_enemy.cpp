@@ -1,4 +1,5 @@
 #include "medium_enemy.hpp"
+#include "../player.hpp"
 #include "engine/systems/ai/goap/components/goap_agent_factory.hpp"
 #include "engine/systems/ai/goap/components/goap_agent.hpp"
 
@@ -12,9 +13,27 @@
 #include "engine\core\components\voxel_renderer.hpp"
 
 void game::MediumEnemy::start() {
-    for (const auto& [CamEntity, camera] : tmt::engine.ecs.view<tmt::Camera>().each()) {
-        player = CamEntity;
-        break;
+    player = Player::get().entity;
+
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+    float closest_dist = std::numeric_limits<float>::max();
+    for (const auto&& [nav_mesh_entity, nav_mesh] : tmt::engine.ecs.view<tmt::NavMesh>().each()) {
+        if (walkable_asteroid == entt::null) walkable_asteroid = nav_mesh_entity;
+        auto& nav_mesh_transform = tmt::engine.ecs.get_component<tmt::Transform>(nav_mesh_entity);
+        auto& current_walkable_transform = tmt::engine.ecs.get_component<tmt::Transform>(walkable_asteroid);
+
+        float dist = glm::length(nav_mesh_transform.get_world_position() - transform.get_world_position());
+        float current_dist = glm::length(current_walkable_transform.get_world_position() - transform.get_world_position());
+        if (dist < closest_dist) {
+            walkable_asteroid = nav_mesh_entity;
+        }
+    }
+    if (walkable_asteroid == entt::null) {
+        tmt::Log::error("No walkable asteroid found for medium enemy! Medium enemy removed.");
+        tmt::engine.ecs.destroy_entity(entity);
+    } else {
+        auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(walkable_asteroid);
+        nav_mesh.generate_mesh_over_time();
     }
 
     // Set ore manager
@@ -32,13 +51,15 @@ void game::MediumEnemy::start() {
     core_voxels = resource->blas->voxel_count - resource->blas->voxels_wasted;
 
     tmt::engine.ecs.get_component<tmt::RigController>(rig_controller).set_parameter_bool("walk", true);
+    tmt::engine.ecs.get_component<tmt::ConstrainedRig>(rig_controller).blend = 1.0f;
 
     auto pos = tmt::engine.ecs.get_component<tmt::Transform>(entity).get_world_position();
     for (int i = 0; i < 4; i++) {
         if (available_positions[i].entity == entt::null) continue;
         if (available_positions[i].reference_entity == entt::null) continue;
         auto ref_pos = tmt::engine.ecs.get_component<tmt::Transform>(available_positions[i].reference_entity).get_world_position();
-        available_positions[i].stored_offset_from_ref_entity = ref_pos - pos;
+        available_positions[i].base_offset_from_ref_entity = ref_pos - pos;
+        available_positions[i].stored_offset_from_ref_entity = available_positions[i].base_offset_from_ref_entity;
     }
 }
 
@@ -115,10 +136,11 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
 
     // height correction
     auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(walkable_asteroid);
-    auto* nodes = nav_mesh.nodes_mesh;
-    if (nodes->empty()) return;
+    if (!nav_mesh.nav_nodes_valid()) return;
+
     int closest_node = nav_mesh.find_closest_node(walking_transform.get_world_position());
 
+    auto* nodes = nav_mesh.nodes_mesh;
     auto& normal = (*nodes)[closest_node].normal;
 
     const tmt::Ray ray = tmt::Ray(walking_transform.get_world_position() + normal * 0.5f, glm::normalize(-normal));
@@ -163,6 +185,14 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
         tmt::engine.ecs.get_component<tmt::RigController>(rig_controller).set_parameter_bool("walk", false);
     }
 
+    // if distance to closest node is too high, teleport to it and set rotation
+    // this is for when an enemy is spawned in, it is not in on start becuase the navmesh isn't fully generated yet
+    // float distance_to_node = glm::distance(walking_transform.get_world_position(), (*nav_mesh.nodes_mesh)[closest_node].world_pos);
+    // if (distance_to_node > 5.0f) {
+    //    walking_transform.set_world_position((*nav_mesh.nodes_mesh)[closest_node].world_pos);
+    //    walking_transform.set_world_rotation(glm::normalize(rot_velocity));
+    //}
+
     // leg available pos update
     for (int i = 0; i < 4; i++) {
         if (available_positions[i].entity == entt::null) continue;
@@ -190,6 +220,7 @@ void game::MediumEnemy::end() {}
 void game::MediumEnemy::kite_player() const {
     auto& enemy = tmt::engine.ecs.get_component<MediumEnemy>(entity);
     auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(enemy.walkable_asteroid);
+    if (!nav_mesh.nav_nodes_valid()) return;
 
     tmt::Transform& enemy_transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
     const auto& enemy_entity_pos = enemy_transform.get_world_position();
@@ -215,6 +246,26 @@ void game::MediumEnemy::die() {
     /*auto& registry = tmt::engine.ecs.get_registry();
     auto& agent = registry.get<tmt::GoapAgent>(this);
     tmt::engine.ecs.remove_component<tmt::GoapAgent>(this);*/
+}
+
+void game::MediumEnemy::set_stored_offsets_to_ref_entity() {
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+    glm::mat4 inv_world = glm::inverse(transform.get_world_matrix());
+    for (int i = 0; i < 4; i++) {
+        if (available_positions[i].entity == entt::null) continue;
+        if (available_positions[i].reference_entity == entt::null) continue;
+        auto ref_world_pos = tmt::engine.ecs.get_component<tmt::Transform>(available_positions[i].reference_entity).get_world_position();
+        // Store as local-space position so world_matrix * offset in update() is correct
+        available_positions[i].stored_offset_from_ref_entity = glm::vec3(inv_world * glm::vec4(ref_world_pos, 1.0f));
+    }
+}
+
+void game::MediumEnemy::set_stored_offsets_to_base() {
+    for (int i = 0; i < 4; i++) {
+        if (available_positions[i].entity == entt::null) continue;
+        if (available_positions[i].reference_entity == entt::null) continue;
+        available_positions[i].stored_offset_from_ref_entity = available_positions[i].base_offset_from_ref_entity;
+    }
 }
 
 void game::MediumEnemy::on_game_paused(const game::GamePausedEvent&) {

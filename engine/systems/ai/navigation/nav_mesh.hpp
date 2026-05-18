@@ -100,6 +100,11 @@ class NavMesh {
 
    public:
     glm::mat4 world_matrix = glm::mat4(1.f);
+    bool nav_nodes_valid() {
+        if (!nodes_mesh) return false;
+        if (nodes_mesh->empty()) return false;
+        return true;
+    }
     void compute_normals(int iterations = std::numeric_limits<int>::max());
 
     void average_neighbor_normals(int iterations = std::numeric_limits<int>::max());
