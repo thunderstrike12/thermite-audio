@@ -8,6 +8,7 @@
 #include <fmod_errors.h>
 
 #include "ecs.hpp"
+#include "polyline.hpp"
 #include "components/audio_emitter.hpp"
 #include "systems/physics/components/voxel_body.hpp"
 
@@ -37,7 +38,7 @@ std::vector<AudioInstance> paused_game_audio;
 }  // namespace
 
 bool AudioInstance::is_valid() const {
-    return engine.audio.active_instances.contains(instance);
+    return engine.audio.active_instances.contains(instance) && instance->isValid();
 }
 
 void AudioInstance::stop(const FMOD_STUDIO_STOP_MODE stop_mode) const {
@@ -150,10 +151,15 @@ FMOD_3D_ATTRIBUTES AudioInstance3D::get_3d_attributes() const {
 }
 
 bool AudioEvent::is_valid() const {
+    if (*this == AudioEvent {}) return false;  // Check if the audio event has an invalid uuid (in which case it, itself is invalid).
+
+    const FMOD::Studio::EventDescription* description = engine.audio.get_event_description(uuid);
     return source_bank && description->isValid();
 }
 
 bool AudioEvent::is_3d() const {
+    const FMOD::Studio::EventDescription* description = engine.audio.get_event_description(uuid);
+
     bool is_3d = false;
     const FMOD_RESULT result = description->is3D(&is_3d);
     TryLogError(result, "Failed check if event is 3D");
@@ -164,6 +170,8 @@ bool AudioEvent::is_3d() const {
 std::string AudioEvent::get_path() const {
 #if defined(THERMITE_EDITOR) || defined(THERMITE_DEBUG)
     if (TryLogError(!is_valid(), "Invalid AudioEvent for get_path")) return "";
+
+    const FMOD::Studio::EventDescription* description = engine.audio.get_event_description(uuid);
 
     // This function only returns useful paths in the editor or in debug mode, since these aren't necessary for audio to function, and it allows us to skip loading string banks in release
     // game.
@@ -182,17 +190,9 @@ std::string AudioEvent::get_path() const {
 #endif
 }
 
-FMOD_GUID AudioEvent::get_guid() const {
-    if (TryLogError(!is_valid(), "Invalid AudioEvent for get_guid")) return {};
-
-    FMOD_GUID guid {};
-    const FMOD_RESULT result = description->getID(&guid);
-    TryLogError(result, "Failed to get the path of the audio event");
-
-    return guid;
-}
-
 std::vector<AudioParameter> AudioEvent::get_parameters() const {
+    const FMOD::Studio::EventDescription* description = engine.audio.get_event_description(uuid);
+
     int parameter_count = 0;
     FMOD_RESULT result = description->getParameterDescriptionCount(&parameter_count);
     if (TryLogError(result, "Failed to get event parameter count")) return {};
@@ -214,6 +214,8 @@ std::vector<AudioParameter> AudioEvent::get_parameters() const {
 
 AudioInstance AudioEvent::play() const {
     if (TryLogError(!is_valid(), "Invalid AudioEvent for play.")) return { nullptr };
+
+    const FMOD::Studio::EventDescription* description = engine.audio.get_event_description(uuid);
 
     // Play the event, creating an instance.
     FMOD::Studio::EventInstance* event_instance = nullptr;
@@ -244,6 +246,8 @@ AudioInstance3D AudioEvent::play_3d() const {
 glm::vec2 AudioEvent::get_min_max_distance() const {
     if (TryLogError(!is_valid(), "Invalid VolumeControl for get_min_max")) return {};
 
+    const FMOD::Studio::EventDescription* description = engine.audio.get_event_description(uuid);
+
     float min = 0;
     float max = 0;
     const FMOD_RESULT result = description->getMinMaxDistance(&min, &max);
@@ -253,12 +257,17 @@ glm::vec2 AudioEvent::get_min_max_distance() const {
 }
 
 bool VolumeControl::is_valid() const {
+    if (*this == VolumeControl {}) return false;  // Check if the volume control has an invalid uuid (in which case it, itself is invalid).
+
+    const FMOD::Studio::VCA* vca = engine.audio.get_vca(uuid);
     return source_bank && vca->isValid();
 }
 
 std::string VolumeControl::get_path() const {
 #if defined(THERMITE_EDITOR) || defined(THERMITE_DEBUG)
     if (TryLogError(!is_valid(), "Invalid VolumeControl for get_path")) return "";
+
+    const FMOD::Studio::VCA* vca = engine.audio.get_vca(uuid);
 
     // This function only returns useful paths in the editor or in debug mode, since these aren't necessary for audio to function, and it allows us to skip loading string banks in release
     // game.
@@ -277,18 +286,10 @@ std::string VolumeControl::get_path() const {
 #endif
 }
 
-FMOD_GUID VolumeControl::get_guid() const {
-    if (TryLogError(!is_valid(), "Invalid VolumeControl for get_guid")) return {};
-
-    FMOD_GUID guid {};
-    const FMOD_RESULT result = vca->getID(&guid);
-    TryLogError(result, "Failed to get the path of the volume control");
-
-    return guid;
-}
-
 float VolumeControl::get_volume() const {
     if (TryLogError(!is_valid(), "Invalid VolumeControl for get_volume")) return 0.0f;
+
+    const FMOD::Studio::VCA* vca = engine.audio.get_vca(uuid);
 
     float volume = 0.0f;
     const FMOD_RESULT result = vca->getVolume(&volume);
@@ -299,6 +300,8 @@ float VolumeControl::get_volume() const {
 
 void VolumeControl::set_volume(const float volume) const {
     if (TryLogError(!is_valid(), "Invalid VolumeControl for set_volume")) return;
+
+    FMOD::Studio::VCA* vca = engine.audio.get_vca(uuid);
 
     const FMOD_RESULT result = vca->setVolume(volume);
     TryLogError(result, "Failed to set VCA volume");
@@ -324,9 +327,13 @@ void Audio::init() {
 }
 
 void Audio::update() {
-    update_listeners();
-    update_emitters();
+    // Game components should only update their position if the game is running and not paused.
+    if (engine.game_controller.is_playing() && not engine.game_controller.is_paused()) {
+        update_listeners();
+        update_emitters();
+    }
 
+    // Audio updates should always keep updating, this makes sure we can preview sounds in the editor.
     system->update();
 
     std::erase_if(active_instances, [](const FMOD::Studio::EventInstance* instance) {
@@ -489,21 +496,32 @@ void Audio::update_emitters() {
 }
 
 void Audio::add_listener(entt::registry& registry, const Entity entity) const {
-    int listener_count;
-    FMOD_RESULT result = system->getNumListeners(&listener_count);
+    int fmod_listener_count;
+    FMOD_RESULT result = system->getNumListeners(&fmod_listener_count);
     if (TryLogError(result, "Failed to get listener count")) return;
 
-    result = system->setNumListeners(listener_count + 1);
-    if (TryLogError(result, "Failed to increase listener count")) return;
+    int listener_index = 0;
+
+    // Only increase the FMOD listener count if the listener count doesn't already match (FMOD always has 1 listener by default).
+    const size_t listener_comp_count = engine.ecs.group<AudioListener>(entt::get<Transform>).size();
+    if (listener_comp_count != static_cast<size_t>(fmod_listener_count)) {
+        listener_index = fmod_listener_count + 1;
+
+        result = system->setNumListeners(listener_index);
+        if (TryLogError(result, "Failed to increase listener count")) return;
+    }
 
     AudioListener& audio_listener = registry.get<AudioListener>(entity);
-    audio_listener.listener_index = listener_count;  // Set to the old listener count aka, the *new* last index.
+    audio_listener.listener_index = listener_index;  // Set to the old listener count aka, the *new* last index.
 }
 
 void Audio::remove_listener() const {
-    int listener_count;
-    FMOD_RESULT result = system->getNumListeners(&listener_count);
+    int fmod_listener_count;
+    FMOD_RESULT result = system->getNumListeners(&fmod_listener_count);
     if (TryLogError(result, "Failed to get listener count")) return;
+
+    // FMOD needs 1 listener minimum, if we remove the last listener component, we should keep the 1 FMOD listener and thus return without updating anything.
+    if (fmod_listener_count <= 1) return;
 
     int new_listener_index = 0;
     const entt::basic_group listener_group = engine.ecs.group<AudioListener>(entt::get<Transform>);
@@ -516,8 +534,51 @@ void Audio::remove_listener() const {
         ++new_listener_index;
     }
 
-    result = system->setNumListeners(listener_count - 1);
+    result = system->setNumListeners(fmod_listener_count - 1);
     TryLogError(result, "Failed to increase listener count");
+}
+
+void Audio::on_draw_lines() const {
+    const bool game_active = engine.game_controller.is_playing();
+
+    // Loop over the all emitters to draw distance bounds of their sounds.
+    const entt::basic_group emitter_group = engine.ecs.group<AudioEmitter>(entt::get<Transform>);
+    for (const auto&& [entity, audio_emitter, transform] : emitter_group.each()) {
+        const bool will_play_on_start = audio_emitter.play_on_start && audio_emitter.event_on_start.is_valid();
+
+        if (game_active) {
+            // During pause or gameplay, draw the distance bounds of the active playing sounds.
+            FMOD_3D_ATTRIBUTES attributes;
+            for (const AudioInstance3D& instance : audio_emitter.playing_instances) {
+                // on_draw_lines() is called before the audio update function, so we have to make sure the instance is still valid.
+                if (not instance.is_valid()) continue;
+
+                FMOD_RESULT result = instance.instance->get3DAttributes(&attributes);
+                if (TryLogError(result, "Failed to get 3d audio instance attributes")) continue;
+
+                float min_distance;
+                float max_distance;
+                result = instance.instance->getMinMaxDistance(&min_distance, &max_distance);
+                if (TryLogError(result, "Failed to get 3d audio instance min/max distance")) continue;
+
+                engine.polyline.use_line_width(1.5f);
+                engine.polyline.use_color(glm::vec3 { 1.0f, 0.0f, 0.0f });
+                engine.polyline.draw_sphere(std::bit_cast<glm::vec3>(attributes.position), min_distance);
+                engine.polyline.use_color(glm::vec3 { 0.0f, 1.0f, 0.0f });
+                engine.polyline.draw_sphere(std::bit_cast<glm::vec3>(attributes.position), max_distance);
+            }
+        } else if (will_play_on_start) {
+            // When not playing the game, draw the distance bounds of the active playing sounds in the viewport.
+            const glm::vec2 distance = audio_emitter.event_on_start.get_min_max_distance();
+            const glm::vec3 position = transform.get_world_position();
+
+            engine.polyline.use_line_width(1.5f);
+            engine.polyline.use_color(glm::vec3 { 1.0f, 0.0f, 0.0f });
+            engine.polyline.draw_sphere(position, distance.x);
+            engine.polyline.use_color(glm::vec3 { 0.0f, 1.0f, 0.0f });
+            engine.polyline.draw_sphere(position, distance.y);
+        }
+    }
 }
 
 }  // namespace tmt

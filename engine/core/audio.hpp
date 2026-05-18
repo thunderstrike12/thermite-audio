@@ -8,6 +8,7 @@
 
 #include "engine/events/game.hpp"
 #include "engine/core/resource.hpp"
+#include "engine/events/debug.hpp"
 
 struct FMOD_GUID;
 struct FMOD_STUDIO_PARAMETER_ID;
@@ -101,13 +102,13 @@ class AudioInstance3D : public AudioInstance {
 class AudioEvent {
    public:
     AudioEvent() = default;
-    AudioEvent(const ResourceRef<AudioBank>& source_bank, FMOD::Studio::EventDescription* description) : source_bank { source_bank }, description { description } {}
+    AudioEvent(const ResourceRef<AudioBank>& source_bank, const FMOD_GUID& description_uuid) : source_bank { source_bank }, uuid { description_uuid } {}
 
     [[nodiscard]] bool is_valid() const;
     [[nodiscard]] bool is_3d() const;
     // Get the path/name of the AudioEvent (returns empty string when not in debug mode and not using the editor).
     [[nodiscard]] std::string get_path() const;
-    [[nodiscard]] FMOD_GUID get_guid() const;
+    [[nodiscard]] FMOD_GUID get_guid() const { return uuid; }
     [[nodiscard]] const ResourceRef<AudioBank>& get_source_bank() const { return source_bank; }
     [[nodiscard]] std::vector<AudioParameter> get_parameters() const;
 
@@ -116,40 +117,44 @@ class AudioEvent {
 
     [[nodiscard]] glm::vec2 get_min_max_distance() const;
 
-    [[nodiscard]] bool operator==(const AudioEvent& other) const { return description == other.description; }
-    [[nodiscard]] bool operator!=(const AudioEvent& other) const { return description != other.description; }
+    [[nodiscard]] bool operator==(const AudioEvent& other) const { return std::memcmp(&uuid, &other.uuid, sizeof(FMOD_GUID)) == 0; }
+    [[nodiscard]] bool operator!=(const AudioEvent& other) const { return std::memcmp(&uuid, &other.uuid, sizeof(FMOD_GUID)) != 0; }
 
    private:
+    BEFRIEND_VISITABLE()
+
     ResourceRef<AudioBank> source_bank;
-    FMOD::Studio::EventDescription* description { nullptr };
+    FMOD_GUID uuid {};
 };
 
 class VolumeControl {
    public:
     VolumeControl() = default;
-    VolumeControl(const ResourceRef<AudioBank>& source_bank, FMOD::Studio::VCA* vca) : source_bank { source_bank }, vca { vca } {}
+    VolumeControl(const ResourceRef<AudioBank>& source_bank, const FMOD_GUID& vca_uuid) : source_bank { source_bank }, uuid { vca_uuid } {}
 
     [[nodiscard]] bool is_valid() const;
     // Get the path/name of the VolumeControl (returns empty string when not in debug mode and not using the editor).
     [[nodiscard]] std::string get_path() const;
-    [[nodiscard]] FMOD_GUID get_guid() const;
+    [[nodiscard]] FMOD_GUID get_guid() const { return uuid; }
     [[nodiscard]] const ResourceRef<AudioBank>& get_source_bank() const { return source_bank; }
 
     [[nodiscard]] float get_volume() const;
     void set_volume(float volume) const;
 
-    [[nodiscard]] bool operator==(const VolumeControl& other) const { return vca == other.vca; }
-    [[nodiscard]] bool operator!=(const VolumeControl& other) const { return vca != other.vca; }
+    [[nodiscard]] bool operator==(const VolumeControl& other) const { return std::memcmp(&uuid, &other.uuid, sizeof(FMOD_GUID)) == 0; }
+    [[nodiscard]] bool operator!=(const VolumeControl& other) const { return std::memcmp(&uuid, &other.uuid, sizeof(FMOD_GUID)) != 0; }
 
    private:
+    BEFRIEND_VISITABLE()
+
     ResourceRef<AudioBank> source_bank;
-    FMOD::Studio::VCA* vca { nullptr };
+    FMOD_GUID uuid {};
 };
 
 class AudioListener;
 using Entity = entt::entity;
 
-class Audio : public OnGamePause, public OnGameResume, public OnGameEnd {
+class Audio : public OnGamePause, public OnGameResume, public OnGameEnd, public OnDrawLines {
     friend class AudioParameter;
     friend class AudioInstance;
     friend class AudioEvent;
@@ -200,6 +205,10 @@ class Audio : public OnGamePause, public OnGameResume, public OnGameEnd {
     FMOD::System* core_system;
 
     std::set<FMOD::Studio::EventInstance*> active_instances;
+
+    // Inherited from OnDrawLines
+    void on_draw_lines() const override;
+    constexpr std::string get_name() const override { return "Audio Distance Bounds"; }
 };
 
 }  // namespace tmt

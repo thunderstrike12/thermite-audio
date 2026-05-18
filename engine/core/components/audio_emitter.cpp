@@ -1,12 +1,10 @@
 #include "audio_emitter.hpp"
 
-#include "engine.hpp"
-#include "core/ecs.hpp"
-#include "engine/systems/physics/components/voxel_body.hpp"
+#include "engine/core/ecs.hpp"
 
 namespace tmt {
 
-inline AudioInstance3D AudioEmitter::play(bool update_position, bool stop_other_instances) {
+AudioInstance3D AudioEmitter::play(const AudioEvent& event, const bool update_position, const bool stop_other_instances) {
     if (stop_other_instances) {
         for (AudioInstance3D& instance : playing_instances) {
             instance.stop();
@@ -15,13 +13,6 @@ inline AudioInstance3D AudioEmitter::play(bool update_position, bool stop_other_
     }
 
     const AudioInstance3D instance = event.play_3d();
-    const Entity self = engine.ecs.get_entity(*this);
-
-    // Set up the initial position and potential velocity of the sound.
-    const Transform& transform = engine.ecs.get_component<Transform>(self);
-    const VoxelBody* voxel_body = engine.ecs.try_get_component<VoxelBody>(self);
-    instance.auto_set_3d_attributes(transform, voxel_body);
-
     if (update_position) playing_instances.push_back(instance);
 
     return instance;
@@ -32,7 +23,7 @@ void AudioEmitter::cleanup_playing_instances() {
 }
 
 void AudioEmitter::on_scene_start() {
-    if (play_on_start && event.is_valid()) playing_instances.push_back(play(true));
+    if (play_on_start && event_on_start.is_valid()) playing_instances.push_back(play(event_on_start, true));
 }
 
 }  // namespace tmt

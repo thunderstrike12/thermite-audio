@@ -100,9 +100,14 @@ std::vector<AudioEvent> AudioBank::get_audio_events() const {
 
     std::vector<AudioEvent> events;
     events.reserve(descriptions.size());
-    for (FMOD::Studio::EventDescription* description : descriptions) {
-        events.emplace_back(self_bank, description);
+    for (const FMOD::Studio::EventDescription* description : descriptions) {
+        FMOD_GUID guid;
+        description->getID(&guid);
+        events.emplace_back(self_bank, guid);
     }
+
+    std::ranges::sort(events, std::less {}, &AudioEvent::get_path);
+
     return events;
 }
 
@@ -128,9 +133,14 @@ std::vector<VolumeControl> AudioBank::get_volume_controls() const {
 
     std::vector<VolumeControl> volume_controls;
     volume_controls.reserve(vcas.size());
-    for (FMOD::Studio::VCA* vca : vcas) {
-        volume_controls.emplace_back(self_bank, vca);
+    for (const FMOD::Studio::VCA* vca : vcas) {
+        FMOD_GUID guid;
+        vca->getID(&guid);
+        volume_controls.emplace_back(self_bank, guid);
     }
+
+    std::ranges::sort(volume_controls, std::less {}, &VolumeControl::get_path);
+
     return volume_controls;
 }
 
