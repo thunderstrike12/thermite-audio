@@ -59,7 +59,9 @@ void SensorsSystem::on_update(const tmt::FrameData& /*time*/) {
         if (!small_enemy || small_enemy->core_destroyed) {
             // remove GOAP so it doesn't keep acting
             tmt::engine.ecs.remove_component<tmt::GoapAgent>(agent);
-            // tmt::engine.ecs.remove_component<SteeringAgent>(agent); // if I keep the other enemies will avoid flying into it
+            tmt::engine.ecs.remove_component<SteeringAgent>(agent);
+
+            small_enemy->die(agent);
 
             return;  // nothing to explode
         }

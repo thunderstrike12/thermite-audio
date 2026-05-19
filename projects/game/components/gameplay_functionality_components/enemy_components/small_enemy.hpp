@@ -35,7 +35,7 @@ class SmallEnemy : public tmt::GameComponent<SmallEnemy> {
     void update(const tmt::FrameData& time) override;
     void end() override {}
 
-    void die();
+    void die(tmt::Entity agent);
 
     tmt::Entity core = entt::null;
     tmt::Entity explosion = entt::null;

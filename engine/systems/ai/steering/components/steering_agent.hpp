@@ -22,4 +22,8 @@ struct SteeringAgent {
     float max_speed = 5.f;             // Max movement speed
     float max_force = 20.f;            // Max turn speed
     float wander_radius_limit = 25.f;  // Max distance it can wander
+
+    // Used for gravity gun
+    bool force_override = false;
+    glm::vec3 override_force = glm::vec3(0);
 };

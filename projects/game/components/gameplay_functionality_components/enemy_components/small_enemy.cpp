@@ -2,6 +2,7 @@
 
 #include "engine/systems/ai/steering/components/steering_agent.hpp"
 #include "engine\core\components\voxel_renderer.hpp"
+#include "engine/systems/physics/components/voxel_body.hpp"
 
 namespace game {
 
@@ -42,6 +43,41 @@ void SmallEnemy::update(const tmt::FrameData& time) {
     }
 }
 
-void SmallEnemy::die() {}
+void SmallEnemy::die(tmt::Entity agent) {
+    auto& ecs = tmt::engine.ecs;
+    auto& registry = ecs.get_registry();
+
+    auto& transform = registry.get<tmt::Transform>(agent);
+
+    std::set<tmt::Entity> children = transform.get_all_children();
+
+    for (tmt::Entity child : children) {
+        if (!ecs.valid(child)) continue;
+
+        if (ecs.try_get_component<tmt::RigModel>(child)) {
+            ecs.remove_component<tmt::RigModel>(child);
+        }
+
+        if (ecs.try_get_component<tmt::VoxelBody>(child)) {
+            tmt::VoxelBody* body = ecs.try_get_component<tmt::VoxelBody>(child);
+
+            if (body->type == tmt::VoxelBody::STATIC) {
+                // Preserve current world transform
+                /*auto& child_transform = registry.get<tmt::Transform>(child);
+                auto pos = child_transform.get_world_position();
+                auto rot = child_transform.get_world_rotation();
+
+                auto pos2 = body->position;
+                auto rot2 = body->rotation;*/
+
+                body->type = tmt::VoxelBody::DYNAMIC;
+
+                // Force sync physics transform
+                /*body->position = pos;
+                body->rotation = rot;*/
+            }
+        }
+    }
+}
 
 }  // namespace game
