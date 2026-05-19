@@ -738,12 +738,20 @@ void Player::add_recoil() {
 void Player::set_crosshair(tmt::Entity active) {
     auto& ecs = tmt::engine.ecs;
     // Disable all crosshairs
-    ecs.disable(rifle_crosshair);
-    ecs.disable(gravity_crosshair);
-    ecs.disable(mine_crosshair);
+    if (ecs.valid(rifle_crosshair)) {
+        ecs.disable(rifle_crosshair);
+    }
+    if (ecs.valid(gravity_crosshair)) {
+        ecs.disable(gravity_crosshair);
+    }
+    if (ecs.valid(mine_crosshair)) {
+        ecs.disable(mine_crosshair);
+    }
 
     // Enable selected crosshair
-    ecs.enable(active);
+    if (ecs.valid(active)) {
+        ecs.enable(active);
+    }
 }
 
 }  // namespace game
