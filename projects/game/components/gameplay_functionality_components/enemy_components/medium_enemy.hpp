@@ -60,6 +60,7 @@ class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
     float height_above_ground_offset = 0.0f;
     float walk_speed = 5.0f;
     float back_off_distance = 5.0f;
+    float velocity_of_objects_on_death = 2.0f;
 
     float aggro_range = 50.0f;
     float laser_range = 30.0f;
@@ -82,6 +83,9 @@ class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
     float burst_interval = 0.2f;
     float missile_max_randomness = 0.1f;
     float missile_explosion_radius = 1.0f;
+    std::vector<tmt::Entity> missile_voxel_entities;
+    int missile_voxel_to_lose = 0;
+    int missile_voxels = 0;
 
     tmt::IO::FileLocation laser_charge_voxel_object;
     tmt::IO::FileLocation laser_voxel_object;
@@ -101,6 +105,9 @@ class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
     float laser_max_randomness = 1.0f;
     float laser_prediction_length = 0.0f;
     float laser_vel_smoothing = 0.25f;
+    std::vector<tmt::Entity> laser_voxel_entities;
+    int laser_voxel_to_lose = 0;
+    int laser_voxels = 0;
 
     float stomp_cooldown = 3.0f;
     float stomp_timer = 0.0f;
@@ -114,10 +121,11 @@ class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
 TMT_OBJECT(game::AvailablePosEntry, (entity, height_offset, reference_entity));
 
 TMT_OBJECT(
-    game::MediumEnemy, (walkable_asteroid, laser_origin, missile_origin, core, rig_controller, available_positions, missile_voxel_object, projectile_mask, enemy_mask, projectile_layer,
-                        enemy_layer, rotation_speed, height_above_ground, walk_speed, aggro_range, laser_range, stomp_range, missile_cooldown, stop_launching_after, start_homing_after,
-                        slow_homing_accuracy_after, launch_speed, home_speed, life_time, missile_rotation_speed, target_offset, missile_burst, burst_interval, missile_max_randomness,
-                        missile_explosion_radius, laser_cooldown, rotation_speed_during_laser, laser_charge_voxel_object, laser_voxel_object, laser_firing_time, laser_sitting_down_time,
-                        laser_winding_up_time, laser_damage, laser_damage_radius, laser_target_offset, laser_linear_speed, laser_exponential_speed, laser_linear_threshold,
-                        laser_max_randomness, laser_prediction_length, laser_vel_smoothing, stomp_cooldown, stomp_timer, stomp_windup, stomp_radius, stomp_damage)
+    game::MediumEnemy,
+    (walkable_asteroid, laser_origin, missile_origin, core, rig_controller, available_positions, missile_voxel_object, projectile_mask, enemy_mask, projectile_layer, enemy_layer,
+     rotation_speed, height_above_ground, walk_speed, back_off_distance, velocity_of_objects_on_death, aggro_range, laser_range, stomp_range, missile_cooldown, stop_launching_after,
+     start_homing_after, slow_homing_accuracy_after, launch_speed, home_speed, life_time, missile_rotation_speed, target_offset, missile_burst, burst_interval, missile_max_randomness,
+     missile_explosion_radius, missile_voxel_entities, missile_voxel_to_lose, laser_cooldown, rotation_speed_during_laser, laser_charge_voxel_object, laser_voxel_object, laser_firing_time,
+     laser_sitting_down_time, laser_winding_up_time, laser_damage, laser_damage_radius, laser_target_offset, laser_linear_speed, laser_exponential_speed, laser_linear_threshold,
+     laser_max_randomness, laser_prediction_length, laser_vel_smoothing, laser_voxel_entities, laser_voxel_to_lose, stomp_cooldown, stomp_timer, stomp_windup, stomp_radius, stomp_damage)
 );

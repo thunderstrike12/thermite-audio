@@ -47,8 +47,21 @@ void game::MediumEnemy::start() {
     dispatcher.sink<game::GamePausedEvent>().connect<&MediumEnemy::on_game_paused>(this);
     dispatcher.sink<game::GameUnpausedEvent>().connect<&MediumEnemy::on_game_unpaused>(this);
 
-    auto resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(core).resource;
-    core_voxels = resource->blas->voxel_count - resource->blas->voxels_wasted;
+    // set voxel amounts for core, laser and missile
+    {
+        auto resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(core).resource;
+        core_voxels = resource->blas->voxel_count - resource->blas->voxels_wasted;
+    }
+
+    for (const auto& laser_voxel_entity : laser_voxel_entities) {
+        auto resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(laser_voxel_entity).resource;
+        laser_voxels += resource->blas->voxel_count - resource->blas->voxels_wasted;
+    }
+
+    for (const auto& missile_voxel_entity : missile_voxel_entities) {
+        auto resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(missile_voxel_entity).resource;
+        missile_voxels += resource->blas->voxel_count - resource->blas->voxels_wasted;
+    }
 
     tmt::engine.ecs.get_component<tmt::RigController>(rig_controller).set_parameter_bool("walk", true);
     tmt::engine.ecs.get_component<tmt::ConstrainedRig>(rig_controller).blend = 1.0f;
@@ -79,18 +92,53 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
     const auto& player_pos = tmt::engine.ecs.get_component<tmt::Transform>(player).get_world_position();
     float dist = glm::length(player_pos - walking_transform.get_world_position());
 
-    // get core entity resource
-    auto resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(core).resource;
-    uint32_t current_core_voxels = resource->blas->voxel_count - resource->blas->voxels_wasted;
-    if (current_core_voxels != core_voxels) {
-        core_destroyed = true;
-        tmt::engine.ecs.get_component<tmt::RigController>(rig_controller).set_parameter_bool("walk", false);
+    // check for core destroyed
+    {
+        auto resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(core).resource;
+        uint32_t current_core_voxels = resource->blas->voxel_count - resource->blas->voxels_wasted;
+        if (current_core_voxels != core_voxels) {
+            core_destroyed = true;
+            tmt::engine.ecs.get_component<tmt::RigController>(rig_controller).set_parameter_bool("walk", false);
+            ws->set_fact(tmt::FactId("m_laser_intact"), false);
+            ws->set_fact(tmt::FactId("m_missiles_intact"), false);
+            auto children = walking_transform.get_all_children();
+            for (const auto& child : children) {
+                if (!tmt::engine.ecs.try_get_component<tmt::VoxelBody>(child)) continue;
+                auto& child_transform = tmt::engine.ecs.get_component<tmt::Transform>(child);
+                child_transform.set_parent(entt::null);
+                auto& child_voxel_body = tmt::engine.ecs.get_component<tmt::VoxelBody>(child);
+                child_voxel_body.velocity = glm::normalize(child_transform.get_world_position() - walking_transform.get_world_position()) * velocity_of_objects_on_death;
+                child_voxel_body.type = tmt::VoxelBody::DYNAMIC;
+                child_voxel_body.gravity = 0.0f;
+                child_voxel_body.position = child_transform.get_world_position();
+                child_voxel_body.rotation = child_transform.get_world_rotation();
+                auto& renderer = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(child);
+                tmt::engine.ecs.systems.try_get<tmt::Physics>()->recalculate_physics_data(child_voxel_body, *renderer.resource.resource);
+            }
+            return;
+        }
+    }
+
+    // check for laser destroyed
+    int amount_of_laser_voxels_remaining = 0;
+    for (const auto& laser_voxel_entity : laser_voxel_entities) {
+        auto resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(laser_voxel_entity).resource;
+        uint32_t current_laser_voxels = resource->blas->voxel_count - resource->blas->voxels_wasted;
+        amount_of_laser_voxels_remaining += current_laser_voxels;
+    }
+    if (laser_voxels - amount_of_laser_voxels_remaining > laser_voxel_to_lose) {
         ws->set_fact(tmt::FactId("m_laser_intact"), false);
+    }
+
+    // check for missile destroyed
+    int amount_of_missile_voxels_remaining = 0;
+    for (const auto& missile_voxel_entity : missile_voxel_entities) {
+        auto resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(missile_voxel_entity).resource;
+        uint32_t current_missile_voxels = resource->blas->voxel_count - resource->blas->voxels_wasted;
+        amount_of_missile_voxels_remaining += current_missile_voxels;
+    }
+    if (missile_voxels - amount_of_missile_voxels_remaining > missile_voxel_to_lose) {
         ws->set_fact(tmt::FactId("m_missiles_intact"), false);
-        // while (true) {
-        //
-        // }
-        return;
     }
 
     // ranges
@@ -229,7 +277,7 @@ void game::MediumEnemy::kite_player() const {
 
     if (std::optional<glm::vec3> direction = nav_mesh.follow_path(enemy_entity_pos, player_pos)) {
         if (distance < back_off_distance) {
-            glm::vec3 target_pos = enemy_entity_pos - *direction;
+            glm::vec3 target_pos = enemy_entity_pos - *direction * 10.0f;
             direction = nav_mesh.follow_path(enemy_entity_pos, target_pos);
             enemy.velocity += glm::vec3(*direction * enemy.walk_speed);
         } else {
