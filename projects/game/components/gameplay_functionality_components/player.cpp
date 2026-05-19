@@ -174,6 +174,7 @@ void Player::look_camera() {
 
     base_yaw -= dx * camera_sensitivity;
     base_pitch -= dy * camera_sensitivity;
+    base_pitch = glm::clamp(base_pitch, -89.f, 89.f);
 
     float yaw = base_yaw;
     float pitch = base_pitch;

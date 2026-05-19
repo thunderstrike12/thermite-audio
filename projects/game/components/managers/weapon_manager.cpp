@@ -1,6 +1,7 @@
 #include "weapon_manager.hpp"
 #include "projects/game/data_headers/game_input.hpp"
 #include "projects/game/components/gameplay_functionality_components/weapon_and_tool_components/weapon.hpp"
+#include "projects/game/components/gameplay_functionality_components/player.hpp"
 #include "engine/core/input/input.hpp"
 #include "engine/core/logger.hpp"
 #include "engine/core/renderer/renderer.hpp"
@@ -56,14 +57,15 @@ void game::WeaponManager::start() {
     // Connect to the GamePausedEvent and GameUnpausedEvent
     tmt::engine.ecs.get_dispatcher().sink<game::GamePausedEvent>().connect<&WeaponManager::on_game_paused>(this);
     tmt::engine.ecs.get_dispatcher().sink<game::GameUnpausedEvent>().connect<&WeaponManager::on_game_unpaused>(this);
+    tmt::engine.ecs.get_dispatcher().sink<WeaponFiredEvent>().connect<&WeaponManager::on_weapon_shoot>(this);
 
     current_weapon = starting_weapon;
     tmt::Log::info("[WeaponManager] Starting with weapon: {}", magic_enum::enum_name(starting_weapon));
 
-    auto shooter_camera = tmt::engine.ecs.try_get_component<tmt::Camera>(shooting_entity);
-    if (shooter_camera) {
-        last_pitch = shooter_camera->pitch;
-        last_yaw = shooter_camera->yaw;
+    auto shooter_player = tmt::engine.ecs.try_get_component<game::Player>(shooting_entity);
+    if (shooter_player) {
+        last_pitch = shooter_player->base_pitch;
+        last_yaw = shooter_player->base_yaw;
     }
 
     for (auto& [type, weapon] : weapons) {
@@ -106,10 +108,7 @@ void game::WeaponManager::check_trigger_shoot_event() {
     auto& input = tmt::engine.input;
 
     if (input.is_action_pressed(action::SHOOT)) {
-        fired = true;
-        upward_response = true;
-
-        tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, false, get_active_weapon() });
+        tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, false });
 
         auto* rig_controller = tmt::engine.ecs.try_get_component<tmt::RigController>(tool_rig);
         if (rig_controller) {
@@ -235,6 +234,11 @@ void game::WeaponManager::draw_debug_lines() const {
     tmt::engine.polyline.draw_line(start, start + fwd * weapon_procanim_data.anti_overlap.check_length);
 }
 
+void game::WeaponManager::on_weapon_shoot(const WeaponFiredEvent& event) {
+    fired = true;
+    upward_response = true;
+}
+
 game::WeaponManager::RotTrans game::WeaponManager::animate_antioverlap() {
     auto& weapon_procanim_data = weapons.at(current_weapon).proc_anim_data;
 
@@ -295,10 +299,23 @@ game::WeaponManager::RotTrans game::WeaponManager::animate_antioverlap() {
 
 game::WeaponManager::RotTrans game::WeaponManager::animate_sway(RotTrans aa_rottrans, tmt::Transform* root_eff_transform, const WeaponProcAnimData& weapon_procanim_data) {
     if (tmt::engine.ecs.valid(shooting_entity)) {
-        auto shooter_camera = tmt::engine.ecs.try_get_component<tmt::Camera>(shooting_entity);
-        if (shooter_camera) {
-            float d_pitch = (shooter_camera->pitch - last_pitch);
-            float d_yaw = (shooter_camera->yaw - last_yaw);
+        auto shooter_player = tmt::engine.ecs.try_get_component<game::Player>(shooting_entity);
+        if (shooter_player) {
+            static glm::vec3 last_player_velocity = {}, player_velocity = {};
+
+            float d_pitch = (shooter_player->base_pitch - last_pitch);
+            float d_yaw = (shooter_player->base_yaw - last_yaw);
+
+            last_player_velocity = player_velocity;
+            player_velocity = shooter_player->get_velocity();
+
+            glm::vec3 vel_delta = (player_velocity - last_player_velocity);
+
+            glm::vec3 local_delta = glm::inverse(shooter_player->get_transform().get_world_matrix()) * glm::vec4(vel_delta, 0.f);
+            glm::vec3 local_vel = glm::inverse(shooter_player->get_transform().get_world_matrix()) * glm::vec4(player_velocity, 0.f);
+
+            aa_rottrans.translation += -local_delta * weapon_procanim_data.sway.displacement_player_acceleration_multiplier;
+            aa_rottrans.translation += -local_vel * weapon_procanim_data.sway.displacement_player_velocity_multiplier;
 
             if (d_pitch || d_yaw) {
                 glm::vec3 displaced_vec = glm::vec3 { d_yaw, -d_pitch, 0.f } * 0.1f;
@@ -320,8 +337,8 @@ game::WeaponManager::RotTrans game::WeaponManager::animate_sway(RotTrans aa_rott
                 aa_rottrans.rotation *= glm::angleAxis(glm::radians(d_yaw) * weapon_procanim_data.sway.look_roll_factor, glm::vec3(0.f, 0.f, 1.f));
             }
 
-            last_pitch = shooter_camera->pitch;
-            last_yaw = shooter_camera->yaw;
+            last_pitch = shooter_player->base_pitch;
+            last_yaw = shooter_player->base_yaw;
 
             return aa_rottrans;
         }
@@ -332,6 +349,7 @@ game::WeaponManager::RotTrans game::WeaponManager::animate_sway(RotTrans aa_rott
 
 void game::WeaponManager::update_procedural_motion(float dt) {
     auto& weapon_procanim_data = weapons.at(current_weapon).proc_anim_data;
+
     if (fired || updating_recoil_impulse) {
         static tmt::SecondOrderSolver::State<glm::quat> rot_state { .current_state = recoil_impulse.rotation };
         static tmt::SecondOrderSolver::State<glm::vec3> pos_state { .current_state = recoil_impulse.translation };
@@ -374,7 +392,7 @@ void game::WeaponManager::update_procedural_motion(float dt) {
         recoil_impulse.translation = pos_state.current_state;
     }
 
-    auto* root_eff_transform = tmt::engine.ecs.try_get_component<tmt::Transform>(tool_rig);
+    auto* root_eff_transform = tmt::engine.ecs.try_get_component<tmt::Transform>(weapon_procanim_data.root);
     if (root_eff_transform) {
         auto aa_rottrans = animate_antioverlap();
         auto sway_rottrans = animate_sway(aa_rottrans, root_eff_transform, weapon_procanim_data);

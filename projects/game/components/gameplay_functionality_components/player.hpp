@@ -103,6 +103,7 @@ class Player : public tmt::GameComponent<Player> {
     tmt::Transform& get_transform() const { return tmt::engine.ecs.get_component<tmt::Transform>(entity); }
     tmt::Camera& get_camera() const { return tmt::engine.ecs.get_component<tmt::Camera>(entity); }
     void set_state(PlayerState new_state) { state = new_state; };
+    glm::vec3 get_velocity() const { return velocity; };
 
     // HUD entities
     tmt::Entity player_hud = entt::null;
