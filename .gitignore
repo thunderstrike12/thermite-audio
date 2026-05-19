@@ -14,6 +14,7 @@ engine/assets/shaders/bin
 editor_save.json
 profiler_settings.json
 Folder.DotSettings.user
+.format_cache.json
 /projects/game/assets
 /.idea/editor.xml
 /.idea/vcs.xml

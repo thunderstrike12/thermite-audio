@@ -105,8 +105,7 @@ void Bvh2<T>::build(const T* input_prims, const uint32_t input_count) {
             /* Compute centroid bounds */
             glm::vec3 cmin(BIG_F32), cmax(-BIG_F32);
             for (uint32_t i = 0u; i < node.prim_count; ++i) {
-                const glm::vec3 c = (bounds[indices[node.left_first + i]].min
-                                + bounds[indices[node.left_first + i]].max) * 0.5f;
+                const glm::vec3 c = (bounds[indices[node.left_first + i]].min + bounds[indices[node.left_first + i]].max) * 0.5f;
                 cmin = glm::min(cmin, c);
                 cmax = glm::max(cmax, c);
             }
@@ -170,8 +169,7 @@ void Bvh2<T>::build(const T* input_prims, const uint32_t input_count) {
             }
 
             /* Partition primitives using split position (not bin re-index) */
-            const float split_pos = nmin3[best_axis]
-                + (extent[best_axis] / (float)BVH_BINS) * (float)(best_split + 1u);
+            const float split_pos = nmin3[best_axis] + (extent[best_axis] / (float)BVH_BINS) * (float)(best_split + 1u);
             uint32_t j = node.left_first + node.prim_count, src = node.left_first;
             for (uint32_t i = 0u; i < node.prim_count; ++i) {
                 const Aabb& prim = bounds[indices[src]];
