@@ -180,14 +180,14 @@ void Destruction::destroy_voxels(Entity entity, const Stencil* stencil, glm::ive
     }
 }
 
-void Destruction::destroy_voxels(Entity entity, const std::vector<glm::uvec3>& indices) {
+std::vector<Entity> Destruction::destroy_voxels(Entity entity, const std::vector<glm::uvec3>& indices) {
     TMT_ZONE_SCOPED_N("Destruction")
 
     // Get voxel body & destructable components
     VoxelRenderer* vr = engine.ecs.try_get_component<VoxelRenderer>(entity);
     VoxelBody* vb = engine.ecs.try_get_component<VoxelBody>(entity);
     Destructible* des = engine.ecs.try_get_component<Destructible>(entity);
-    if (vr == nullptr || des == nullptr) return;
+    if (vr == nullptr || des == nullptr) return { entity };
 
     // Subtract voxels from BLAS
     auto* resource = vr->resource.resource.get();
@@ -242,6 +242,17 @@ void Destruction::destroy_voxels(Entity entity, const std::vector<glm::uvec3>& i
 
         Physics::initialize_voxel_body(seperate_vb, *seperate_vr.resource.resource.get());
     }
+
+        // Remove disabled or deleted entities from the seperated entities list
+    seperated_entities.erase(
+        std::remove_if(
+            seperated_entities.begin(), seperated_entities.end(),
+            [](Entity e) { return engine.ecs.try_get_component<Disable>(e) != nullptr || engine.ecs.try_get_component<Delete>(e) != nullptr; }
+        ),
+        seperated_entities.end()
+    );
+
+    return seperated_entities;
 }
 
 uint64_t flood_fill_64(uint64_t seed, uint64_t solid_mask) {
@@ -277,22 +288,20 @@ uint64_t flood_fill_64(uint64_t seed, uint64_t solid_mask) {
     return filled;
 }
 
-void Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
+std::vector<Entity> Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
     TMT_ZONE_SCOPED_N("Destruction")
 
     // If the entity does not exist anymore (got destroyed this frame already)
-    if (engine.ecs.try_get_component<Delete>(entity) != nullptr) return;
-
+    if (engine.ecs.try_get_component<Delete>(entity) != nullptr) return { entity };
     // Get voxel body & destructable components
     VoxelRenderer* vr = engine.ecs.try_get_component<VoxelRenderer>(entity);
     VoxelBody* vb = engine.ecs.try_get_component<VoxelBody>(entity);
     Destructible* des = engine.ecs.try_get_component<Destructible>(entity);
-    if (vr == nullptr || des == nullptr) return;
+    if (vr == nullptr || des == nullptr) return { entity };
 
     // Check if the voxel is already empty
     auto* resource = vr->resource.resource.get();
-    if (resource->blas->get_voxel(pos.x, pos.y, pos.z) == nullptr) return;
-
+    if (resource->blas->get_voxel(pos.x, pos.y, pos.z) == nullptr) return { entity };
     // Subtract voxels from BLAS
     resource->blas->remove_voxel(pos.x, pos.y, pos.z);
     resource->set_dirty();
@@ -337,7 +346,7 @@ void Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
 
     // Early out
     if (seperation_early_out(resource, pos, neighbors)) {
-        return;
+        return {entity};
     }
 
     //// NOTE: Replace this with custom recalculate graph function for a single voxel
@@ -374,6 +383,13 @@ void Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
 
         Physics::initialize_voxel_body(seperate_vb, *seperate_vr.resource.resource.get());
     }
+
+    // Remove disabled or deleted entities from the seperated entities list
+    seperated_entities.erase(std::remove_if(seperated_entities.begin(), seperated_entities.end(), [](Entity e) { return engine.ecs.try_get_component<Disable>(e) != nullptr || engine.ecs.try_get_component<Delete>(e) != nullptr; }),
+        seperated_entities.end()
+    );
+
+    return seperated_entities;
 }
 
 bool Destruction::seperation_early_out(VoxelVolume* resource, const glm::uvec3& pos, const std::vector<glm::uvec3>& neighbors) {

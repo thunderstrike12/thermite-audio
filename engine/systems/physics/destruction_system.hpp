@@ -25,8 +25,8 @@ class Destruction : public ISystem {
     void on_end() override;
 
     void destroy_voxels(Entity entity, const Stencil* stencil, glm::ivec3 offset = glm::ivec3(0));
-    void destroy_voxels(Entity entity, const std::vector<glm::uvec3>& indices);
-    void destroy_voxel(Entity entity, glm::uvec3 pos);
+    std::vector<Entity> destroy_voxels(Entity entity, const std::vector<glm::uvec3>& indices);
+    std::vector<Entity> destroy_voxel(Entity entity, glm::uvec3 pos);
 
     static uint32_t pos_to_node_id(uint32_t x, uint32_t y, uint32_t z) { return (x + (y << 10) + (z << 20)); };
 

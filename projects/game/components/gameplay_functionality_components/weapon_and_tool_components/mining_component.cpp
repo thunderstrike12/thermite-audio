@@ -164,7 +164,10 @@ void MiningComponent::handle_voxel(const VoxelID& voxel_id) {
             if (ore_toughness < tmt::engine.frame_data().elapsed_time - mining_voxels.at(voxel_id)) {
                 // resource->blas->remove_voxel(voxel_coord.x, voxel_coord.y, voxel_coord.z);
                 // resource->set_dirty();
-                tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxel(voxel_id.entity_id, voxel_coord);
+                auto entities { tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxel(voxel_id.entity_id, voxel_coord) };
+                if (entities.size() > 1) {
+                    tmt::Log::info("Mining has separated objects");
+                }
             }
             break;
     }
