@@ -2,6 +2,7 @@
 #include "mover_component.hpp"
 #include "engine/tools/player_data.hpp"
 #include "projects/game/data_headers/save_entries.hpp"
+
 namespace {
 
 game::MoverComponent& get_mover_component(tmt::Entity entity) {
@@ -21,6 +22,7 @@ void game::FuelComponent::start() {
         tmt::engine.ecs.get_dispatcher().sink<TriggerMovementEvent>().connect<&MoverComponent::update_movement>(get_mover_component(mover_entity));
     }
 }
+
 void game::FuelComponent::end() {
     tmt::engine.ecs.get_dispatcher().sink<MovementUpdateEvent>().disconnect<&FuelComponent::on_trigger_movement>(this);
 
@@ -38,4 +40,5 @@ void game::FuelComponent::on_trigger_movement(const MovementUpdateEvent& event) 
         tmt::Log::info("No more fuel");
         tmt::engine.ecs.get_dispatcher().sink<TriggerMovementEvent>().disconnect<&MoverComponent::update_movement>(get_mover_component(mover_entity));
     }
+    tmt::engine.ecs.get_dispatcher().trigger<BargeFuelChanged>({ .barge_fuel_entity = entity, .new_value = current_fuel });
 }
