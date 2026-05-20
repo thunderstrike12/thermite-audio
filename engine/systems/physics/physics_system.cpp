@@ -7,6 +7,7 @@
 #include "engine.hpp"
 #include "engine/core/ecs.hpp"
 #include "engine/core/components/transform.hpp"
+#include "engine/core/components/camera.hpp"
 #include "engine/core/logger.hpp"
 #include "engine/core/polyline.hpp"
 #include "engine/tools/profiler.hpp"
@@ -188,6 +189,13 @@ void Physics::on_fixed_update(const FrameData&) {
         if (vb.accumulated_forces <= 150.0f && forces <= 150.0f) vb.type = VoxelBody::SLEEPING;
     }
 
+    // Get Camera
+    auto camera_entity = Camera::get_active_camera();
+    glm::vec3 camera_position {};
+    if (camera_entity != entt::null) {
+        camera_position = engine.ecs.get_component<Transform>(camera_entity).get_world_position();
+    }
+
     // Wake up
     engine.salvo.activate_workers();
 
@@ -208,6 +216,14 @@ void Physics::on_fixed_update(const FrameData&) {
             /* Convert the entity to a voxel object */
             VoxelObject object {};
             object.local_to_world = transform.get_world_matrix();
+
+            /* Distance check from camera */
+            const float distance_from_camera = glm::length2(transform.get_world_position() - camera_position);
+            if (distance_from_camera > max_distance) {
+                // Skip objects that are too far from the camera
+                continue;
+            }
+
             object.world_to_local = glm::inverse(object.local_to_world);
             object.size = renderer.resource->size;
             object.mask = (1u << vb.layer);
