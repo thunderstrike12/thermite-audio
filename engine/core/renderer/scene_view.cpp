@@ -342,7 +342,7 @@ void SceneView::update_lights(RenderGraph& render_graph, const RenderView&) {
     fog_anisotropy = 0.6f;
     fog_scatter_strength = 0.25f;
     fog_absorption = glm::vec3(0.02f);
-    particle_reflectance = 0.1f;
+    particle_reflectance = 0.01f;
 
     /* Iterate over all environments */
     for (auto&& [entity, env] : env_group.each()) {

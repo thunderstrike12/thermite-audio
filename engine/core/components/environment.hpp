@@ -26,7 +26,7 @@ struct Environment {
     /* Fog absorption as RGB triplet. */
     glm::vec3 fog_absorption = glm::vec3(0.02f);
     /* What percentage of light is reflected off of particles. */
-    float particle_reflectance = 0.1f;
+    float particle_reflectance = 0.01f;
 };
 
 }  // namespace tmt

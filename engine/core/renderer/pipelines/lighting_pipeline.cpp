@@ -196,7 +196,7 @@ void LightingPipeline::enqueue(RenderGraph& render_graph, RenderView& render_vie
         struct Fpc {
             float fog_anisotropy = 0.6f;
             float scatter_strength = 0.0025f;
-            float particle_reflectance = 0.1f;
+            float particle_reflectance = 0.01f;
         } froxel_p {};
         froxel_p.fog_anisotropy = scene_view.fog_anisotropy;
         froxel_p.scatter_strength = scene_view.fog_scatter_strength / 100.0f;

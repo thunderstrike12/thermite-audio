@@ -66,7 +66,7 @@ void main(int3 thread_id: SV_DispatchThreadID) {
     const float3 history_uvw = iv::froxel_uvw(froxel_center, render_view.prev_world_to_clip, iv::FROXEL_NEAR_Z, iv::FROXEL_FAR_Z);
     if (any(history_uvw < 0.0f) || any(history_uvw >= 1.0f)) {
         froxel_scatter[thread_id] = luminance * phase * p.scatter_strength;
-        froxel_luminance[thread_id] = luminance;
+        froxel_luminance[thread_id] = luminance * p.particle_reflectance;
         return;
     }
 
