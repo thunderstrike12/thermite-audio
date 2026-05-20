@@ -37,6 +37,12 @@ class Resources {
     requires std::constructible_from<T, const IO::FileLocation&, Args...>
     ResourceRef<T> load_resource(const IO::FileLocation& file_location, Args&&... args) {
         TMT_ZONE_SCOPED_N("Resources::load_resource");
+
+        if (file_location.relative_path.empty()) {
+            Log::error(Log::Scope::ENGINE, "[Resources] Empty file location passed");
+            return ResourceRef<T>(file_location);
+        }
+
         // duplicate checking
         if (resources.contains(file_location)) {
             auto& collection = resources.at(file_location);
@@ -148,7 +154,7 @@ class Resources {
         const bool fallback_success = resource->fallback(FallbackReason::LOAD_FAILED);
         if (fallback_success == false) {
             tmt::Log::error(tmt::Log::Scope::ENGINE, "[Resources] [CRITICAL ERROR] Failed to load fallback (REALLY BAD).");
-            throw std::runtime_error("Failed to load resource and fallback failed: " + file_location.get_absolute_path().string());
+            // throw std::runtime_error("Failed to load resource and fallback failed: " + file_location.get_absolute_path().string());
         }
 
         resource->loaded = fallback_success;
