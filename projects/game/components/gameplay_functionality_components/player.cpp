@@ -10,6 +10,7 @@
 #include "engine/core/components/camera.hpp"
 
 #include "engine/core/window.hpp"
+#include "engine/core/components/image_renderer.hpp"
 #include "engine/core/input/input_map.hpp"
 #include "projects/game/data_headers/game_input.hpp"
 #include "engine/core/components/ui_component.hpp"
@@ -520,6 +521,11 @@ void Player::update(const tmt::FrameData& time) {
         tmt::engine.ecs.get_dispatcher().trigger(EndRun { true });
 
         state = PlayerState::PAUSED;
+    } else if (tmt::engine.ecs.valid(black_out_hud)) {
+        auto& image_renderer = tmt::engine.ecs.get_component<tmt::ImageRenderer>(black_out_hud);
+
+        const float curve_value = black_out_curve.eval(out_of_energy_timer / out_of_energy_time_till_death);
+        image_renderer.color.get().a = curve_value;
     }
 
     // Health death (instant)

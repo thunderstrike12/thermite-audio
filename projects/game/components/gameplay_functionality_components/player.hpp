@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/systems/gameplay/game_component.hpp"
 #include "engine/core/components/camera.hpp"
+#include "engine/tools/types/bezier_curve.hpp"
 #include "engine/shared/ray.hpp"
 #include "projects/game/data_headers/events.hpp"
 #include "projects/game/data_headers/layer_mask.hpp"
@@ -98,6 +99,7 @@ class Player : public tmt::GameComponent<Player> {
     PlayerStat energy;
     float energy_drain_per_second = 0.5f;
     float out_of_energy_time_till_death = 10.0f;
+    tmt::BezierCurve black_out_curve;
 
     // Helper functions
     tmt::Transform& get_transform() const { return tmt::engine.ecs.get_component<tmt::Transform>(entity); }
@@ -109,6 +111,7 @@ class Player : public tmt::GameComponent<Player> {
     tmt::Entity player_hud = entt::null;
     tmt::Entity barge_hud = entt::null;
     tmt::Entity low_energy_hud = entt::null;
+    tmt::Entity black_out_hud = entt::null;
 
     // Energy pop up settings
     float low_energy_threshold = 0.3f;    // 30 percent, 0.0/1.0
@@ -185,6 +188,6 @@ TMT_OBJECT(game::CameraShakeSettings, (enabled, max_intensity, boost_intensity, 
 TMT_OBJECT(
     game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, boost_max_speed_multiplier, boost_acceleration_multiplier, boost_deceleration_factor,
                    boost_cost_per_second_per_additional_speed_above_max, boost_initial_cost, boost_availability, health, energy, energy_drain_per_second, out_of_energy_time_till_death,
-                   low_energy_threshold, low_energy_duration, use_second_warning, low_energy_threshold_2, low_energy_duration_2, player_hud, barge_hud, low_energy_hud, rifle_crosshair,
+                   low_energy_threshold, low_energy_duration, use_second_warning, low_energy_threshold_2, low_energy_duration_2, player_hud, barge_hud, low_energy_hud, black_out_hud, black_out_curve, rifle_crosshair,
                    gravity_crosshair, mine_crosshair, barge, recharge_distance, ray_check, camera_shake_settings)
 );
