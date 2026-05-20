@@ -150,11 +150,15 @@ void Engine::run() {
             game_controller.should_resume_game = false;
         }
 
-        current_frame_data = {
-            .frame_number = frame_count,
-            .delta_time = timer.tick(),
-            .elapsed_time = timer.elapsed(),
-        };
+        {
+            float frame_time = timer.tick();
+            current_frame_data = {
+                .frame_number = frame_count,
+                .delta_time = std::min(frame_time, Config::MAX_DELTA_TIME),
+                .uncapped_delta_time = frame_time,
+                .elapsed_time = timer.elapsed(),
+            };
+        }
 
         input.update(current_frame_data);
 
