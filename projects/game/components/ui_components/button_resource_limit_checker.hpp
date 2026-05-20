@@ -34,4 +34,4 @@ class ResourceLimitChecker : public tmt::GameComponent<ResourceLimitChecker> {
 
 }  // namespace game
 
-TMT_OBJECT(game::ResourceLimitChecker, (wallet_entity, flashing_ui_entity, flash_time, flashing_time, check_interval));
+TMT_GAME_COMPONENT(game::ResourceLimitChecker, (wallet_entity, flashing_ui_entity, flash_time, flashing_time, check_interval));

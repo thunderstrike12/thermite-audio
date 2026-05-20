@@ -54,4 +54,4 @@ class SmallEnemy : public tmt::GameComponent<SmallEnemy> {
 }  // namespace game
 TMT_OBJECT(game::LogicParameters, (min_explosion_range, max_explosion_range, charge_time, explosion_damage, explosion_force, activation_range, push_radius));
 TMT_OBJECT(game::MovementParameters, (max_speed, max_force, arrive_radius, wander_radius_limit));
-TMT_OBJECT(game::SmallEnemy, (core, explosion, thermite, explosion_parameters, logic_paramaters, movement_paramaters));
+TMT_GAME_COMPONENT(game::SmallEnemy, (core, explosion, thermite, explosion_parameters, logic_paramaters, movement_paramaters));

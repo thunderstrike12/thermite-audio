@@ -19,4 +19,4 @@ class OpacityFader : public tmt::GameComponent<OpacityFader> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::OpacityFader, (curve));
+TMT_GAME_COMPONENT(game::OpacityFader, (curve));

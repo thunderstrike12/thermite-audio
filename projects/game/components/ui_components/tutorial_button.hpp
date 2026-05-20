@@ -15,4 +15,4 @@ class TutorialButton : public tmt::GameComponent<TutorialButton> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::TutorialButton, (saved_name));
+TMT_GAME_COMPONENT(game::TutorialButton, (saved_name));

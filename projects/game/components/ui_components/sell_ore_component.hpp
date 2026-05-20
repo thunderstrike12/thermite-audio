@@ -32,4 +32,4 @@ class SellOreComponent : public tmt::GameComponent<SellOreComponent> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::SellOreComponent, (entity_with_wallet, ore_property_entity, material_to_sell, initial_hold_cooldown, speed_up_factor));
+TMT_GAME_COMPONENT(game::SellOreComponent, (entity_with_wallet, ore_property_entity, material_to_sell, initial_hold_cooldown, speed_up_factor));

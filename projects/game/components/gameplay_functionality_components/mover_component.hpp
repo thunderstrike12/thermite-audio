@@ -26,4 +26,4 @@ class MoverComponent : public tmt::GameComponent<MoverComponent> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::MoverComponent, (movement_speed, can_move, cfg, trigger_entity));
+TMT_GAME_COMPONENT(game::MoverComponent, (movement_speed, can_move, cfg, trigger_entity));

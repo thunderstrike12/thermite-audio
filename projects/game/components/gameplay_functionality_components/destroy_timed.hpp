@@ -15,4 +15,4 @@ class DestroyTimed : public tmt::GameComponent<DestroyTimed> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::DestroyTimed, (time_to_destroy));
+TMT_GAME_COMPONENT(game::DestroyTimed, (time_to_destroy));

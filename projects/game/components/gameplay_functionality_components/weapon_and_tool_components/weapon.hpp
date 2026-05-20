@@ -36,4 +36,4 @@ class Weapon : public tmt::GameComponent<Weapon> {
 }  // namespace game
 TMT_OBJECT(game::FireRate, (shots_per_second));
 
-TMT_OBJECT(game::Weapon, (primary_fire_rate, secondary_fire_rate, shooting_entity, spawn_location_entity));
+TMT_GAME_COMPONENT(game::Weapon, (primary_fire_rate, secondary_fire_rate, shooting_entity, spawn_location_entity));

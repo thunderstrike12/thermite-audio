@@ -56,7 +56,7 @@ Engine::Engine() :
     salvo(*new Salvo()),
     scenes(*new Scenes()),
     polyline(*new Polyline()),
-    component_registry(*new GameComponentRegistry()),
+    component_registry(GameComponentRegistry::instance()),
     fps_limiter(*new FpsLimiter()),
     player_data(*new PlayerData()) {}
 
@@ -64,7 +64,7 @@ Engine::~Engine() {
     /* Destruction should be in reverse order */
     delete &player_data;
     delete &fps_limiter;
-    delete &component_registry;
+    //delete &component_registry;
     delete &polyline;
     delete &scenes;
     delete &salvo;

@@ -44,4 +44,4 @@ class MenuController : public tmt::GameComponent<MenuController> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::MenuController, (pause_menu_entity, inventory_menu_entity, upgrade_menu_entity, end_run_menu_entity, death_menu_entity, player_entity, penalty_percentage, barge_entity));
+TMT_GAME_COMPONENT(game::MenuController, (pause_menu_entity, inventory_menu_entity, upgrade_menu_entity, end_run_menu_entity, death_menu_entity, player_entity, penalty_percentage, barge_entity));

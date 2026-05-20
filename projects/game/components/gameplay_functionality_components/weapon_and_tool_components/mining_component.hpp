@@ -87,5 +87,5 @@ class MiningComponent : public tmt::GameComponent<MiningComponent> {
 
 }  // namespace game
 TMT_OBJECT(game::RayCylinder, (base_transform_entity, base_radius, ray_distance, ray_amount, rotating_speed));
-TMT_OBJECT(game::MiningComponent, (active, cfg, ray_cylinder, ray_mask, time_draw_rays_in_debug));
+TMT_GAME_COMPONENT(game::MiningComponent, (active, cfg, ray_cylinder, ray_mask, time_draw_rays_in_debug));
 TMT_OBJECT(game::MiningData, (base_radius, ray_distance, ray_amount, rays_per_second));

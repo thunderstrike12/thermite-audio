@@ -23,4 +23,4 @@ class ProjectileSpawner : public tmt::GameComponent<ProjectileSpawner> {
 
 }  // namespace game
 
-TMT_OBJECT(game::ProjectileSpawner, (animated_tool_entity));
+TMT_GAME_COMPONENT(game::ProjectileSpawner, (animated_tool_entity));

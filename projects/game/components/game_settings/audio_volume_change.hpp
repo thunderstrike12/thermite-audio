@@ -22,4 +22,4 @@ class AudioVolumeChangeComponent : public tmt::GameComponent<AudioVolumeChangeCo
 }  // namespace game
 TMT_COMPONENT_DEPENDENCIES(game::AudioVolumeChangeComponent, tmt::Slider);
 
-TMT_OBJECT(game::AudioVolumeChangeComponent, (volume_control));
+TMT_GAME_COMPONENT(game::AudioVolumeChangeComponent, (volume_control));

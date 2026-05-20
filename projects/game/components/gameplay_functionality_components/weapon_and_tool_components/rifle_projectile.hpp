@@ -40,4 +40,4 @@ class RifleProjectile : public tmt::GameComponent<RifleProjectile> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::RifleProjectile, (stencil, movement_speed, layer_mask, protected_mask, explosion_parameters));
+TMT_GAME_COMPONENT(game::RifleProjectile, (stencil, movement_speed, layer_mask, protected_mask, explosion_parameters));

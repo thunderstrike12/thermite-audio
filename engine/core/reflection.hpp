@@ -49,6 +49,10 @@
     TMT_OBJECT_SERIALIZE_TEMPLATE(TPARAMS, Type, TARGS, __VA_ARGS__); \
     TMT_OBJECT_INSPECT_TEMPLATE(TPARAMS, Type, TARGS, __VA_ARGS__)
 
+#define TMT_OBJECT_EMPTY(Type)        \
+    TMT_OBJECT_SERIALIZE_EMPTY(Type); \
+    TMT_OBJECT_INSPECT_EMPTY(Type)
+
 namespace tmt {
 
 template <typename T>

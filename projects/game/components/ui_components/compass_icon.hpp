@@ -27,4 +27,4 @@ class CompassIcon : public tmt::GameComponent<CompassIcon> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::CompassIcon, (relative_entity, radius, default_placement, enable_above, enable_below, min_threshold, max_threshold, move_increments));
+TMT_GAME_COMPONENT(game::CompassIcon, (relative_entity, radius, default_placement, enable_above, enable_below, min_threshold, max_threshold, move_increments));

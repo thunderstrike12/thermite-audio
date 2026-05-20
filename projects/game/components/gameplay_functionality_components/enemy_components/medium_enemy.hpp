@@ -120,7 +120,7 @@ class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
 
 TMT_OBJECT(game::AvailablePosEntry, (entity, height_offset, reference_entity));
 
-TMT_OBJECT(
+TMT_GAME_COMPONENT(
     game::MediumEnemy,
     (walkable_asteroid, laser_origin, missile_origin, core, rig_controller, available_positions, missile_voxel_object, projectile_mask, enemy_mask, projectile_layer, enemy_layer,
      rotation_speed, height_above_ground, walk_speed, back_off_distance, velocity_of_objects_on_death, aggro_range, laser_range, stomp_range, missile_cooldown, stop_launching_after,

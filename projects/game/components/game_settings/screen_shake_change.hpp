@@ -19,4 +19,4 @@ class ScreenShakeChangeComponent : public tmt::GameComponent<ScreenShakeChangeCo
 }  // namespace game
 TMT_COMPONENT_DEPENDENCIES(game::ScreenShakeChangeComponent, tmt::Slider);
 
-// TMT_OBJECT(game::ScreenShakeChangeComponent, (volume_control));
+TMT_GAME_COMPONENT_EMPTY(game::ScreenShakeChangeComponent);

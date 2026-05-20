@@ -26,4 +26,4 @@ class EntityControlComponent : public tmt::GameComponent<EntityControlComponent>
 
 }  // namespace game
 
-TMT_OBJECT(game::EntityControlComponent, (entities_to_disable, entities_to_enable));
+TMT_GAME_COMPONENT(game::EntityControlComponent, (entities_to_disable, entities_to_enable));

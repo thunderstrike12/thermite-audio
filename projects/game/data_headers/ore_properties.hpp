@@ -31,4 +31,4 @@ class OreProperties : public tmt::GameComponent<OreProperties> {
 
 }  // namespace game
 TMT_OBJECT(game::OreProperties::MiningOre, (value, toughness, weight, resource_per_voxel, ore_resource));
-TMT_OBJECT(game::OreProperties, (ores));
+TMT_GAME_COMPONENT(game::OreProperties, (ores));

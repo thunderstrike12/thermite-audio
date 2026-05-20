@@ -28,4 +28,4 @@ class FuelComponent : public tmt::GameComponent<FuelComponent> {
 
 }  // namespace game
 TMT_OBJECT(game::FuelData, (max_fuel));
-TMT_OBJECT(game::FuelComponent, (mover_entity, fuel_data, decrease_multiplier, current_fuel));
+TMT_GAME_COMPONENT(game::FuelComponent, (mover_entity, fuel_data, decrease_multiplier, current_fuel));

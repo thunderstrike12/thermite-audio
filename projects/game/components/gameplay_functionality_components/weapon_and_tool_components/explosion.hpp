@@ -38,4 +38,4 @@ class Explosion : public tmt::GameComponent<Explosion> {
 
 }  // namespace game
 TMT_OBJECT(game::ExplosionParameters, (radius, explosion_power, distance_strength_curve, mask));
-TMT_OBJECT(game::Explosion, (param, explosion, explosion_lifetime));
+TMT_GAME_COMPONENT(game::Explosion, (param, explosion, explosion_lifetime));

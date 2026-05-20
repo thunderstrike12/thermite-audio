@@ -26,4 +26,4 @@ class TransformTween : public tmt::GameComponent<TransformTween> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::TransformTween, (move_offset, move_tween, rotation_offset, rotate_tween, scale_offset, scale_tween));
+TMT_GAME_COMPONENT(game::TransformTween, (move_offset, move_tween, rotation_offset, rotate_tween, scale_offset, scale_tween));

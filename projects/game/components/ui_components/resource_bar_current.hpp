@@ -33,4 +33,4 @@ class ResourceBarCurrentComponent : public tmt::GameComponent<ResourceBarCurrent
 };
 
 }  // namespace game
-TMT_OBJECT(game::ResourceBarCurrentComponent, (player_entity, barge_fuel_entity, resource, resource_per_segment, rendered_string));
+TMT_GAME_COMPONENT(game::ResourceBarCurrentComponent, (player_entity, barge_fuel_entity, resource, resource_per_segment, rendered_string));

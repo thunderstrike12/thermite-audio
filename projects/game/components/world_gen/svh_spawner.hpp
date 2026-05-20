@@ -25,4 +25,4 @@ class SVHSpawner : public tmt::GameComponent<SVHSpawner> {
 
 }  // namespace game
 
-TMT_OBJECT(game::SVHSpawner, (scene_to_spawn, needs_distance_culling));
+TMT_GAME_COMPONENT(game::SVHSpawner, (scene_to_spawn, needs_distance_culling));

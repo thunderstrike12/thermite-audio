@@ -71,4 +71,4 @@ class Upgrade : public tmt::GameComponent<Upgrade> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::Upgrade, (upgrade_target, type, upgrade_to, dollar_cost, new_upgrade_costs, required_upgrade_entities, entities_to_disable, entities_to_enable));
+TMT_GAME_COMPONENT(game::Upgrade, (upgrade_target, type, upgrade_to, dollar_cost, new_upgrade_costs, required_upgrade_entities, entities_to_disable, entities_to_enable));

@@ -66,4 +66,4 @@ class OreManager : public tmt::GameComponent<OreManager> {
 
 }  // namespace game
 TMT_OBJECT(game::ThermiteOreSettings, (radius_explosion, damage_explosion, cooldown_explosion, explosion_strength, layer_mask));
-TMT_OBJECT(game::OreManager, (thermite_ore_settings));
+TMT_GAME_COMPONENT(game::OreManager, (thermite_ore_settings));

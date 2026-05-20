@@ -130,4 +130,4 @@ TMT_OBJECT(
 );
 TMT_OBJECT(game::WeaponManager::WeaponProcAnimData, (root, anti_overlap, sway, recoil));
 TMT_OBJECT(game::WeaponManager::WeaponEntry, (proc_anim_data, entity));
-TMT_OBJECT(game::WeaponManager, (tool_rig, weapons, starting_weapon, shooting_entity, overheat_time, switching_time));
+TMT_GAME_COMPONENT(game::WeaponManager, (tool_rig, weapons, starting_weapon, shooting_entity, overheat_time, switching_time));

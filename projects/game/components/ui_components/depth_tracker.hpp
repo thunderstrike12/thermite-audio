@@ -28,4 +28,4 @@ class DepthTracker : public tmt::GameComponent<DepthTracker> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::DepthTracker, (player_entity, barge_entity, distance_type, displayed_decimals));
+TMT_GAME_COMPONENT(game::DepthTracker, (player_entity, barge_entity, distance_type, displayed_decimals));

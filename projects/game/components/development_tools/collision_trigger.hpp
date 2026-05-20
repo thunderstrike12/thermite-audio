@@ -30,4 +30,4 @@ class CollisionTrigger : public tmt::GameComponent<CollisionTrigger> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::CollisionTrigger, (collision_shape, line_config, layer_mask));
+TMT_GAME_COMPONENT(game::CollisionTrigger, (collision_shape, line_config, layer_mask));

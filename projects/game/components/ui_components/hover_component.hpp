@@ -23,4 +23,4 @@ class HoverComponent : public tmt::GameComponent<HoverComponent> {
 
 }  // namespace game
 
-TMT_OBJECT(game::HoverComponent, (hover_entity));
+TMT_GAME_COMPONENT(game::HoverComponent, (hover_entity));

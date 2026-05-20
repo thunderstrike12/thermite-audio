@@ -21,4 +21,4 @@ class AnimationPlayer : public tmt::GameComponent<AnimationPlayer> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::AnimationPlayer, (rig_location, animation_location, animation_name));
+TMT_GAME_COMPONENT(game::AnimationPlayer, (rig_location, animation_location, animation_name));

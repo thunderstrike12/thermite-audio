@@ -27,4 +27,4 @@ class SceneSwitchComponent : public tmt::GameComponent<SceneSwitchComponent> {
 
 }  // namespace game
 
-TMT_OBJECT(game::SceneSwitchComponent, (target_scene));
+TMT_GAME_COMPONENT(game::SceneSwitchComponent, (target_scene));

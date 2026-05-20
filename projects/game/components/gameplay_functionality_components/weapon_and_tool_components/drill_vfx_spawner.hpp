@@ -24,4 +24,4 @@ class DrillVFXSpawner : public tmt::GameComponent<DrillVFXSpawner> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::DrillVFXSpawner, (active_rate_per_second, emitter_entity));
+TMT_GAME_COMPONENT(game::DrillVFXSpawner, (active_rate_per_second, emitter_entity));

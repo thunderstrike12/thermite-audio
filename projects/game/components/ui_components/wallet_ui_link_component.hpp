@@ -46,4 +46,4 @@ class WalletUiLink : public tmt::GameComponent<WalletUiLink> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::WalletUiLink, (entities_with_wallet, resource_to_display, display_type, ramp_up_curve, use_ramp_up_curve, ramp_duration));
+TMT_GAME_COMPONENT(game::WalletUiLink, (entities_with_wallet, resource_to_display, display_type, ramp_up_curve, use_ramp_up_curve, ramp_duration));

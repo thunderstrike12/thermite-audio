@@ -25,72 +25,17 @@
 #include "ai_actions/stomp.hpp"
 #include "ai_actions/flee.hpp"
 
-// Enemies
-#include "components/gameplay_functionality_components/enemy_components/medium_enemy.hpp"
-#include "components/gameplay_functionality_components/enemy_components/missile.hpp"
-#include "components/gameplay_functionality_components/enemy_components/small_enemy.hpp"
-
-// Animation
-#include "components/animation_player.hpp"
-// Game Components
-#include "components/gameplay_functionality_components/player.hpp"
-#include "components/gameplay_functionality_components/mover_component.hpp"
-#include "components/gameplay_functionality_components/ore_collector.hpp"
-#include "components/gameplay_functionality_components/fuel.hpp"
-#include "components/gameplay_functionality_components/upgrade.hpp"
-#include "components/gameplay_functionality_components/destroy_timed.hpp"
-
-// Weapons and tools
-#include "components/gameplay_functionality_components/weapon_and_tool_components/projectile_spawner.hpp"
-#include "components/gameplay_functionality_components/weapon_and_tool_components/rifle_projectile.hpp"
-#include "components/gameplay_functionality_components/weapon_and_tool_components/spawner.hpp"
-#include "components/gameplay_functionality_components/weapon_and_tool_components/weapon.hpp"
-#include "components/gameplay_functionality_components/weapon_and_tool_components/mining_component.hpp"
-#include "components/gameplay_functionality_components/weapon_and_tool_components/gravity_manipulation_component.hpp"
-#include "components/gameplay_functionality_components/weapon_and_tool_components/drill_vfx_spawner.hpp"
-
-// Ui
-#include "components/ui_components/text_component.hpp"
-#include "components/ui_components/scene_switch_component.hpp"
-#include "components/ui_components/entity_control_component.hpp"
-#include "components/ui_components/self_destruct_component.hpp"
-#include "components/ui_components/quit_game_component.hpp"
-#include "components/ui_components/wallet_ui_link_component.hpp"
-#include "components/ui_components/sell_ore_component.hpp"
-#include "components/ui_components/button_resource_limit_checker.hpp"
-#include "components/ui_components/compass_icon.hpp"
-#include "components/ui_components/tutorial_button.hpp"
-#include "components/ui_components/resource_bar_current.hpp"
-#include "components/ui_components/opacity_fader.hpp"
-#include "components/game_settings/screen_shake_change.hpp"
-#include "components/ui_components/depth_tracker.hpp"
-
-// Managers
-#include "components/managers/ore_manager.hpp"
-#include "components/managers/menu_controller.hpp"
-// Development tools
-#include "components/development_tools/collision_trigger.hpp"
-#include "components/development_tools/attach_component.hpp"
-#include "components/development_tools/transform_tween.hpp"
-// World generation
-#include "components/world_gen/generation_component.hpp"
-#include "components/world_gen/random_prefab_spawner.hpp"
-#include "components/world_gen/svh_spawner.hpp"
-// Data Headers
-#include "data_headers/scene_list.hpp"
-#include "data_headers/wallet.hpp"
-#include "data_headers/ore_properties.hpp"
-// Game Settings
-#include "components/game_settings/audio_volume_change.hpp"
-// Goap Components
-#include "components/gameplay_functionality_components/weapon_and_tool_components/explosion.hpp"
-#include "engine/systems/ai/goap/goap_system.hpp"
+#include "components/goap_actions/sensor_system.hpp"
 #include "components/goap_actions/steer_to_player.hpp"
 #include "components/goap_actions/wander_steering.hpp"
 #include "components/goap_actions/prepare_explode.hpp"
 #include "components/goap_actions/explode.hpp"
-#include "components/goap_actions/sensor_system.hpp"
+
+// Data Headers
 #include "data_headers/save_entries.hpp"
+#include "data_headers/scene_list.hpp"
+#include "data_headers/wallet.hpp"
+#include "data_headers/ore_properties.hpp"
 #include "engine/tools/player_data.hpp"
 
 #include <bitset>
@@ -128,57 +73,6 @@ std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs&
     tmt::engine.scenes.register_scene<WeaponMotionTest>();
     tmt::engine.scenes.register_scene<BogdanulTestScene>();
     tmt::engine.scenes.register_scene<JaedenTestScene>();
-
-    /* Register Game Components */
-    tmt::engine.component_registry.register_component<game::Player>();
-    tmt::engine.component_registry.register_component<game::Weapon>();
-    tmt::engine.component_registry.register_component<game::Spawner>();
-    tmt::engine.component_registry.register_component<game::RifleProjectile>();
-    tmt::engine.component_registry.register_component<game::ProjectileSpawner>();
-    tmt::engine.component_registry.register_component<game::Wallet>();
-    tmt::engine.component_registry.register_component<game::MiningComponent>();
-    tmt::engine.component_registry.register_component<game::AnimationPlayer>();
-    tmt::engine.component_registry.register_component<game::GravityManipulationComponent>();
-    tmt::engine.component_registry.register_component<game::OreCollector>();
-    tmt::engine.component_registry.register_component<game::CollisionTrigger>();
-    tmt::engine.component_registry.register_component<game::WeaponManager>();
-    tmt::engine.component_registry.register_component<game::TextComponent>();
-    tmt::engine.component_registry.register_component<game::MoverComponent>();
-    tmt::engine.component_registry.register_component<game::AttachComponent>();
-    tmt::engine.component_registry.register_component<game::Upgrade>();
-    tmt::engine.component_registry.register_component<game::MenuController>();
-    tmt::engine.component_registry.register_component<game::FuelComponent>();
-    tmt::engine.component_registry.register_component<game::MediumEnemy>();
-    tmt::engine.component_registry.register_component<game::Missile>();
-    tmt::engine.component_registry.register_component<game::SmallEnemy>();
-    tmt::engine.component_registry.register_component<game::OreProperties>();
-    tmt::engine.component_registry.register_component<game::OreManager>();
-    tmt::engine.component_registry.register_component<game::Explosion>();
-    tmt::engine.component_registry.register_component<game::DestroyTimed>();
-    tmt::engine.component_registry.register_component<game::TransformTween>();
-    tmt::engine.component_registry.register_component<game::DrillVFXSpawner>();
-
-    /* Register World Generation Components */
-    tmt::engine.component_registry.register_component<game::GenerationComponent>();
-    tmt::engine.component_registry.register_component<game::RandomPrefabSpawner>();
-    tmt::engine.component_registry.register_component<game::SVHSpawner>();
-    /* Register Game UI Components */
-    tmt::engine.component_registry.register_component<game::SceneSwitchComponent>();
-    tmt::engine.component_registry.register_component<game::EntityControlComponent>();
-    tmt::engine.component_registry.register_component<game::SelfDestructComponent>();
-    tmt::engine.component_registry.register_component<game::QuitGameComponent>();
-    tmt::engine.component_registry.register_component<game::WalletUiLink>();
-    tmt::engine.component_registry.register_component<game::SellOreComponent>();
-    tmt::engine.component_registry.register_component<game::ResourceLimitChecker>();
-    tmt::engine.component_registry.register_component<game::CompassIcon>();
-    tmt::engine.component_registry.register_component<game::TutorialButton>();
-    tmt::engine.component_registry.register_component<game::ResourceBarCurrentComponent>();
-    tmt::engine.component_registry.register_component<game::OpacityFader>();
-    tmt::engine.component_registry.register_component<game::ScreenShakeChangeComponent>();
-    tmt::engine.component_registry.register_component<game::DepthTracker>();
-
-    /* Register Game Settings */
-    tmt::engine.component_registry.register_component<game::AudioVolumeChangeComponent>();
 
 #if THERMITE_EDITOR
     tmt::editor.systems[tmt::Editor::Mode::SCENE].add<tmt::LevelEditor>();

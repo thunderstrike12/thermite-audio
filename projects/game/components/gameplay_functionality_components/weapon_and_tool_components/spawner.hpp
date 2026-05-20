@@ -23,4 +23,4 @@ class Spawner : public tmt::GameComponent<Spawner> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::Spawner, (spawn_parent, prefab_location, use_attached_entity_as_spawn_parent));
+TMT_GAME_COMPONENT(game::Spawner, (spawn_parent, prefab_location, use_attached_entity_as_spawn_parent));

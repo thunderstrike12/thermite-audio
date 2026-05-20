@@ -78,5 +78,5 @@ class Wallet : public tmt::GameComponent<Wallet> {
 
 }  // namespace game
 TMT_OBJECT(game::Currencies, (dollars, resource_counts));
-TMT_OBJECT(game::Wallet, (currencies, limits, total_resource_limit));
+TMT_GAME_COMPONENT(game::Wallet, (currencies, limits, total_resource_limit));
 TMT_OBJECT(game::WalletData, (limits, total_resource_limit));

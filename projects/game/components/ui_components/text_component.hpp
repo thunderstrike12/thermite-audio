@@ -20,4 +20,4 @@ class TextComponent : public tmt::GameComponent<TextComponent> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::TextComponent, (text, scale, config));
+TMT_GAME_COMPONENT(game::TextComponent, (text, scale, config));

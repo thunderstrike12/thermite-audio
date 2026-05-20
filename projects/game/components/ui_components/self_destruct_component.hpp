@@ -23,4 +23,4 @@ class SelfDestructComponent : public tmt::GameComponent<SelfDestructComponent> {
 
 }  // namespace game
 
-TMT_OBJECT(game::SelfDestructComponent, (player_entity));
+TMT_GAME_COMPONENT(game::SelfDestructComponent, (player_entity));

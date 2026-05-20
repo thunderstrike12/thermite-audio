@@ -23,4 +23,4 @@ class OreCollector : public tmt::GameComponent<OreCollector> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::OreCollector, (radius, wallet_entity));
+TMT_GAME_COMPONENT(game::OreCollector, (radius, wallet_entity));

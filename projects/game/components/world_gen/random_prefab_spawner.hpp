@@ -30,4 +30,4 @@ struct RandomPrefabSpawner : tmt::GameComponent<RandomPrefabSpawner> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::RandomPrefabSpawner, (prefabs, spawn_limit, respawn_time, re_randomize));
+TMT_GAME_COMPONENT(game::RandomPrefabSpawner, (prefabs, spawn_limit, respawn_time, re_randomize));
