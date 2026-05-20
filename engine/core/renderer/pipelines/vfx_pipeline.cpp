@@ -173,8 +173,15 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
 
             // Get emitter's world rotation
             const glm::quat world_rot = transform.get_world_rotation();
-
             eff.pos = transform.get_world_position() + world_rot * effect.pos_offset;
+
+            /* Calculate emitter opacity based on distance from the camera */
+            const float object_d = glm::distance(eff.pos, glm::vec3(render_view.gpu_view.origin));
+            const float range_d = glm::max(0.0001f, engine.renderer.scene_view.object_transparent_distance - engine.renderer.scene_view.object_opaque_distance);
+            const float opacity_t = 1.0f - glm::clamp(object_d - engine.renderer.scene_view.object_opaque_distance, 0.0f, range_d) / range_d;
+            const float opacity = (1.0f - powf(2.0f, -engine.renderer.scene_view.object_opacity_transition * opacity_t));
+            if (opacity <= 0.0f) continue; /* Skip fully transparent objects */
+
             eff.dir = glm::normalize(world_rot * local_dir);
             eff.cone_angle = glm::cos(glm::radians(effect.cone_angle));
             eff.start_speed = effect.start_speed;
@@ -184,8 +191,8 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
             eff.start_size = effect.start_size;
             eff.end_size = effect.end_size;
             eff.size_curve.points = effect.size_curve.get_vec4();
-            eff.start_opacity = effect.start_opacity;
-            eff.end_opacity = effect.end_opacity;
+            eff.start_opacity = Range(effect.start_opacity.min * opacity, effect.start_opacity.max * opacity);
+            eff.end_opacity = Range(effect.end_opacity.min * opacity, effect.end_opacity.max * opacity);
             eff.opacity_curve.points = effect.opacity_curve.get_vec4();
             eff.rotation_speed = effect.rotation_speed;
             eff.pos_jitter = effect.pos_jitter;

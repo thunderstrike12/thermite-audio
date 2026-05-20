@@ -13,30 +13,37 @@ StructuredBuffer<uint32_t> alive_list;
 
 [shader("vertex")]
 BillboardVertexOutput main(VertexInput input, uint32_t instance_id: SV_InstanceID) {
+    BillboardVertexOutput output;
     const Particle particle = particles[alive_list[instance_id]];
 
-    /* 1. Transform to clip space  */
+    /* Transform to clip space  */
     const float4 clip_pos = mul(gpu_view.world_to_clip, float4(particle.pos, 1.0f));
 
-    /* 2. Transform to pixel space */
+    /* Transform to pixel space */
     const float2 pixel_center = gpu_view.resolution * (0.5f * (clip_pos.xy / clip_pos.w) + 0.5f);
 
-    /* 3. Get pixel size */
+    /* Get pixel size */
     const float pixel_size = particle.size / clip_pos.w;
 
-    /* 3.5. Rotate the positions */
+    /* Return NaN positions if the pixel size is less than 1 pixel. */
+    /* (this will degenerate the triangle so the rasterizer produces zero fragments) */
+    if (pixel_size < 1.0f) {
+        output.pos = float4(asfloat(0x7fc00000), asfloat(0x7fc00000), asfloat(0x7fc00000), asfloat(0x7fc00000));
+        return output;
+    }
+
+    /* Rotate the positions */
     const float c = cos(particle.rotation);
     const float s = sin(particle.rotation);
     const float2 rotated = float2(input.pos.x * c - input.pos.y * s, input.pos.x * s + input.pos.y * c);
 
-    /* 4. Get pixel pos */
+    /* Get pixel pos */
     const float2 pixel_pos = pixel_center + float2(rotated.x, -rotated.y) * pixel_size;
 
-    /* 5. Convert to ndc space */
+    /* Convert to ndc space */
     const float2 ndc_pos = (pixel_pos / gpu_view.resolution) * 2.0f - 1.0f;
 
-    BillboardVertexOutput output;
-    /* 6. Convert to clip space */
+    /* Convert to clip space */
     output.pos = float4(ndc_pos * clip_pos.w, clip_pos.z, clip_pos.w);
     output.world_pos = particle.pos;
 
