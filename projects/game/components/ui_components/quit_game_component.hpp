@@ -21,3 +21,5 @@ class QuitGameComponent : public tmt::GameComponent<QuitGameComponent> {
 };
 
 }  // namespace game
+
+TMT_GAME_COMPONENT_EMPTY(game::QuitGameComponent);

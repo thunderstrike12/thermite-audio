@@ -30,3 +30,4 @@ struct Missile : public tmt::GameComponent<Missile> {
 };
 
 }  // namespace game
+TMT_GAME_COMPONENT_EMPTY(game::Missile);
