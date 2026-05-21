@@ -21,6 +21,11 @@ void game::ScreenShakeChangeComponent::on_value_changed(tmt::Slider::Context con
     auto& cam_shake { tmt::engine.player_data.get<float>(CAMERA_SHAKE, 1.0f) };
 
     cam_shake = context.value;
+    // apply from pause menu to player
+    auto view = tmt::engine.ecs.view<Player>(entt::exclude_t {});
+    if (view.empty() != false) {
+        std::get<0>(view.front().components).camera_shake_settings.set_multiplier(cam_shake);
+    }
 }
 void game::ScreenShakeChangeComponent::end() {
     if (auto* button_component = tmt::engine.ecs.try_get_component<tmt::Slider>(entity)) {

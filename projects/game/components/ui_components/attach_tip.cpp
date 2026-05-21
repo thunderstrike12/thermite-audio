@@ -12,14 +12,16 @@ void game::AttachTip::update(const tmt::FrameData& time) {
     percentage = std::min(percentage, time_to_fade);
     percentage /= time_to_fade;
 
-    tmt::engine.ecs.get_dispatcher().trigger(
-        IconTransitionEvent {
-            .icon_entity = ui_entity,
-            .current_value = in_range ? (1.0f - percentage) : percentage,
-            .min_value = percentage_for_starting_to_fade,
-            .max_value = 1.0f,
-        }
-    );
+    for (auto ui_entity : ui_entities) {
+        tmt::engine.ecs.get_dispatcher().trigger(
+            IconTransitionEvent {
+                .icon_entity = ui_entity,
+                .current_value = in_range ? (1.0f - percentage) : percentage,
+                .min_value = percentage_for_starting_to_fade,
+                .max_value = 1.0f,
+            }
+        );
+    }
 }
 void game::AttachTip::end() {
     tmt::engine.ecs.get_dispatcher().sink<game::InRangeEvent>().disconnect<&AttachTip::on_in_range>(this);

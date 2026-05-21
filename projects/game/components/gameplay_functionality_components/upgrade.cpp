@@ -105,7 +105,7 @@ void Upgrade::modify_upgrade_entities() const {
             tmt::engine.player_data.get<MiningData>(MINING_DATA).ray_amount = static_cast<uint32_t>(upgrade_to);
             break;
         case UpgradeType::DRILL_SPEED:
-            tmt::engine.player_data.get<MiningData>(RIFLE_FIRE_DATA).rays_per_second = upgrade_to;
+            tmt::engine.player_data.get<MiningData>(MINING_DATA).rays_per_second = upgrade_to;
             break;
 
         // ── Gravity Tool ──
