@@ -90,8 +90,10 @@ struct RenderView {
     ScreenBuffer hbuffer1 {};     /* Accumulated (History) frame buffer (WxH, 8 bytes) */
     ScreenBuffer hbuffer2 {};     /* Accumulated (History) frame buffer (WxH, 8 bytes) */
     ScreenBuffer mbuffer {};      /* Motion Vector buffer (WxH, 4 bytes) */
+
     /* Post Process buffers */
     PostProcessBuffer tbuffer {}; /* Thresholded luminance buffer (WxH, 4 bytes) */
+    ScreenBuffer post_tonemap {}; /* Post color grading and tonemap buffer (WxH, 8 bytes) */
 
     /* Intermediate specular & diffuse buffers */
     ScreenBuffer spec_buffer {};

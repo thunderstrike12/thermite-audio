@@ -6,6 +6,8 @@
     #error THERMITE_EDITOR must be defined to 1 in editor builds
 #endif
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include "editor/editor.hpp"
 
 #include "engine/engine.hpp"
@@ -13,7 +15,7 @@
 #include "engine/core/ecs.hpp"
 #include "engine/core/logger.hpp"
 #include "engine/core/renderer/renderer.hpp"
-#include "engine/core/renderer/pipelines/lighting_pipeline.hpp"
+#include "engine/core/renderer/pipelines/post_process_pipeline.hpp"
 #include "engine/core/renderer/pipelines/ui_pipeline.hpp"
 #include "engine/core/scenes.hpp"
 #include "engine/tools/player_data.hpp"
@@ -327,6 +329,13 @@ void Editor::main_menu_bar() {
                 if (ImGui::DragInt("Step Count", &count, 1.0f, 16, 128)) {
                     settings.fog_step_count = (uint32_t)count;
                 }
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Chromatic Aberration")) {
+                PostProcessPipeline& ppp = engine.renderer.post_process_pipeline;
+                ImGui::DragFloat3("CA RGB Offsets", glm::value_ptr(ppp.ca_values.rgb_offsets), 0.001f, -1.0f, 1.0f);
+                ImGui::DragFloat("CA Strength", &ppp.ca_values.strength, 0.01f, 0.0f, 5.0f);
                 ImGui::EndMenu();
             }
 

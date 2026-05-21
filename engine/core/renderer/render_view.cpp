@@ -100,6 +100,11 @@ void RenderView::init() {
     for (uint32_t curr_mip = 0; curr_mip < tbuffer.meta.mips; curr_mip++)
         tbuffer.images.push_back(bank.create_image("Thresholded Luminance Buffer Image", tbuffer.texture, false, false, curr_mip).expect("failed to create tbuffer image."));
 
+    /* Create the post cg and tonemap buffer (pre chromatic aberration) */
+    post_tonemap.texture = bank.create_texture("Post CG/Tonemap Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RGBA8Unorm, full_rate)
+                          .expect("failed to create post cg/tonemap texture.");
+    post_tonemap.image = bank.create_image("Post CG/Tonemap Buffer Image", post_tonemap.texture).expect("failed to create post cg/tonemap image.");
+
     /* History Screen Buffers */
     hbuffer1.texture = bank.create_texture("History1 Buffer Texture", 
         TextureUsage::ColorAttachment | TextureUsage::Sampled | TextureUsage::Storage, TextureFormat::RGBA16Sfloat, full_rate
@@ -229,6 +234,8 @@ void RenderView::deinit() {
     bank.destroy(diff_buffer.texture);
     for (auto& timage : tbuffer.images) bank.destroy(timage);
     bank.destroy(tbuffer.texture);
+    bank.destroy(post_tonemap.image);
+    bank.destroy(post_tonemap.texture);
     bank.destroy(spec_buffer.image);
     bank.destroy(spec_buffer.texture);
     bank.destroy(hbuffer1.image);
@@ -311,6 +318,7 @@ void RenderView::resize_textures() {
     bank.resize_texture(hbuffer2.texture, full_rate).expect("failed to resize hbuffer texture.");
     bank.resize_texture(mbuffer.texture, full_rate).expect("failed to resize mbuffer texture.");
     bank.resize_texture(tbuffer.texture, full_rate, tbuffer.meta).expect("failed to resize tbuffer texture.");
+    bank.resize_texture(post_tonemap.texture, full_rate).expect("failed to resize post cg/tonemap texture.");
 }
 
 }  // namespace tmt

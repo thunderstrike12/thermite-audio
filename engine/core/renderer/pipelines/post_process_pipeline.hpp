@@ -10,6 +10,11 @@ class RenderGraph;
 
 namespace tmt {
 
+struct ChromaticAberration {
+    glm::vec3 rgb_offsets = glm::vec3(0.01f, 0.0f, -0.01f);
+    float strength = 0.5f;
+};
+
 class PostProcessPipeline {
    public:
     PostProcessPipeline() {}
@@ -23,6 +28,11 @@ class PostProcessPipeline {
     void deinit(GPUAdapter& gpu);
 
     Sampler lut_sampler;
+
+    ChromaticAberration ca_values;
 };
 
 }  // namespace tmt
+
+TMT_OBJECT(tmt::ChromaticAberration, (rgb_offsets, strength));
+TMT_OBJECT(tmt::PostProcessPipeline, (ca_values));

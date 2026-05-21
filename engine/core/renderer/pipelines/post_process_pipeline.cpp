@@ -14,6 +14,7 @@ namespace tmt {
 void PostProcessPipeline::init(GPUAdapter& gpu) {
     /* Init 3D LUT Sampler */
     VRAMBank& bank = gpu.get_vram_bank();
+
     lut_sampler = bank.create_sampler("LUT Sampler", Filter::Linear, AddressMode::ClampToEdge).expect("failed to initialize lut sampler.");
 }
 
@@ -104,12 +105,25 @@ void PostProcessPipeline::enqueue(RenderGraph& render_graph, RenderView& render_
     /* Bloom Addition, Color Grading and Tonemapping */
     /* clang-format off */
     render_graph.add_compute_pass("color grading and tonemapping", "cg_tonemap.cs")
+        .read(render_view.render_view_buffer)
         .read(scene_view.scene_view)
         .read(render_view.lbuffer.image)
         .read(render_view.tbuffer.images[0])
-        .write(render_view.get_render_image())
+        .write(render_view.post_tonemap.image)
         .read(lut_sampler)
         .push_constants(&scene_view.lut_size, 0, sizeof(float))
+        .group_size(16, 8)
+        .work_size(render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y);
+    /* clang-format on */
+
+    /* Chromatic Aberration */
+    /* clang-format off */
+    render_graph.add_compute_pass("chromatic aberration", "chromatic_aberration.cs")
+        .read(render_view.render_view_buffer)
+        .read(render_view.post_tonemap.image)
+        .read(lut_sampler)
+        .write(render_view.get_render_image())
+        .push_constants(&ca_values, 0u, sizeof(ChromaticAberration))
         .group_size(16, 8)
         .work_size(render_view.gpu_view.resolution.x, render_view.gpu_view.resolution.y);
     /* clang-format on */

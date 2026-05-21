@@ -368,14 +368,14 @@ void Renderer::capture_screenshot() {
 
 json RendererSerializer::serialize() const {
     tmt::json result = json::object();
-    // result["post_process_pipeline"] = Serializer::serialize(engine.renderer.post_process_pipeline);
+    result["post_process_pipeline"] = Serializer::serialize(engine.renderer.post_process_pipeline);
     return result;
 }
 
-void RendererSerializer::deserialize(const json& /* value */) {
-    // if (value.contains("post_process_pipeline")) {
-    //     Serializer::deserialize(value["post_process_pipeline"], engine.renderer.post_process_pipeline);
-    // }
+void RendererSerializer::deserialize(const json& value) {
+    if (value.contains("post_process_pipeline")) {
+        Serializer::deserialize(value["post_process_pipeline"], engine.renderer.post_process_pipeline);
+    }
 }
 
 Hit Renderer::trace_ray(const Ray& ray) const {
