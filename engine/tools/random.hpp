@@ -29,7 +29,10 @@ class Random {
         return glm::vec3(r * std::cos(a), r * std::sin(a), z);
     }
 
+    static float noise3D(const float x, const float y, const float z);
+
    private:
+
     static std::mt19937& rng() {
         static thread_local std::mt19937 engine { std::random_device {}() };
         return engine;

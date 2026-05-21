@@ -17,6 +17,9 @@ void SVHSpawner::start() {
         tmt::Log::error("Failed to spawn scene from SVHSpawner on entity {}. The scene did not instantiate any entities.", entity);
     }
 
+    auto& root_transform = tmt::engine.ecs.get_component<tmt::Transform>(roots.front());
+    root_transform.set_local_position({0.f, 0.f, 0.f});
+
     for (const tmt::Entity root : roots) {
         add_required(root);
         init_children(root);

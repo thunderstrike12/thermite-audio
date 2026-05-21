@@ -29,7 +29,11 @@ struct PoissonField {
 
     float spacing_radius = 50.f;
 
+    //don't need serializing
     glm::vec3 size;
+    bool use_noise;
+    float noise_treshold;
+    float noise_scale;
 };
 
 struct SpatialLookupGrid {

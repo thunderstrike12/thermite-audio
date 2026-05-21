@@ -27,7 +27,12 @@ struct CellTemplate {
     PoissonField field;
     RGBA color { glm::vec4(1.f, 0.f, 0.f, 1.f) };
 
+    float light_spawn_radius_factor_threshold = 1.f;
     std::vector<RGBA> possible_light_colors;
+    float spot_light_power;
+    float spot_light_angle;
+
+    tmt::ResourceRef<tmt::Json> light_prefab;
 };
 
 struct LevelConfiguration {
@@ -37,9 +42,13 @@ struct LevelConfiguration {
     float cell_size;
     float cell_margin;
     glm::vec3 global_field_offset;
+
+    bool use_noise;
+    float threshold = 0.f;
+    float noise_scale = 1.f;
 };
 
 }  // namespace tmt
-TMT_OBJECT(tmt::CellTemplate, (name, random_seed, seed, height, field, color, possible_light_colors));
+TMT_OBJECT(tmt::CellTemplate, (name, random_seed, seed, height, field, color, possible_light_colors, light_prefab, spot_light_power, spot_light_angle, light_spawn_radius_factor_threshold));
 TMT_OBJECT(tmt::Cell, (template_index));
-TMT_OBJECT(tmt::LevelConfiguration, (cell_size, cell_margin, global_field_offset, scene_cells, scene_pickable_cell_templates));
+TMT_OBJECT(tmt::LevelConfiguration, (cell_size, cell_margin, global_field_offset, scene_cells, scene_pickable_cell_templates, use_noise, threshold, noise_scale));

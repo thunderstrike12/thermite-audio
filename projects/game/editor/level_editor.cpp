@@ -31,6 +31,9 @@ void tmt::LevelEditor::on_inspect() {
     ImGui::DragFloat("Cell size", &level_configuration.cell_size);
     ImGui::DragFloat("Cell margin", &level_configuration.cell_margin, 1.f, 0.f, level_configuration.cell_size * 0.5f);
     ImGui::DragFloat3("Global field offset", &level_configuration.global_field_offset[0]);
+    ImGui::Checkbox("Use noise rejection", &level_configuration.use_noise);
+    ImGui::DragFloat("Noise rejection threshold", &level_configuration.threshold, 0.01f, 0.f, 1.f);
+    ImGui::DragFloat("Noise scale", &level_configuration.noise_scale, 0.1f);
 
     static const char* brush_previews[static_cast<int>(Brush::MAX)] = { "PLACE", "REMOVE", "REPLACE" };
     if (ImGui::BeginCombo("Brush Mode", brush_previews[selected_brush_mode])) {
@@ -160,8 +163,10 @@ void tmt::LevelEditor::on_inspect() {
     }
     if (ImGui::Button("Save level config")) {
         tmt::json config_json = Serializer::serialize(level_configuration);
-        IO::write_text_file({ IO::Location::PROJECT, "level/config.json" }, config_json.dump(4));
-        Notification::create().severity(tmt::Severity::INFO).message("Level config saved!");
+        bool success = IO::write_text_file({ IO::Location::PROJECT, "level/config.json" }, config_json.dump(4));
+        
+        if(success) Notification::create().severity(tmt::Severity::INFO).message("Level config saved!");
+        else Notification::create().severity(tmt::Severity::ERROR).message("Can't save level config, is it read-only / not checked out?");
 
         auto view = engine.ecs.view<game::GenerationComponent>();
         if (view.begin() == view.end()) {
