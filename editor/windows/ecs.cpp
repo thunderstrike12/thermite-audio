@@ -4,6 +4,7 @@
 
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
+#include "engine/core/components/all.hpp"
 
 void tmt::EcsInspector::on_inspect() {
     ImGui::BeginChild("ECS Inspector Child", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
@@ -54,6 +55,15 @@ void tmt::EcsInspector::on_inspect() {
             }
             ImGui::EndTable();
         }
+    }
+
+    if (ImGui::CollapsingHeader("Component Counts")) {
+        InspectComponents::for_each([](auto type) {
+            using ComponentType = typename decltype(type)::type;
+            size_t count = tmt::engine.ecs.get_registry().template view<ComponentType>().size();
+            /* Quick and dirty way of getting the name */
+            ImGui::BulletText("%s: %zu", typeid(ComponentType).name(), count);
+        });
     }
 
     ImGui::Separator();
