@@ -13,6 +13,7 @@ void Upgrade::start() {
     if (auto* name_component { tmt::engine.ecs.try_get_component<tmt::Name>(entity) }) {
         // check if this should be disabled
         if (tmt::engine.player_data.get<bool>(name_component->name, false)) {
+            apply_entity_enable_disable();
             tmt::engine.ecs.disable(entity);
         }
     }
@@ -125,6 +126,15 @@ void Upgrade::modify_upgrade_entities() const {
     }
 }
 
+void Upgrade::apply_entity_enable_disable() const {
+    for (tmt::Entity curr_entity : entities_to_disable) {
+        disable(curr_entity);
+    }
+
+    for (tmt::Entity curr_entity : entities_to_enable) {
+        enable(curr_entity);
+    }
+}
 bool Upgrade::apply_upgrade() {
     auto* wallet_component = tmt::engine.ecs.try_get_component<Wallet>(game::Player::get().entity);
 
@@ -146,13 +156,7 @@ bool Upgrade::apply_upgrade() {
 
     modify_upgrade_entities();
 
-    for (tmt::Entity curr_entity : entities_to_disable) {
-        disable(curr_entity);
-    }
-
-    for (tmt::Entity curr_entity : entities_to_enable) {
-        enable(curr_entity);
-    }
+    apply_entity_enable_disable();
     return true;
 }
 
