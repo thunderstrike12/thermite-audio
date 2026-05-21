@@ -3,6 +3,8 @@
 #include "engine/core/components/camera.hpp"
 #include "engine/tools/types/bezier_curve.hpp"
 #include "engine/shared/ray.hpp"
+#include "engine/tools/tweening.hpp"
+#include "engine/tools/tweening/transform.hpp"
 #include "projects/game/data_headers/events.hpp"
 #include "projects/game/data_headers/layer_mask.hpp"
 
@@ -31,6 +33,23 @@ struct RayCollisionCheck {
     float camera_near_distance = 0.3f;
 };
 enum class PlayerState { FREEMOVING, ATTACHED, PAUSED };
+struct AttachedCameraSettings {
+    float distance = 12.0f;
+    float height_offset = 3.0f;
+    float look_at_height_offset = 1.5f;
+    float rotation_sensitivity = 0.08f;
+    float pitch_min = -25.0f;
+    float pitch_max = 45.0f;
+    float default_yaw = 0.0f;
+    float default_pitch = 15.0f;
+    float fov = 75.0f;
+};
+struct DetachCameraTransitionSettings {
+    bool enabled = true;
+    bool align_player_to_camera = true;
+    float duration = 0.6f;
+    Tweening::Ease ease = Tweening::Ease::IN_OUT_SINE;
+};
 struct CameraShakeSettings {
     // Camera shake
     bool enabled = true;          // global toggle for designers
@@ -149,6 +168,8 @@ class Player : public tmt::GameComponent<Player> {
 
     // screen shake
     CameraShakeSettings camera_shake_settings;
+    AttachedCameraSettings attached_camera_settings;
+    DetachCameraTransitionSettings detach_camera_transition_settings;
     float current_shake = 0.0f;
 
     float base_yaw = 0.0f;
@@ -164,6 +185,10 @@ class Player : public tmt::GameComponent<Player> {
     void set_hud_enabled(tmt::Entity hud_root, bool enabled);
     void update_shake(float dt);
     void set_crosshair(tmt::Entity active);
+    void ensure_attached_camera();
+    void update_attached_camera();
+    void start_detach_camera_transition();
+    void align_player_camera_to_attached();
 
     PlayerState state = PlayerState::FREEMOVING;
     glm::vec3 velocity = { 0.0f, 0.0f, 0.0f };
@@ -177,6 +202,10 @@ class Player : public tmt::GameComponent<Player> {
     float previous_max_energy = energy.max_value;
     float previous_energy = energy.value;
     float out_of_energy_timer = 0.0f;
+    tmt::Entity attached_camera_entity = entt::null;
+    float attached_camera_yaw = 0.0f;
+    float attached_camera_pitch = 0.0f;
+    bool detach_camera_transition_active = false;
 };
 
 }  // namespace game
@@ -184,6 +213,8 @@ TMT_OBJECT(game::PlayerStat, (max_value, value, increase_multiplier));
 TMT_OBJECT(game::PlayerMovement, (acceleration, max_speed, boost_max_speed_multiplier));
 TMT_OBJECT(game::PlayerRecharge, (recharge_distance, out_of_energy_time_till_death));
 TMT_OBJECT(game::RayCollisionCheck, (collision_layer, player_radius, collision_speed_damping, camera_near_distance));
+TMT_OBJECT(game::AttachedCameraSettings, (distance, height_offset, look_at_height_offset, rotation_sensitivity, pitch_min, pitch_max, default_yaw, default_pitch, fov));
+TMT_OBJECT(game::DetachCameraTransitionSettings, (enabled, align_player_to_camera, duration, ease));
 TMT_OBJECT(game::CameraShakeSettings, (enabled, max_intensity, boost_intensity, drill_intensity, decay_speed, recoil_strength, recoil_return_speed, recoil_horizontal));
 TMT_GAME_COMPONENT(
     game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, boost_max_speed_multiplier, boost_acceleration_multiplier, boost_deceleration_factor,
