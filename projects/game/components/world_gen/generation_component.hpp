@@ -22,5 +22,4 @@ struct GenerationComponent : public tmt::GameComponent<GenerationComponent> {
 };
 
 }  // namespace game
-TMT_COMPONENT_INSPECT_EMPTY(game::GenerationComponent);
-TMT_COMPONENT_SERIALIZE_EMPTY(game::GenerationComponent);
+TMT_GAME_COMPONENT_EMPTY(game::GenerationComponent);
