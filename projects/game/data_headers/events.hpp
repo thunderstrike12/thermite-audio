@@ -50,6 +50,10 @@ struct AttachEvent {
     tmt::Entity entity;
     bool is_attached;
 };
+struct InRangeEvent {
+    tmt::Entity entity;
+    bool in_range;
+};
 struct PlayerMaxHealthChanged {
     tmt::Entity player_entity;
     float new_value;
@@ -84,7 +88,7 @@ struct IconTransitionEvent {
     tmt::Entity icon_entity;
     float current_value;
     float min_value;
-    float max_value;
+    float max_value = 1.0f;
 };
 
 struct MineVoxelEvent {

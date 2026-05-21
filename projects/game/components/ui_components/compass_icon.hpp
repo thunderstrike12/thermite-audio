@@ -6,7 +6,7 @@ class CompassIcon : public tmt::GameComponent<CompassIcon> {
    public:
     using GameComponent::GameComponent;
     static std::string_view get_name() { return "CompassIcon"; }
-    void start() override {};
+    void start() override {}
     void follow_relative_transform(glm::vec3 relative_vector);
     void follow_world_direction(glm::vec3 world_dir);
     void update(const tmt::FrameData& time) override;

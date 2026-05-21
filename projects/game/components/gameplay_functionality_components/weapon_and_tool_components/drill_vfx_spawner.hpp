@@ -10,7 +10,7 @@ class DrillVFXSpawner : public tmt::GameComponent<DrillVFXSpawner> {
     static std::string_view get_name() { return "DrillVFX"; };
     void start() override;
     void update(const tmt::FrameData& time) override;
-    ;
+
     void end() override;
     bool activate_emitter(bool active) const;
     float active_rate_per_second { 1.0f };

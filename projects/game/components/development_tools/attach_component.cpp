@@ -4,6 +4,7 @@
 #include "engine/core/input/input.hpp"
 #include "glm/gtx/norm.inl"
 #include "projects/game/components/gameplay_functionality_components/player.hpp"
+#include "projects/game/components/ui_components/movement_tip.hpp"
 #include "projects/game/data_headers/game_input.hpp"
 namespace {
 
@@ -31,8 +32,23 @@ void game::AttachComponent::update(const tmt::FrameData& time) {
     if (is_attached == false) {
         is_moving = false;
         has_started_pressing = false;
+
+        if (entity_that_attaches != entt::null) {
+            // triggers when we are in range to attach, will display press E to attach
+            tmt::engine.ecs.get_dispatcher().trigger(InRangeEvent { .entity = entity, .in_range = check_inside_range({ entity_that_attaches }) });
+        }
+        // enable movement tip if possible on the first exit from the barge
+        if (once) {
+            once = false;
+            auto view { tmt::engine.ecs.view<MovementTip>(entt::exclude_t {}) };
+            if (view.empty() == false) {
+                // enable movement tips, they will disable themselves if already shown
+                tmt::engine.ecs.enable(std::get<0>(view.front().components).entity);
+            }
+        }
         return;
     }
+
     auto& input = tmt::engine.input;
     if (input.is_action_just_pressed(action::TRIGGER_BARGE_MOVEMENT)) {
         has_started_pressing = true;
@@ -42,9 +58,9 @@ void game::AttachComponent::update(const tmt::FrameData& time) {
     }
 
     // if we have been pressing for a while trigger it, if we keep pressing after the fact ignore
-    if (firstFrame || (has_started_pressing == true && input.get_action_duration(action::TRIGGER_BARGE_MOVEMENT) > time_to_start_stop_barge_movement)) {
+    if (first_frame || (has_started_pressing == true && input.get_action_duration(action::TRIGGER_BARGE_MOVEMENT) > time_to_start_stop_barge_movement)) {
         is_moving = !is_moving;
-        firstFrame = false;
+        first_frame = false;
         has_started_pressing = false;
         tmt::Log::info("Movement is {}", is_moving);
     }

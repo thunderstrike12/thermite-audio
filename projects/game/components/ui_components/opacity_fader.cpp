@@ -15,7 +15,7 @@ void game::OpacityFader::on_transition(const game::IconTransitionEvent& event) {
     if (ui == nullptr) return;
     // inverse lerp
     auto factor { event.current_value - event.min_value };
-    factor /= 1.0f - event.min_value;
+    factor /= event.max_value - event.min_value;
 
-    ui->color.get().a = 1.0f - curve.eval(factor);
+    ui->color.get().a = event.max_value - curve.eval(factor);
 }
