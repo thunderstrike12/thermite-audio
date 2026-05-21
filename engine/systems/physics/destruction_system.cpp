@@ -243,7 +243,7 @@ std::vector<Entity> Destruction::destroy_voxels(Entity entity, const std::vector
         Physics::initialize_voxel_body(seperate_vb, *seperate_vr.resource.resource.get());
     }
 
-        // Remove disabled or deleted entities from the seperated entities list
+    // Remove disabled or deleted entities from the seperated entities list
     seperated_entities.erase(
         std::remove_if(
             seperated_entities.begin(), seperated_entities.end(),
@@ -346,7 +346,7 @@ std::vector<Entity> Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
 
     // Early out
     if (seperation_early_out(resource, pos, neighbors)) {
-        return {entity};
+        return { entity };
     }
 
     //// NOTE: Replace this with custom recalculate graph function for a single voxel
@@ -385,7 +385,11 @@ std::vector<Entity> Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
     }
 
     // Remove disabled or deleted entities from the seperated entities list
-    seperated_entities.erase(std::remove_if(seperated_entities.begin(), seperated_entities.end(), [](Entity e) { return engine.ecs.try_get_component<Disable>(e) != nullptr || engine.ecs.try_get_component<Delete>(e) != nullptr; }),
+    seperated_entities.erase(
+        std::remove_if(
+            seperated_entities.begin(), seperated_entities.end(),
+            [](Entity e) { return engine.ecs.try_get_component<Disable>(e) != nullptr || engine.ecs.try_get_component<Delete>(e) != nullptr; }
+        ),
         seperated_entities.end()
     );
 

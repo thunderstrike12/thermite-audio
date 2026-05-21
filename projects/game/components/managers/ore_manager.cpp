@@ -6,6 +6,7 @@
 #include "engine/systems/physics/destruction_system.hpp"
 #include "engine/systems/physics/physics_system.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"
+#include "engine/tools/prefab_helper.hpp"
 #include "projects/game/components/gameplay_functionality_components/player.hpp"
 
 namespace game {
@@ -30,6 +31,21 @@ void OreManager::start() {
 }
 
 void OreManager::update(const tmt::FrameData& time) {
+    // explosion vfx handling
+    std::unordered_set<tmt::Entity> destroyed_emitters;
+    for (std::pair<const tmt::Entity, float>& emitter_entity : emitter_lifetime_table) {
+        if (emitter_entity.second < 0.0f) {
+            tmt::engine.ecs.destroy_entity(emitter_entity.first);
+            destroyed_emitters.insert(emitter_entity.first);
+        } else {
+            emitter_entity.second -= time.delta_time;
+        }
+    }
+    for (auto emitter_entity : destroyed_emitters) {
+        emitter_lifetime_table.erase(emitter_entity);
+    }
+
+    // explosion logic handling
     if (thermite_ore_explosion_cooldown_timer >= thermite_ore_settings.cooldown_explosion) {
         new_thermite_to_explode.clear();
         for (auto& thermite_voxel : thermite_to_explode) {
@@ -73,6 +89,9 @@ void OreManager::process_thermite_ore_explosion(tmt::Entity voxel_entity, glm::u
     // vox_renderer->resource->set_dirty();
     tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxel(voxel_entity, explosion_center);
 
+    // spawn an emitter
+    spawn_emitter(explosion_world_pos);
+
     // refactor: use sphere check instead
     auto sphere_check_result = tmt::engine.ecs.systems.get<tmt::Physics>().overlap_sphere(explosion_world_pos, thermite_ore_settings.radius_explosion, thermite_ore_settings.layer_mask);
     for (auto& result_pair : sphere_check_result) {
@@ -113,6 +132,23 @@ void OreManager::process_thermite_ore_explosion(tmt::Entity voxel_entity, glm::u
         }
         tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxels(result_pair.first, voxel_list);
     }
+}
+
+void OreManager::spawn_emitter(glm::vec3 spawn_pos) {
+    auto explosion_prefab = vfx_settings.explosion_emitter_prefab;
+    float lifetime = vfx_settings.vfx_lifetime_thermite_explosion;
+
+    if (lifetime <= 0.0f) {
+        tmt::Log::error("lifetime of thermite explosion has not been set up correctly, cannot spawn particle emitter");
+        return;
+    }
+
+    tmt::Entity instantiated_entity = tmt::PrefabHelper::instantiate_prefab(explosion_prefab->file_location);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(instantiated_entity);
+
+    transform.set_world_position(spawn_pos);
+
+    emitter_lifetime_table.emplace(instantiated_entity, lifetime);
 }
 
 }  // namespace game
