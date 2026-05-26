@@ -89,6 +89,7 @@ class WeaponManager : public tmt::GameComponent<WeaponManager> {
     void on_overheat(const WeaponFiredEvent& event);
     void check_trigger_shoot_event();
     void transition_to_other_weapons();
+    void show_weapon_tips(game::WeaponType slot);
     WeaponType current_weapon;
     // weapon that is being switched to by the player
     WeaponType pending_weapon;

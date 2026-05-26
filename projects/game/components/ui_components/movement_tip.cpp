@@ -1,15 +1,19 @@
-#include "movement_tip.hpp"
+﻿#include "movement_tip.hpp"
 
 #include "opacity_fader.hpp"
 #include "engine/core/input/input.hpp"
 #include "engine/tools/player_data.hpp"
-#include "projects/game/data_headers/events.hpp"
 #include "projects/game/data_headers/game_input.hpp"
-void game::MovementTip::try_to_enable() {
+void game::MovementTip::try_to_enable(bool& first_enabled) {
     if (auto* name_component { tmt::engine.ecs.try_get_component<tmt::Name>(entity) }) {
         // check if this should be disabled
-        if (tmt::engine.player_data.get<bool>(name_component->name, false)) {
+        auto& was_played_already { tmt::engine.player_data.get<bool>(name_component->name, false) };
+
+        if (was_played_already == true) {
             apply_enable_disable();
+        } else if (first_enabled) {
+            tmt::engine.ecs.enable(entity);
+            first_enabled = false;
         }
     }
 }
@@ -27,6 +31,36 @@ void game::MovementTip::apply_enable_disable() {
         }
     }
 }
+void game::MovementTip::on_entity_enabled() {
+    for (auto ui_entity : ui_entities) {
+        tmt::engine.ecs.get_dispatcher().trigger(
+            IconTransitionEvent {
+                .icon_entity = ui_entity,
+                .current_value = 1.0f,
+                .min_value = percentage_for_starting_to_fade,
+                .max_value = 1.0f,
+            }
+        );
+    }
+
+    // Fade in
+    Tweening::tween(fade_tween).from(1.0f).to(0.0f).duration(time_to_fade_in).ease(Tweening::Ease::OUT_QUAD).on_update([this](float alpha, float*) {
+        const auto& s = fade_tween->get_start();
+        const auto& e = fade_tween->get_end();
+        const float v = s + (e - s) * alpha;
+        for (auto ui_entity : ui_entities) {
+            tmt::engine.ecs.get_dispatcher().trigger(
+                IconTransitionEvent {
+                    .icon_entity = ui_entity,
+                    .current_value = v,
+                    .min_value = percentage_for_starting_to_fade,
+                    .max_value = 1.0f,
+                }
+            );
+        }
+    });
+}
+void game::MovementTip::start() {}
 void game::MovementTip::update(const tmt::FrameData& time) {
     auto& input { tmt::engine.input };
     bool pressed_move_key {};
@@ -49,34 +83,14 @@ void game::MovementTip::update(const tmt::FrameData& time) {
             break;
     }
 
-    if (pressed_move_key) {
-        if (first_time) {
-            elapsed_time = tmt::engine.frame_data().elapsed_time;
-            first_time = false;
-            // save disable of this component
-            if (auto* name_component { tmt::engine.ecs.try_get_component<tmt::Name>(entity) }) {
-                tmt::engine.player_data.get<bool>(name_component->name, false) = true;
-            }
-        }
-    }
-    if (first_time == false) {
-        auto percentage = tmt::engine.frame_data().elapsed_time - elapsed_time;
+    if (pressed_move_key && !started) {
+        started = true;
 
-        percentage = std::min(percentage, time_to_fade);
-        percentage /= time_to_fade;
-        for (auto ui_entity : ui_entities) {
-            tmt::engine.ecs.get_dispatcher().trigger(
-                IconTransitionEvent {
-                    .icon_entity = ui_entity,
-                    .current_value = percentage,
-                    .min_value = percentage_for_starting_to_fade,
-                    .max_value = 1.0f,
-                }
-            );
+        if (auto* name_component { tmt::engine.ecs.try_get_component<tmt::Name>(entity) }) {
+            tmt::engine.player_data.get<bool>(name_component->name, false) = true;
         }
-        const auto elapsed { tmt::engine.frame_data().elapsed_time - elapsed_time };
-        if (elapsed > time_to_fade) {
-            apply_enable_disable();
-        }
+
+        fade_tween->from(0.0f).to(1.0f).duration(time_to_fade_out).ease(Tweening::Ease::IN_QUAD).on_complete([this] { apply_enable_disable(); });
+        fade_tween->restart();
     }
 }
