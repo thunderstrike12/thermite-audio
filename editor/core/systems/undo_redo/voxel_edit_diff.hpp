@@ -112,4 +112,23 @@ class NodeVectorDiff : public IUndoRedo {
     std::vector<UUID> after_uuids;
 };
 
+class NodePaletteDiff : public IUndoRedo {
+   public:
+    NodePaletteDiff(const std::vector<MaterialIndex>& material_indices) : material_indices { material_indices } {}
+
+    void before(const std::function<void()>& set_member_value) { set_before_value = set_member_value; }
+    void after(const std::function<void()>& set_member_value) { set_after_value = set_member_value; }
+
+    // Inherited via IUndoRedo
+    void undo() override { set_before_value(); }
+    void redo() override { set_after_value(); }
+    void inspect() override {}
+
+   private:
+    std::vector<MaterialIndex> material_indices {};
+
+    std::function<void()> set_before_value {};
+    std::function<void()> set_after_value {};
+};
+
 }  // namespace tmt

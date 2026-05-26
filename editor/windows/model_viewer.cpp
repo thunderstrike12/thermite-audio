@@ -525,7 +525,7 @@ void ModelViewer::on_inspect() {
     // Return early if no valid voxel was selected.
     if (!handle_selection(valid_faces, brush_state, mouse_ray, hit, selected_entity, transform, half_extent)) return;
 
-    const MaterialIndex material_index = editor.systems[Editor::Mode::VOXEL].get<Palette>().get_selected_material_index();
+    const MaterialIndex material_index = editor.systems[Editor::Mode::VOXEL].get<Palette>().get_selected_material_indices().front();
     const Material& material = resource->blas->palette.entries[material_index];
     draw_selection(hit, half_extent, transform, material.albedo.unpack());
 
