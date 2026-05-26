@@ -134,10 +134,6 @@ inline void tag_invoke(ImReflect::ImInput_t, const char*, tmt::ParticleEmitter& 
 
             ImGui::Spacing();
 
-            if (ImGui::Button("Effect Burst")) {
-                value.should_burst = true;
-                effect.should_burst = true;
-            }
             ImReflect::Input("##effect", effect, type_settings, type_response);
 
             ImGui::Unindent();

@@ -133,14 +133,29 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
     /* clang-format off */
     const entt::basic_group group = engine.ecs.group<ParticleEmitter>(entt::get<Transform>);
     for (auto&& [entity, emitter, transform] : group.each()) {
-        /* Skip inactive emitters */
-        if (!emitter.active && !emitter.should_burst) continue;
+        /* Emitter-level burst: fan out to all active effects, restart their timelines */
+        if (emitter.should_burst) {
+            for (auto& effect : emitter.effects) {
+                if (effect.active) {
+                    effect.should_burst = true;
+                    effect.spawn_timer  = 0.0f;  /* delay starts from now */
+                }
+            }
+            emitter.should_burst = false;
+        }
+
+        /* Skip emitter if neither continuous emission nor any pending burst needs processing */
+        bool needs_processing = emitter.active;
+        if (!needs_processing) {
+            for (const auto& effect : emitter.effects) {
+                if (effect.should_burst) { needs_processing = true; break; }
+            }
+        }
+        if (!needs_processing) continue;
 
         if (emitters.size() >= MAX_EMITTERS) break;
 
         if (effects.size() >= MAX_EMITTERS * MAX_EFFECTS_PER_EMITTER) break;
-
-        emitter.should_burst = !emitter.should_burst;
 
         GpuEmitter em {};
         em.effects_count = static_cast<uint32_t>(emitter.effects.size());
@@ -148,22 +163,34 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
 
         for (auto& effect : emitter.effects) {
             if (!effect.active && !effect.should_burst) continue;
-            
-            effect.should_burst = !effect.should_burst;
 
             uint32_t actual_spawn_count = 0u;
 
             GpuParticleEffect eff {};
 
-            if (effect.spawn_interval <= 0.0f) {
-                // No interval so we spawn every frame
-                actual_spawn_count = effect.spawn_count;
-            } 
-            else {
-                effect.spawn_timer += render_view.gpu_view.dt;
-                while (effect.spawn_timer >= effect.spawn_interval) {
-                    actual_spawn_count += effect.spawn_count;
-                    effect.spawn_timer -= effect.spawn_interval;
+            if (effect.should_burst) {
+                /* Bursting */
+                if (effect.spawn_interval <= 0.0f) {
+                    actual_spawn_count  = effect.spawn_count;
+                    effect.should_burst = false;
+                } else {
+                    effect.spawn_timer += render_view.gpu_view.dt;
+                    if (effect.spawn_timer >= effect.spawn_interval) {
+                        actual_spawn_count  = effect.spawn_count;
+                        effect.spawn_timer  = 0.0f;
+                        effect.should_burst = false;
+                    }
+                }
+            } else if (emitter.active) {
+                /* Continuous emission */
+                if (effect.spawn_interval <= 0.0f) {
+                    actual_spawn_count = effect.spawn_count;
+                } else {
+                    effect.spawn_timer += render_view.gpu_view.dt;
+                    while (effect.spawn_timer >= effect.spawn_interval) {
+                        actual_spawn_count += effect.spawn_count;
+                        effect.spawn_timer -= effect.spawn_interval;
+                    }
                 }
             }
 
@@ -207,6 +234,7 @@ void VfxPipeline::enqueue(RenderGraph& render_graph, RenderView render_view) {
 
             effects.push_back(eff);
         }
+        emitter.should_burst = false;
         emitters.push_back(em);
     }
 
