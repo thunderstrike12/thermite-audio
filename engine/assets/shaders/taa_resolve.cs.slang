@@ -62,7 +62,7 @@ float4 sample_texture_catmull_roll(in Texture2D<float4> tex, in SamplerState lin
     // Work out weighting factors and sampling offsets that will let us use bilinear filtering to
     // simultaneously evaluate the middle 2 samples from the 4x4 grid.
     float2 w12 = w1 + w2;
-    float2 offset12 = w2 / (w1 + w2);
+    float2 offset12 = w2 / w12;
 
     // Compute the final UV coordinates we'll use for sampling the texture
     float2 texPos0 = texPos1 - 1;
@@ -154,6 +154,9 @@ void main(int2 thread_id: SV_DispatchThreadID) {
             
     output = lerp(curr_luminance, prev_luminance, blend);
 
-    hbuffer1[thread_id] = float4(output, 1.0f);
-    lbuffer[thread_id] = output;
+    /* NaN rejection check */
+    if (any(isnan(output)) == false) {
+        hbuffer1[thread_id] = float4(output, 1.0f);
+        lbuffer[thread_id] = output;
+    }
 }

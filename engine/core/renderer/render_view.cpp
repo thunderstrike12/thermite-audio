@@ -59,10 +59,10 @@ void RenderView::init() {
     vbuffer.texture = bank.create_texture("Visibility Buffer Texture", TextureUsage::Storage | TextureUsage::Sampled, TextureFormat::RG32Uint, full_rate).expect("failed to create vbuffer texture.");
     vbuffer.image = bank.create_image("Visibility Buffer Image", vbuffer.texture).expect("failed to create vbuffer image.");
     dbuffer.texture =
-        bank.create_texture("Depth/Stencil Buffer Texture", TextureUsage::DepthStencil | TextureUsage::Sampled, TextureFormat::D24UnormS8Uint, full_rate).expect("failed to create depth buffer texture.");
+        bank.create_texture("Depth/Stencil Buffer Texture", TextureUsage::DepthStencil | TextureUsage::Sampled, TextureFormat::D16UnormS8Uint, full_rate).expect("failed to create depth buffer texture.");
     dbuffer.image = bank.create_image("Depth/Stencil Buffer Image", dbuffer.texture).expect("failed to create depth buffer image."); /* Depth Stencil Image View - Used for Writing in Raster Pass */
     prev_dbuffer.texture =
-        bank.create_texture("Prev Depth/Stencil Buffer Texture", TextureUsage::DepthStencil | TextureUsage::Sampled, TextureFormat::D24UnormS8Uint, full_rate).expect("failed to create prev depth buffer texture.");
+        bank.create_texture("Prev Depth/Stencil Buffer Texture", TextureUsage::DepthStencil | TextureUsage::Sampled, TextureFormat::D16UnormS8Uint, full_rate).expect("failed to create prev depth buffer texture.");
     prev_dbuffer.image = bank.create_image("Prev Depth/Stencil Buffer Image", prev_dbuffer.texture).expect("failed to create prev depth buffer image."); /* Depth Stencil Image View - Used for Writing in Raster Pass */
     
     depth_image = bank.create_image("Depth Buffer Image", dbuffer.texture, true).expect("failed to create depth buffer image."); /* Depth Image View - Used for Reading in Compute Pass */
