@@ -18,11 +18,13 @@ class UiPipeline {
    private:
     /* Image Rendering */
     Buffer images_buffer {};
+    Buffer images_3d_buffer {};
     Buffer image_vertex_buffer {};
     Sampler image_sampler {};
 
     /* Text Rendering */
     Buffer glyphs_buffer {};
+    Buffer glyphs_3d_buffer {};
     Buffer glyph_vertex_buffer {};
     Sampler text_sampler {};
     uint32_t glyph_count = 0u;

@@ -49,6 +49,17 @@ struct GpuImage {
     uint32_t flipbook_frames {};
 };
 
+/* GPU data for a single 3d image instance. */
+struct GpuImage3D {
+    glm::mat4 local_to_world {};
+    glm::vec4 color {};
+    glm::vec2 pivot {};
+    uint32_t flipbook_frame {};
+    uint32_t flipbook_frames {};
+    uint32_t image_index {};
+    uint32_t p0 {}, p1 {}, p2 {}; /* padding */
+};
+
 /* GPU data for a single text glyph (char) instance. */
 struct GpuGlyph {
     glm::vec4 pos_size {}; /* .xy = screen position, .zw = glyph size */
@@ -59,12 +70,23 @@ struct GpuGlyph {
     float pad {};
 };
 
+/* GPU data for a single text glyph (char) instance. */
+struct GpuGlyph3D {
+    glm::vec4 pos_size {}; /* .xy = screen position, .zw = glyph size */
+    glm::vec4 uv_rect {};  /* .xy = min UV, .zw = max UV */
+    glm::vec4 color {};    /* Text color (RGBA Rec.709) */
+    glm::vec4 params {};   /* .x = atlas_index, .yzw = unused */
+    glm::mat4 local_to_world {};
+};
+
 void UiPipeline::init(GPUAdapter& gpu) {
     VRAMBank& bank = gpu.get_vram_bank();
 
     /* Create UI Images Buffer */
     images_buffer =
         bank.create_buffer("[UI] Images Buffer", BufferUsage::Storage | BufferUsage::TransferDst, MAX_UI_IMAGES, sizeof(GpuImage)).expect("failed to initialise the ui images buffer.");
+    images_3d_buffer =
+        bank.create_buffer("[UI] 3D Images Buffer", BufferUsage::Storage | BufferUsage::TransferDst, MAX_UI_IMAGES, sizeof(GpuImage3D)).expect("failed to initialise the ui images buffer.");
 
     /* Create Image Vertex Buffer */
     image_vertex_buffer =
@@ -77,6 +99,8 @@ void UiPipeline::init(GPUAdapter& gpu) {
     /* Create Text Glyphs Buffer */
     glyphs_buffer =
         bank.create_buffer("[UI] Glyphs Buffer", BufferUsage::Storage | BufferUsage::TransferDst, MAX_UI_GLYPHS, sizeof(GpuGlyph)).expect("failed to initialise the glyphs buffer.");
+    glyphs_3d_buffer =
+        bank.create_buffer("[UI] 3D Glyphs Buffer", BufferUsage::Storage | BufferUsage::TransferDst, MAX_UI_GLYPHS, sizeof(GpuGlyph3D)).expect("failed to initialise the glyphs buffer.");
 
     /* Create Glyph Vertex Buffer (shares quad vertices with images) */
     glyph_vertex_buffer =
@@ -124,6 +148,7 @@ void UiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view) {
 void UiPipeline::enqueue_images(RenderGraph& render_graph, RenderView& render_view) {
     /* Temporary list of image instances */
     std::vector<GpuImage> images {};
+    std::vector<GpuImage3D> images_3d {};
 
     { /* Collect all the images in the scene (Game ECS) */
         const entt::basic_view view = engine.ecs.view<ImageRenderer, UIComponent, Transform>();
@@ -168,55 +193,103 @@ void UiPipeline::enqueue_images(RenderGraph& render_graph, RenderView& render_vi
             /* Get the world matrix for this image instance */
             glm::mat4 world = transform.get_world_matrix();
 
-            /* Fill out all the image instance attributes */
+            /* Fill the parameters of the gpu image */
             GpuImage& image = images.emplace_back();
             decompose_matrix(world, image.pos, image.extent, image.angles);
-            image.extent = image.extent * ui_component.size;
-            image.pivot = ui_component.pivot;
             image.color = image_renderer.color;
             if (image_renderer.texture) image.image_index = image_renderer.texture.resource->image.get_index();
             image.flipbook_frame = image_renderer.current_frame;
             image.flipbook_frames = image_renderer.texture ? image_renderer.texture.resource->flipbook_frames : 1u;
-
-            glm::vec2 anchor_offset = AnchorHelper::calculate_anchor_offset(entity);
-            image.pos += anchor_offset;
+            image.extent = image.extent * ui_component.size;
+            image.pivot = ui_component.pivot;
+            image.pos += AnchorHelper::calculate_anchor_offset(entity);
         }
     }
 
-    if (images.empty()) return;
+    if (!images.empty()) {
+        /* Upload the image instances */
+        render_graph.upload_buffer(images_buffer, images.data(), 0u, images.size() * sizeof(GpuImage));
+        image_count = (uint32_t)images.size();
 
-    /* Upload the image instances */
-    render_graph.upload_buffer(images_buffer, images.data(), 0u, images.size() * sizeof(GpuImage));
-    image_count = (uint32_t)images.size();
+        /* Get Render Image */
+        const BindHandle render_image = render_view.get_render_image();
 
-    /* Get Render Image */
-    const BindHandle render_image = render_view.get_render_image();
+        /* Get Render Resolution */
+        const glm::uvec2 render_res = render_view.gpu_view.resolution;
 
-    /* Get Render Resolution */
-    const glm::uvec2 render_res = render_view.gpu_view.resolution;
+        /* UI overlay rendering */
+        /* clang-format off */
+        RasterNode& image_pass = render_graph.add_raster_pass("ui images", "ui/ui_image.vx", "ui/ui_image.px")
+            /* Vertex stage */
+            .topology(Topology::TriangleList)
+            .attribute(AttrFormat::XYZ32_SFloat) /* Position */
+            .attribute(AttrFormat::XY32_SFloat)  /* UV */
+            .read(render_view.render_view_buffer, ShaderStages::Vertex)
+            /* Pixel stage */
+            .read(images_buffer, ShaderStages::Vertex | ShaderStages::Pixel)
+            .read(image_sampler, ShaderStages::Pixel)
+            .alpha_blending(true)
+            .attach(render_image)
+            .raster_extent(render_res.x, render_res.y);
+        /* clang-format on */
 
-    /* UI overlay rendering */
-    /* clang-format off */
-    RasterNode& image_pass = render_graph.add_raster_pass("ui images", "ui/ui_image.vx", "ui/ui_image.px")
-        /* Vertex stage */
-        .topology(Topology::TriangleList)
-        .attribute(AttrFormat::XYZ32_SFloat) /* Position */
-        .attribute(AttrFormat::XY32_SFloat)  /* UV */
-        .read(render_view.render_view_buffer, ShaderStages::Vertex)
-        /* Pixel stage */
-        .read(images_buffer, ShaderStages::Vertex | ShaderStages::Pixel)
-        .read(image_sampler, ShaderStages::Pixel)
-        .alpha_blending(true)
-        .attach(render_image)
-        .raster_extent(render_res.x, render_res.y);
-    /* clang-format on */
+        /* Draw all images with 1 draw call, using instancing & bindless textures. */
+        image_pass.draw(image_vertex_buffer, 6u, 0u, image_count);
+    }
 
-    /* Draw all images with 1 draw call, using instancing & bindless textures. */
-    image_pass.draw(image_vertex_buffer, 6u, 0u, image_count);
+    { /* Collect all the images in the scene (Game ECS) */
+        const entt::basic_view view = engine.ecs.view<ImageRenderer, Transform>(entt::exclude<UIComponent>);
+
+        for (auto&& [entity, image_renderer, transform] : view.each()) {
+            /* Fill the parameters of the gpu image */
+            GpuImage3D& image = images_3d.emplace_back();
+            image.color = image_renderer.color;
+            if (image_renderer.texture) image.image_index = image_renderer.texture.resource->image.get_index();
+            image.flipbook_frame = image_renderer.current_frame;
+            image.flipbook_frames = image_renderer.texture ? image_renderer.texture.resource->flipbook_frames : 1u;
+            image.local_to_world = transform.get_world_matrix();
+        }
+    }
+
+    if (!images_3d.empty()) {
+        /* Upload the image instances */
+        render_graph.upload_buffer(images_3d_buffer, images_3d.data(), 0u, images_3d.size() * sizeof(GpuImage3D));
+        image_count += (uint32_t)images_3d.size();
+
+        /* Get Render Image */
+        const BindHandle render_image = render_view.get_render_image();
+
+        /* Get Render Resolution */
+        const glm::uvec2 render_res = render_view.gpu_view.resolution;
+
+        /* UI overlay rendering */
+        /* clang-format off */
+        const bool flip = (render_view.frame_counter & 0b1u) == 0u;
+        RasterNode& image_pass = render_graph.add_raster_pass("ui images 3d", "ui/3d_image.vx", "ui/3d_image.px")
+            /* Vertex stage */
+            .topology(Topology::TriangleList)
+            .attribute(AttrFormat::XYZ32_SFloat) /* Position */
+            .attribute(AttrFormat::XY32_SFloat)  /* UV */
+            .read(render_view.render_view_buffer, ShaderStages::Vertex)
+            /* Pixel stage */
+            .read(images_3d_buffer, ShaderStages::Vertex | ShaderStages::Pixel)
+            .read(image_sampler, ShaderStages::Pixel)
+            .depth_stencil(flip ? render_view.dbuffer.image : render_view.prev_dbuffer.image, true, true)
+            .load_op_depth(LoadOp::Load)
+            .load_op_color(LoadOp::Load)
+            .alpha_blending(true)
+            .attach(render_image)
+            .raster_extent(render_res.x, render_res.y);
+        /* clang-format on */
+
+        /* Draw all images with 1 draw call, using instancing & bindless textures. */
+        image_pass.draw(image_vertex_buffer, 6u, 0u, (uint32_t)images_3d.size());
+    }
 }
 
 void UiPipeline::enqueue_text(RenderGraph& render_graph, RenderView& render_view) {
     std::vector<GpuGlyph> glyphs {};
+    std::vector<GpuGlyph3D> glyphs_3d {};
 
     { /* Collect all the text in the scene (Game ECS) */
         const entt::basic_view view = engine.ecs.view<TextRenderer, UIComponent, Transform>();
@@ -317,44 +390,122 @@ void UiPipeline::enqueue_text(RenderGraph& render_graph, RenderView& render_view
         }
     }
 
-    if (glyphs.empty()) return;
+    if (!glyphs.empty()) {
+        /* Upload the glyph instances */
+        render_graph.upload_buffer(glyphs_buffer, glyphs.data(), 0u, glyphs.size() * sizeof(GpuGlyph));
+        glyph_count = (uint32_t)glyphs.size();
 
-    /* Upload the glyph instances */
-    render_graph.upload_buffer(glyphs_buffer, glyphs.data(), 0u, glyphs.size() * sizeof(GpuGlyph));
-    glyph_count = (uint32_t)glyphs.size();
+        /* Get Render Image */
+        const BindHandle render_image = render_view.get_render_image();
+        const glm::uvec2 render_res = render_view.gpu_view.resolution;
 
-    /* Get Render Image */
-    const BindHandle render_image = render_view.get_render_image();
-    const glm::uvec2 render_res = render_view.gpu_view.resolution;
+        /* Text rendering pass */
+        /* clang-format off */
+        RasterNode& text_pass = render_graph.add_raster_pass("ui text", "ui/ui_text.vx", "ui/ui_text.px")
+            /* Vertex stage */
+            .topology(Topology::TriangleList)
+            .attribute(AttrFormat::XYZ32_SFloat) /* Position */
+            .attribute(AttrFormat::XY32_SFloat)  /* UV */
+            .read(render_view.render_view_buffer, ShaderStages::Vertex)
+            /* Pixel stage */
+            .read(glyphs_buffer, ShaderStages::Vertex | ShaderStages::Pixel)
+            .read(text_sampler, ShaderStages::Pixel)
+            .alpha_blending(true)
+            .attach(render_image)
+            .raster_extent(render_res.x, render_res.y);
+        /* clang-format on */
 
-    /* Text rendering pass */
-    /* clang-format off */
-    RasterNode& text_pass = render_graph.add_raster_pass("ui text", "ui/ui_text.vx", "ui/ui_text.px")
-        /* Vertex stage */
-        .topology(Topology::TriangleList)
-        .attribute(AttrFormat::XYZ32_SFloat) /* Position */
-        .attribute(AttrFormat::XY32_SFloat)  /* UV */
-        .read(render_view.render_view_buffer, ShaderStages::Vertex)
-        /* Pixel stage */
-        .read(glyphs_buffer, ShaderStages::Vertex | ShaderStages::Pixel)
-        .read(text_sampler, ShaderStages::Pixel)
-        .alpha_blending(true)
-        .attach(render_image)
-        .raster_extent(render_res.x, render_res.y);
-    /* clang-format on */
+        /* Draw all glyphs with 1 draw call, using instancing & bindless textures. */
+        text_pass.draw(glyph_vertex_buffer, 6u, 0u, glyph_count);
+    }
 
-    /* Draw all glyphs with 1 draw call, using instancing & bindless textures. */
-    text_pass.draw(glyph_vertex_buffer, 6u, 0u, glyph_count);
+    { /* Collect all the text in the scene (Game ECS) */
+        const entt::basic_view view = engine.ecs.view<TextRenderer, Transform>(entt::exclude<UIComponent>);
+
+        for (auto&& [entity, text_renderer, transform] : view.each()) {
+            /* Skip empty text */
+            if (text_renderer.text.empty()) continue;
+
+            /* Get the font (use default if none specified) */
+            const Font* font = nullptr;
+            if (text_renderer.font && text_renderer.font.resource) {
+                font = text_renderer.font.resource.get();
+            }
+            if (!font || !font->is_valid()) {
+                font = FontManager::get_default_font().get();
+            }
+            if (!font || !font->is_valid()) {
+                continue; /* No font available */
+            }
+
+            /* Perform text layout */
+            TextLayoutResult layout = TextLayout::layout(text_renderer, font, glm::vec2(transform.get_world_scale()));
+
+            /* Convert layout glyphs to GPU format */
+            for (const auto& glyph : layout.glyphs) {
+                if (glyphs_3d.size() >= MAX_UI_GLYPHS) {
+                    Log::warn(Log::Scope::RENDERER, "Max UI glyphs reached ({})", MAX_UI_GLYPHS);
+                    break;
+                }
+
+                /* Fill in the GPU glyph struct */
+                GpuGlyph3D& gpu_glyph = glyphs_3d.emplace_back();
+                gpu_glyph.pos_size.x = glyph.position.x;
+                gpu_glyph.pos_size.y = glyph.position.y;
+                gpu_glyph.pos_size.z = glyph.size.x;
+                gpu_glyph.pos_size.w = glyph.size.y;
+                gpu_glyph.uv_rect = glyph.uv_rect;
+                gpu_glyph.color = glyph.color;
+                gpu_glyph.params.x = *reinterpret_cast<const float*>(&glyph.atlas_index);
+                gpu_glyph.local_to_world = transform.get_world_matrix();
+            }
+        }
+    }
+
+    if (!glyphs_3d.empty()) {
+        /* Upload the glyph instances */
+        render_graph.upload_buffer(glyphs_3d_buffer, glyphs_3d.data(), 0u, glyphs_3d.size() * sizeof(GpuGlyph3D));
+        glyph_count += (uint32_t)glyphs_3d.size();
+
+        /* Get Render Image */
+        const BindHandle render_image = render_view.get_render_image();
+        const glm::uvec2 render_res = render_view.gpu_view.resolution;
+
+        /* Text rendering pass */
+        /* clang-format off */
+        const bool flip = (render_view.frame_counter & 0b1u) == 0u;
+        RasterNode& text_pass = render_graph.add_raster_pass("ui text 3d", "ui/3d_text.vx", "ui/3d_text.px")
+            /* Vertex stage */
+            .topology(Topology::TriangleList)
+            .attribute(AttrFormat::XYZ32_SFloat) /* Position */
+            .attribute(AttrFormat::XY32_SFloat)  /* UV */
+            .read(render_view.render_view_buffer, ShaderStages::Vertex)
+            /* Pixel stage */
+            .read(glyphs_3d_buffer, ShaderStages::Vertex | ShaderStages::Pixel)
+            .read(text_sampler, ShaderStages::Pixel)
+            .depth_stencil(flip ? render_view.dbuffer.image : render_view.prev_dbuffer.image, true, true)
+            .load_op_depth(LoadOp::Load)
+            .load_op_color(LoadOp::Load)
+            .alpha_blending(true)
+            .attach(render_image)
+            .raster_extent(render_res.x, render_res.y);
+        /* clang-format on */
+
+        /* Draw all glyphs with 1 draw call, using instancing & bindless textures. */
+        text_pass.draw(glyph_vertex_buffer, 6u, 0u, (uint32_t)glyphs_3d.size());
+    }
 }
 
 void UiPipeline::deinit(GPUAdapter& gpu) {
     VRAMBank& bank = gpu.get_vram_bank();
 
     bank.destroy(images_buffer);
+    bank.destroy(images_3d_buffer);
     bank.destroy(image_vertex_buffer);
     bank.destroy(image_sampler);
 
     bank.destroy(glyphs_buffer);
+    bank.destroy(glyphs_3d_buffer);
     bank.destroy(glyph_vertex_buffer);
     bank.destroy(text_sampler);
 }
