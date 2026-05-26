@@ -26,7 +26,13 @@ static Wallet* get_wallet(std::string_view label) {
 
 static void apply_multiplier(Currencies& currencies, float multiplier) {
     for (auto& [ore, count] : currencies.resource_counts) {
-        count = count * multiplier;
+        if (ore == OreProperties::OreResources::NONE) {
+            // safety net
+            count = count * 0.0f;
+
+        } else {
+            count = count * multiplier;
+        }
     }
 }
 
