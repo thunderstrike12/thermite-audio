@@ -136,9 +136,34 @@ void UiPipeline::enqueue_images(RenderGraph& render_graph, RenderView& render_vi
 
         for (const auto entity : sorted_entities) {
             /* Get the components for this entity */
-            auto [image_renderer, ui_component, transform] = view.get(entity);
+            auto&& [image_renderer, ui_component, transform] = view.get(entity);
             /* Skip disabled transforms */
             // if (transform.) == false) continue;
+
+            /* flipbook frame animation */
+            if (image_renderer.texture && !image_renderer.finished) {
+                const uint32_t frame_count = image_renderer.texture.resource->flipbook_frames;
+                if (frame_count <= 1) {
+                    image_renderer.current_frame = 0;
+                } else {
+                    image_renderer.accumulated_time += engine.frame_data().delta_time * image_renderer.anim_speed;
+                    const uint32_t total_frames_elapsed = uint32_t(image_renderer.accumulated_time);
+
+                    if (image_renderer.continuous_anim) {
+                        image_renderer.current_frame = total_frames_elapsed % frame_count;
+                    } else {
+                        const uint32_t loops = total_frames_elapsed / frame_count;
+                        if (loops >= image_renderer.loop_count) {
+                            image_renderer.current_frame = frame_count - 1;
+                            image_renderer.completed_loops = image_renderer.loop_count;
+                            image_renderer.finished = true;
+                        } else {
+                            image_renderer.current_frame = total_frames_elapsed % frame_count;
+                            image_renderer.completed_loops = loops;
+                        }
+                    }
+                }
+            }
 
             /* Get the world matrix for this image instance */
             glm::mat4 world = transform.get_world_matrix();
