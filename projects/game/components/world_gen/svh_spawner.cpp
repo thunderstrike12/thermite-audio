@@ -18,7 +18,7 @@ void SVHSpawner::start() {
     }
 
     auto& root_transform = tmt::engine.ecs.get_component<tmt::Transform>(roots.front());
-    root_transform.set_local_position({0.f, 0.f, 0.f});
+    root_transform.set_local_position({ 0.f, 0.f, 0.f });
 
     for (const tmt::Entity root : roots) {
         add_required(root);

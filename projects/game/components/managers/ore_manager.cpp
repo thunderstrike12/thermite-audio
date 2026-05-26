@@ -79,6 +79,10 @@ void OreManager::process_thermite_ore_explosion(tmt::Entity voxel_entity, glm::u
 
     glm::vec3 explosion_center_local_pos = (glm::vec3(explosion_center) - glm::vec3(vox_renderer->resource->size) / 2.0f) * UNITS_PER_VOXEL;
     auto explosion_world_pos = glm::vec3(vox_entity_transform.get_world_matrix() * glm::vec4(explosion_center_local_pos, 1.0f));
+    auto* curr_vox_material = vox_renderer->resource->blas->get_voxel(explosion_center.x, explosion_center.y, explosion_center.z);
+
+    // Watch out, this has to be removed for chain reaction, currently no chain reaction so leave it in, change this in case of chain reaction being added back in
+    if (!curr_vox_material) return;
 
     // check if player is within explosion
     if (glm::length(tmt::engine.ecs.get_component<tmt::Transform>(player_entity).get_world_position() - explosion_world_pos) <= thermite_ore_settings.radius_explosion) {
@@ -87,10 +91,12 @@ void OreManager::process_thermite_ore_explosion(tmt::Entity voxel_entity, glm::u
     // remove initial voxel (explosion center)
     // vox_renderer->resource->blas->remove_voxel(cx, cy, cz);
     // vox_renderer->resource->set_dirty();
-    tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxel(voxel_entity, explosion_center);
 
-    // spawn an emitter
+    // spawn an emitter if the center actually still exists
     spawn_emitter(explosion_world_pos);
+
+    // delete the initial voxel
+    tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxel(voxel_entity, explosion_center);
 
     // refactor: use sphere check instead
     auto sphere_check_result = tmt::engine.ecs.systems.get<tmt::Physics>().overlap_sphere(explosion_world_pos, thermite_ore_settings.radius_explosion, thermite_ore_settings.layer_mask);
@@ -135,8 +141,8 @@ void OreManager::process_thermite_ore_explosion(tmt::Entity voxel_entity, glm::u
 }
 
 void OreManager::spawn_emitter(glm::vec3 spawn_pos) {
-    auto explosion_prefab = vfx_settings.explosion_emitter_prefab;
-    float lifetime = vfx_settings.vfx_lifetime_thermite_explosion;
+    auto explosion_prefab = vfx_settings.explosion_vfx_prefab;
+    float lifetime = vfx_lifetime_thermite_explosion;
 
     if (lifetime <= 0.0f) {
         tmt::Log::error("lifetime of thermite explosion has not been set up correctly, cannot spawn particle emitter");
@@ -147,6 +153,15 @@ void OreManager::spawn_emitter(glm::vec3 spawn_pos) {
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(instantiated_entity);
 
     transform.set_world_position(spawn_pos);
+
+    tmt::ParticleEmitter* emitter_component = tmt::engine.ecs.try_get_component<tmt::ParticleEmitter>(instantiated_entity);
+    if (!emitter_component) {
+        tmt::Log::error("Cant spawn particle on emitter, check prefab on ore manager component on entity: {}", entity);
+        return;
+    }
+
+    emitter_component->active = false;
+    emitter_component->should_burst = true;
 
     emitter_lifetime_table.emplace(instantiated_entity, lifetime);
 }

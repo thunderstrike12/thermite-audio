@@ -21,13 +21,10 @@ struct GenerationComponent : public tmt::GameComponent<GenerationComponent> {
     glm::vec3 coord_to_world(glm::ivec2 coord, const tmt::LevelConfiguration& level_configuration);
 };
 
-struct ClearanceVolume : public tmt::GameComponent<ClearanceVolume> 
-{
+struct ClearanceVolume : public tmt::GameComponent<ClearanceVolume> {
     using GameComponent::GameComponent;
 
-
-
-// Inherited via GameComponent
+    // Inherited via GameComponent
     void start() override;
     void update(const tmt::FrameData& time) override;
     void end() override;

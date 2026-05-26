@@ -219,6 +219,6 @@ TMT_OBJECT(game::CameraShakeSettings, (enabled, max_intensity, boost_intensity, 
 TMT_GAME_COMPONENT(
     game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, boost_max_speed_multiplier, boost_acceleration_multiplier, boost_deceleration_factor,
                    boost_cost_per_second_per_additional_speed_above_max, boost_initial_cost, boost_availability, health, energy, energy_drain_per_second, out_of_energy_time_till_death,
-                   low_energy_threshold, low_energy_duration, use_second_warning, low_energy_threshold_2, low_energy_duration_2, player_hud, barge_hud, low_energy_hud, black_out_hud, black_out_curve, rifle_crosshair,
-                   gravity_crosshair, mine_crosshair, barge, recharge_distance, ray_check, camera_shake_settings)
+                   low_energy_threshold, low_energy_duration, use_second_warning, low_energy_threshold_2, low_energy_duration_2, player_hud, barge_hud, low_energy_hud, black_out_hud,
+                   black_out_curve, rifle_crosshair, gravity_crosshair, mine_crosshair, barge, recharge_distance, ray_check, camera_shake_settings)
 );

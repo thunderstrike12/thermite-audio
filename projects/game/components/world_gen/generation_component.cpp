@@ -96,8 +96,7 @@ void GenerationComponent::start() {
             int obj_idx = static_cast<int>(Random::rand_range(0.f, static_cast<float>(spawnables.size()) - 0.0001f));
 
             const auto& spawn_obj = spawnables[obj_idx];
-            if(spawn_obj)
-            {
+            if (spawn_obj) {
                 float pitch = Random::rand_range(0.f, 360.f);
                 float yaw = Random::rand_range(0.f, 360.f);
                 float roll = Random::rand_range(0.f, 360.f);
@@ -129,8 +128,6 @@ void GenerationComponent::start() {
                 else
                     lighting_pass_data.push_back(std::make_tuple(cell.template_index, point, instantiated, has_lantern_prefab));
             }
-            
-            
         }
     }
 }
@@ -143,7 +140,6 @@ glm::vec3 GenerationComponent::coord_to_world(glm::ivec2 coord, const tmt::Level
 }
 
 void GenerationComponent::update(const tmt::FrameData& time) {
-
     static unsigned int max_iterations = 1000;
 
     if (lighting_pass_data.size() > 0 && max_iterations) {
@@ -155,7 +151,8 @@ void GenerationComponent::update(const tmt::FrameData& time) {
             auto& cell_template = level_configuration.scene_pickable_cell_templates[cell_template_idx];
             auto& layer_entry = cell_template.field.layer_entries[point.entry_idx];
 
-            if (layer_entry.can_spawn_lights && Random::rand_range(0.f, 1.f) < layer_entry.light_spawn_chance && main_sun_entity != entt::null && layer_entry.radius_factor < cell_template.light_spawn_radius_factor_threshold) {
+            if (layer_entry.can_spawn_lights && Random::rand_range(0.f, 1.f) < layer_entry.light_spawn_chance && main_sun_entity != entt::null &&
+                layer_entry.radius_factor < cell_template.light_spawn_radius_factor_threshold) {
                 auto& sun_transform = tmt::engine.ecs.get_component<tmt::Transform>(main_sun_entity);
                 auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(spawned_entity);
 
@@ -170,11 +167,10 @@ void GenerationComponent::update(const tmt::FrameData& time) {
                 if (!hit.miss()) {
                     remove_entry = true;
 
-                    if(hit.distance > 1.f)
-                    {
+                    if (hit.distance > 1.f) {
                         tmt::Entity asteroid_light_entity;
 
-                        glm::vec3 color = {1.f, 1.f, 1.f};
+                        glm::vec3 color = { 1.f, 1.f, 1.f };
                         if (!cell_template.possible_light_colors.empty()) {
                             int color_idx = static_cast<int>(Random::rand_range(0.f, static_cast<float>(cell_template.possible_light_colors.size()) - 0.01f));
                             auto& rgba = cell_template.possible_light_colors[color_idx];
@@ -188,7 +184,7 @@ void GenerationComponent::update(const tmt::FrameData& time) {
                             auto& point_light_transform = tmt::engine.ecs.get_component<tmt::Transform>(point_light_entity);
 
                             point_light_transform.set_parent(asteroid_light_entity);
-                            point_light_transform.set_local_position({0.f, 0.f, 0.f});
+                            point_light_transform.set_local_position({ 0.f, 0.f, 0.f });
 
                             auto& light = tmt::engine.ecs.add_component<tmt::Light>(point_light_entity);
                             auto& sphere_light = std::get<tmt::SphereLight>(light.light);
@@ -201,7 +197,7 @@ void GenerationComponent::update(const tmt::FrameData& time) {
                             asteroid_light_entity = tmt::engine.ecs.create_entity("AsteroidLight");
 
                         auto& light = tmt::engine.ecs.add_component<tmt::Light>(asteroid_light_entity);
-                        
+
                         auto& light_transform = tmt::engine.ecs.get_component<tmt::Transform>(asteroid_light_entity);
 
                         float surface_dist = cell_template.field.spacing_radius * layer_entry.radius_factor - hit.distance;
@@ -221,7 +217,6 @@ void GenerationComponent::update(const tmt::FrameData& time) {
 
                         light.color = color;
                     }
-                    
                 }
             }
 
@@ -242,13 +237,12 @@ void ClearanceVolume::update(const tmt::FrameData& time) {}
 
 void ClearanceVolume::end() {}
 
-void ClearanceVolume::draw_debug_lines() const 
-{
+void ClearanceVolume::draw_debug_lines() const {
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     glm::vec3 pos = transform.get_world_position();
 
-    tmt::engine.polyline.use_color({1.f, 0.f, 0.f, 1.f});
+    tmt::engine.polyline.use_color({ 1.f, 0.f, 0.f, 1.f });
     tmt::engine.polyline.draw_aabb(pos - size * 0.5f, pos + size * 0.5f);
 }
 
@@ -259,8 +253,10 @@ bool ClearanceVolume::contains(const glm::vec3& pos) {
     glm::vec3 min = mid_pos - size * 0.5f;
     glm::vec3 max = mid_pos + size * 0.5f;
 
-    if(pos.x > min.x && pos.x < max.x && pos.y > min.y && pos.y < max.y && pos.z > min.z && pos.z < max.z)return true;
-    else return false;
+    if (pos.x > min.x && pos.x < max.x && pos.y > min.y && pos.y < max.y && pos.z > min.z && pos.z < max.z)
+        return true;
+    else
+        return false;
 }
 
 }  // namespace game

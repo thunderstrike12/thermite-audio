@@ -149,12 +149,12 @@ struct AutoRegister {
 #define TMT_CONCAT_IMPL(a, b) a##b
 #define TMT_CONCAT(a, b) TMT_CONCAT_IMPL(a, b)
 
-#define TMT_GAME_COMPONENT_IMPL(Type)                                                                                   \
-    namespace {                                                                                                         \
-                                                                                                                        \
+#define TMT_GAME_COMPONENT_IMPL(Type)                                                                                        \
+    namespace {                                                                                                              \
+                                                                                                                             \
     static_assert(std::is_base_of_v<tmt::IGameComponent, Type>, "AutoRegister<Type>: Type must derive from IGameComponent"); \
-    [[maybe_unused]] tmt::details::AutoRegister<Type> TMT_CONCAT(_auto_reg_, __COUNTER__) {};                                       \
-                                                                                                                        \
+    [[maybe_unused]] tmt::details::AutoRegister<Type> TMT_CONCAT(_auto_reg_, __COUNTER__) {};                                \
+                                                                                                                             \
     }
 
 #define TMT_GAME_COMPONENT(Type, Fields) \

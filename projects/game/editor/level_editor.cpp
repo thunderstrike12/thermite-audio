@@ -164,9 +164,11 @@ void tmt::LevelEditor::on_inspect() {
     if (ImGui::Button("Save level config")) {
         tmt::json config_json = Serializer::serialize(level_configuration);
         bool success = IO::write_text_file({ IO::Location::PROJECT, "level/config.json" }, config_json.dump(4));
-        
-        if(success) Notification::create().severity(tmt::Severity::INFO).message("Level config saved!");
-        else Notification::create().severity(tmt::Severity::ERROR).message("Can't save level config, is it read-only / not checked out?");
+
+        if (success)
+            Notification::create().severity(tmt::Severity::INFO).message("Level config saved!");
+        else
+            Notification::create().severity(tmt::Severity::ERROR).message("Can't save level config, is it read-only / not checked out?");
 
         auto view = engine.ecs.view<game::GenerationComponent>();
         if (view.begin() == view.end()) {
