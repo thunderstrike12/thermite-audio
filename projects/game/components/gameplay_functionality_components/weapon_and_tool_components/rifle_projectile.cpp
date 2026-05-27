@@ -5,6 +5,8 @@
 #include "engine/core/components/voxel_renderer.hpp"
 #include "engine/shared/ray.hpp"
 #include "engine/systems/physics/physics_system.hpp"
+#include "glm/detail/_noise.hpp"
+
 
 namespace game {
 
@@ -19,11 +21,13 @@ void RifleProjectile::update(const tmt::FrameData& time) {
     auto delta = direction * time.delta_time * movement_speed;
 
     const float step_distance = glm::length(delta);
-    const tmt::Ray ray_cast = tmt::Ray(previous_position, glm::normalize(delta));
+    auto dir { glm::normalize(delta) };
+    const tmt::Ray ray_cast = tmt::Ray(previous_position, dir);
     const tmt::Hit hit = tmt::engine.ecs.systems.get<tmt::Physics>().raycast(ray_cast, layer_mask);
-
     if (hit.distance < step_distance) {
-        collide(hit);
+        auto explode_position { previous_position + dir * hit.distance };
+
+        collide(hit, explode_position);
         return;
     }
 
@@ -36,7 +40,7 @@ void RifleProjectile::draw_debug_lines() const {
     tmt::engine.polyline.use_line_width(2.5f);
     tmt::engine.polyline.draw_arrow(previous_position, direction, last_step_length);
 }
-void RifleProjectile::spawn_explosion() const {
+void RifleProjectile::spawn_explosion(const glm::vec3& explode_position) const {
     auto* spawner = tmt::engine.ecs.try_get_component<Spawner>(entity);
     if (spawner == nullptr) {
         tmt::Log::warn("No spawner found on entity {}", entity);
@@ -50,10 +54,10 @@ void RifleProjectile::spawn_explosion() const {
         return;
     }
 
-    tmt::engine.ecs.get_component<tmt::Transform>(explosion_entity).set_world_position(tmt::engine.ecs.get_component<tmt::Transform>(entity).get_world_position());
+    tmt::engine.ecs.get_component<tmt::Transform>(explosion_entity).set_world_position(explode_position);
     explosion->param = explosion_parameters;
 }
-void RifleProjectile::collide(const tmt::Hit& hit) const {
+void RifleProjectile::collide(const tmt::Hit& hit, const glm::vec3& explode_position) const {
     auto collision_entity = hit.entity;
 
     // spawn vfx sounds
@@ -62,7 +66,7 @@ void RifleProjectile::collide(const tmt::Hit& hit) const {
     // only destroy voxels if the hit entity isn't on a protected layer (e.g. barge)
     auto& body = tmt::engine.ecs.get_component<tmt::VoxelBody>(hit.entity);
     if (protected_mask.test(body.layer) == false) {
-        spawn_explosion();
+        spawn_explosion(explode_position);
     }
 
     tmt::engine.ecs.destroy_entity(entity);

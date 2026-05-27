@@ -31,8 +31,9 @@ class RifleProjectile : public tmt::GameComponent<RifleProjectile> {
     ExplosionParameters explosion_parameters;
 
    private:
-    void spawn_explosion() const;
-    void collide(const tmt::Hit& hit) const;
+    void spawn_explosion(const glm::vec3& explode_position) const;
+    void collide(const tmt::Hit& hit, const glm::vec3& vec) const;
+
     float last_step_length = 0.0f;
     glm::vec3 previous_position { 0.0f };
     // normalized
