@@ -150,6 +150,11 @@ void UiPipeline::enqueue_images(RenderGraph& render_graph, RenderView& render_vi
     std::vector<GpuImage> images {};
     std::vector<GpuImage3D> images_3d {};
 
+    /* Factor to convert authored (1920x1080) positions to actual screen pixels. */
+    const glm::vec2 pos_scale_factor(
+        static_cast<float>(render_view.gpu_view.resolution.x) / UIComponent::REFERENCE_WIDTH, static_cast<float>(render_view.gpu_view.resolution.y) / UIComponent::REFERENCE_HEIGHT
+    );
+
     { /* Collect all the images in the scene (Game ECS) */
         const entt::basic_view view = engine.ecs.view<ImageRenderer, UIComponent, Transform>();
 
@@ -196,6 +201,10 @@ void UiPipeline::enqueue_images(RenderGraph& render_graph, RenderView& render_vi
             /* Fill the parameters of the gpu image */
             GpuImage& image = images.emplace_back();
             decompose_matrix(world, image.pos, image.extent, image.angles);
+            /* Scale authored position to real screen pixels before anchor is applied. */
+            image.pos *= pos_scale_factor;
+            image.extent = image.extent * ui_component.real_size;
+            image.pivot = ui_component.pivot;
             image.color = image_renderer.color;
             if (image_renderer.texture) image.image_index = image_renderer.texture.resource->image.get_index();
             image.flipbook_frame = image_renderer.current_frame;
@@ -291,6 +300,11 @@ void UiPipeline::enqueue_text(RenderGraph& render_graph, RenderView& render_view
     std::vector<GpuGlyph> glyphs {};
     std::vector<GpuGlyph3D> glyphs_3d {};
 
+    /* Factor to convert authored (1920x1080) positions to actual screen pixels. */
+    const glm::vec2 pos_scale_factor(
+        static_cast<float>(render_view.gpu_view.resolution.x) / UIComponent::REFERENCE_WIDTH, static_cast<float>(render_view.gpu_view.resolution.y) / UIComponent::REFERENCE_HEIGHT
+    );
+
     { /* Collect all the text in the scene (Game ECS) */
         const entt::basic_view view = engine.ecs.view<TextRenderer, UIComponent, Transform>();
 
@@ -309,10 +323,19 @@ void UiPipeline::enqueue_text(RenderGraph& render_graph, RenderView& render_view
             /* Skip empty text */
             if (text_renderer.text.empty()) continue;
 
-            /* Sync max_width/max_height with UIComponent size if enabled */
+            /* Build a scaled copy of the renderer for layout.
+               All authored pixel values (font_size, letter_spacing, max_width, max_height)
+               are in 1920x1080 space and must be converted to real screen pixels.
+               We never write back to the component — this copy is layout-only. */
+            TextRenderer layout_tr = text_renderer;
+            layout_tr.font_size = text_renderer.font_size * pos_scale_factor.y;
+            layout_tr.letter_spacing = text_renderer.letter_spacing * pos_scale_factor.y;
             if (text_renderer.use_ui_component_size) {
-                text_renderer.max_width = ui_component.size.x;
-                text_renderer.max_height = ui_component.size.y;
+                layout_tr.max_width = ui_component.real_size.x;
+                layout_tr.max_height = ui_component.real_size.y;
+            } else {
+                if (text_renderer.max_width > 0) layout_tr.max_width = text_renderer.max_width * pos_scale_factor.x;
+                if (text_renderer.max_height > 0) layout_tr.max_height = text_renderer.max_height * pos_scale_factor.y;
             }
 
             /* Get the font (use default if none specified) */
@@ -327,20 +350,20 @@ void UiPipeline::enqueue_text(RenderGraph& render_graph, RenderView& render_view
                 continue; /* No font available */
             }
 
-            /* Calculate the base position from transform */
-            glm::vec2 base_pos = glm::vec2(transform.get_world_position());
+            /* Calculate the base position from transform, scaled to actual screen pixels. */
+            glm::vec2 base_pos = glm::vec2(transform.get_world_position()) * pos_scale_factor;
             glm::vec2 anchor_offset = AnchorHelper::calculate_anchor_offset(entity);
             base_pos += anchor_offset;
 
             /* Apply pivot offset */
-            glm::vec2 pivot_offset = ui_component.pivot * ui_component.size;
+            glm::vec2 pivot_offset = ui_component.pivot * ui_component.real_size;
             base_pos -= pivot_offset;
 
             /* Calculate container size for text layout */
-            glm::vec2 container_size = ui_component.size;
+            glm::vec2 container_size = ui_component.real_size;
 
-            /* Perform text layout */
-            TextLayoutResult layout = TextLayout::layout(text_renderer, font, container_size);
+            /* Perform text layout using the scaled copy */
+            TextLayoutResult layout = TextLayout::layout(layout_tr, font, container_size);
 
             glm::vec3 scale {};
             glm::vec3 translation {};

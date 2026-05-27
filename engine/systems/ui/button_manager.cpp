@@ -94,8 +94,11 @@ void UIElementManager::update_states(const tmt::FrameData& time) {
                 break;
         }
 
-        const float image_width = ui_component.size.x;
-        const glm::vec3 slider_position = transform.get_world_position();
+        const float image_width = ui_component.real_size.x;
+        const glm::uvec2 screen_res = engine.renderer.render_view.gpu_view.resolution;
+        const glm::vec2 pos_scale_factor(static_cast<float>(screen_res.x) / UIComponent::REFERENCE_WIDTH, static_cast<float>(screen_res.y) / UIComponent::REFERENCE_HEIGHT);
+        const glm::vec3 slider_position_raw = transform.get_world_position();
+        const glm::vec3 slider_position(slider_position_raw.x * pos_scale_factor.x, slider_position_raw.y * pos_scale_factor.y, slider_position_raw.z);
 
         auto& handle_transform = engine.ecs.get_component<Transform>(slider.handle_entity);
         const float handle_x = slider_position.x - image_width * 0.5f + (slider.value - slider.min) / (slider.max - slider.min) * image_width;

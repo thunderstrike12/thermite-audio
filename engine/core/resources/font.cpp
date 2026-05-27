@@ -351,11 +351,13 @@ bool Font::generate_msdf_atlas(const char* font_file) {
             // Generate atlas bitmap
             generator.generate(glyphs_geo.data(), (int)glyphs_geo.size());
 
-            /* Store font metrics */
+            /* Store font metrics — msdf-atlas-gen returns values in em units (1.0 = 1 em).
+               Multiply by base_font_size to convert to pixels at the atlas generation size,
+               matching the pixel units used for glyph size, bearing, and advance. */
             auto msdf_metrics = fontGeometry.getMetrics();
-            metrics.ascender = (float)msdf_metrics.ascenderY;
-            metrics.descender = (float)msdf_metrics.descenderY;
-            metrics.line_height = (float)msdf_metrics.lineHeight;
+            metrics.ascender = (float)msdf_metrics.ascenderY * base_font_size;
+            metrics.descender = (float)msdf_metrics.descenderY * base_font_size;
+            metrics.line_height = (float)msdf_metrics.lineHeight * base_font_size;
             metrics.base_size = base_font_size;
 
             /* Store glyph info */

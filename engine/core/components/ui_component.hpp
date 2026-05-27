@@ -29,6 +29,12 @@ class AnchorHelper {
 
 struct UIComponent {
    public:
+    /* All authored sizes are relative to this resolution.
+       At any other resolution they are scaled proportionally. */
+    static constexpr float REFERENCE_WIDTH = 1920.0f;
+    static constexpr float REFERENCE_HEIGHT = 1080.0f;
+
+    /* Size relative to 1920x1080 resolution */
     glm::vec2 size = glm::vec2(50.0f);
     glm::vec2 pivot = glm::vec2(0.5f, 0.5f); /* center */
     bool block_raycasts = false;             /* doesn't do anything yet */
@@ -38,6 +44,11 @@ struct UIComponent {
     glm::vec2 aspect_ratio = glm::vec2(1.0f, 1.0f); /* 1:1 */
     Anchor anchor = Anchor::MIDDLE_CENTER;
     bool synced_from_image = false;
+
+    /* Computed every frame by the UI system. do NOT set manually.
+       Always in actual screen pixels, accounting for resolution scaling.
+       Use this everywhere pixel dimensions are needed (rendering, hit-testing, anchoring). */
+    glm::vec2 real_size = glm::vec2(50.0f);
 };
 
 }  // namespace tmt

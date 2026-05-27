@@ -75,17 +75,24 @@ bool Gizmo::manip(
     const Entity primary = selected_entities.front();
     if (!engine.ecs.valid(primary)) return false;
 
+    /* Scale factor: converts authored (1920x1080) positions to actual viewport pixels.
+       The ortho projection covers [0..width] x [0..height], so gizmo positions must
+       be in that same real-pixel space. */
+    const glm::vec2 pos_scale_factor(width / UIComponent::REFERENCE_WIDTH, height / UIComponent::REFERENCE_HEIGHT);
+
     // --- 1. Build the gizmo matrix ---
     const bool use_average = (multiselect_mode != 0);
 
     glm::mat4 gizmo_matrix;
 
-    // For UI bounds manipulation, we need the UI size to build the bounds
-    glm::vec2 ui_size(0.f);
+    /* For UI bounds: real_size for display (matches ortho space), authored size for write-back. */
+    glm::vec2 ui_size_real(0.f);
+    glm::vec2 ui_size_authored(0.f);
     glm::vec2 ui_pivot(0.5f);
     if (has_ui && selected_entities.size() == 1) {
         const UIComponent& ui = engine.ecs.get_component<UIComponent>(primary);
-        ui_size = ui.size;
+        ui_size_real = ui.real_size;
+        ui_size_authored = ui.size;
         ui_pivot = ui.pivot;
     }
 
@@ -94,7 +101,13 @@ bool Gizmo::manip(
         const auto ui_offset = has_ui ? AnchorHelper::calculate_anchor_offset(primary) : glm::vec2(0.f);
 
         gizmo_matrix = wm;
-        gizmo_matrix[3] += glm::vec4(ui_offset, 0.f, 0.f);
+        if (has_ui) {
+            /* Scale authored translation to real viewport pixels, then add anchor offset. */
+            gizmo_matrix[3].x = gizmo_matrix[3].x * pos_scale_factor.x + ui_offset.x;
+            gizmo_matrix[3].y = gizmo_matrix[3].y * pos_scale_factor.y + ui_offset.y;
+        } else {
+            gizmo_matrix[3] += glm::vec4(ui_offset, 0.f, 0.f);
+        }
     } else {
         const float weight = 1.f / static_cast<float>(selected_entities.size());
         glm::vec3 avg_translation(0.f);
@@ -105,7 +118,12 @@ bool Gizmo::manip(
             const glm::mat4& wm = t.get_world_matrix();
             const auto ui_offset = has_ui ? AnchorHelper::calculate_anchor_offset(e) : glm::vec2(0.f);
 
-            avg_translation += glm::vec3(wm[3]) + glm::vec3(ui_offset, 0.f);
+            if (has_ui) {
+                /* Scale each entity's authored translation to real pixels before averaging. */
+                avg_translation += glm::vec3(wm[3].x * pos_scale_factor.x + ui_offset.x, wm[3].y * pos_scale_factor.y + ui_offset.y, wm[3].z);
+            } else {
+                avg_translation += glm::vec3(wm[3]) + glm::vec3(ui_offset, 0.f);
+            }
             avg_rotation += weight * t.get_world_rotation();
         }
         avg_translation /= static_cast<float>(selected_entities.size());
@@ -126,17 +144,15 @@ bool Gizmo::manip(
     // Only use bounds when in bounds mode AND we have a UI element
     // localBounds format: { min.x, min.y, min.z, max.x, max.y, max.z }
     float local_bounds[6] = { 0 };
-    const bool use_bounds = is_bounds_mode && has_ui && selected_entities.size() == 1 && ui_size.x > 0.f && ui_size.y > 0.f;
+    const bool use_bounds = is_bounds_mode && has_ui && selected_entities.size() == 1 && ui_size_real.x > 0.f && ui_size_real.y > 0.f;
     if (use_bounds) {
-        // Build bounds centered on pivot
-        // pivot (0.5, 0.5) means center, so min = -size/2, max = +size/2
-        // pivot (0, 0) means top-left, so min = 0, max = size
-        local_bounds[0] = -ui_size.x * ui_pivot.x;         // min.x
-        local_bounds[1] = -ui_size.y * ui_pivot.y;         // min.y
-        local_bounds[2] = -0.5f;                           // min.z (thin in Z)
-        local_bounds[3] = ui_size.x * (1.f - ui_pivot.x);  // max.x
-        local_bounds[4] = ui_size.y * (1.f - ui_pivot.y);  // max.y
-        local_bounds[5] = 0.5f;                            // max.z
+        // Bounds in real viewport pixels — must match the ortho space the gizmo lives in.
+        local_bounds[0] = -ui_size_real.x * ui_pivot.x;
+        local_bounds[1] = -ui_size_real.y * ui_pivot.y;
+        local_bounds[2] = -0.5f;
+        local_bounds[3] = ui_size_real.x * (1.f - ui_pivot.x);
+        local_bounds[4] = ui_size_real.y * (1.f - ui_pivot.y);
+        local_bounds[5] = 0.5f;
     }
 
     // Determine the operation to use
@@ -168,7 +184,7 @@ bool Gizmo::manip(
     if (!was_using && is_using) {
         gizmo_start_matrix = gizmo_matrix_before;  // frozen gizmo reference
         if (use_bounds) {
-            start_ui_size = ui_size;               // Capture original size at drag start
+            start_ui_size = ui_size_authored;      // authored space — write-back uses ui.size
         }
         for (const Entity e : selected_entities) {
             if (!engine.ecs.valid(e)) continue;
@@ -224,22 +240,16 @@ bool Gizmo::manip(
                     // Size delta from original
                     const glm::vec2 size_delta = glm::vec2(new_width, new_height) - start_ui_size;
 
-                    // To scale from center, we need to offset by half the size change
-                    // ImGuizmo already moved position for edge-based scaling, so we reset to start
-                    // then apply centered offset
                     const glm::mat4& start_matrix = entity_start_matrices[primary];
                     const glm::vec3 start_pos = glm::vec3(start_matrix[3]);
 
-                    // For centered scaling, position shifts by half the delta in the direction of the pivot
-                    // With pivot 0.5, no shift needed. With pivot 0, shift by -delta/2. With pivot 1, shift by +delta/2
                     const glm::vec2 center_offset = -size_delta * (ui_pivot - glm::vec2(0.5f));
 
                     t.set_local_position(start_pos + glm::vec3(center_offset, 0.f));
                 } else {
-                    // Default: Use ImGuizmo's position (scales from opposite edge)
-                    // ImGuizmo modifies gizmo_matrix position, apply it
+                    // Gizmo matrix translation is in real pixel space — unscale back to authored space.
                     const glm::vec2 ui_offset = AnchorHelper::calculate_anchor_offset(primary);
-                    glm::vec3 new_pos = glm::vec3(gizmo_matrix[3]) - glm::vec3(ui_offset, 0.f);
+                    glm::vec3 new_pos((gizmo_matrix[3].x - ui_offset.x) / pos_scale_factor.x, (gizmo_matrix[3].y - ui_offset.y) / pos_scale_factor.y, gizmo_matrix[3].z);
                     t.set_local_position(new_pos);
                 }
 
@@ -254,17 +264,31 @@ bool Gizmo::manip(
                 const glm::vec2 ui_offset = has_ui ? AnchorHelper::calculate_anchor_offset(e) : glm::vec2(0.f);
 
                 if (!use_average && e == primary) {
-                    // Direct assignment is still cleanest for the primary
                     glm::mat4 new_world = gizmo_matrix;
-                    new_world[3] -= glm::vec4(ui_offset, 0.f, 0.f);
+                    if (has_ui) {
+                        /* Gizmo output is in real pixel space — unscale back to authored space. */
+                        new_world[3].x = (gizmo_matrix[3].x - ui_offset.x) / pos_scale_factor.x;
+                        new_world[3].y = (gizmo_matrix[3].y - ui_offset.y) / pos_scale_factor.y;
+                    } else {
+                        new_world[3] -= glm::vec4(ui_offset, 0.f, 0.f);
+                    }
                     t.set_world_matrix(new_world);
                 } else {
-                    // Apply delta to INITIAL world matrix, not current
                     glm::mat4 effective_start = entity_start_matrices.count(e) ? entity_start_matrices[e] : t.get_world_matrix();
-
-                    effective_start[3] += glm::vec4(ui_offset, 0.f, 0.f);
+                    if (has_ui) {
+                        /* Bring start matrix into real pixel space, apply delta, then unscale back. */
+                        effective_start[3].x = effective_start[3].x * pos_scale_factor.x + ui_offset.x;
+                        effective_start[3].y = effective_start[3].y * pos_scale_factor.y + ui_offset.y;
+                    } else {
+                        effective_start[3] += glm::vec4(ui_offset, 0.f, 0.f);
+                    }
                     glm::mat4 new_effective = own_delta * effective_start;
-                    new_effective[3] -= glm::vec4(ui_offset, 0.f, 0.f);
+                    if (has_ui) {
+                        new_effective[3].x = (new_effective[3].x - ui_offset.x) / pos_scale_factor.x;
+                        new_effective[3].y = (new_effective[3].y - ui_offset.y) / pos_scale_factor.y;
+                    } else {
+                        new_effective[3] -= glm::vec4(ui_offset, 0.f, 0.f);
+                    }
                     t.set_world_matrix(new_effective);
                 }
             }
