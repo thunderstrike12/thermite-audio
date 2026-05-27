@@ -39,6 +39,8 @@ struct TriggerCollisionEvent {
 struct TriggerMovementEvent {
     tmt::Entity trigger;
 };
+struct TriggerMovementStopEvent {};
+
 struct MovementUpdateEvent {
     tmt::Entity moved_entity;
     float length;
