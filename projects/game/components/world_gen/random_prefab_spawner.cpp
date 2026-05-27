@@ -46,7 +46,8 @@ void game::RandomPrefabSpawner::spawn_random_prefab() {
 }
 
 void game::RandomPrefabSpawner::spawn_prefab(const tmt::ResourceRef<tmt::Json>& prefab) {
-    auto instantiated = tmt::PrefabHelper::instantiate_prefab(prefab->file_location);
+    auto instantiated = tmt::PrefabHelper::instantiate_prefab(prefab.file_location);
+    if (instantiated == entt::null) return;
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(instantiated);
     auto& transform_parent = tmt::engine.ecs.get_component<tmt::Transform>(entity);
     auto voxel_body = tmt::engine.ecs.try_get_component<tmt::VoxelBody>(instantiated);

@@ -149,7 +149,8 @@ void OreManager::spawn_emitter(glm::vec3 spawn_pos) {
         return;
     }
 
-    tmt::Entity instantiated_entity = tmt::PrefabHelper::instantiate_prefab(explosion_prefab->file_location);
+    tmt::Entity instantiated_entity = tmt::PrefabHelper::instantiate_prefab(explosion_prefab.file_location);
+    if (instantiated_entity == entt::null) return;
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(instantiated_entity);
 
     transform.set_world_position(spawn_pos);

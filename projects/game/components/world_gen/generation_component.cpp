@@ -101,7 +101,8 @@ void GenerationComponent::start() {
                 float yaw = Random::rand_range(0.f, 360.f);
                 float roll = Random::rand_range(0.f, 360.f);
 
-                auto instantiated = tmt::PrefabHelper::instantiate_prefab(spawn_obj->file_location, entity);
+                auto instantiated = tmt::PrefabHelper::instantiate_prefab(spawn_obj.file_location, entity);
+                if (instantiated == entt::null) return;
 
                 auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(instantiated);
 
