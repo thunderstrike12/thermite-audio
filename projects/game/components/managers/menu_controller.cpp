@@ -86,11 +86,24 @@ void MenuController::enable_pause_menu() const {
         return;
     }
     if (check_for_open_menus()) return;
+    /*unlock_mouse();
+    tmt::engine.ecs.enable(pause_menu_entity);*/
+    auto& player = tmt::engine.ecs.get_component<Player>(player_entity);
+
+    player.set_state_before_pause(player.get_state());
+
+    player.set_state(PlayerState::PAUSED);
+
     unlock_mouse();
+
     tmt::engine.ecs.enable(pause_menu_entity);
 
     // Dispatch game paused event
     tmt::engine.ecs.get_dispatcher().trigger(game::GamePausedEvent {});
+
+    // Disable HUD's
+    player.set_hud_enabled(player.player_hud, false);
+    player.set_hud_enabled(player.barge_hud, false);
 
     // disable systems
     auto& systems = tmt::engine.ecs.systems;
@@ -117,11 +130,23 @@ void MenuController::disable_pause_menu() const {
         tmt::Log::error("No pause menu found, please add the menu to the menu controller.");
         return;
     }
+    /*lock_mouse();
+     tmt::engine.ecs.disable(pause_menu_entity);*/
+
+    auto& player = tmt::engine.ecs.get_component<Player>(player_entity);
+
+    player.set_state(player.get_state_before_pause());
+
     lock_mouse();
+
     tmt::engine.ecs.disable(pause_menu_entity);
 
     // Dispatch game unpaused event
     tmt::engine.ecs.get_dispatcher().trigger(game::GameUnpausedEvent {});
+
+    // enable HUD's
+    if (player.get_state() == PlayerState::FREEMOVING) player.set_hud_enabled(player.player_hud, true);
+    if (player.get_state() == PlayerState::ATTACHED) player.set_hud_enabled(player.barge_hud, true);
 
     // enable systems
     auto& systems = tmt::engine.ecs.systems;
@@ -190,6 +215,10 @@ void MenuController::handle_saving(const EndRun& event) const {
     save_resources_on_run(multiplier);
 }
 void MenuController::enable_end_of_game_menu(const EndRun& event) const {
+    auto& player = tmt::engine.ecs.get_component<Player>(player_entity);
+    player.set_hud_enabled(player.player_hud, false);
+    player.set_hud_enabled(player.barge_hud, false);
+
     if (pause_menu_entity != entt::null) {
         tmt::engine.ecs.disable(pause_menu_entity);
     }
@@ -224,7 +253,7 @@ void MenuController::lock_mouse() const {
     tmt::engine.input.set_mouse_relative_to_window(true);
 
     // TODO this will get removed when proper game state are implemented
-    tmt::engine.ecs.get_component<Player>(player_entity).set_state(PlayerState::FREEMOVING);
+    // tmt::engine.ecs.get_component<Player>(player_entity).set_state(PlayerState::FREEMOVING);
 }
 
 void MenuController::unlock_mouse() const {
@@ -232,7 +261,7 @@ void MenuController::unlock_mouse() const {
     tmt::engine.input.set_mouse_relative_to_window(false);
 
     // TODO this will get removed when proper game state are implemented
-    tmt::engine.ecs.get_component<Player>(player_entity).set_state(PlayerState::PAUSED);
+    // tmt::engine.ecs.get_component<Player>(player_entity).set_state(PlayerState::PAUSED);
 }
 
 bool MenuController::check_for_open_menus() const {

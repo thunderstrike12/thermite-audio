@@ -29,6 +29,8 @@ void game::AttachComponent::start() {
         }
     }
     tmt::engine.ecs.get_dispatcher().sink<AttachAttemptEvent>().connect<&AttachComponent::on_check_range_to_attach>(this);
+    tmt::engine.ecs.get_dispatcher().sink<GamePausedEvent>().connect<&AttachComponent::on_game_paused>(this);
+    tmt::engine.ecs.get_dispatcher().sink<GameUnpausedEvent>().connect<&AttachComponent::on_game_unpaused>(this);
 
     auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
     auto& mover_comp = tmt::engine.ecs.get_component<MoverComponent>(transform.get_parent());
@@ -36,6 +38,8 @@ void game::AttachComponent::start() {
     tmt::engine.ecs.get_dispatcher().sink<TriggerMovementStopEvent>().connect<&MoverComponent::stop_movement>(mover_comp);
 }
 void game::AttachComponent::update(const tmt::FrameData& time) {
+    if (paused) return;
+
     if (is_attached == false) {
         if (is_moving) tmt::engine.ecs.get_dispatcher().trigger(TriggerMovementStopEvent {});
 
@@ -129,4 +133,12 @@ void game::AttachComponent::on_check_range_to_attach(const AttachAttemptEvent& e
 
         tmt::engine.ecs.get_dispatcher().trigger<AttachEvent>({ .entity = entity_that_attaches, .is_attached = is_attached });
     }
+}
+
+void game::AttachComponent::on_game_paused(const game::GamePausedEvent&) {
+    paused = true;
+}
+
+void game::AttachComponent::on_game_unpaused(const game::GameUnpausedEvent&) {
+    paused = false;
 }

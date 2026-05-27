@@ -19,6 +19,11 @@ class AttachComponent : public tmt::GameComponent<AttachComponent> {
     bool check_inside_range(const game::AttachAttemptEvent& event) const;
     void on_check_range_to_attach(const AttachAttemptEvent& event);
 
+    void on_game_paused(const game::GamePausedEvent&);
+    void on_game_unpaused(const game::GameUnpausedEvent&);
+
+    bool paused = false;
+
     float radius = 1.0f;
     float time_to_start_stop_barge_movement = 2.0f;
     float time_to_end_run = 2.0f;
