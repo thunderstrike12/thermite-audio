@@ -76,7 +76,16 @@ void SensorsSystem::on_update(const tmt::FrameData& /*time*/) {
         glm::vec3 agent_pos = agent_transform->get_world_position();
         float distance = glm::length(player_pos - agent_pos);
 
-        ws->set_fact(tmt::FactId("s_player_in_range"), distance <= small_enemy->logic_paramaters.activation_range);
+        const bool in_active_range = distance <= small_enemy->logic_paramaters.activation_range;
+
+        // Check if the agent has entered the activation range this frame, play its aggro sound if so.
+        if (small_enemy->in_active_range != in_active_range) {
+            small_enemy->in_active_range = in_active_range;
+
+            if (in_active_range) small_enemy->play_aggro_sound();
+        }
+
+        ws->set_fact(tmt::FactId("s_player_in_range"), in_active_range);
         ws->set_fact(tmt::FactId("s_player_in_explosion_zone"), distance <= small_enemy->logic_paramaters.max_explosion_range);
 
         if (!ws->facts[tmt::FactId("s_player_in_explosion_zone").id]) {

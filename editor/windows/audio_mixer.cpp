@@ -23,6 +23,15 @@ void audio_drag_source(const std::string& type_name, const Type& value) {
     ImGui::EndDragDropSource();
 }
 
+void parameter_drag_source(const tmt::AudioParameter& value) {
+    if (!ImGui::BeginDragDropSource()) return;
+
+    ImGui::Text("AudioParameter: %s", value.get_name().c_str());
+    const std::string json_string = tmt::Serializer::serialize(value).dump(4);
+    ImGui::SetDragDropPayload("AudioParameter", json_string.data(), json_string.size());
+    ImGui::EndDragDropSource();
+}
+
 }  // namespace
 
 namespace tmt {
@@ -98,6 +107,7 @@ void AudioMixer::on_inspect() {
                     if (ImGui::Button(ICON_MS_STOP " Stop") && playing_instance.is_valid()) playing_instance.stop();
 
                     ImGui::Text("Path: %s", event.get_path().c_str());
+                    ImGui::Text("Length: %.3fs", event.get_length());
 
                     // Visualize if the sound is 3D using a checkbox (the checkbox is disabled).
                     {
@@ -125,9 +135,15 @@ void AudioMixer::on_inspect() {
                     ImGui::NewLine();
 
                     for (const AudioParameter& parameter : parameters) {
-                        ImGui::Text("Name: %s", parameter.get_name().c_str());
-                        ImGui::Text("Range: %.1f-%.1f", parameter.get_min(), parameter.get_max());
-                        ImGui::NewLine();
+                        const FMOD_STUDIO_PARAMETER_DESCRIPTION description = parameter.get_description();
+                        const bool header_open = ImGui::CollapsingHeader(description.name);
+
+                        parameter_drag_source(parameter);
+
+                        if (!header_open) continue;
+
+                        ImGui::Text("Type: %s", magic_enum::enum_name(description.type).data());
+                        ImGui::Text("Range: %.1f-%.1f", description.minimum, description.maximum);
                     }
                     ImGui::Unindent();
                 }

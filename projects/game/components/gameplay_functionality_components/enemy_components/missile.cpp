@@ -131,6 +131,12 @@ void game::Missile::end() {}
 
 void game::Missile::explode() {
     auto& enemy = tmt::engine.ecs.get_component<MediumEnemy>(enemy_entity);
+
+    if (enemy.audio_emitter != nullptr) {
+        const tmt::AudioInstance3D instance = enemy.audio_emitter->play(enemy.sounds.sound_missile_explosion);
+        instance.set_maximum_distance(enemy.aggro_range * 1.25f);  // Multiply be 1.25f to ensure the player can hear it even when at the edge of the range
+    }
+
     enemy.ore_manager->initiate_thermite_explosion(entity, glm::uvec3(0, 0, 0));
 
     auto& missile_trans = tmt::engine.ecs.get_component<tmt::Transform>(entity);

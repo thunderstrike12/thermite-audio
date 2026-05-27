@@ -37,26 +37,13 @@ class AudioBank;
 struct Transform;
 struct VoxelBody;
 
-class AudioParameter {
-   public:
-    AudioParameter(const FMOD_STUDIO_PARAMETER_DESCRIPTION& description) : description { description } {}
-
-    // Get the name of the AudioParameter.
-    [[nodiscard]] std::string get_name() const { return description.name; }
-    [[nodiscard]] const FMOD_STUDIO_PARAMETER_ID& get_id() const { return description.id; }
-    [[nodiscard]] float get_min() const { return description.minimum; }
-    [[nodiscard]] float get_max() const { return description.maximum; }
-
-   private:
-    FMOD_STUDIO_PARAMETER_DESCRIPTION description;
-};
-
-class AudioEvent;
+class AudioParameter;
 
 class AudioInstance {
     friend class AudioEvent;
 
    public:
+    AudioInstance() = default;
     AudioInstance(FMOD::Studio::EventInstance* instance) : instance { instance } {}
 
     [[nodiscard]] bool is_valid() const;
@@ -80,6 +67,9 @@ class AudioInstance3D : public AudioInstance {
     using AudioInstance::AudioInstance;
 
    public:
+    void set_minimum_distance(float min) const;
+    void set_maximum_distance(float max) const;
+
     void set_3d_position(const glm::vec3& position) const;
     // Set the velocity of the sound, used to calculate the sound's doppler effect.
     void set_3d_velocity(const glm::vec3& velocity) const;
@@ -95,17 +85,24 @@ class AudioInstance3D : public AudioInstance {
     // Get the bitmask of which listeners should listen to this sound instance (default is all on).
     unsigned int get_listener_mask() const;
 
+    float get_minimum_distance() const;
+    float get_maximum_distance() const;
+
    private:
     [[nodiscard]] FMOD_3D_ATTRIBUTES get_3d_attributes() const;
 };
 
 class AudioEvent {
+    friend class AudioParameter;
+
    public:
     AudioEvent() = default;
     AudioEvent(const ResourceRef<AudioBank>& source_bank, const FMOD_GUID& description_uuid) : source_bank { source_bank }, uuid { description_uuid } {}
 
     [[nodiscard]] bool is_valid() const;
     [[nodiscard]] bool is_3d() const;
+    // Get the length of the audio event's timeline in seconds.
+    [[nodiscard]] float get_length() const;
     // Get the path/name of the AudioEvent (returns empty string when not in debug mode and not using the editor).
     [[nodiscard]] std::string get_path() const;
     [[nodiscard]] FMOD_GUID get_guid() const { return uuid; }
@@ -121,10 +118,34 @@ class AudioEvent {
     [[nodiscard]] bool operator!=(const AudioEvent& other) const { return std::memcmp(&uuid, &other.uuid, sizeof(FMOD_GUID)) != 0; }
 
    private:
+    [[nodiscard]] FMOD_STUDIO_PARAMETER_DESCRIPTION get_parameter_description(const FMOD_STUDIO_PARAMETER_ID& id) const;
     BEFRIEND_VISITABLE()
 
     ResourceRef<AudioBank> source_bank;
     FMOD_GUID uuid {};
+};
+
+class AudioParameter {
+   public:
+    AudioParameter() = default;
+    AudioParameter(const AudioEvent& source_event, const FMOD_STUDIO_PARAMETER_ID& parameter_id) : source_event { source_event }, id { parameter_id } {}
+
+    [[nodiscard]] bool is_valid() const;
+    // Get the name of the AudioParameter.
+    [[nodiscard]] std::string get_name() const;
+    [[nodiscard]] const FMOD_STUDIO_PARAMETER_ID& get_id() const { return id; }
+    [[nodiscard]] float get_min() const;
+    [[nodiscard]] float get_max() const;
+    [[nodiscard]] FMOD_STUDIO_PARAMETER_DESCRIPTION get_description() const { return source_event.get_parameter_description(id); }
+
+    [[nodiscard]] bool operator==(const AudioParameter& other) const { return source_event == other.source_event && std::memcmp(&id, &other.id, sizeof(FMOD_STUDIO_PARAMETER_ID)) == 0; }
+    [[nodiscard]] bool operator!=(const AudioParameter& other) const { return source_event != other.source_event || std::memcmp(&id, &other.id, sizeof(FMOD_STUDIO_PARAMETER_ID)) != 0; }
+
+   private:
+    BEFRIEND_VISITABLE()
+
+    AudioEvent source_event;
+    FMOD_STUDIO_PARAMETER_ID id {};
 };
 
 class VolumeControl {
@@ -212,3 +233,6 @@ class Audio : public OnGamePause, public OnGameResume, public OnGameEnd, public 
 };
 
 }  // namespace tmt
+
+JSON_REFLECT(FMOD_STUDIO_PARAMETER_ID, data1, data2);
+JSON_REFLECT(tmt::AudioParameter, source_event, id);

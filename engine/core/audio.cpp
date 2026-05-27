@@ -81,6 +81,18 @@ void AudioInstance::set_label_parameter(const AudioParameter& event_parameter, c
     TryLogError(result, "Failed to set parameter with label");
 }
 
+void AudioInstance3D::set_minimum_distance(const float min) const {
+    const FMOD_RESULT result = instance->setProperty(FMOD_STUDIO_EVENT_PROPERTY_MINIMUM_DISTANCE, min);
+
+    TryLogError(result, "Failed to set minimum distance");
+}
+
+void AudioInstance3D::set_maximum_distance(const float max) const {
+    const FMOD_RESULT result = instance->setProperty(FMOD_STUDIO_EVENT_PROPERTY_MAXIMUM_DISTANCE, max);
+
+    TryLogError(result, "Failed to set maximum distance");
+}
+
 void AudioInstance3D::set_3d_position(const glm::vec3& position) const {
     FMOD_3D_ATTRIBUTES attributes = get_3d_attributes();
     attributes.position = std::bit_cast<FMOD_VECTOR>(position);
@@ -142,6 +154,24 @@ unsigned int AudioInstance3D::get_listener_mask() const {
     return mask;
 }
 
+float AudioInstance3D::get_minimum_distance() const {
+    float min = 0.0f;
+    const FMOD_RESULT result = instance->getProperty(FMOD_STUDIO_EVENT_PROPERTY_MINIMUM_DISTANCE, &min);
+
+    TryLogError(result, "Failed to get minimum distance");
+
+    return min;
+}
+
+float AudioInstance3D::get_maximum_distance() const {
+    float max = 0.0f;
+    const FMOD_RESULT result = instance->getProperty(FMOD_STUDIO_EVENT_PROPERTY_MAXIMUM_DISTANCE, &max);
+
+    TryLogError(result, "Failed to get maximum distance");
+
+    return max;
+}
+
 FMOD_3D_ATTRIBUTES AudioInstance3D::get_3d_attributes() const {
     FMOD_3D_ATTRIBUTES attributes;
     const FMOD_RESULT result = instance->get3DAttributes(&attributes);
@@ -165,6 +195,16 @@ bool AudioEvent::is_3d() const {
     TryLogError(result, "Failed check if event is 3D");
 
     return is_3d;
+}
+
+float AudioEvent::get_length() const {
+    const FMOD::Studio::EventDescription* description = engine.audio.get_event_description(uuid);
+
+    int length = 0;
+    const FMOD_RESULT result = description->getLength(&length);
+    TryLogError(result, "Failed get event length");
+
+    return static_cast<float>(length) / 1000.0f;  // Length in seconds.
 }
 
 std::string AudioEvent::get_path() const {
@@ -206,7 +246,7 @@ std::vector<AudioParameter> AudioEvent::get_parameters() const {
         result = description->getParameterDescriptionByIndex(i, &parameter_description);
         if (TryLogError(result, "Failed to get event parameter by index")) return {};
 
-        parameters.emplace_back(parameter_description);
+        parameters.emplace_back(*this, parameter_description.id);
     }
 
     return parameters;
@@ -254,6 +294,36 @@ glm::vec2 AudioEvent::get_min_max_distance() const {
     if (TryLogError(result, "Failed to get VCA volume")) return {};
 
     return { min, max };
+}
+
+FMOD_STUDIO_PARAMETER_DESCRIPTION AudioEvent::get_parameter_description(const FMOD_STUDIO_PARAMETER_ID& id) const {
+    const FMOD::Studio::EventDescription* description = engine.audio.get_event_description(uuid);
+
+    FMOD_STUDIO_PARAMETER_DESCRIPTION parameter_description {};
+    const FMOD_RESULT result = description->getParameterDescriptionByID(id, &parameter_description);
+    if (TryLogError(result, "Failed to get event parameter by ID")) return {};
+
+    return parameter_description;
+}
+
+bool AudioParameter::is_valid() const {
+    if (*this == AudioParameter {}) return false;                       // Check if the audio parameter has an invalid uuid (in which case it, itself is invalid).
+
+    if (!source_event.is_valid()) return false;                         // Check if the source event is still valid.
+
+    return source_event.get_parameter_description(id).name != nullptr;  // Check if the audio parameter description is valid.
+}
+
+std::string AudioParameter::get_name() const {
+    return source_event.get_parameter_description(id).name;
+}
+
+float AudioParameter::get_min() const {
+    return source_event.get_parameter_description(id).minimum;
+}
+
+float AudioParameter::get_max() const {
+    return source_event.get_parameter_description(id).maximum;
 }
 
 bool VolumeControl::is_valid() const {

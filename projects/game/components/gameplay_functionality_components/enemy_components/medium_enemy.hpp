@@ -4,6 +4,7 @@
 #include "../../../editor/all.hpp"
 #include "projects/game/data_headers/events.hpp"
 #include "engine/core/components/rig_controller.hpp"
+#include "engine/core/components/audio_emitter.hpp"
 
 #include "projects/game/components/managers/ore_manager.hpp"
 #include "projects/game/data_headers/layer_mask.hpp"
@@ -16,6 +17,18 @@ struct AvailablePosEntry {
     tmt::Entity reference_entity = entt::null;
     glm::vec3 stored_offset_from_ref_entity = glm::vec3(0, 0, 0);
     glm::vec3 base_offset_from_ref_entity = glm::vec3(0, 0, 0);
+};
+
+struct Sounds {
+    tmt::AudioEvent sound_aggroed_audio;      // done
+    tmt::AudioEvent sound_laser;              // done
+    tmt::AudioEvent sound_missile_explosion;  // done
+    tmt::AudioEvent sound_missile_fire;       // done
+    tmt::AudioEvent sound_random_chatter;     // not yet implemented anywhere, where do designers want this?
+    tmt::AudioEvent sound_shield_slam;        // done
+    tmt::AudioEvent sound_taunt;              // not yet implemented, enemy doesnt have a taunt, where do designers want this?
+    tmt::AudioEvent sound_walk;               // done
+    tmt::AudioEvent sound_core_destroyed;     // done
 };
 
 class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
@@ -114,18 +127,34 @@ class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
     float stomp_windup = 0.5f;
     float stomp_radius = 1.0f;
     float stomp_damage = 0.5f;
+
+    // sounds
+    Sounds sounds;
+    tmt::AudioEmitter* audio_emitter;
+
+    tmt::AudioInstance3D walk_instance;
+    tmt::AudioInstance3D laser_instance;
+    tmt::AudioInstance3D shield_slam_instance;
+
+   private:
+    // sounds variables
+    bool played_aggro_sound = false;
 };
 
 }  // namespace game
 
 TMT_OBJECT(game::AvailablePosEntry, (entity, height_offset, reference_entity));
 
+TMT_OBJECT(
+    game::Sounds, (sound_aggroed_audio, sound_laser, sound_missile_explosion, sound_missile_fire, sound_random_chatter, sound_shield_slam, sound_taunt, sound_walk, sound_core_destroyed)
+);
+
 TMT_GAME_COMPONENT(
     game::MediumEnemy,
     (walkable_asteroid, laser_origin, missile_origin, core, rig_controller, available_positions, missile_voxel_object, projectile_mask, enemy_mask, projectile_layer, enemy_layer,
-     rotation_speed, height_above_ground, walk_speed, back_off_distance, velocity_of_objects_on_death, aggro_range, laser_range, stomp_range, missile_cooldown, stop_launching_after,
-     start_homing_after, slow_homing_accuracy_after, launch_speed, home_speed, life_time, missile_rotation_speed, target_offset, missile_burst, burst_interval, missile_max_randomness,
-     missile_explosion_radius, missile_voxel_entities, missile_voxel_to_lose, laser_cooldown, rotation_speed_during_laser, laser_charge_voxel_object, laser_voxel_object, laser_firing_time,
-     laser_sitting_down_time, laser_winding_up_time, laser_damage, laser_damage_radius, laser_target_offset, laser_linear_speed, laser_exponential_speed, laser_linear_threshold,
-     laser_max_randomness, laser_prediction_length, laser_vel_smoothing, laser_voxel_entities, laser_voxel_to_lose, stomp_cooldown, stomp_timer, stomp_windup, stomp_radius, stomp_damage)
+     rotation_speed, height_above_ground, velocity_of_objects_on_death, aggro_range, laser_range, stomp_range, missile_cooldown, stop_launching_after, start_homing_after,
+     slow_homing_accuracy_after, launch_speed, home_speed, life_time, missile_rotation_speed, target_offset, missile_burst, burst_interval, missile_max_randomness, missile_explosion_radius,
+     missile_voxel_entities, missile_voxel_to_lose, laser_cooldown, rotation_speed_during_laser, laser_charge_voxel_object, laser_voxel_object, laser_firing_time, laser_sitting_down_time,
+     laser_winding_up_time, laser_damage, laser_damage_radius, laser_target_offset, laser_linear_speed, laser_exponential_speed, laser_linear_threshold, laser_max_randomness,
+     laser_prediction_length, laser_vel_smoothing, laser_voxel_entities, laser_voxel_to_lose, stomp_cooldown, stomp_timer, stomp_windup, stomp_radius, stomp_damage, sounds)
 );

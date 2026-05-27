@@ -152,6 +152,11 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
 
     switch (state) {
         case SITTING_DOWN: {
+            if (enemy.audio_emitter != nullptr && !enemy.shield_slam_instance.is_valid()) {
+                enemy.shield_slam_instance = enemy.audio_emitter->play(enemy.sounds.sound_shield_slam);
+                enemy.shield_slam_instance.set_maximum_distance(enemy.aggro_range * 1.25f);  // Multiply be 1.25f to ensure the player can hear it even when at the edge of the range
+            }
+
             tmt::engine.ecs.get_component<tmt::RigController>(enemy.rig_controller).set_parameter_bool("laser", true);
             enemy.height_above_ground_offset = -enemy.height_above_ground + enemy.laser_sitting_down_height_offset;
             if (time > enemy.laser_sitting_down_time) {
@@ -177,6 +182,11 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
             rotate_to_face_player(enemy_entity, dt);
             tmt::Transform& enemy_transform = tmt::engine.ecs.get_component<tmt::Transform>(enemy_entity);
             target_pos = enemy_transform.get_world_position() + enemy_transform.get_forward() * enemy.laser_range * 0.8f;
+
+            if (enemy.audio_emitter != nullptr && !enemy.laser_instance.is_valid()) {
+                enemy.laser_instance = enemy.audio_emitter->play(enemy.sounds.sound_laser);
+                enemy.laser_instance.set_maximum_distance(enemy.aggro_range * 1.25f);  // Multiply be 1.25f to ensure the player can hear it even when at the edge of the range
+            }
 
             enemy.height_above_ground_offset = -enemy.height_above_ground + enemy.laser_sitting_down_height_offset;
             glm::vec3 target_dir = glm::normalize(target_pos - laser_pos);

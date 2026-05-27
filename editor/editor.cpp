@@ -146,6 +146,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     systems[Mode::PREFAB].add<UIEditor>();
     systems[Mode::PREFAB].add<DebugLines>();
     systems[Mode::PREFAB].add<RigStateController>();
+    systems[Mode::PREFAB].add<AudioMixer>();
 
     save_data.load();
 

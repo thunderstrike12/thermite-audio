@@ -2,6 +2,7 @@
 
 #include "engine/systems/ai/steering/components/steering_agent.hpp"
 #include "engine\core\components\voxel_renderer.hpp"
+#include "engine/core/components/audio_emitter.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"
 #include "engine/core/polyline.hpp"
 #include "engine/systems/physics/physics_system.hpp"
@@ -43,6 +44,25 @@ void SmallEnemy::update(const tmt::FrameData& time) {
         core_destroyed = true;
         return;
     }
+
+    // Handle playing random chatter sound.
+    auto* audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(entity);
+    if (audio_emitter) {
+        // Set up the random number generator.
+        static std::random_device random_device;
+        static std::mt19937 random_generator(random_device());
+        constexpr float MAX_RANDOM_VALUE = static_cast<float>(std::mt19937::max());
+
+        // Play the chatter sound effect again after a random time (within range).
+        if (time.elapsed_time >= next_chatter_time) {
+            audio_emitter->play(sound_parameters.idle_chatter_audio);
+
+            const float lerp = static_cast<float>(random_generator()) / MAX_RANDOM_VALUE;
+            const float interval = glm::mix(sound_parameters.chatter_play_intervals.x, sound_parameters.chatter_play_intervals.x, lerp);
+
+            next_chatter_time = time.elapsed_time + interval;
+        }
+    }
 }
 
 void SmallEnemy::die(tmt::Entity agent) {
@@ -80,6 +100,17 @@ void SmallEnemy::die(tmt::Entity agent) {
             }
         }
     }
+}
+
+void SmallEnemy::play_aggro_sound() const {
+    // Check if the agent has an audio emitter.
+    auto* audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(entity);
+    if (audio_emitter == nullptr) return;
+
+    const auto& small_enemy = tmt::engine.ecs.get_component<SmallEnemy>(entity);
+
+    const tmt::AudioInstance3D instance = audio_emitter->play(small_enemy.sound_parameters.aggroed_audio);
+    instance.set_maximum_distance(small_enemy.logic_paramaters.activation_range * 1.25f);  // Multiply be 1.25f to ensure the player can hear it even when at the edge of the range.
 }
 
 }  // namespace game

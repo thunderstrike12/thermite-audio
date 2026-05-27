@@ -156,6 +156,21 @@ void tag_invoke(ImReflect::ImInput_t, const char* name, game::MediumEnemy& value
             ImGui::TreePop();
         }
 
+        /* Sounds */
+        if (ImGui::TreeNode("Sounds")) {
+            ImReflect::Input("Aggroed Audio", value.sounds.sound_aggroed_audio, type_settings, type_response);
+            ImReflect::Input("Laser", value.sounds.sound_laser, type_settings, type_response);
+            ImReflect::Input("Missile Explosion", value.sounds.sound_missile_explosion, type_settings, type_response);
+            ImReflect::Input("Missile Fire", value.sounds.sound_missile_fire, type_settings, type_response);
+            ImReflect::Input("Random Chatter", value.sounds.sound_random_chatter, type_settings, type_response);
+            ImReflect::Input("Shield Slam", value.sounds.sound_shield_slam, type_settings, type_response);
+            ImReflect::Input("Taunt", value.sounds.sound_taunt, type_settings, type_response);
+            ImReflect::Input("Walk", value.sounds.sound_walk, type_settings, type_response);
+            ImReflect::Input("Core Destroyed", value.sounds.sound_core_destroyed, type_settings, type_response);
+
+            ImGui::TreePop();
+        }
+
         ImGui::Unindent();
         ImGui::TreePop();
     }

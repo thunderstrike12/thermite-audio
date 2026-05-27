@@ -4,6 +4,7 @@
 #include "engine/core/ecs.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
 #include "engine/core/components/emitter.hpp"
+#include "engine/core/components/audio_emitter.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"
 #include "engine/systems/animation/rig_model.hpp"
 
@@ -56,6 +57,16 @@ void Explode::on_start(tmt::Entity agent) {
             rig_controller->set_parameter_bool("Chasing", false);
             rig_controller->set_parameter_bool("Wandering", false);
         }
+    }
+
+    // Check if the agent has an audio emitter.
+    auto* audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(agent);
+    if (audio_emitter == nullptr) return;
+
+    // Play the small enemy explosion charge audio.
+    auto* small_enemy = tmt::engine.ecs.try_get_component<SmallEnemy>(agent);
+    if (small_enemy != nullptr) {
+        small_enemy->explosion_audio_instance = audio_emitter->play(small_enemy->sound_parameters.explosion_charge_audio, true, true);
     }
 }
 
@@ -187,6 +198,15 @@ void Explode::on_tick(tmt::Entity agent, float dt) {
         tmt::engine.ecs.remove_component<tmt::GoapAgent>(agent);
 
         small_enemy->die(agent);
+
+        // Check if the agent has an audio emitter.
+        auto* audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(agent);
+        if (audio_emitter == nullptr) return;
+
+        // Trigger the explosion to start on the current wind up sound.
+        if (small_enemy->explosion_audio_instance.is_valid()) {
+            small_enemy->explosion_audio_instance.set_parameter(small_enemy->sound_parameters.explode_audio_param, true);
+        }
     }
 }
 
@@ -212,6 +232,12 @@ void Explode::on_interrupt(tmt::Entity agent) {
                 }
             }
         }
+    }
+
+    // Stop the "prepare explode" sound affect when interrupted.
+    const auto* small_enemy = tmt::engine.ecs.try_get_component<SmallEnemy>(agent);
+    if (small_enemy != nullptr && small_enemy->explosion_audio_instance.is_valid()) {
+        small_enemy->explosion_audio_instance.stop();
     }
 }
 

@@ -2,6 +2,7 @@
 
 #include "engine/engine.hpp"
 #include "engine/core/ecs.hpp"
+#include "engine/core/components/audio_emitter.hpp"
 
 #include "engine/systems/physics/components/voxel_body.hpp"
 #include "engine/systems/ai/steering/components/steering_mode.hpp"
@@ -10,6 +11,7 @@
 #include "engine/systems/animation/rig_model.hpp"
 #include "../gameplay_functionality_components/player.hpp"
 #include "../gameplay_functionality_components/enemy_components/small_enemy.hpp"
+#include "../gameplay_functionality_components/enemy_components/medium_enemy.hpp"
 
 namespace game {
 
@@ -24,15 +26,12 @@ void SteerToPlayer::on_start(tmt::Entity agent) {
         registry.emplace<SteeringAgent>(agent);
     }
 
-    auto* steering = tmt::engine.ecs.systems.try_get<tmt::SteeringSystem>();
+    const auto* steering = tmt::engine.ecs.systems.try_get<tmt::SteeringSystem>();
 
     if (!steering) {
         tmt::Log::warn("Steering system not active.");
         return;
     }
-
-    // Get the SteeringAgent component & copy global steering params into this agent
-    auto& steering_agent = registry.get<SteeringAgent>(agent);
 
     tmt::SteeringRequest request {};
     request.mode = SteeringMode::SEEK;
