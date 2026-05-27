@@ -161,6 +161,8 @@ void MiningComponent::handle_voxel(const VoxelID& voxel_id) {
         case tmt::Material::Type::NONE:
         case tmt::Material::Type::COPPER:
         case tmt::Material::Type::TITANIUM:
+        case tmt::Material::Type::REINFORCED_STEEL:
+        case tmt::Material::Type::STEEL:
             if (ore_toughness < tmt::engine.frame_data().elapsed_time - mining_voxels.at(voxel_id)) {
                 // resource->blas->remove_voxel(voxel_coord.x, voxel_coord.y, voxel_coord.z);
                 // resource->set_dirty();

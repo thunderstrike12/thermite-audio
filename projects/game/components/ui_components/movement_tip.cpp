@@ -90,7 +90,7 @@ void game::MovementTip::update(const tmt::FrameData& time) {
             tmt::engine.player_data.get<bool>(name_component->name, false) = true;
         }
 
-        fade_tween->from(0.0f).to(1.0f).duration(time_to_fade_out).ease(Tweening::Ease::IN_QUAD).on_complete([this] { apply_enable_disable(); });
+        fade_tween->from(0.0f).to(1.0f).duration(time_to_fade_out).start_delay(time_to_hold).ease(Tweening::Ease::IN_QUAD).on_complete([this] { apply_enable_disable(); });
         fade_tween->restart();
     }
 }
