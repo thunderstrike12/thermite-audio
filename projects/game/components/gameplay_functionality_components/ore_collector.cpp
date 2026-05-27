@@ -5,16 +5,33 @@
 #include "engine/core/components/voxel_renderer.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"
 #include "engine/tools/player_data.hpp"
+#include "engine/tools/prefab_helper.hpp"
 #include "projects/game/data_headers/save_entries.hpp"
 #include "projects/game/data_headers/wallet.hpp"
+
+namespace game {
+
 void game::OreCollector::start() {
     tmt::engine.ecs.get_dispatcher().sink<TriggerCollisionEvent>().connect<&OreCollector::on_collision_trigger>(this);
     if (wallet_entity == entt::null) {
         wallet_entity = entity;
     }
 }
-
 void game::OreCollector::update(const tmt::FrameData& time) {
+    // explosion vfx handling
+    std::unordered_set<tmt::Entity> destroyed_emitters;
+    for (std::pair<const tmt::Entity, float>& emitter_entity : emitter_lifetime_table) {
+        if (emitter_entity.second < 0.0f) {
+            tmt::engine.ecs.destroy_entity(emitter_entity.first);
+            destroyed_emitters.insert(emitter_entity.first);
+        } else {
+            emitter_entity.second -= time.delta_time;
+        }
+    }
+    for (auto emitter_entity : destroyed_emitters) {
+        emitter_lifetime_table.erase(emitter_entity);
+    }
+
     auto& collector_transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
 
     auto barge_entity = collector_transform.get_parent();
@@ -124,6 +141,10 @@ void game::OreCollector::on_collision_trigger(const TriggerCollisionEvent& trigg
         auto count = type_counts[static_cast<uint8_t>(type)];
         tmt::Log::info("Ore count is {}, for {}", count, magic_enum::enum_name(type));
     }
+
+    // vfx trigger before deletion
+    spawn_emitter(tmt::engine.ecs.try_get_component<tmt::Transform>(trigger.other_object)->get_world_position());
+
     tmt::engine.ecs.destroy_entity(trigger.other_object);
 
     // update the wallet
@@ -147,3 +168,27 @@ void game::OreCollector::on_collision_trigger(const TriggerCollisionEvent& trigg
         wallet->currencies.resource_counts[ore.ore_resource] += count * ore.resource_per_voxel;
     }
 }
+
+void OreCollector::spawn_emitter(glm::vec3 spawn_pos) {
+    if (emitter_lifetime <= 0.0f) {
+        return;
+    }
+
+    tmt::Entity instantiated_entity = tmt::PrefabHelper::instantiate_prefab(ore_collection_vfx_prefab->file_location);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(instantiated_entity);
+
+    transform.set_world_position(spawn_pos);
+
+    tmt::ParticleEmitter* emitter_component = tmt::engine.ecs.try_get_component<tmt::ParticleEmitter>(instantiated_entity);
+    if (!emitter_component) {
+        tmt::Log::error("Cant spawn particle on emitter, check prefab on ore collector component, on entity: {}", entity);
+        return;
+    }
+
+    emitter_component->active = false;
+    emitter_component->should_burst = true;
+
+    emitter_lifetime_table.emplace(instantiated_entity, emitter_lifetime);
+}
+
+}  // namespace game

@@ -65,17 +65,15 @@ struct Component {
 
 }  // namespace tmt
 
-#define TMT_COMPONENT_NAME(Type, Name)            \
-    namespace tmt {                               \
-                                                  \
-    template <>                                   \
-    struct Component<Type> {                      \
-        static constexpr const char* NAME = Name; \
-        static constexpr const char* get_name() { \
-            return NAME;                          \
-        }                                         \
-    };                                            \
-                                                  \
+#define TMT_COMPONENT_NAME(Type, Name)                           \
+    namespace tmt {                                              \
+                                                                 \
+    template <>                                                  \
+    struct Component<Type> {                                     \
+        static constexpr const char* NAME = Name;                \
+        static constexpr const char* get_name() { return NAME; } \
+    };                                                           \
+                                                                 \
     }
 
 /* Used to reflect components */
