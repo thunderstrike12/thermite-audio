@@ -65,8 +65,7 @@ void UIElementManager::update_states(const tmt::FrameData& time) {
     }
 
     const glm::vec2 screen_size = engine.renderer.viewport_size();
-    const glm::vec2 mouse_pos = engine.input.get_mouse_position();
-    const glm::vec2 mouse_world = mouse_pos - screen_size * 0.5f;
+    const glm::vec2 mouse_pos = engine.input.get_mouse_position(); /* top-left origin, real screen pixels */
 
     auto slider_view = engine.ecs.view<Slider, UIInteractable, UIComponent, Transform>();
     for (const auto& [entity, slider, interactable, ui_component, transform] : slider_view.each()) {
@@ -96,22 +95,35 @@ void UIElementManager::update_states(const tmt::FrameData& time) {
 
         const float image_width = ui_component.real_size.x;
         const glm::uvec2 screen_res = engine.renderer.render_view.gpu_view.resolution;
-        const glm::vec2 pos_scale_factor(static_cast<float>(screen_res.x) / UIComponent::REFERENCE_WIDTH, static_cast<float>(screen_res.y) / UIComponent::REFERENCE_HEIGHT);
+        const glm::vec2 pos_scale_factor(
+            static_cast<float>(screen_res.x) / UIComponent::REFERENCE_WIDTH,
+            static_cast<float>(screen_res.y) / UIComponent::REFERENCE_HEIGHT
+        );
+
+        /* pivot_screen_x is the point on screen where the slider's pivot lands.
+           The left edge depends on the pivot: left = pivot_pos - pivot.x * width */
         const glm::vec3 slider_position_raw = transform.get_world_position();
-        const glm::vec3 slider_position(slider_position_raw.x * pos_scale_factor.x, slider_position_raw.y * pos_scale_factor.y, slider_position_raw.z);
+        const glm::vec2 slider_anchor_offset = AnchorHelper::calculate_anchor_offset(entity);
+        const float pivot_screen_x = slider_position_raw.x * pos_scale_factor.x + slider_anchor_offset.x;
+        const float slider_left_x  = pivot_screen_x - ui_component.pivot.x * image_width;
+
+        /* Snap handle: screen X of the handle's position along the track. */
+        const float handle_screen_x = slider_left_x
+            + (slider.value - slider.min) / (slider.max - slider.min) * image_width;
 
         auto& handle_transform = engine.ecs.get_component<Transform>(slider.handle_entity);
-        const float handle_x = slider_position.x - image_width * 0.5f + (slider.value - slider.min) / (slider.max - slider.min) * image_width;
-
+        const glm::vec2 handle_anchor_offset = AnchorHelper::calculate_anchor_offset(slider.handle_entity);
+        const float handle_authored_x = (handle_screen_x - handle_anchor_offset.x) / pos_scale_factor.x;
         const glm::vec3 handle_position = handle_transform.get_world_position();
-        handle_transform.set_world_position({ handle_x, handle_position.y, handle_position.z });
+        handle_transform.set_world_position({ handle_authored_x, handle_position.y, handle_position.z });
 
         const auto allowed_states = { ButtonState::ON_CLICK, ButtonState::ON_HOLD };
         if (std::find(allowed_states.begin(), allowed_states.end(), interactable.state) == allowed_states.end()) {
             continue;
         }
 
-        const float relative_x = (mouse_world.x - (slider_position.x - image_width * 0.5f)) / image_width;
+        /* mouse_pos and slider_left_x are both in real screen pixels (top-left origin). */
+        const float relative_x = (mouse_pos.x - slider_left_x) / image_width;
         float new_value = std::clamp(relative_x * (slider.max - slider.min) + slider.min, slider.min, slider.max);
         /* Round to step */
         new_value = std::round(new_value / slider.step) * slider.step;
