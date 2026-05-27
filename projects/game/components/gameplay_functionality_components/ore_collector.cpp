@@ -3,6 +3,7 @@
 #include "projects/game/components/development_tools/collision_trigger.hpp"
 #include "engine/core/polyline.hpp"
 #include "engine/core/components/voxel_renderer.hpp"
+#include "engine/systems/physics/components/voxel_body.hpp"
 #include "engine/tools/player_data.hpp"
 #include "projects/game/data_headers/save_entries.hpp"
 #include "projects/game/data_headers/wallet.hpp"
@@ -12,7 +13,64 @@ void game::OreCollector::start() {
         wallet_entity = entity;
     }
 }
-void game::OreCollector::update(const tmt::FrameData& time) {}
+
+void game::OreCollector::update(const tmt::FrameData& time) {
+    auto& collector_transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+
+    auto barge_entity = collector_transform.get_parent();
+    if (!tmt::engine.ecs.valid(barge_entity)) return;
+
+    auto& barge_transform = tmt::engine.ecs.get_component<tmt::Transform>(barge_entity);
+
+    glm::vec3 barge_pos = barge_transform.get_world_position();
+
+    float dt = time.delta_time;
+
+    for (auto&& [physics_entity, body, transform] : tmt::engine.ecs.view<tmt::VoxelBody, tmt::Transform>().each()) {
+        if (physics_entity == entity) continue;
+        if (body.type != tmt::VoxelBody::DYNAMIC) continue;
+
+        glm::vec3 pos = transform.get_world_position();
+        glm::vec3 to_barge = barge_pos - pos;
+
+        float dist = glm::length(to_barge);
+        if (dist < 0.001f || dist > attraction_range) continue;
+
+        glm::vec3 dir = to_barge / dist;
+
+        // stop the bodies
+        const float capture_radius = 1.5f;
+        if (dist < capture_radius) {
+            body.velocity = glm::vec3(0.0f);
+            transform.set_world_position(barge_pos);
+            continue;
+        }
+
+        // falloff
+        float t = 1.0f - (dist / attraction_range);
+        t = t * t;
+
+        // addative attraction only
+        float accel = attraction_strength * t;
+
+        body.velocity += dir * accel * dt;
+
+        // damping
+        body.velocity *= 0.985f;
+    }
+}
+
+void game::OreCollector::draw_debug_lines() const {
+    auto& collector_transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+
+    auto barge = collector_transform.get_parent();
+    auto barge_transform = tmt::engine.ecs.get_component<tmt::Transform>(barge);
+    glm::vec3 barge_pos = barge_transform.get_world_position();
+
+    tmt::engine.polyline.use_color(1.0f, 0.0f, 0.0f);
+    tmt::engine.polyline.use_line_width(0.5f);
+    tmt::engine.polyline.draw_sphere(barge_pos, attraction_range);
+}
 
 void game::OreCollector::end() {
     tmt::engine.ecs.get_dispatcher().sink<TriggerCollisionEvent>().disconnect<&OreCollector::on_collision_trigger>(this);
