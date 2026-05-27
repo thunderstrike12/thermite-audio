@@ -45,6 +45,10 @@ struct VoxelBody {
     glm::vec3 position = glm::vec3(0);
     glm::quat rotation = glm::quat(1, 0, 0, 0);
 
+    // For interpolation
+    glm::vec3 prev_position = glm::vec3(0);
+    glm::quat prev_rotation = glm::quat(1, 0, 0, 0);
+
     enum Type {
         STATIC,
         DYNAMIC,

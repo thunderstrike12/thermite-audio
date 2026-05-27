@@ -109,16 +109,19 @@ void draw_solids(
     }
 }
 
-void Physics::on_update(const FrameData&) {
+void Physics::on_update(const FrameData& frame) {
     engine.polyline.use_line_width(0.25f);
 
+    // Rigidbody initialization and debug drawing
     for (const auto& [entity, vb, transform, vr] : engine.ecs.view<VoxelBody, Transform, VoxelRenderer>().each()) {
         if (engine.ecs.is_disabled(entity)) continue;
         // if (!transform.is_enabled()) continue;
 
         if (vb.initialized == false) {
             vb.position = transform.get_world_position();
+            vb.prev_position = vb.position;
             vb.rotation = transform.get_world_rotation();
+            vb.prev_rotation = vb.rotation;
 
             if (vb.type == VoxelBody::DYNAMIC) {
                 recalculate_physics_data(vb, *vr.resource.resource);
@@ -148,13 +151,31 @@ void Physics::on_update(const FrameData&) {
         // engine.polyline.use_line_width(0.2f);
         // engine.polyline.draw_obb(vb.position, glm::vec3(vb.width, vb.height, vb.depth) * 0.5f, vb.rotation);
     }
+
+    // Physics interpolation
+    interpolation_time_accum = std::clamp(interpolation_time_accum + frame.delta_time, 0.0f, Engine::Config::FIXED_TIME_STEP);
+    const float alpha = interpolation_time_accum / Engine::Config::FIXED_TIME_STEP;
+
+    for (const auto& [entity, vb, transform] : engine.ecs.view<VoxelBody, Transform>().each()) {
+        const glm::vec3 pos = glm::mix(vb.prev_position, vb.position, alpha);
+        const glm::quat rot = glm::slerp(vb.prev_rotation, vb.rotation, alpha);
+
+        transform.set_world_position(pos);
+        transform.set_world_rotation(rot);
+    }
 }
 
 void Physics::on_fixed_update(const FrameData&) {
     TMT_ZONE_SCOPED_N("Physics")
 
+    interpolation_time_accum -= Engine::Config::FIXED_TIME_STEP;
+
     // Update Forces
     for (const auto& [entity, vb, transform] : engine.ecs.view<VoxelBody, Transform>().each()) {
+        // Store snapshot for interpolation
+        vb.prev_position = vb.position;
+        vb.prev_rotation = vb.rotation;
+
         // Add stored forces
         vb.velocity += vb.stored_velocity;
         vb.stored_velocity = glm::vec3(0);
@@ -647,11 +668,7 @@ void Physics::apply_velocities() const {
 
         // Get change in angle
         float angle = glm::length(vb.angular_velocity) * Engine::Config::FIXED_TIME_STEP;
-        if (angle <= 0.0f) {
-            transform.set_world_position(vb.position);
-            transform.set_world_rotation(vb.rotation);
-            continue;
-        }
+        if (angle <= 0.0f) continue;
 
         // Apply change in angle
         glm::vec3 axis = glm::normalize(vb.angular_velocity);
@@ -662,10 +679,6 @@ void Physics::apply_velocities() const {
         glm::vec3 offset = vb.position - vb.center_of_mass;
         offset = incremental_rot * offset;
         vb.position = vb.center_of_mass + offset;
-
-        // Apply position and rotation
-        transform.set_world_position(vb.position);
-        transform.set_world_rotation(vb.rotation);
     }
 }
 

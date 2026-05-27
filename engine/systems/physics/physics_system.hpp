@@ -31,6 +31,7 @@ class Physics : public ISystem {
    private:
     // Simulation data
     float simulation_time_accum = 0.0f;
+    float interpolation_time_accum = 0.0f;
     int max_contacts = 256;
     bool simulating = true;
     ConstraintSolver solver = {};
