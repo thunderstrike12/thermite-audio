@@ -209,8 +209,6 @@ void UiPipeline::enqueue_images(RenderGraph& render_graph, RenderView& render_vi
             if (image_renderer.texture) image.image_index = image_renderer.texture.resource->image.get_index();
             image.flipbook_frame = image_renderer.current_frame;
             image.flipbook_frames = image_renderer.texture ? image_renderer.texture.resource->flipbook_frames : 1u;
-            image.extent = image.extent * ui_component.size;
-            image.pivot = ui_component.pivot;
             image.pos += AnchorHelper::calculate_anchor_offset(entity);
         }
     }
