@@ -1,10 +1,12 @@
-#include "nav_mesh.hpp"
+﻿#include "nav_mesh.hpp"
 
 #include "engine/engine.hpp"
 #include "engine/core/polyline.hpp"
 #include "engine/core/logger.hpp"
 #include "glm/gtx/pca.hpp"
 #include "engine/core/renderer/renderer.hpp"
+#include "engine/systems/physics/components/voxel_body.hpp"
+#include "engine/core/components/voxel_renderer.hpp"
 
 namespace tmt {
 
@@ -67,6 +69,58 @@ void NavMesh::compute_normals(int iterations) {
     for (int i = generation_iteration * iterations; i < max_iterations; i++) {
         entered_loop = true;
         auto& node = (*generating_nodes)[i];
+
+        // fire rays to see if node is inside the asteroid
+        float node_spacing = float(1u << (generating_lod * 2)) * 0.1f;      // 0.1f = voxelscale
+        float max_distance = 0.0f;
+        const int NUM_RAYS = 12;
+        const float PHI = (1.0f + std::sqrt(5.0f)) / 2.0f;                  // golden ratio
+        const float GOLDEN_ANGLE = 2.0f * glm::pi<float>() * (2.0f - PHI);  // ~2.399 rad
+
+        for (int j = 0; j < NUM_RAYS; j++) {
+            float t = (float)j / (float)(NUM_RAYS - 1);
+            float inclination = std::acos(1.0f - 2.0f * t);  // [0, π]
+            float azimuth = GOLDEN_ANGLE * j;                // golden angle spiral
+
+            glm::vec3 dir(std::sin(inclination) * std::cos(azimuth), std::sin(inclination) * std::sin(azimuth), std::cos(inclination));
+            dir = glm::normalize(dir);
+
+            tmt::Ray ray_g(node.world_pos - dir * node_spacing * 0.5f, dir);
+            auto hit_g = tmt::engine.renderer.trace_ray(ray_g);
+            if (hit_g.distance > max_distance) max_distance = hit_g.distance;
+        }
+
+        if (max_distance < 0.001f) {
+            for (auto& connecting_node : node.connecting_nodes) {
+                (*generating_nodes)[connecting_node].normal = glm::vec3(0, 0, 0);
+                for (int j = 0; j < (*generating_nodes)[connecting_node].connecting_nodes.size(); j++) {
+                    auto& connecting_node_connection = (*generating_nodes)[connecting_node].connecting_nodes[j];
+                    //(*generating_nodes)[connecting_node_connection].normal = glm::vec3(0, 0, 0);
+                    if (connecting_node_connection == i) {
+                        // remove this connection, it's invalid
+                        (*generating_nodes)[connecting_node].connecting_nodes.erase((*generating_nodes)[connecting_node].connecting_nodes.begin() + j);
+                    }
+                }
+            }
+            node.connecting_nodes.clear();
+            continue;
+        }
+
+        for (auto& other_node : (*generating_nodes)) {
+            if (glm::distance(node.world_pos, other_node.world_pos) < node_spacing) {
+                // if nodes are very close, connect them
+                if (std::find(node.connecting_nodes.begin(), node.connecting_nodes.end(), other_node.id) == node.connecting_nodes.end() && other_node.id != node.id) {
+                    node.connecting_nodes.push_back(other_node.id);
+                    node.normal = glm::vec3(0.f);
+                }
+                // connect both ways
+                if (std::find(other_node.connecting_nodes.begin(), other_node.connecting_nodes.end(), node.id) == other_node.connecting_nodes.end() && other_node.id != node.id) {
+                    other_node.connecting_nodes.push_back(node.id);
+                    other_node.normal = glm::vec3(0.f);
+                }
+            }
+        }
+
         float length_acc = 0.f;
         glm::vec3 edge_acc(0.f);
         glm::vec3 last_edge(0.f, 1.f, 0.f);
@@ -126,7 +180,9 @@ void NavMesh::average_neighbor_normals(int iterations) {
             unsigned int idx = node.connecting_nodes[j];
             node_normal += (*generating_nodes)[idx].normal;
         }
-        node.normal = glm::normalize(node_normal);
+        if (glm::length(node_normal) > 0.001f) {
+            node.normal = glm::normalize(node_normal);
+        }
     }
     if (!entered_loop) {
         generation_iteration = -1;
@@ -138,9 +194,23 @@ void NavMesh::generate_mesh_over_time() {
     int iterations = 100;
     switch (generation_state) {
         case NavMeshGenerationState::UNINITIALISED: {
-            generating_lod = 3;
-            init();
-            nodes_mesh->clear();
+            auto entity = tmt::engine.ecs.get_entity(*this);
+            auto children = tmt::engine.ecs.get_component<tmt::Transform>(entity).get_all_children();
+            nav_mesh_entities.clear();
+            voxels_since_generation = 0;
+            for (auto child : children) {
+                if (tmt::engine.ecs.has_component<tmt::VoxelRenderer>(child)) {
+                    nav_mesh_entities.push_back(child);
+                    auto resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(child).resource;
+                    voxels_since_generation += resource->blas->voxel_count - resource->blas->voxels_wasted;
+                }
+            }
+            generating_lod = 2;
+            generating_entity_index = 0;
+            if (!nodes_mesh) {
+                init();
+                nodes_mesh->clear();
+            }
             generation_state = NavMeshGenerationState::INITIALISING_VOLUME;
             generation_iteration = -1;
             break;
@@ -150,18 +220,32 @@ void NavMesh::generate_mesh_over_time() {
             break;
         }
         case NavMeshGenerationState::INITIALISING_VOLUME: {
-            delete node_map;
-            node_map = new std::unordered_map<uint32_t, int>;
+            // Per-entity reset: node_map keys are local to the current entity's volume,
+            // so they must not leak between entities.
+            node_map->clear();
             volume = Volume();
             volume.traversed = false;
-            if (generating_nodes) generating_nodes->clear();
+            // Only clear the node list at the start of a fresh LOD pass (first entity).
+            // Subsequent entities accumulate into the same buffer.
+            if (generating_entity_index == 0 && generating_nodes) {
+                generating_nodes->clear();
+            }
             generate_mesh(iterations);
             generation_state = NavMeshGenerationState::GENERATING_MESH;
             break;
         }
         case NavMeshGenerationState::FINISHED_LOWER_LOD: {
-            generation_iteration = -1;
-            generation_state = NavMeshGenerationState::GENERATING_NORMALS;
+            // Done with the current entity at this LOD. Advance to the next entity,
+            // or move on to the normals phase if all entities are processed.
+            generating_entity_index++;
+            if (generating_entity_index < (int)nav_mesh_entities.size()) {
+                generation_iteration = -1;
+                generation_state = NavMeshGenerationState::INITIALISING_VOLUME;
+            } else {
+                generating_entity_index = 0;
+                generation_iteration = -1;
+                generation_state = NavMeshGenerationState::GENERATING_NORMALS;
+            }
             break;
         }
         case NavMeshGenerationState::GENERATING_NORMALS: {
@@ -183,6 +267,7 @@ void NavMesh::generate_mesh_over_time() {
             } else {
                 generation_state = NavMeshGenerationState::INITIALISING_VOLUME;
                 generating_lod--;
+                generating_entity_index = 0;
             }
             break;
         }
@@ -194,6 +279,19 @@ void NavMesh::generate_mesh_over_time() {
 }
 
 void NavMesh::generate_mesh(int iterations) {
+    if (nav_mesh_entities.empty() || generating_entity_index >= (int)nav_mesh_entities.size()) {
+        generation_state = NavMeshGenerationState::FINISHED_LOWER_LOD;
+        return;
+    }
+
+    auto& entity = nav_mesh_entities[generating_entity_index];
+
+    // NOTE: adjust these two accessors to match your ECS / component API.
+    // They are the only places that depend on how an Entity exposes its
+    // VoxelBody and its world transform.
+    auto voxel_volume = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(entity).resource;
+    glm::mat4 entity_world_matrix = tmt::engine.ecs.get_component<tmt::Transform>(entity).get_world_matrix();
+
     if (generation_state == NavMeshGenerationState::INITIALISING_VOLUME) {
         volume.traverse(voxel_volume, generating_lod);
     }
@@ -224,8 +322,9 @@ void NavMesh::generate_mesh(int iterations) {
                     glm::vec3 voxel_pos = (glm::vec3(x, y, z) + 0.5f) * float(volume.divisor);
                     glm::vec3 centered = voxel_pos - full_size * 0.5f;
                     node.local_pos = centered * voxel_scale;
-                    node.world_pos = world_matrix * glm::vec4(node.local_pos, 1.f);
+                    node.world_pos = entity_world_matrix * glm::vec4(node.local_pos, 1.f);
                     node.iteration = generation_iteration;
+                    node.id = (int)generating_nodes->size();
                     (*node_map)[pos_index] = (int)generating_nodes->size();
                     node_index = (int)generating_nodes->size();
                     generating_nodes->push_back(node);
@@ -250,8 +349,9 @@ void NavMesh::generate_mesh(int iterations) {
                                 glm::vec3 voxel_pos = (glm::vec3(neighbor.x, neighbor.y, neighbor.z) + 0.5f) * float(volume.divisor);
                                 glm::vec3 centered = voxel_pos - full_size * 0.5f;
                                 node.local_pos = centered * voxel_scale;
-                                node.world_pos = world_matrix * glm::vec4(node.local_pos, 1.f);
+                                node.world_pos = entity_world_matrix * glm::vec4(node.local_pos, 1.f);
                                 node.iteration = generation_iteration;
+                                node.id = (int)generating_nodes->size();
                                 (*node_map)[neighbor_pos_index] = (int)generating_nodes->size();
                                 neighbor_node_index = (int)generating_nodes->size();
                                 generating_nodes->push_back(node);
@@ -408,9 +508,23 @@ std::optional<glm::vec3> tmt::NavMesh::follow_path(glm::vec3 start, glm::vec3 en
     return glm::normalize(target_pos - start);
 }
 
+void tmt::NavMesh::check_if_should_regenerate() {
+    int amount_of_voxels_remaining = 0;
+    for (const auto& voxel_entity : nav_mesh_entities) {
+        auto resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(voxel_entity).resource;
+        uint32_t current_voxels = resource->blas->voxel_count - resource->blas->voxels_wasted;
+        amount_of_voxels_remaining += current_voxels;
+    }
+    if (voxels_since_generation - amount_of_voxels_remaining > voxels_to_lose) {
+        generation_state = NavMeshGenerationState::UNINITIALISED;
+        generate_mesh_over_time();
+    }
+}
+
 void tmt::NavMesh::inspect() {
     tmt::engine.polyline.use_color(1.0f, 0.0f, 0.0f);
     tmt::engine.polyline.use_line_width(2, true);
+    tmt::engine.polyline.use_depth_testing(true);
 
     if (draw_nodes) {
         for (int i = 0; i < (*nodes_mesh).size(); i++) {

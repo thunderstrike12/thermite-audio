@@ -12,6 +12,7 @@
 #include "engine/systems/animation/constraints/two_bone_ik.hpp"
 #include "engine/core/renderer/renderer.hpp"
 #include "engine/core/components/rig_controller.hpp"
+#include "engine/systems/physics/components/voxel_body.hpp"
 #include "engine/systems/ai/navigation/nav_mesh.hpp"
 
 namespace tmt {
@@ -394,11 +395,15 @@ void AnimationPoseEvaluator::on_update(const tmt::FrameData&) {
     for (const auto&& [entity, rig] : engine.ecs.view<RigModel>().each()) {
         for (const Entity bone_entity : rig.bone_entities) {
             auto& transform = engine.ecs.get_component<Transform>(bone_entity);
-
             const auto& local_pose = rig.bone_keyframes[bone_entity];
-            transform.set_local_position(local_pose.translation);
-            transform.set_local_rotation(local_pose.rotation);
-            transform.set_local_scale(local_pose.scale);
+            if (auto voxel_body = tmt::engine.ecs.try_get_component<tmt::VoxelBody>(bone_entity)) {
+                voxel_body->position = local_pose.translation;
+                voxel_body->rotation = local_pose.rotation;
+            } else {
+                transform.set_local_position(local_pose.translation);
+                transform.set_local_rotation(local_pose.rotation);
+                transform.set_local_scale(local_pose.scale);
+            }
         }
     }
 
@@ -413,9 +418,14 @@ void AnimationPoseEvaluator::on_update(const tmt::FrameData&) {
             glm::quat blend_pose_rotation = glm::slerp(local_keyframe_pose.rotation, local_constrained_pose.rotation, constrained_rig.blend);
             glm::vec3 blend_pose_scale = glm::mix(local_keyframe_pose.scale, local_constrained_pose.scale, constrained_rig.blend);
 
-            transform.set_local_position(blend_pose_position);
-            transform.set_local_rotation(blend_pose_rotation);
-            transform.set_local_scale(blend_pose_scale);
+            if (auto voxel_body = tmt::engine.ecs.try_get_component<tmt::VoxelBody>(entity)) {
+                voxel_body->position = blend_pose_position;
+                voxel_body->rotation = blend_pose_rotation;
+            } else {
+                transform.set_local_position(blend_pose_position);
+                transform.set_local_rotation(blend_pose_rotation);
+                transform.set_local_scale(blend_pose_scale);
+            }
         }
     }
 }

@@ -20,7 +20,6 @@ struct Missile : public tmt::GameComponent<Missile> {
 
     glm::vec3 velocity = glm::vec3(0, 0, 0);
 
-    LayerMask enemy_projectile_mask {};
     tmt::ResourceRef<tmt::Stencil> stencil;
     tmt::Entity enemy_entity;
 
@@ -30,5 +29,4 @@ struct Missile : public tmt::GameComponent<Missile> {
 };
 
 }  // namespace game
-
-TMT_GAME_COMPONENT(game::Missile, (enemy_projectile_mask, stencil, enemy_entity, life_time, offset, damage));
+TMT_GAME_COMPONENT_EMPTY(game::Missile);

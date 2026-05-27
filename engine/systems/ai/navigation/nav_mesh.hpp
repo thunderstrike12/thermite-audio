@@ -70,7 +70,10 @@ class NavMesh {
     std::vector<NavNode>* generating_nodes = nullptr;
     std::vector<int> path;
 
-    tmt::ResourceRef<tmt::VoxelVolume> voxel_volume;
+    // tmt::ResourceRef<tmt::VoxelScene> voxel_volume;
+    // tmt::ResourceRef<tmt::VoxelVolume> voxel_volume;
+    std::vector<Entity> nav_mesh_entities;
+    int selected_entity_index = 0;
     int lod_level = 0;
     glm::vec3 inflation = glm::vec3(1.0f);
 
@@ -80,6 +83,7 @@ class NavMesh {
 
    private:
     std::unordered_map<uint32_t, int>* node_map;
+    int generating_entity_index = 0;
     Volume volume;
 
     int generating_lod = 0;
@@ -98,6 +102,9 @@ class NavMesh {
     std::vector<NavNode>* buffer_a = nullptr;
     std::vector<NavNode>* buffer_b = nullptr;
 
+    int voxels_since_generation = -1;
+    int voxels_to_lose = 100;
+
    public:
     glm::mat4 world_matrix = glm::mat4(1.f);
     bool nav_nodes_valid() {
@@ -106,15 +113,15 @@ class NavMesh {
         return true;
     }
     void compute_normals(int iterations = std::numeric_limits<int>::max());
-
     void average_neighbor_normals(int iterations = std::numeric_limits<int>::max());
     void generate_mesh_over_time();
     void generate_mesh(int iterations = std::numeric_limits<int>::max());
     std::vector<int> find_path(const int starting_node_id, const int ending_node_id);
     int find_closest_node(const glm::vec3& position);
     std::optional<glm::vec3> follow_path(glm::vec3 start, glm::vec3 end);
+    void check_if_should_regenerate();
     void inspect();
 };
 
 }  // namespace tmt
-TMT_COMPONENT(tmt::NavMesh, "Navigation Mesh", (voxel_volume, lod_level, draw_nodes, draw_gen_nodes, draw_path));
+TMT_COMPONENT(tmt::NavMesh, "Navigation Mesh", (lod_level, draw_nodes, draw_gen_nodes, draw_path));

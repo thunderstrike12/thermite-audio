@@ -157,6 +157,7 @@ void Physics::on_update(const FrameData& frame) {
     const float alpha = interpolation_time_accum / Engine::Config::FIXED_TIME_STEP;
 
     for (const auto& [entity, vb, transform] : engine.ecs.view<VoxelBody, Transform>().each()) {
+        if (vb.type == VoxelBody::STATIC) continue;
         const glm::vec3 pos = glm::mix(vb.prev_position, vb.position, alpha);
         const glm::quat rot = glm::slerp(vb.prev_rotation, vb.rotation, alpha);
 

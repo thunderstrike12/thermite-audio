@@ -40,12 +40,17 @@ void Wander::on_tick(tmt::Entity enemy_entity, float dt) {
     }
 
     // follow path toward wander target
+    tmt::engine.polyline.use_depth_testing(false);
+    tmt::engine.polyline.draw_sphere(wander_target, 0.1f, 8, 0.1f);
     if (has_path) {
         std::optional<glm::vec3> direction = nav_mesh.follow_path(enemy_entity_pos, wander_target);
-
-        auto velocity = glm::vec3(*direction * enemy.walk_speed);
-        enemy.velocity += velocity;
+        if (direction) {
+            auto velocity = glm::vec3(*direction * enemy.walk_speed);
+            if (glm::length(velocity) > 10.0f) tmt::Log::warn("Wander velocity is very high: {}", glm::length(velocity));
+            enemy.velocity += velocity;
+        }
         if (glm::abs(enemy.velocity.x) < 0.1f && glm::abs(enemy.velocity.y) < 0.1f && glm::abs(enemy.velocity.z) < 0.1f) {
+            tmt::Log::warn("Wander path recomputed", glm::length(enemy.velocity));
             has_path = false;  // need a new random destination
             return;
         }

@@ -116,7 +116,11 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
                 auto& child_transform = tmt::engine.ecs.get_component<tmt::Transform>(child);
                 child_transform.set_parent(entt::null);
                 auto& child_voxel_body = tmt::engine.ecs.get_component<tmt::VoxelBody>(child);
-                child_voxel_body.velocity = glm::normalize(child_transform.get_world_position() - walking_transform.get_world_position()) * velocity_of_objects_on_death;
+                child_voxel_body.velocity = velocity * 0.4f + glm::normalize(child_transform.get_world_position() - walking_transform.get_world_position()) * velocity_of_objects_on_death;
+                child_voxel_body.angular_velocity = glm::vec3(
+                    (static_cast<float>(rand()) / RAND_MAX - 0.5f) * velocity_of_objects_on_death, (static_cast<float>(rand()) / RAND_MAX - 0.5f) * velocity_of_objects_on_death,
+                    (static_cast<float>(rand()) / RAND_MAX - 0.5f) * velocity_of_objects_on_death
+                );
                 child_voxel_body.type = tmt::VoxelBody::DYNAMIC;
                 child_voxel_body.gravity = 0.0f;
                 child_voxel_body.position = child_transform.get_world_position();
@@ -213,7 +217,11 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
     int closest_node = nav_mesh.find_closest_node(walking_transform.get_world_position());
 
     auto* nodes = nav_mesh.nodes_mesh;
-    auto& normal = (*nodes)[closest_node].normal;
+    auto normal = (*nodes)[closest_node].normal;
+    if (glm::length(normal) > 1.1f || glm::length(normal) < 0.9f) {
+        normal = walking_transform.get_up();
+        tmt::Log::warn("current normal is cooked from medium enemy.cpp");
+    }
 
     const tmt::Ray ray = tmt::Ray(walking_transform.get_world_position() + normal * 0.5f, glm::normalize(-normal));
     const tmt::Hit hit = tmt::engine.ecs.systems.get<tmt::Physics>().raycast(ray, enemy_mask);
@@ -223,6 +231,7 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
     if (glm::isnan(desired_velocity.x)) {
         tmt::Log::warn("desired vel is nan");
     } else {
+        if (glm::length(desired_velocity) > 10.0f) tmt::Log::warn("Desired velocity is very high: {}", glm::length(desired_velocity));
         velocity += desired_velocity;
     }
 
@@ -280,7 +289,8 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
         tmt::engine.polyline.draw_arrow(ray.origin, ray.dir, 1.0f);
         tmt::Hit hit = tmt::engine.ecs.systems.get<tmt::Physics>().raycast(ray, enemy_mask);
         float ground_distance = hit.distance - 1.0f;
-        float move_distance = ground_distance - available_positions[i].height_offset > 10.0f ? 10.0f : ground_distance - available_positions[i].height_offset;
+        float move_distance = ground_distance - available_positions[i].height_offset;
+        move_distance = glm::clamp(move_distance, available_pos_min_height_diff, available_pos_max_height_diff);
         pos_transform.set_world_position(ref_pos + ray.dir * move_distance);
         tmt::engine.polyline.draw_sphere(pos_transform.get_world_position(), 0.1f, 8);
         tmt::engine.polyline.draw_sphere(ref_pos, 0.2f, 8);
@@ -310,8 +320,10 @@ void game::MediumEnemy::kite_player() const {
         if (distance < back_off_distance) {
             glm::vec3 target_pos = enemy_entity_pos - *direction * 10.0f;
             direction = nav_mesh.follow_path(enemy_entity_pos, target_pos);
+            if (glm::length(glm::vec3(*direction * enemy.walk_speed)) > 10.0f) tmt::Log::warn("Kite back off velocity is very high: {}", glm::length(glm::vec3(*direction * enemy.walk_speed)));
             enemy.velocity += glm::vec3(*direction * enemy.walk_speed);
         } else {
+            if (glm::length(glm::vec3(*direction * enemy.walk_speed)) > 10.0f) tmt::Log::warn("Kite velocity is very high: {}", glm::length(glm::vec3(*direction * enemy.walk_speed)));
             enemy.velocity += glm::vec3(*direction * enemy.walk_speed);
         }
     } else {
