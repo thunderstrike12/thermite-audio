@@ -2,6 +2,8 @@
 #include "projects/game/data_headers/events.hpp"
 #include "engine/systems/gameplay/game_component.hpp"
 #include "projects/game/components/managers/weapon_manager.hpp"
+#include "engine/core/components/emitter.hpp"
+
 namespace game {
 
 struct FireRate {
@@ -28,12 +30,18 @@ class Weapon : public tmt::GameComponent<Weapon> {
     tmt::Entity shooting_entity;
     tmt::Entity spawn_location_entity = entt::null;
 
+    tmt::Entity vfx_spawn_location_entity = entt::null;
+    tmt::ResourceRef<tmt::Json> weapon_shoot_vfx;
+
    private:
     friend class WeaponManager;
     void on_shoot(const ShootEvent& e);
+    std::unordered_map<tmt::Entity, float> emitter_lifetime_table;
+    void spawn_emitter();
+    float emitter_lifetime = 0.5f;
 };
 
 }  // namespace game
 TMT_OBJECT(game::FireRate, (shots_per_second));
 
-TMT_GAME_COMPONENT(game::Weapon, (primary_fire_rate, secondary_fire_rate, shooting_entity, spawn_location_entity));
+TMT_GAME_COMPONENT(game::Weapon, (primary_fire_rate, secondary_fire_rate, shooting_entity, spawn_location_entity, vfx_spawn_location_entity, weapon_shoot_vfx));

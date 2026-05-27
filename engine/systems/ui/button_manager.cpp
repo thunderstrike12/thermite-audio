@@ -95,21 +95,17 @@ void UIElementManager::update_states(const tmt::FrameData& time) {
 
         const float image_width = ui_component.real_size.x;
         const glm::uvec2 screen_res = engine.renderer.render_view.gpu_view.resolution;
-        const glm::vec2 pos_scale_factor(
-            static_cast<float>(screen_res.x) / UIComponent::REFERENCE_WIDTH,
-            static_cast<float>(screen_res.y) / UIComponent::REFERENCE_HEIGHT
-        );
+        const glm::vec2 pos_scale_factor(static_cast<float>(screen_res.x) / UIComponent::REFERENCE_WIDTH, static_cast<float>(screen_res.y) / UIComponent::REFERENCE_HEIGHT);
 
         /* pivot_screen_x is the point on screen where the slider's pivot lands.
            The left edge depends on the pivot: left = pivot_pos - pivot.x * width */
         const glm::vec3 slider_position_raw = transform.get_world_position();
         const glm::vec2 slider_anchor_offset = AnchorHelper::calculate_anchor_offset(entity);
         const float pivot_screen_x = slider_position_raw.x * pos_scale_factor.x + slider_anchor_offset.x;
-        const float slider_left_x  = pivot_screen_x - ui_component.pivot.x * image_width;
+        const float slider_left_x = pivot_screen_x - ui_component.pivot.x * image_width;
 
         /* Snap handle: screen X of the handle's position along the track. */
-        const float handle_screen_x = slider_left_x
-            + (slider.value - slider.min) / (slider.max - slider.min) * image_width;
+        const float handle_screen_x = slider_left_x + (slider.value - slider.min) / (slider.max - slider.min) * image_width;
 
         auto& handle_transform = engine.ecs.get_component<Transform>(slider.handle_entity);
         const glm::vec2 handle_anchor_offset = AnchorHelper::calculate_anchor_offset(slider.handle_entity);
