@@ -107,6 +107,13 @@ void game::WeaponManager::on_overheat(const game::WeaponFiredEvent& event) {
 
 void game::WeaponManager::check_trigger_shoot_event() {
     auto& input = tmt::engine.input;
+    auto* player = tmt::engine.ecs.try_get_component<game::Player>(shooting_entity);
+    if (player && player->get_state() == game::PlayerState::ATTACHED) {
+        if (input.is_action_just_released(action::SHOOT)) {
+            tmt::engine.ecs.get_dispatcher().trigger(ReleaseShootEvent { shooting_entity });
+        }
+        return;
+    }
 
     if (input.is_action_pressed(action::SHOOT)) {
         tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, false });
@@ -133,6 +140,20 @@ void game::WeaponManager::complete_switch() {
 }
 
 void game::WeaponManager::update(const tmt::FrameData& time) {
+    auto* player = tmt::engine.ecs.try_get_component<game::Player>(shooting_entity);
+    const bool is_attached = player && player->get_state() == game::PlayerState::ATTACHED;
+    if (is_attached) {
+        auto& input = tmt::engine.input;
+        if (input.is_action_pressed(action::SHOOT) || input.is_action_just_released(action::SHOOT) || input.is_action_pressed(action::SECONDARY_TOOL_USE) ||
+            input.is_action_just_released(action::SECONDARY_TOOL_USE)) {
+            tmt::engine.ecs.get_dispatcher().trigger(ReleaseShootEvent { shooting_entity });
+            auto* rig_controller = tmt::engine.ecs.try_get_component<tmt::RigController>(tool_rig);
+            if (rig_controller) {
+                rig_controller->set_parameter_bool("InUse", false);
+            }
+        }
+    }
+
     // TODO replace with proper state
     if (switching) {
         switching_remaining_time -= tmt::engine.frame_data().delta_time;
@@ -143,19 +164,25 @@ void game::WeaponManager::update(const tmt::FrameData& time) {
     } else {
         switch (current_weapon) {
             case game::WeaponType::RIFLE:
-                check_trigger_shoot_event();
+                if (!is_attached) {
+                    check_trigger_shoot_event();
+                }
 
                 break;
             case game::WeaponType::GRAVITY:
-                if (overheat_remaining_time < 0.0f) {
-                    check_trigger_shoot_event();
-                }
-                if (tmt::engine.input.is_action_pressed(action::SECONDARY_TOOL_USE)) {
-                    tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, true });
+                if (!is_attached) {
+                    if (overheat_remaining_time < 0.0f) {
+                        check_trigger_shoot_event();
+                    }
+                    if (tmt::engine.input.is_action_pressed(action::SECONDARY_TOOL_USE)) {
+                        tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, true });
+                    }
                 }
                 break;
             case game::WeaponType::MINING:
-                check_trigger_shoot_event();
+                if (!is_attached) {
+                    check_trigger_shoot_event();
+                }
 
                 break;
         }
