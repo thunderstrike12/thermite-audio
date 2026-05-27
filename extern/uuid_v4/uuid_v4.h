@@ -114,7 +114,7 @@ class UUID {
     }
 
     /* Builds a 128-bits UUID */
-    UUID(__m128i uuid) {
+    explicit UUID(__m128i uuid) {
       _mm_store_si128((__m128i*)data, uuid);
     }
 
@@ -123,7 +123,7 @@ class UUID {
       _mm_store_si128((__m128i*)data, z);
     }
 
-    UUID(const uint8_t* bytes) {
+    explicit UUID(const uint8_t* bytes) {
       __m128i x = _mm_loadu_si128((__m128i*)bytes);
       _mm_store_si128((__m128i*)data, x);
     }
