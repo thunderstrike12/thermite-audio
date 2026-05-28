@@ -228,15 +228,17 @@ void UIElementManager::on_mouse_move(MouseMoveEvent& event) {
         }
     }
 
-    auto slider_view = engine.ecs.view<Slider>();
-    for (auto [entity, slider] : slider_view.each()) {
-        if (AnchorHelper::is_inside(entity, mouse_pos)) {
-            select_button(entity);
-            return;
-        }
-        if (slider.handle_entity != entt::null && AnchorHelper::is_inside(slider.handle_entity, mouse_pos)) {
-            select_button(entity);
-            return;
+    if (engine.ecs.has_component<Slider>(selected_entity) == false) {
+        auto slider_view = engine.ecs.view<Slider>();
+        for (auto [entity, slider] : slider_view.each()) {
+            if (AnchorHelper::is_inside(entity, mouse_pos)) {
+                select_button(entity);
+                return;
+            }
+            if (slider.handle_entity != entt::null && AnchorHelper::is_inside(slider.handle_entity, mouse_pos)) {
+                select_button(entity);
+                return;
+            }
         }
     }
 
