@@ -38,7 +38,7 @@ std::vector<AudioInstance> paused_game_audio;
 }  // namespace
 
 bool AudioInstance::is_valid() const {
-    return !is_stopped() && instance->isValid();
+    return instance->isValid() && !is_stopped();
 }
 
 bool AudioInstance::is_stopped() const {
@@ -578,7 +578,7 @@ void Audio::update_emitters() {
             .up = std::bit_cast<FMOD_VECTOR>(transform.get_up()),
         };
 
-        for (const AudioInstance3D& instance : audio_emitter.playing_instances) {
+        for (const AudioInstance3D& instance : audio_emitter.playing_instances_3d) {
             const FMOD_RESULT result = instance.instance->set3DAttributes(&attributes);
             TryLogError(result, "Failed to set emitter attributes");
         }
@@ -639,7 +639,7 @@ void Audio::on_draw_lines() const {
         if (game_active) {
             // During pause or gameplay, draw the distance bounds of the active playing sounds.
             FMOD_3D_ATTRIBUTES attributes;
-            for (const AudioInstance3D& instance : audio_emitter.playing_instances) {
+            for (const AudioInstance3D& instance : audio_emitter.playing_instances_3d) {
                 // on_draw_lines() is called before the audio update function, so we have to make sure the instance is still valid.
                 if (not instance.is_valid()) continue;
 

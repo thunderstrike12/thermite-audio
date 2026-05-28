@@ -100,6 +100,12 @@ void SmallEnemy::die(tmt::Entity agent) {
             }
         }
     }
+
+    // If the audio emitter exists and is playing sounds it should stop the sounds.
+    auto* audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(entity);
+    if (audio_emitter != nullptr) {
+        audio_emitter->stop_instances();
+    }
 }
 
 void SmallEnemy::play_aggro_sound() const {

@@ -100,10 +100,10 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
         uint32_t current_core_voxels = resource->blas->voxel_count - resource->blas->voxels_wasted;
         if (current_core_voxels != core_voxels) {
             if (audio_emitter != nullptr) {
+                // Stop all other sounds playing on this emitter before playing the death sound.
+                audio_emitter->stop_instances();
                 const tmt::AudioInstance3D instance = audio_emitter->play(sounds.sound_core_destroyed);
                 instance.set_maximum_distance(aggro_range * 1.5f);  // Multiply be 1.25f to ensure the player can hear it even when at the edge of the range
-                walk_instance.stop();
-                laser_instance.stop();
             }
 
             core_destroyed = true;

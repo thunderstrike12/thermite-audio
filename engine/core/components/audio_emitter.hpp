@@ -19,12 +19,18 @@ class AudioEmitter : public OnSceneStart {
     /// @param stop_other_instances: If all other sounds being played by this AudioEmitter should be stopped.
     /// @return The AudioInstance3D of the audio event, can be used to modify parameters while the sound is playing.
     AudioInstance3D play(const AudioEvent& event, bool update_position = true, bool stop_other_instances = false);
-
     AudioInstance play_2d(const AudioEvent& event, bool stop_other_instances = false);
 
+    // Stop all instances currently playing through this emitter.
+    void stop_instances();
+
+    // Disconnect an audio instance from being managed by this emitter (used for explosions).
+    void disconnect_instance(const AudioInstance3D& instance);
+    void disconnect_instance(const AudioInstance& instance);
+
    private:
-    std::vector<AudioInstance3D> playing_instances;
-    std::vector<AudioInstance> playing_instances_2d;
+    std::vector<AudioInstance3D> playing_instances_3d;
+    std::vector<AudioInstance> playing_instances;
 
     void cleanup_playing_instances();
     void on_scene_start() override;

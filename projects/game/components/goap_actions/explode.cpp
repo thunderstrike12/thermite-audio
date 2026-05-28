@@ -197,16 +197,16 @@ void Explode::on_tick(tmt::Entity agent, float dt) {
         tmt::engine.ecs.remove_component<SteeringAgent>(agent);
         tmt::engine.ecs.remove_component<tmt::GoapAgent>(agent);
 
-        small_enemy->die(agent);
-
         // Check if the agent has an audio emitter.
         auto* audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(agent);
-        if (audio_emitter == nullptr) return;
 
         // Trigger the explosion to start on the current wind up sound.
-        if (small_enemy->explosion_audio_instance.is_valid()) {
+        if (audio_emitter != nullptr && small_enemy->explosion_audio_instance.is_valid()) {
             small_enemy->explosion_audio_instance.set_parameter(small_enemy->sound_parameters.explode_audio_param, true);
+            audio_emitter->disconnect_instance(small_enemy->explosion_audio_instance);
         }
+
+        small_enemy->die(agent);
     }
 }
 
