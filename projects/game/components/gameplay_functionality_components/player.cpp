@@ -149,6 +149,9 @@ void Player::start() {
     if (tmt::engine.ecs.valid(barge)) {
         ensure_attached_camera();
     }
+
+    health.value = health.max_value;
+    energy.value = energy.max_value;
 }
 void Player::end() {
     tmt::engine.ecs.get_dispatcher().sink<AttachEvent>().disconnect<&Player::on_attach>(this);
