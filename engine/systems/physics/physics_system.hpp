@@ -38,7 +38,7 @@ class Physics : public ISystem {
     Bvh2<VoxelObject> bvh {};
     std::vector<Entity> entities {};
 
-    float max_distance = 1'000.0f;
+    float max_distance = 152.0f * 152.0f;
 
     // Layers
     PhysicsLayers physics_layers;
