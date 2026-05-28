@@ -38,9 +38,13 @@ void WalletUiLink::change_text() const {
 }
 
 void WalletUiLink::update_value() {
+    /* Try to get the wallet player data */
+    auto wallet_data { tmt::engine.player_data.try_get<WalletData>(WALLET_DATA) };
+
     if (entities_with_wallet.empty() == true) return;
     auto entity_with_wallet = entities_with_wallet.at(0);
     auto* wallet_component = tmt::engine.ecs.try_get_component<Wallet>(entity_with_wallet);
+
     // wallet guard
     if (wallet_component) {
         auto view_elements = tmt::engine.ecs.view<MenuController>();
@@ -99,8 +103,8 @@ void WalletUiLink::update_value() {
                 } else if (resource_to_display == DisplayTextType::ALL_RESOURCES) {
                     // reset value first for accumulation
                     target_value = 0;
-                    // accumulate resource counts
-                    target_value = wallet_component->total_resource_limit;
+                    /* Use the player data if present, otherwise use what's in the wallet component */
+                    target_value = wallet_data.has_value() ? wallet_data.value().total_resource_limit : wallet_component->total_resource_limit;
                 } else {
                     // Cast enum to OreResources and use directly
                     auto ore_type = static_cast<OreProperties::OreResources>(resource_to_display);
