@@ -17,9 +17,11 @@ class ResourceLimitChecker : public tmt::GameComponent<ResourceLimitChecker> {
 
     tmt::Entity wallet_entity = entt::null;
     tmt::Entity flashing_ui_entity = entt::null;
+    tmt::Entity pop_up_entity = entt::null;
     float flash_time = 0.1f;      // length of individual flash
     float flashing_time = 0.5f;   // length of flashing
     float check_interval = 1.0f;  // amount of time to pass to check in update for resource limit
+    float pop_up_time = 3.0f;
 
    private:
     bool resource_check();
@@ -34,4 +36,4 @@ class ResourceLimitChecker : public tmt::GameComponent<ResourceLimitChecker> {
 
 }  // namespace game
 
-TMT_GAME_COMPONENT(game::ResourceLimitChecker, (wallet_entity, flashing_ui_entity, flash_time, flashing_time, check_interval));
+TMT_GAME_COMPONENT(game::ResourceLimitChecker, (wallet_entity, flashing_ui_entity, pop_up_entity, flash_time, flashing_time, check_interval, pop_up_time));

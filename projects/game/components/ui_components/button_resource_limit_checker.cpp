@@ -99,6 +99,16 @@ void ResourceLimitChecker::button_click(tmt::Button::Context context) {
         } else {
             tmt::Log::info("Button stays disabled, resource check failed, sell some ores.");
             is_flashing = true;
+
+            if (pop_up_entity != entt::null) {
+                tmt::engine.ecs.enable(pop_up_entity);
+                Tweening::tween<float>()  //
+                    .duration(pop_up_time)
+                    .on_complete([this]() {
+                        //
+                        tmt::engine.ecs.disable(pop_up_entity);
+                    });
+            }
         }
     }
 }
