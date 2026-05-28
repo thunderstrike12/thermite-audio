@@ -18,7 +18,7 @@ class OreCollector : public tmt::GameComponent<OreCollector> {
     float radius = 1.0f;
     // debugging settings
     tmt::Entity wallet_entity { entt::null };
-    tmt::ResourceRef<tmt::Json> ore_collection_vfx_prefab{};
+    tmt::ResourceRef<tmt::Json> ore_collection_vfx_prefab {};
 
     // Attraction variables
     float attraction_range = 20.f;

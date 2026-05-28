@@ -7,7 +7,6 @@
 #include "engine/systems/physics/physics_system.hpp"
 #include "glm/detail/_noise.hpp"
 
-
 namespace game {
 
 void RifleProjectile::start() {

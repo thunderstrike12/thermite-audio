@@ -154,7 +154,6 @@ void game::WeaponManager::update(const tmt::FrameData& time) {
         }
     }
 
-    // TODO replace with proper state
     if (switching) {
         switching_remaining_time -= tmt::engine.frame_data().delta_time;
 

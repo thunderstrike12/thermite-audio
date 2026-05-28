@@ -940,19 +940,9 @@ void Player::set_hud_enabled(tmt::Entity hud_root, bool enabled) {
 
     // Toggle this entity
     if (enabled) {
-        ecs.remove_component<tmt::Disable>(hud_root);
+        ecs.enable(hud_root);
     } else {
-        ecs.add_or_get_component<tmt::Disable>(hud_root);
-    }
-
-    // Get transform
-    if (!ecs.has_component<tmt::Transform>(hud_root)) return;
-
-    auto& transform = ecs.get_component<tmt::Transform>(hud_root);
-
-    // Recurse children
-    for (auto child : transform.get_all_children()) {
-        set_hud_enabled(child, enabled);
+        ecs.disable(hud_root);
     }
 }
 
