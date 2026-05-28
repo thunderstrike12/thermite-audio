@@ -3,6 +3,7 @@
 #include "projects/game/data_headers/game_input.hpp"
 #include "projects/game/components/gameplay_functionality_components/player.hpp"
 #include "projects/game/components/managers/weapon_manager.hpp"
+#include "engine/core/audio.hpp"
 
 // systems to disable for pause
 #include "engine/systems/ai/goap/goap_system.hpp"
@@ -128,6 +129,9 @@ void MenuController::enable_pause_menu() const {
     if (systems.try_get<tmt::Physics>()) {
         systems.get<tmt::Physics>().disable();
     }
+
+    // unpause any running sounds
+    tmt::engine.audio.pause_game_audio();
 }
 
 void MenuController::disable_pause_menu() const {
@@ -171,6 +175,9 @@ void MenuController::disable_pause_menu() const {
     if (systems.try_get<tmt::Physics>()) {
         systems.get<tmt::Physics>().enable();
     }
+
+    // unpause any running sounds
+    tmt::engine.audio.resume_game_audio();
 }
 
 void MenuController::enable_inventory_menu() const {

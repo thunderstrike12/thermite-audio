@@ -430,31 +430,11 @@ void Audio::end() const {
 }
 
 void Audio::on_game_pause() {
-    paused_game_audio.reserve(active_instances_3d.size() + active_instances_2d.size());
-
-    for (AudioInstance instance : active_instances_3d) {
-        if (instance.get_paused()) continue;
-
-        // If the audio instance is not paused yet, we pause it to resume once the game resumes.
-        paused_game_audio.emplace_back(instance);
-        instance.set_paused(true);
-    }
-
-    for (AudioInstance instance : active_instances_2d) {
-        if (instance.get_paused()) continue;
-
-        // If the audio instance is not paused yet, we pause it to resume once the game resumes.
-        paused_game_audio.emplace_back(instance);
-        instance.set_paused(true);
-    }
+    pause_game_audio();
 }
 
 void Audio::on_game_resume() {
-    // Resume the stored audio instances then clear the vector.
-    for (AudioInstance instance : paused_game_audio) {
-        instance.set_paused(false);
-    }
-    paused_game_audio.clear();
+    resume_game_audio();
 }
 
 void Audio::on_game_end() {
@@ -537,6 +517,34 @@ Audio::DopplerSettings Audio::get_3d_settings() const {
 
     TryLogError(result, "Failed to get doppler settings");
     return settings;
+}
+
+void Audio::pause_game_audio() {
+    paused_game_audio.reserve(active_instances_3d.size() + active_instances_2d.size());
+
+    // Pause 3D instances
+    for (AudioInstance3D& instance : active_instances_3d) {
+        if (instance.get_paused()) continue;
+
+        paused_game_audio.emplace_back(instance);
+        instance.set_paused(true);
+    }
+
+    // Pause 2D instances
+    for (AudioInstance& instance : active_instances_2d) {
+        if (instance.get_paused()) continue;
+
+        paused_game_audio.emplace_back(instance);
+        instance.set_paused(true);
+    }
+}
+
+void Audio::resume_game_audio() {
+    for (AudioInstance& instance : paused_game_audio) {
+        instance.set_paused(false);
+    }
+
+    paused_game_audio.clear();
 }
 
 void Audio::update_listeners() const {

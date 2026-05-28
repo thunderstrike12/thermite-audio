@@ -219,6 +219,9 @@ class Audio : public OnGamePause, public OnGameResume, public OnGameEnd, public 
     void set_3d_settings(const DopplerSettings& settings) const;
     [[nodiscard]] DopplerSettings get_3d_settings() const;
 
+    void pause_game_audio();
+    void resume_game_audio();
+
    private:
     void update_listeners() const;
     static void update_emitters();
