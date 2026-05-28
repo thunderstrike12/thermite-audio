@@ -20,8 +20,11 @@ class AudioEmitter : public OnSceneStart {
     /// @return The AudioInstance3D of the audio event, can be used to modify parameters while the sound is playing.
     AudioInstance3D play(const AudioEvent& event, bool update_position = true, bool stop_other_instances = false);
 
+    AudioInstance play_2d(const AudioEvent& event, bool stop_other_instances = false);
+
    private:
     std::vector<AudioInstance3D> playing_instances;
+    std::vector<AudioInstance> playing_instances_2d;
 
     void cleanup_playing_instances();
     void on_scene_start() override;

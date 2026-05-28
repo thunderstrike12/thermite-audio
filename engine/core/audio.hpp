@@ -44,9 +44,11 @@ class AudioInstance {
 
    public:
     AudioInstance() = default;
-    AudioInstance(FMOD::Studio::EventInstance* instance) : instance { instance } {}
+    AudioInstance(const ResourceRef<AudioBank>& source_bank, FMOD::Studio::EventInstance* instance) : source_bank { source_bank }, instance { instance } {}
 
     [[nodiscard]] bool is_valid() const;
+
+    [[nodiscard]] bool is_stopped() const;
 
     void stop(FMOD_STUDIO_STOP_MODE stop_mode = FMOD_STUDIO_STOP_IMMEDIATE) const;
     void set_paused(bool pause = true) const;
@@ -59,6 +61,7 @@ class AudioInstance {
 
    protected:
     FMOD::Studio::EventInstance* instance { nullptr };
+    ResourceRef<AudioBank> source_bank {};
 };
 
 class AudioInstance3D : public AudioInstance {
@@ -225,7 +228,8 @@ class Audio : public OnGamePause, public OnGameResume, public OnGameEnd, public 
     FMOD::Studio::System* system;
     FMOD::System* core_system;
 
-    std::set<FMOD::Studio::EventInstance*> active_instances;
+    std::vector<AudioInstance3D> active_instances_3d;
+    std::vector<AudioInstance> active_instances_2d;
 
     // Inherited from OnDrawLines
     void on_draw_lines() const override;

@@ -98,7 +98,7 @@ void AudioMixer::on_inspect() {
             case 1: {  // AudioEvent selected
                 const auto& event = std::get<AudioEvent>(selection);
                 if (event.is_valid()) {
-                    static AudioInstance playing_instance { nullptr };
+                    static AudioInstance playing_instance { {}, nullptr };
                     if (ImGui::Button(ICON_MS_PLAY_ARROW " play")) {
                         if (playing_instance.is_valid()) playing_instance.stop();
                         playing_instance = event.play();
