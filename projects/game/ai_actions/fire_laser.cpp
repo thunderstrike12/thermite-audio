@@ -347,6 +347,7 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
             // deal damage to player and cutoff laser
             if (distance_to_player < enemy.laser_damage_radius) {
                 tmt::engine.ecs.get_component<game::Player>(enemy.player).health.value -= enemy.laser_damage * dt;
+                // tmt::engine.ecs.get_component<game::Player>(enemy.player).take_damage(enemy.laser_damage * dt);
                 // end_pos = closest_point;
             }
 

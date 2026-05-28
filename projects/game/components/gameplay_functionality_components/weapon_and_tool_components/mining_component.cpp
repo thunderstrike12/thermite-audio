@@ -72,10 +72,6 @@ void MiningComponent::start() {
             weapon->primary_fire_rate.shots_per_second = mining_data->rays_per_second;
         }
     }
-
-    if (!tmt::engine.ecs.valid(player_entity)) {
-        player_entity = tmt::engine.ecs.view<Player>(entt::exclude_t {}).front().entity;  // Assuming there's only one player entity in the game
-    }
 }
 
 void MiningComponent::update(const tmt::FrameData& time) {
@@ -91,6 +87,7 @@ tmt::Transform* MiningComponent::get_transform() const {
     }
     return transform;
 }
+
 void MiningComponent::draw_debug_lines() const {
     cfg.set_values();
     auto& polyline = tmt::engine.polyline;
@@ -128,6 +125,11 @@ void MiningComponent::on_stop_mining(const ReleaseShootEvent& e) {
     // TODO this will trigger no matter what the entity is for now
     stopped_mining = true;
     tmt::engine.ecs.get_dispatcher().trigger<MineNothingEvent>({ entity });
+
+    if (mining_sound_instance.is_valid()) {
+        mining_sound_instance.stop();
+        mining_sound_instance = {};
+    }
 
     tmt::Log::info("Stopped mining, reset previous hits");
 }
@@ -182,6 +184,7 @@ void MiningComponent::mine(const glm::vec3& dir) {
         mining_voxels.clear();
         stopped_mining = false;
     }
+
     previous_computed_origins = compute_ray_origins(*get_transform());
     // Get a list of all unique voxels that we hit this frame
     UniqueVoxelsSet new_mining_voxel_set {};
@@ -190,6 +193,9 @@ void MiningComponent::mine(const glm::vec3& dir) {
         const tmt::Hit hit = tmt::engine.ecs.systems.get<tmt::Physics>().raycast(ray_cast, ray_mask);
 
         if (hit.miss() == false && hit.distance < ray_cylinder.ray_distance) {
+            if (!mining_sound_instance.is_valid()) {
+                mining_sound_instance = mining_sound.play();
+            }
             new_mining_voxel_set.insert(VoxelID { hit.entity, hit.coord });
             // handle_ore(hit);
         }

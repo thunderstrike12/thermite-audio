@@ -171,7 +171,7 @@ void Explode::on_tick(tmt::Entity agent, float dt) {
             float dist = glm::length(dir);
 
             if (dist <= radius && dist > 0.001f) {
-                player.health.value -= small_enemy->logic_paramaters.explosion_damage;
+                player.take_damage(small_enemy->logic_paramaters.explosion_damage);
 
                 glm::vec3 normal = glm::normalize(dir);
 

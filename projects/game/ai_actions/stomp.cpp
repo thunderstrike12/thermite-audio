@@ -67,7 +67,7 @@ void Stomp::on_tick(tmt::Entity enemy_entity, float dt) {
         auto& player_transform = tmt::engine.ecs.get_component<tmt::Transform>(enemy.player);
         const auto& player_pos = player_transform.get_world_position();
         if (glm::length(player_pos - enemy_entity_pos) <= enemy.stomp_radius) {
-            tmt::engine.ecs.get_component<game::Player>(enemy.player).health.value -= enemy.stomp_damage;
+            tmt::engine.ecs.get_component<game::Player>(enemy.player).take_damage(enemy.stomp_damage);
         }
 
         tmt::engine.polyline.use_color(0, 1, 0);

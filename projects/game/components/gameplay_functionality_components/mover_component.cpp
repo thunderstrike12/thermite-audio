@@ -45,6 +45,10 @@ void game::MoverComponent::update_movement(const TriggerMovementEvent& event) {
         return;
     }
 
+    if (!jet_sound_instance.is_valid()) {
+        jet_sound_instance = jet_propulsion.play();
+    }
+
     if (!tmt::engine.ecs.is_enabled(move_flair_entity)) tmt::engine.ecs.enable(move_flair_entity);
 
     velocity += acceleration * tmt::engine.frame_data().delta_time;
@@ -58,6 +62,12 @@ void game::MoverComponent::stop_movement(const TriggerMovementStopEvent& event) 
     if (move_flair_entity != entt::null) {
         tmt::engine.ecs.disable(move_flair_entity);
     }
+
+    if (jet_sound_instance.is_valid()) {
+        jet_sound_instance.stop();
+        jet_sound_instance = {};
+    }
+
     stop = true;
 }
 

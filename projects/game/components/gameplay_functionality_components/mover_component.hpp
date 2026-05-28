@@ -3,6 +3,8 @@
 #include "engine/systems/gameplay/game_component.hpp"
 #include "projects/game/data_headers/events.hpp"
 #include "projects/game/components/development_tools/debug_line_helper.hpp"
+#include "engine/core/components/audio_emitter.hpp"
+
 namespace game {
 
 class MoverComponent : public tmt::GameComponent<MoverComponent> {
@@ -30,6 +32,10 @@ class MoverComponent : public tmt::GameComponent<MoverComponent> {
 
     tmt::Entity move_flair_entity = entt::null;
 
+    // audio
+    tmt::AudioEvent jet_propulsion;
+    tmt::AudioInstance jet_sound_instance;
+
    private:
     float velocity = 0.f;
     bool stop = false;
@@ -37,4 +43,4 @@ class MoverComponent : public tmt::GameComponent<MoverComponent> {
 };
 
 }  // namespace game
-TMT_GAME_COMPONENT(game::MoverComponent, (movement_speed, can_move, cfg, trigger_entity, acceleration, deceleration, move_flair_entity));
+TMT_GAME_COMPONENT(game::MoverComponent, (movement_speed, can_move, cfg, trigger_entity, acceleration, deceleration, move_flair_entity, jet_propulsion));

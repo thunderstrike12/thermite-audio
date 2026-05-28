@@ -33,6 +33,9 @@ void ProjectileSpawner::on_shoot(const WeaponFiredEvent& e) const {
         return;
     }
 
+    // Add sound
+    sounds.rifle_shoot.play();
+
     // Get the animated rig for the tool animations
     auto* rig_controller = tmt::engine.ecs.try_get_component<tmt::RigController>(animated_tool_entity);
     if (rig_controller) {

@@ -4,6 +4,11 @@
 
 namespace game {
 
+struct RifleSounds {
+    tmt::AudioEvent rifle_impact;
+    tmt::AudioEvent rifle_shoot;  // done
+};
+
 class ProjectileSpawner : public tmt::GameComponent<ProjectileSpawner> {
    public:
     using GameComponent::GameComponent;
@@ -16,11 +21,13 @@ class ProjectileSpawner : public tmt::GameComponent<ProjectileSpawner> {
 
     entt::entity animated_tool_entity;  // entity with the animation state machine to animate
 
+    RifleSounds sounds;
+
    private:
     void on_shoot(const WeaponFiredEvent& e) const;
     tmt::Entity player_entity = entt::null;
 };
 
 }  // namespace game
-
-TMT_GAME_COMPONENT(game::ProjectileSpawner, (animated_tool_entity));
+TMT_OBJECT(game::RifleSounds, (rifle_impact, rifle_shoot));
+TMT_GAME_COMPONENT(game::ProjectileSpawner, (animated_tool_entity, sounds));

@@ -7,10 +7,16 @@
 #include "engine/tools/player_data.hpp"
 #include "projects/game/data_headers/save_entries.hpp"
 
+#include "engine/core/input/input.hpp"
+#include "projects/game/data_headers/game_input.hpp"
+
+#include "../player.hpp"
+
 namespace game {
 
 void GravityManipulationComponent::start() {
     tmt::engine.ecs.get_dispatcher().sink<WeaponFiredEvent>().connect<&GravityManipulationComponent::on_weapon_fired>(this);
+    tmt::engine.ecs.get_dispatcher().sink<ReleaseShootEvent>().connect<&GravityManipulationComponent::on_release>(this);
 
     max_mass = tmt::engine.player_data.get<float>(GRAVITY_GUN_DATA, max_mass);
 }
@@ -19,6 +25,7 @@ void GravityManipulationComponent::update(const tmt::FrameData& time) {}
 
 void GravityManipulationComponent::end() {
     tmt::engine.ecs.get_dispatcher().sink<WeaponFiredEvent>().disconnect<&GravityManipulationComponent::on_weapon_fired>(this);
+    tmt::engine.ecs.get_dispatcher().sink<ReleaseShootEvent>().disconnect<&GravityManipulationComponent::on_release>(this);
 }
 void GravityManipulationComponent::draw_debug_lines() const {
     if (attraction_point_entity == entt::null) return;
@@ -29,10 +36,18 @@ void GravityManipulationComponent::draw_debug_lines() const {
 
 void GravityManipulationComponent::on_weapon_fired(const WeaponFiredEvent& e) {
     if (e.weapon_entity != entity) return;
+
     grav_point_check();
     if (e.secondary_shot == false) {
+        if (!gravity_hold_instance.is_valid()) {
+            gravity_hold_instance = sounds.gravity_hold_object.play();
+        }
         grav_attract();
     } else {
+        if (!gravity_shoot_sound_played) {
+            sounds.graviry_launch_project.play();
+            gravity_shoot_sound_played = true;
+        }
         grav_shoot();
 
         // Get the animated rig for the tool animations
@@ -41,6 +56,15 @@ void GravityManipulationComponent::on_weapon_fired(const WeaponFiredEvent& e) {
             rig_controller->set_parameter_trigger("Shoot");
         }
     }
+}
+
+void GravityManipulationComponent::on_release(const ReleaseShootEvent& e) {
+    if (gravity_hold_instance.is_valid()) {
+        gravity_hold_instance.stop();
+        gravity_hold_instance = {};
+    }
+
+    gravity_shoot_sound_played = false;
 }
 
 void GravityManipulationComponent::grav_point_check() {
