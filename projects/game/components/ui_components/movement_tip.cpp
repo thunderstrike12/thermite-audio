@@ -31,7 +31,8 @@ void game::MovementTip::apply_enable_disable() {
         }
     }
 }
-void game::MovementTip::on_entity_enabled() {
+void game::MovementTip::on_entity_enabled() {}
+void game::MovementTip::start() {
     for (auto ui_entity : ui_entities) {
         tmt::engine.ecs.get_dispatcher().trigger(
             IconTransitionEvent {
@@ -60,7 +61,6 @@ void game::MovementTip::on_entity_enabled() {
         }
     });
 }
-void game::MovementTip::start() {}
 void game::MovementTip::update(const tmt::FrameData& time) {
     auto& input { tmt::engine.input };
     bool pressed_move_key {};

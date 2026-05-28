@@ -2,6 +2,7 @@
 #include "engine/systems/gameplay/game_component.hpp"
 #include "projects/game/components/gameplay_functionality_components/weapon_and_tool_components/explosion.hpp"
 #include "engine/core/entity.hpp"
+#include "engine/core/audio.hpp"
 #include "../../../editor/all.hpp"
 
 namespace game {

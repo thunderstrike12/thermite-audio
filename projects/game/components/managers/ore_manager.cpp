@@ -3,6 +3,7 @@
 #include <queue>
 
 #include "engine/core/components/voxel_renderer.hpp"
+#include "engine/core/components/emitter.hpp"
 #include "engine/systems/physics/destruction_system.hpp"
 #include "engine/systems/physics/physics_system.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"
