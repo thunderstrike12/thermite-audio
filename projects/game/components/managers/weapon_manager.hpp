@@ -76,12 +76,12 @@ class WeaponManager : public tmt::GameComponent<WeaponManager> {
 
     WeaponType last_used_weapon = WeaponType::RIFLE;  // default ?
     tmt::Entity tool_rig = entt::null;
+    bool switching = false;
 
    private:
     void complete_switch();
     float overheat_remaining_time = -0.1f;
     float switching_remaining_time = -0.1f;
-    bool switching = false;
     /// <summary>
     /// Handles the weapon overheat event when a weapon is fired.
     /// </summary>

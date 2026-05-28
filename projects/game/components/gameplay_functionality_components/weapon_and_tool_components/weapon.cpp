@@ -31,6 +31,12 @@ bool game::Weapon::update_fire_rate(FireRate& fire_rate) {
     return true;
 }
 void game::Weapon::on_shoot(const ShootEvent& e) {
+    tmt::Entity weapon_manager_entity = tmt::engine.ecs.view<WeaponManager>().front().entity;
+    if (WeaponManager* weapon_manager_component = tmt::engine.ecs.try_get_component<WeaponManager>(weapon_manager_entity)) {
+        if (weapon_manager_component->switching) {
+            return;
+        }
+    }
     if (e.shooting_entity != shooting_entity) return;
 
     // TODO change if we have a third shot
