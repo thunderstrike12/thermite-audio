@@ -12,7 +12,7 @@ Window::~Window() {
     }
 }
 
-void Window::init(const ApplicationSpecs&) {
+void Window::init(const ApplicationSpecs& spec) {
     SDL_SetAppMetadata("Thermite Engine", "0.1", "com.thermite.engine");
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
@@ -20,7 +20,7 @@ void Window::init(const ApplicationSpecs&) {
         return;
     }
 
-    window = SDL_CreateWindow(title.data(), width, height, SDL_WINDOW_VULKAN);
+    window = SDL_CreateWindow(spec.name.c_str(), width, height, SDL_WINDOW_VULKAN);
     if (!window) {
         Log::error(Log::Scope::ENGINE, "Couldn't create window: %s", SDL_GetError());
         return;

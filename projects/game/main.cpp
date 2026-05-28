@@ -53,9 +53,9 @@ class Game : public tmt::Application {
 std::unique_ptr<tmt::Application> create_application(const tmt::CommandLineArgs& args) {
     // clang-format off
     tmt::ApplicationSpecs specs {
-        .name = "Mining Game",
+        .name = "Starlocked",
         .command_args = args,
-        .log_file = "mining_game_logs.txt"
+        .log_file = "Starlocked.txt"
     };
     // clang-format on
 

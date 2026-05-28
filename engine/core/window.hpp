@@ -15,7 +15,6 @@ class Window {
     int width = 1920;
     int height = 1080;
     bool resized = false;
-    std::string_view title = "Thermite Engine";
 
     Window() = default;
     ~Window();
