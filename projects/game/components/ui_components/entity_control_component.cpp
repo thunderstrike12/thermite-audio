@@ -20,21 +20,25 @@ void game::EntityControlComponent::end() {
 
 void game::EntityControlComponent::button_functionality(tmt::Button::Context context) {
     if (context.disabled) return;
-    for (auto currett : entities_to_enable) {
+    handle_action();
+}
+
+void game::EntityControlComponent::handle_action() const {
+    for (const auto currett : entities_to_enable) {
         enable(currett);
     }
-    for (auto currett : entities_to_disable) {
+    for (const auto currett : entities_to_disable) {
         disable(currett);
     }
 }
 
-void game::EntityControlComponent::disable(tmt::Entity ett_to_dis) {
+void game::EntityControlComponent::disable(tmt::Entity ett_to_dis) const {
     if (tmt::engine.ecs.valid(ett_to_dis)) {
         tmt::engine.ecs.disable(ett_to_dis);
     }
 }
 
-void game::EntityControlComponent::enable(tmt::Entity ett_to_en) {
+void game::EntityControlComponent::enable(tmt::Entity ett_to_en) const {
     if (tmt::engine.ecs.valid(ett_to_en)) {
         tmt::engine.ecs.enable(ett_to_en);
     }

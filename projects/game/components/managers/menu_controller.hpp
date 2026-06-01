@@ -23,6 +23,8 @@ class MenuController : public tmt::GameComponent<MenuController> {
     entt::entity death_menu_entity = entt::null;
     entt::entity player_entity = entt::null;
     entt::entity barge_entity = entt::null;
+    entt::entity settings_menu_entity = entt::null;
+    entt::entity close_settings_menu_entity = entt::null;
     float penalty_percentage = 0.6f;
 
     void enable_pause_menu() const;
@@ -45,5 +47,6 @@ class MenuController : public tmt::GameComponent<MenuController> {
 
 }  // namespace game
 TMT_GAME_COMPONENT(
-    game::MenuController, (pause_menu_entity, inventory_menu_entity, upgrade_menu_entity, end_run_menu_entity, death_menu_entity, player_entity, penalty_percentage, barge_entity)
+    game::MenuController, (pause_menu_entity, inventory_menu_entity, upgrade_menu_entity, end_run_menu_entity, death_menu_entity, player_entity, penalty_percentage, barge_entity,
+                           settings_menu_entity, close_settings_menu_entity)
 );

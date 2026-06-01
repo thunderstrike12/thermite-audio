@@ -15,13 +15,15 @@ class EntityControlComponent : public tmt::GameComponent<EntityControlComponent>
     void update(const tmt::FrameData& time) override;
     void end() override;
 
+    void handle_action() const;
+
     std::vector<tmt::Entity> entities_to_disable = { entt::null };
     std::vector<tmt::Entity> entities_to_enable = { entt::null };
 
    private:
     void button_functionality(tmt::Button::Context context);
-    void disable(tmt::Entity entity_to_disable);
-    void enable(tmt::Entity entity_to_enable);
+    void disable(tmt::Entity entity_to_disable) const;
+    void enable(tmt::Entity entity_to_enable) const;
 };
 
 }  // namespace game

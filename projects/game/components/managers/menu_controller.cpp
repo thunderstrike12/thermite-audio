@@ -20,6 +20,7 @@
 #include "projects/game/components/gameplay_functionality_components/ore_collector.hpp"
 #include "projects/game/data_headers/save_entries.hpp"
 #include "projects/game/data_headers/wallet.hpp"
+#include "projects/game/components/ui_components/entity_control_component.hpp"
 
 namespace game {
 
@@ -53,6 +54,22 @@ void MenuController::update(const tmt::FrameData& time) {
         if (pause_menu_entity == entt::null) {
             tmt::Log::debug("No pause menu entity has been set, cannot open pause menu.");
             return;
+        }
+
+        const bool settings_menu_open = settings_menu_entity != entt::null && tmt::engine.ecs.is_enabled(settings_menu_entity);
+        // close_settings_menu_entity
+        if (settings_menu_open) {
+            if (close_settings_menu_entity != entt::null) {
+                const auto& entity_control_component = tmt::engine.ecs.try_get_component<EntityControlComponent>(close_settings_menu_entity);
+                if (entity_control_component) {
+                    entity_control_component->handle_action();
+                } else {
+                    tmt::Log::error("No entity control component found for close settings menu entity, cannot close settings menu.");
+                }
+                return;  // if settings menu is open, we want to close it instead of handling the pause menu input
+            } else {
+                tmt::Log::error("No close settings menu entity has been set, cannot close settings menu.");
+            }
         }
 
         if (tmt::engine.ecs.is_disabled(pause_menu_entity)) {
