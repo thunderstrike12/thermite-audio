@@ -12,7 +12,9 @@ class TutorialButton : public tmt::GameComponent<TutorialButton> {
     void end() override {}
     void disable_entity(tmt::Button::Context context);
     std::string saved_name { "tutorial" };
+    std::vector<tmt::Entity> entities_to_disable {};
+    std::vector<tmt::Entity> entities_to_enable {};
 };
 
 }  // namespace game
-TMT_GAME_COMPONENT(game::TutorialButton, (saved_name));
+TMT_GAME_COMPONENT(game::TutorialButton, (saved_name, entities_to_disable, entities_to_enable));
