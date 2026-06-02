@@ -756,7 +756,10 @@ void Player::update(const tmt::FrameData& time) {
     // Health death (instant)
     if (health.value <= 0.0f && !player_ended_run) {
         // Play sound
-        player_sounds.destroyed_death.play();
+        if (!destroyed_death_instance.is_valid() && !player_destroyed) {
+            destroyed_death_instance = player_sounds.destroyed_death.play();
+            player_destroyed = true;
+        }
         // player ded -> call end run event with player ded
         tmt::engine.ecs.get_dispatcher().trigger(EndRun { true });
 

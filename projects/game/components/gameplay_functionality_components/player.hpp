@@ -253,6 +253,8 @@ class Player : public tmt::GameComponent<Player> {
 
     // sound variables
     bool out_of_energy = false;
+    tmt::AudioInstance destroyed_death_instance;
+    bool player_destroyed = false;
 
     ToolType active_tool = ToolType::RIFLE;
 };
