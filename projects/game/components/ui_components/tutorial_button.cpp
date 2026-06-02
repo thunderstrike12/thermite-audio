@@ -5,8 +5,7 @@ void game::TutorialButton::start() {
     if (entities_to_disable.empty()) {
         entities_to_disable.push_back(entity);
     }
-    auto is_disabled = tmt::engine.player_data.try_get<bool>(saved_name);
-    if (is_disabled.has_value()) {
+    if (auto is_disabled = tmt::engine.player_data.get<bool>(saved_name, false)) {
         for (auto ent : entities_to_disable) {
             if (tmt::engine.ecs.valid(ent) == false) {
                 continue;
