@@ -53,6 +53,8 @@ static void save_resources_on_run(float multiplier_percentage) {
     auto& persistent_curr = tmt::engine.player_data.get<Currencies>(PERSISTENT_RESOURCES);
     persistent_curr = player_wallet->currencies;
     player_wallet->currencies = persistent_curr;
+    auto& wallet_data = tmt::engine.player_data.get<WalletData>(WALLET_DATA, WalletData { player_wallet->limits, player_wallet->total_resource_limit });
+    wallet_data.total_resource_limit = player_wallet->total_resource_limit;
 }
 
 }  // namespace game

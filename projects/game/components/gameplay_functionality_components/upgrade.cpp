@@ -83,6 +83,7 @@ void Upgrade::modify_upgrade_entities() const {
             break;
         case UpgradeType::STORAGE_LIMIT:
             tmt::engine.player_data.get<WalletData>(WALLET_DATA).total_resource_limit = static_cast<int>(upgrade_to);
+            tmt::engine.ecs.try_get_component<Wallet>(Player::get().entity)->total_resource_limit = static_cast<int>(upgrade_to);
             break;
 
         case UpgradeType::BARGE_MAX_FUEL:

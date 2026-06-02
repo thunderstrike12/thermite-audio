@@ -194,7 +194,6 @@ void game::WeaponManager::update(const tmt::FrameData& time) {
 
     update_procedural_motion(time.delta_time);
 
-
     // state timers update
     if (overheat_remaining_time > 0.0f) {
         overheat_remaining_time -= tmt::engine.frame_data().delta_time;
