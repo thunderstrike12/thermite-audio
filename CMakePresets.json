@@ -28,7 +28,7 @@
         "THERMITE_DEBUG_BUILD": "ON"
       }
     },
-      {
+    {
     "name": "Developer-Packaging",
     "inherits": "base",
     "displayName": "Developer Packaging",

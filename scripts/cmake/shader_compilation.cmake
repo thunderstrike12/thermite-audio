@@ -36,7 +36,7 @@ function(compile_shaders)
         endif()
 
         set(SHADER_DEBUG_FLAG "")
-        if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+        if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" AND NOT THERMITE_DEVELOPER_BUILD)
             set(SHADER_DEBUG_FLAG --debug)
         endif()
         if (THERMITE_DEBUG_BUILD)
