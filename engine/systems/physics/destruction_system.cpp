@@ -228,7 +228,6 @@ std::vector<Entity> Destruction::destroy_voxels(Entity entity, const std::vector
             // Clear the graph and generate it a new one (slow)
             des->clear();
             generate_connection_graph(*des, seperate_vr.resource->blas.get());
-            continue;
         }
 
         // NOTE: We still need to initialize the voxel body somehow, but we can make some assumtions when we have static objects
@@ -369,7 +368,6 @@ std::vector<Entity> Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
             // Clear the graph and generate it a new one (slow)
             des->clear();
             generate_connection_graph(*des, seperate_vr.resource->blas.get());
-            continue;
         }
 
         // NOTE: We still need to initialize the voxel body somehow, but we can make some assumtions when we have static objects
