@@ -30,6 +30,7 @@ class MenuController : public tmt::GameComponent<MenuController> {
     void enable_pause_menu() const;
     void disable_pause_menu() const;
 
+
     void enable_inventory_menu() const;
     void disable_inventory_menu() const;
 
@@ -43,6 +44,8 @@ class MenuController : public tmt::GameComponent<MenuController> {
     void lock_mouse() const;
     void unlock_mouse() const;
     bool check_for_open_menus() const;
+
+    void enable_systems() const;
 };
 
 }  // namespace game

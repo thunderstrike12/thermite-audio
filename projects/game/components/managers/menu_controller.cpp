@@ -101,6 +101,8 @@ void MenuController::end() {
     } else {
         handle_saving({ true });
     }
+
+    enable_systems();
 }
 
 void MenuController::enable_pause_menu() const {
@@ -174,6 +176,10 @@ void MenuController::disable_pause_menu() const {
     if (player.get_state() == PlayerState::FREEMOVING) player.set_hud_enabled(player.player_hud, true);
     if (player.get_state() == PlayerState::ATTACHED) player.set_hud_enabled(player.barge_hud, true);
 
+    enable_systems();
+}
+
+void MenuController::enable_systems() const {
     // enable systems
     auto& systems = tmt::engine.ecs.systems;
 
