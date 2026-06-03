@@ -587,17 +587,14 @@ void Player::update(const tmt::FrameData& time) {
 
     // Swapping crosshair
     if (input.is_action_just_pressed(action::SWITCH_RIFLE)) {
-        if (active_tool != ToolType::RIFLE) tool_sounds.gravity_gun_activate.play();
         active_tool = ToolType::RIFLE;
         set_crosshair(rifle_crosshair);
     }
     if (input.is_action_just_pressed(action::SWITCH_GRAVITY)) {
-        if (active_tool != ToolType::GRAVITY) tool_sounds.gravity_gun_activate.play();
         active_tool = ToolType::GRAVITY;
         set_crosshair(gravity_crosshair);
     }
     if (input.is_action_just_pressed(action::SWITCH_MINING)) {
-        if (active_tool != ToolType::MINING) tool_sounds.mining_tool_activate.play();
         active_tool = ToolType::MINING;
         set_crosshair(mine_crosshair);
     }

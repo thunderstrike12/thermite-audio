@@ -8,8 +8,9 @@
 namespace game {
 
 struct GravitySounds {
+    tmt::AudioEvent gravity_activate;  // done
     tmt::AudioEvent gravity_hold_object;     // done
-    tmt::AudioEvent graviry_launch_project;  // done
+    tmt::AudioEvent gravity_launch_object;  // done
 };
 
 class GravityManipulationComponent : public tmt::GameComponent<GravityManipulationComponent> {
@@ -32,6 +33,7 @@ class GravityManipulationComponent : public tmt::GameComponent<GravityManipulati
     entt::entity animated_tool_entity;     // entity with the animation state machine to animate
 
     GravitySounds sounds;
+    tmt::AudioInstance gravity_active_instance;
 
    private:
     std::vector<entt::entity> currently_manipulated_entities;
@@ -44,13 +46,9 @@ class GravityManipulationComponent : public tmt::GameComponent<GravityManipulati
     void clear_enemy_override();
 
     void on_release(const ReleaseShootEvent& e);
-
-    bool gravity_shoot_sound_played = false;
-    tmt::AudioInstance gravity_hold_instance;
-
     // TODO the same, this could be primarily handled through weapon, a second timer could be used for the second shot
 };
 
 }  // namespace game
-TMT_OBJECT(game::GravitySounds, (gravity_hold_object, graviry_launch_project));
+TMT_OBJECT(game::GravitySounds, (gravity_activate, gravity_hold_object, gravity_launch_object));
 TMT_GAME_COMPONENT(game::GravityManipulationComponent, (range, max_mass, pull_strength, push_strength, attraction_acceleration, attraction_point_entity, animated_tool_entity, sounds));

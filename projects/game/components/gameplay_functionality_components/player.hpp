@@ -94,10 +94,6 @@ struct PlayerSounds {
     tmt::AudioEvent battery_almost_out;    // done
     tmt::AudioEvent battery_out;           // done
 };
-struct ToolSounds {
-    tmt::AudioEvent gravity_gun_activate;  // done
-    tmt::AudioEvent mining_tool_activate;  // done
-};
 
 enum class ToolType { RIFLE, GRAVITY, MINING };
 
@@ -210,7 +206,6 @@ class Player : public tmt::GameComponent<Player> {
     // Sounds
     tmt::AudioEmitter* audio_emitter;
     PlayerSounds player_sounds;
-    ToolSounds tool_sounds;
 
    private:
     void refill(float delta);
@@ -269,11 +264,10 @@ TMT_OBJECT(game::AttachCameraTransitionSettings, (enabled, play_on_first_attach,
 TMT_OBJECT(game::DetachCameraTransitionSettings, (enabled, align_player_to_camera, duration, ease));
 TMT_OBJECT(game::CameraShakeSettings, (enabled, max_intensity, boost_intensity, drill_intensity, decay_speed, recoil_strength, recoil_return_speed, recoil_horizontal));
 TMT_OBJECT(game::PlayerSounds, (destroyed_death, drone_boost, hit, battery_half, battery_almost_out, battery_out));
-TMT_OBJECT(game::ToolSounds, (gravity_gun_activate, mining_tool_activate));
 TMT_GAME_COMPONENT(
     game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, boost_max_speed_multiplier, boost_acceleration_multiplier, boost_deceleration_factor,
                    boost_cost_per_second_per_additional_speed_above_max, boost_initial_cost, boost_availability, health, energy, energy_drain_per_second, out_of_energy_time_till_death,
                    low_energy_threshold, low_energy_duration, use_second_warning, low_energy_threshold_2, low_energy_duration_2, player_hud, barge_hud, low_energy_hud, black_out_hud,
                    black_out_curve, rifle_crosshair, gravity_crosshair, mine_crosshair, barge, recharge_distance, ray_check, camera_shake_settings, attached_camera_settings,
-                   attach_camera_transition_settings, detach_camera_transition_settings, player_sounds, tool_sounds)
+                   attach_camera_transition_settings, detach_camera_transition_settings, player_sounds)
 );

@@ -61,6 +61,8 @@ class MiningComponent : public tmt::GameComponent<MiningComponent> {
     LayerMask ray_mask {};
     float time_draw_rays_in_debug = 2.0f;
 
+    tmt::AudioEvent mining_activate_sound;
+    tmt::AudioInstance mining_activate_sound_instance;
     tmt::AudioEvent mining_sound;
     tmt::AudioInstance mining_sound_instance;
 
@@ -92,5 +94,5 @@ class MiningComponent : public tmt::GameComponent<MiningComponent> {
 
 }  // namespace game
 TMT_OBJECT(game::RayCylinder, (base_transform_entity, base_radius, ray_distance, ray_amount, rotating_speed));
-TMT_GAME_COMPONENT(game::MiningComponent, (active, cfg, ray_cylinder, ray_mask, time_draw_rays_in_debug, mining_sound));
+TMT_GAME_COMPONENT(game::MiningComponent, (active, cfg, ray_cylinder, ray_mask, time_draw_rays_in_debug, mining_activate_sound, mining_sound));
 TMT_OBJECT(game::MiningData, (base_radius, ray_distance, ray_amount, rays_per_second));

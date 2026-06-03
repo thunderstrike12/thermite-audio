@@ -39,15 +39,12 @@ void GravityManipulationComponent::on_weapon_fired(const WeaponFiredEvent& e) {
 
     grav_point_check();
     if (e.secondary_shot == false) {
-        if (!gravity_hold_instance.is_valid()) {
-            gravity_hold_instance = sounds.gravity_hold_object.play();
-        }
         grav_attract();
-    } else {
-        if (!gravity_shoot_sound_played) {
-            sounds.graviry_launch_project.play();
-            gravity_shoot_sound_played = true;
-        }
+
+        if (sounds.gravity_activate.is_valid() && !gravity_active_instance.is_valid()) gravity_active_instance = sounds.gravity_activate.play();
+
+    } else if (!currently_manipulated_entities.empty()) {
+        if (sounds.gravity_launch_object.is_valid()) sounds.gravity_launch_object.play();
         grav_shoot();
 
         // Get the animated rig for the tool animations
@@ -58,18 +55,12 @@ void GravityManipulationComponent::on_weapon_fired(const WeaponFiredEvent& e) {
     }
 }
 
-void GravityManipulationComponent::on_release(const ReleaseShootEvent& e) {
-    if (gravity_hold_instance.is_valid()) {
-        gravity_hold_instance.stop();
-        gravity_hold_instance = {};
-    }
-
-    gravity_shoot_sound_played = false;
-}
+void GravityManipulationComponent::on_release(const ReleaseShootEvent& e) {}
 
 void GravityManipulationComponent::grav_point_check() {
-    currently_manipulated_entities.clear();
+    const auto start_size = currently_manipulated_entities.size();
 
+    currently_manipulated_entities.clear();
     auto attraction_pos = tmt::engine.ecs.get_component<tmt::Transform>(attraction_point_entity).get_world_position();
 
     auto physical_entity_view = tmt::engine.ecs.view<tmt::VoxelBody>();
@@ -83,6 +74,8 @@ void GravityManipulationComponent::grav_point_check() {
             currently_manipulated_entities.push_back(e);
         }
     }
+
+    if (sounds.gravity_hold_object.is_valid() && currently_manipulated_entities.size() > start_size) sounds.gravity_hold_object.play();
 }
 
 void GravityManipulationComponent::grav_attract() {

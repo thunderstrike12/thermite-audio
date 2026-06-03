@@ -31,6 +31,45 @@ void tag_invoke(JsonReflect::deserialize_t, const JsonReflect::json& j, tmt::Aud
     if (bank) event = tmt::AudioEvent { bank, guid };
 }
 
+JSON_REFLECT(tmt::AudioParameter, source_event, source_bank, id);
+
+JsonReflect::json tag_invoke(JsonReflect::serialize_t, const tmt::AudioParameter& parameter) {
+    JsonReflect::json json;
+
+    const bool is_global = parameter.is_global();
+    if (is_global) {
+        const tmt::ResourceRef<tmt::AudioBank>& source_bank = parameter.get_source_bank();
+        if (source_bank) json["source_bank"] = tmt::Serializer::serialize(source_bank);
+    } else {
+        const tmt::AudioEvent& source_event = parameter.get_source_event();
+        if (source_event.is_valid()) json["source_event"] = tmt::Serializer::serialize(source_event);
+    }
+
+    if (parameter.is_valid()) json["id"] = tmt::Serializer::serialize(parameter.get_id());
+
+    return json;
+}
+
+void tag_invoke(JsonReflect::deserialize_t, const JsonReflect::json& j, tmt::AudioParameter& parameter) {
+    tmt::ResourceRef<tmt::AudioBank> source_bank {};
+    if (j.contains("source_bank")) {
+        tmt::Serializer::deserialize(j["source_bank"], source_bank);
+    }
+
+    tmt::AudioEvent source_event {};
+    if (j.contains("source_event")) {
+        tmt::Serializer::deserialize(j["source_event"], source_event);
+    }
+
+    FMOD_STUDIO_PARAMETER_ID id {};
+    if (j.contains("id")) tmt::Serializer::deserialize(j["id"], id);
+
+    if (source_bank)
+        parameter = tmt::AudioParameter { source_bank, id };
+    else
+        parameter = tmt::AudioParameter { source_event, id };
+}
+
 JsonReflect::json tag_invoke(JsonReflect::serialize_t, const tmt::VolumeControl& control) {
     JsonReflect::json json;
 

@@ -137,23 +137,34 @@ class AudioEvent {
 class AudioParameter {
    public:
     AudioParameter() = default;
-    AudioParameter(const AudioEvent& source_event, const FMOD_STUDIO_PARAMETER_ID& parameter_id) : source_event { source_event }, id { parameter_id } {}
+    AudioParameter(const AudioEvent& source_event, const FMOD_STUDIO_PARAMETER_ID& parameter_id) :
+        source_event { source_event }, source_bank { source_event.get_source_bank() }, id { parameter_id } {}
+    AudioParameter(const ResourceRef<AudioBank>& source_bank, const FMOD_STUDIO_PARAMETER_ID& parameter_id) : source_bank { source_bank }, id { parameter_id } {}
 
     [[nodiscard]] bool is_valid() const;
+    [[nodiscard]] bool is_global() const;
     // Get the name of the AudioParameter.
-    [[nodiscard]] std::string get_name() const;
+    [[nodiscard]] std::string get_name() const { return get_description().name; }
     [[nodiscard]] const FMOD_STUDIO_PARAMETER_ID& get_id() const { return id; }
-    [[nodiscard]] float get_min() const;
-    [[nodiscard]] float get_max() const;
-    [[nodiscard]] FMOD_STUDIO_PARAMETER_DESCRIPTION get_description() const { return source_event.get_parameter_description(id); }
+    [[nodiscard]] float get_min() const { return get_description().minimum; }
+    [[nodiscard]] float get_max() const { return get_description().maximum; }
+    [[nodiscard]] FMOD_STUDIO_PARAMETER_DESCRIPTION get_description() const;
 
-    [[nodiscard]] bool operator==(const AudioParameter& other) const { return source_event == other.source_event && std::memcmp(&id, &other.id, sizeof(FMOD_STUDIO_PARAMETER_ID)) == 0; }
-    [[nodiscard]] bool operator!=(const AudioParameter& other) const { return source_event != other.source_event || std::memcmp(&id, &other.id, sizeof(FMOD_STUDIO_PARAMETER_ID)) != 0; }
+    [[nodiscard]] const AudioEvent& get_source_event() const { return source_event; }
+    [[nodiscard]] const ResourceRef<AudioBank>& get_source_bank() const { return source_bank; }
+
+    [[nodiscard]] bool operator==(const AudioParameter& other) const {
+        return source_event == other.source_event && source_bank == other.source_bank && std::memcmp(&id, &other.id, sizeof(FMOD_STUDIO_PARAMETER_ID)) == 0;
+    }
+    [[nodiscard]] bool operator!=(const AudioParameter& other) const {
+        return source_event != other.source_event || source_bank != other.source_bank || std::memcmp(&id, &other.id, sizeof(FMOD_STUDIO_PARAMETER_ID)) != 0;
+    }
 
    private:
     BEFRIEND_VISITABLE()
 
-    AudioEvent source_event;
+    AudioEvent source_event {};
+    ResourceRef<AudioBank> source_bank;
     FMOD_STUDIO_PARAMETER_ID id {};
 };
 
@@ -208,6 +219,7 @@ class Audio : public OnGamePause, public OnGameResume, public OnGameEnd, public 
     // Initialize an FMOD bank with all its assets from a .bank file in memory.
     [[nodiscard]] FMOD::Studio::Bank* init_bank(const std::vector<char>& bank_data) const;
 
+    [[nodiscard]] FMOD_STUDIO_PARAMETER_DESCRIPTION get_global_parameter(FMOD_STUDIO_PARAMETER_ID id) const;
     [[nodiscard]] FMOD::Studio::EventDescription* get_event_description(const FMOD_GUID& guid) const;
     [[nodiscard]] FMOD::Studio::VCA* get_vca(const FMOD_GUID& guid) const;
 
@@ -248,4 +260,3 @@ class Audio : public OnGamePause, public OnGameResume, public OnGameEnd, public 
 }  // namespace tmt
 
 JSON_REFLECT(FMOD_STUDIO_PARAMETER_ID, data1, data2);
-JSON_REFLECT(tmt::AudioParameter, source_event, id);

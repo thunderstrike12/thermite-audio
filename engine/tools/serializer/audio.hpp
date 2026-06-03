@@ -5,6 +5,7 @@
 namespace tmt {
 
 class AudioEvent;
+class AudioParameter;
 class VolumeControl;
 class AudioListener;
 
@@ -13,6 +14,10 @@ class AudioListener;
 /* AudioEvent */
 JsonReflect::json tag_invoke(JsonReflect::serialize_t, const tmt::AudioEvent& event);
 void tag_invoke(JsonReflect::deserialize_t, const JsonReflect::json& j, tmt::AudioEvent& event);
+
+/* AudioParameter */
+JsonReflect::json tag_invoke(JsonReflect::serialize_t, const tmt::AudioParameter& parameter);
+void tag_invoke(JsonReflect::deserialize_t, const JsonReflect::json& j, tmt::AudioParameter& parameter);
 
 /* VolumeControl */
 JsonReflect::json tag_invoke(JsonReflect::serialize_t, const tmt::VolumeControl& control);

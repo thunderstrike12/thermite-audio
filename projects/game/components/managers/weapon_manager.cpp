@@ -36,6 +36,9 @@ void game::WeaponManager::switch_to(WeaponType weapon_slot) {
         tmt::Log::error("[WeaponManager] Weapon entity is not set, can't animate transitions!");
     }
 
+    // Play the switch tool sound.
+    if (switch_tool_event.is_valid()) switch_tool_event.play();
+
     // the new subscription happens when the switching is done
     switching_remaining_time = switching_time;
     pending_weapon = weapon_slot;
@@ -121,6 +124,8 @@ void game::WeaponManager::check_trigger_shoot_event() {
         if (switching) return;
         tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, false });
 
+        if (holding_parameter.is_valid()) tmt::engine.audio.set_global_parameter(holding_parameter, 1.0f);
+
         auto* rig_controller = tmt::engine.ecs.try_get_component<tmt::RigController>(tool_rig);
         if (rig_controller) {
             rig_controller->set_parameter_bool("InUse", true);
@@ -128,6 +133,8 @@ void game::WeaponManager::check_trigger_shoot_event() {
 
     } else if (input.is_action_just_released(action::SHOOT)) {
         tmt::engine.ecs.get_dispatcher().trigger(ReleaseShootEvent { shooting_entity });
+
+        if (holding_parameter.is_valid()) tmt::engine.audio.set_global_parameter(holding_parameter, 0.0f);
 
         auto* rig_controller = tmt::engine.ecs.try_get_component<tmt::RigController>(tool_rig);
         if (rig_controller) {

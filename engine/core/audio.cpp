@@ -246,14 +246,18 @@ std::vector<AudioParameter> AudioEvent::get_parameters() const {
 
     if (parameter_count <= 0) return {};
 
-    std::vector<AudioParameter> parameters;
-    parameters.reserve(parameter_count);
+    std::vector<AudioParameter> parameters(parameter_count);
     for (int i = 0; i < parameter_count; i++) {
-        FMOD_STUDIO_PARAMETER_DESCRIPTION parameter_description;
+        FMOD_STUDIO_PARAMETER_DESCRIPTION parameter_description {};
         result = description->getParameterDescriptionByIndex(i, &parameter_description);
         if (TryLogError(result, "Failed to get event parameter by index")) return {};
 
-        parameters.emplace_back(*this, parameter_description.id);
+        // Create an AudioParameter based on the description, global or non global.
+        if (parameter_description.flags & FMOD_STUDIO_PARAMETER_GLOBAL) {
+            parameters[i] = AudioParameter { source_bank, parameter_description.id };
+        } else {
+            parameters[i] = AudioParameter { *this, parameter_description.id };
+        }
     }
 
     return parameters;
@@ -317,23 +321,21 @@ FMOD_STUDIO_PARAMETER_DESCRIPTION AudioEvent::get_parameter_description(const FM
 }
 
 bool AudioParameter::is_valid() const {
-    if (*this == AudioParameter {}) return false;                       // Check if the audio parameter has an invalid uuid (in which case it, itself is invalid).
+    if (*this == AudioParameter {}) return false;  // Check if the audio parameter has an invalid id (in which case it, itself is invalid).
 
-    if (!source_event.is_valid()) return false;                         // Check if the source event is still valid.
-
-    return source_event.get_parameter_description(id).name != nullptr;  // Check if the audio parameter description is valid.
+    // Check if the audio parameter description is valid.
+    return get_description().name != nullptr;
 }
 
-std::string AudioParameter::get_name() const {
-    return source_event.get_parameter_description(id).name;
+bool AudioParameter::is_global() const {
+    return !source_event.is_valid();
 }
 
-float AudioParameter::get_min() const {
-    return source_event.get_parameter_description(id).minimum;
-}
-
-float AudioParameter::get_max() const {
-    return source_event.get_parameter_description(id).maximum;
+FMOD_STUDIO_PARAMETER_DESCRIPTION AudioParameter::get_description() const {
+    if (is_global()) {
+        return engine.audio.get_global_parameter(id);
+    }
+    return source_event.get_parameter_description(id);
 }
 
 bool VolumeControl::is_valid() const {
@@ -456,6 +458,15 @@ FMOD::Studio::Bank* Audio::init_bank(const std::vector<char>& bank_data) const {
     if (TryLogError(result, "Bank could not flush sample loading")) return nullptr;
 
     return bank;
+}
+
+FMOD_STUDIO_PARAMETER_DESCRIPTION Audio::get_global_parameter(const FMOD_STUDIO_PARAMETER_ID id) const {
+    FMOD_STUDIO_PARAMETER_DESCRIPTION description {};
+
+    const FMOD_RESULT result = system->getParameterDescriptionByID(id, &description);
+    TryLogError(result, "Failed to get FMOD_STUDIO_PARAMETER_DESCRIPTION");
+
+    return description;
 }
 
 FMOD::Studio::EventDescription* Audio::get_event_description(const FMOD_GUID& guid) const {

@@ -124,6 +124,8 @@ void MiningComponent::on_weapon_fired(const WeaponFiredEvent& e) {
         player->add_camera_shake(player->camera_shake_settings.get_drill_intensity());
     }
 
+    if (mining_activate_sound.is_valid() && !mining_activate_sound_instance.is_valid()) mining_activate_sound_instance = mining_activate_sound.play();
+
     mine(e.direction);
 }
 void MiningComponent::on_stop_mining(const ReleaseShootEvent& e) {
@@ -207,6 +209,11 @@ void MiningComponent::mine(const glm::vec3& dir) {
     }
     if (new_mining_voxel_set.empty() == true) {
         tmt::engine.ecs.get_dispatcher().trigger<MineNothingEvent>({ entity });
+
+        if (mining_sound_instance.is_valid()) {
+            mining_sound_instance.stop();
+            mining_sound_instance = {};
+        }
     }
     // Comparing with the previous hit we get 3 options
     // we do not have a voxel that has previously been in the dictionary, but not in this frame of mining, meaning we have to remove it
