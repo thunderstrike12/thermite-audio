@@ -45,6 +45,11 @@ struct TextRenderer {
     /* Text color (Rec.709) */
     RGBA color = RGBA(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
+    /* Glow properties */
+    RGBA glow_color = RGBA(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f));  // .rgb = color | .a = glow strength
+    float glow_radius_px = 2.0f;
+    float glow_boost = 1.0f;
+
     /* Layout properties */
     float line_spacing = 1.0f;       // Multiplier for line height
     float letter_spacing = 0.0f;     // Extra spacing between characters
@@ -60,15 +65,16 @@ struct TextRenderer {
     float max_height = 0.0f;  // Max height for text area (0 = unlimited)
     TextOverflow overflow = TextOverflow::VISIBLE;
 
-    /* When enabled, max_width and max_height are automatically set from the
-     * attached UIComponent's size every frame. This allows the text bounds
-     * to follow the UI element's size. */
+    /*When enabled, max_width and max_height are automatically set from the
+    attached UIComponent's size every frame. This allows the text bounds
+    to follow the UI element's size. */
     bool use_ui_component_size = true;
 
     /* When enabled, the font size is automatically calculated to make the text
-     * fit exactly within max_width and max_height. Requires both max_width and
-     * max_height to be set (or use_ui_component_size to be enabled).
-     * This will override the font_size value during layout. */
+
+    fit exactly within max_width and max_height. Requires both max_width and
+    max_height to be set (or use_ui_component_size to be enabled).
+    This will override the font_size value during layout. */
     bool auto_font_size = false;
 
     /* Rich text parsing */
@@ -85,6 +91,6 @@ struct TextRenderer {
 
 TMT_COMPONENT(
     tmt::TextRenderer, "TextRenderer",
-    (text, font, font_size, color, line_spacing, letter_spacing, paragraph_spacing, horizontal_align, vertical_align, word_wrap, max_width, max_height, overflow, use_ui_component_size,
-     auto_font_size, rich_text_enabled)
+    (text, font, font_size, color, glow_color, glow_radius_px, glow_boost, line_spacing, letter_spacing, paragraph_spacing, horizontal_align, vertical_align, word_wrap, max_width, max_height,
+     overflow, use_ui_component_size, auto_font_size, rich_text_enabled)
 );

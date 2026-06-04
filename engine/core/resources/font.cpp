@@ -318,13 +318,13 @@ bool Font::generate_msdf_atlas(const char* font_file) {
             // Set atlas parameters:
             // setDimensions or setDimensionsConstraint to find the best value
             packer.setDimensionsConstraint(msdf_atlas::DimensionsConstraint::SQUARE);
-            packer.setDimensions(512, 512);
+            packer.setDimensions(1024, 1024);
 
             // setScale for a fixed size or setMinimumScale to use the largest that fits
             packer.setMinimumScale(24.0);
 
             // setPixelRange or setUnitRange
-            packer.setPixelRange(2.0);
+            packer.setPixelRange(16.0);
             packer.setMiterLimit(1.0);
 
             // Compute atlas layout - pack glyphs

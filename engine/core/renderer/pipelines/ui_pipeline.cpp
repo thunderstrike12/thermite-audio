@@ -62,10 +62,11 @@ struct GpuImage3D {
 
 /* GPU data for a single text glyph (char) instance. */
 struct GpuGlyph {
-    glm::vec4 pos_size {}; /* .xy = screen position, .zw = glyph size */
-    glm::vec4 uv_rect {};  /* .xy = min UV, .zw = max UV */
-    glm::vec4 color {};    /* Text color (RGBA Rec.709) */
-    glm::vec4 params {};   /* .x = atlas_index, .yzw = unused */
+    glm::vec4 pos_size {};   /* .xy = screen position, .zw = glyph size */
+    glm::vec4 uv_rect {};    /* .xy = min UV, .zw = max UV */
+    glm::vec4 color {};      /* Text color (RGBA Rec.709) */
+    glm::vec4 glow_color {}; /* Glow color (RGBA Rec.709) | .rgb = color, .a = strength */
+    glm::vec4 params {};     /* .x = atlas_index, .y = glow_radius_px, .z = glow_boost, .w = unused */
     glm::vec3 angles {};
     float pad {};
 };
@@ -108,7 +109,7 @@ void UiPipeline::init(GPUAdapter& gpu) {
     bank.upload_buffer(glyph_vertex_buffer, quad_vertices, 0u, sizeof(quad_vertices));
 
     /* Create Text sampler with linear filtering for SDF */
-    text_sampler = bank.create_sampler("[UI] Text Sampler", Filter::Linear).expect("failed to create text sampler.");
+    text_sampler = bank.create_sampler("[UI] Text Sampler", Filter::Linear, AddressMode::ClampToEdge).expect("failed to create text sampler.");
 
     /* Initialize font manager for default font */
     FontManager::init();
@@ -405,7 +406,10 @@ void UiPipeline::enqueue_text(RenderGraph& render_graph, RenderView& render_view
                 gpu_glyph.pos_size.w = glyph.size.y * scale.y;
                 gpu_glyph.uv_rect = glyph.uv_rect;
                 gpu_glyph.color = glyph.color;
+                gpu_glyph.glow_color = text_renderer.glow_color;
                 gpu_glyph.params.x = *reinterpret_cast<const float*>(&glyph.atlas_index);
+                gpu_glyph.params.y = text_renderer.glow_radius_px;
+                gpu_glyph.params.z = text_renderer.glow_boost;
                 gpu_glyph.angles = angles;
             }
         }
