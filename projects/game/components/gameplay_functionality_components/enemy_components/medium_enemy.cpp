@@ -26,6 +26,7 @@ void game::MediumEnemy::start() {
         float current_dist = glm::length(current_walkable_transform.get_world_position() - transform.get_world_position());
         if (dist < closest_dist) {
             walkable_asteroid = nav_mesh_entity;
+            closest_dist = dist;
         }
     }
     if (walkable_asteroid == entt::null) {
