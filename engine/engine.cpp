@@ -114,6 +114,7 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     ecs.systems.add<Gameplay>(); /* Should be last */
 
     OnEngineInit::dispatch(app->specs);
+    engine.steam.init_achievements();
 }
 
 // Example stuff

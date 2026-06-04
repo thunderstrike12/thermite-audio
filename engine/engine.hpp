@@ -6,6 +6,8 @@
 
 namespace tmt {
 
+class SteamAchievements;
+
 class SteamAPI;
 
 /* Forward declarations */

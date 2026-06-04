@@ -2,6 +2,8 @@
 
 #include "engine/core/polyline.hpp"
 #include "engine/core/input/input.hpp"
+#include "engine/steam/achievements.hpp"
+#include "engine/steam/steam_api.hpp"
 #include "glm/gtx/norm.inl"
 #include "projects/game/components/gameplay_functionality_components/enable_movement_tips.hpp"
 #include "projects/game/components/gameplay_functionality_components/player.hpp"
@@ -91,6 +93,7 @@ void game::AttachComponent::update(const tmt::FrameData& time) {
     if (player_component.player_ended_run == false && input.get_action_duration(action::TRIGGER_RUN_END) > time_to_end_run) {
         player_component.player_ended_run = true;
         tmt::engine.ecs.get_dispatcher().trigger<EndRun>({ .player_dead = false });
+        tmt::engine.steam.achievement->set_achievement("ACH_COMPLETE_ONE_RUN");
     }
 }
 void game::AttachComponent::end() {
