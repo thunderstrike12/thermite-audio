@@ -151,7 +151,7 @@ void SceneView::update_voxel_objects(RenderGraph& render_graph) {
 
         /* Don't render objects with invalid transforms */
         if (validate_transform(transform.get_world_matrix())) continue;
-        renderer.resource->update_if_dirty();
+        renderer.resource->update_if_dirty(render_graph);
 
         /* Calculate object opacity based on distance from the camera */
         const float object_d = glm::distance(transform.get_world_position(), glm::vec3(engine.renderer.render_view.gpu_view.origin));

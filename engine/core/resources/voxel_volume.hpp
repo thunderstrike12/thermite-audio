@@ -6,6 +6,8 @@
 
 #include "engine/core/reflection.hpp"
 
+class RenderGraph;
+
 namespace tmt {
 
 /* Voxel volume run-time resource, created from a Voxel model resource. */
@@ -29,7 +31,7 @@ class VoxelVolume : public tmt::RuntimeResource<VoxelScene, UUID> {
     bool fallback(FallbackReason reason) override;
 
     /* Updates the GPU buffers of this voxel volume if dirty. (note: this should only be called from the renderer) */
-    void update_if_dirty();
+    void update_if_dirty(RenderGraph& graph);
 
     /* Mark this voxel volume as dirty, meaning it needs to be re-uploaded to the GPU. */
     void set_dirty() { is_dirty = true; }

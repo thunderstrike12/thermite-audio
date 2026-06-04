@@ -153,7 +153,7 @@ bool VoxelVolume::fallback(FallbackReason) {
     return true;
 }
 
-void VoxelVolume::update_if_dirty() {
+void VoxelVolume::update_if_dirty(RenderGraph& graph) {
     if (is_dirty == false) return;
     VRAMBank& bank = engine.renderer.vram_bank();
 
@@ -166,13 +166,14 @@ void VoxelVolume::update_if_dirty() {
         blas_voxels_capacity = blas->voxels_capacity;
         bank.resize_buffer(blas_nodes, blas_nodes_capacity, sizeof(Svt64Node));
         bank.resize_buffer(blas_voxels, blas_voxels_capacity, sizeof(MaterialIndex));
-        Log::info("Resized SVT64 buffers.");
+        Log::debug("Re-sized \"{}\" voxel buffer(s).", name);
     }
 
     /* Re-upload voxel data */
-    bank.upload_buffer(blas_voxels, blas->materials, 0u, blas->voxel_count * sizeof(MaterialIndex));
-    bank.upload_buffer(blas_nodes, blas->nodes, 0u, blas->node_count * sizeof(Svt64Node));
-    bank.upload_buffer(blas_palette, &blas->palette, 0u, sizeof(MaterialPalette));
+    graph.upload_buffer(blas_voxels, blas->materials, 0u, blas->voxel_count * sizeof(MaterialIndex));
+    graph.upload_buffer(blas_nodes, blas->nodes, 0u, blas->node_count * sizeof(Svt64Node));
+    graph.upload_buffer(blas_palette, &blas->palette, 0u, sizeof(MaterialPalette));
+    Log::debug("Re-uploaded \"{}\" voxel buffer(s).", name);
 }
 
 void VoxelVolume::create_gpu_buffers() {
