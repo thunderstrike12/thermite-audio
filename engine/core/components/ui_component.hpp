@@ -19,12 +19,15 @@ struct Rect {
     glm::vec2 size;
 };
 
+struct Transform;
+struct UIComponent;
+
 class AnchorHelper {
    public:
     static glm::vec2 calculate_anchor_offset_in_rect(const glm::vec2 size, const Anchor anchor);
     static glm::vec2 calculate_anchor_offset(Entity entity);
     static Rect get_bounds(Entity entity);
-    static bool is_inside(Entity entity, const glm::vec2& viewport_point);
+    static bool is_inside(Entity entity, const glm::vec2& viewport_point, const UIComponent& ui_component, const Transform& transform);
 };
 
 struct UIComponent {

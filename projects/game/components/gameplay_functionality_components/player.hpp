@@ -33,6 +33,11 @@ struct RayCollisionCheck {
     float collision_speed_damping = 0.4f;
     float camera_near_distance = 0.3f;
 };
+
+struct PlayerVFXSettings {
+    tmt::ResourceRef<tmt::Json> recharge_vfx_prefab;
+};
+
 enum class PlayerState { FREEMOVING, ATTACHED, PAUSED };
 struct AttachedCameraSettings {
     float distance = 12.0f;
@@ -180,6 +185,7 @@ class Player : public tmt::GameComponent<Player> {
     tmt::Entity gravity_crosshair = entt::null;
     tmt::Entity mine_crosshair = entt::null;
 
+    PlayerVFXSettings player_vfx_settings;
     // Barge point
     tmt::Entity barge = entt::null;
 
@@ -221,6 +227,7 @@ class Player : public tmt::GameComponent<Player> {
     void start_detach_camera_transition();
     void align_player_camera_to_attached();
     void sync_attached_orbit_from_camera();
+    void setup_vfx_emitter(tmt::Entity& entity_to_set_up, tmt::ResourceRef<tmt::Json>& prefab_to_set_up);
     glm::vec3 get_attached_camera_orbit_position(const glm::vec3& barge_pos) const;
 
     PlayerState state = PlayerState::FREEMOVING;
@@ -252,6 +259,8 @@ class Player : public tmt::GameComponent<Player> {
     bool player_destroyed = false;
 
     ToolType active_tool = ToolType::RIFLE;
+
+    tmt::Entity recharge_emitter_entity = entt::null;
 };
 
 }  // namespace game
@@ -264,10 +273,11 @@ TMT_OBJECT(game::AttachCameraTransitionSettings, (enabled, play_on_first_attach,
 TMT_OBJECT(game::DetachCameraTransitionSettings, (enabled, align_player_to_camera, duration, ease));
 TMT_OBJECT(game::CameraShakeSettings, (enabled, max_intensity, boost_intensity, drill_intensity, decay_speed, recoil_strength, recoil_return_speed, recoil_horizontal));
 TMT_OBJECT(game::PlayerSounds, (destroyed_death, drone_boost, hit, battery_half, battery_almost_out, battery_out));
+TMT_OBJECT(game::PlayerVFXSettings, (recharge_vfx_prefab));
 TMT_GAME_COMPONENT(
     game::Player, (camera_sensitivity, acceleration, deceleration, drag, max_speed, boost_max_speed_multiplier, boost_acceleration_multiplier, boost_deceleration_factor,
                    boost_cost_per_second_per_additional_speed_above_max, boost_initial_cost, boost_availability, health, energy, energy_drain_per_second, out_of_energy_time_till_death,
                    low_energy_threshold, low_energy_duration, use_second_warning, low_energy_threshold_2, low_energy_duration_2, player_hud, barge_hud, low_energy_hud, black_out_hud,
-                   black_out_curve, rifle_crosshair, gravity_crosshair, mine_crosshair, barge, recharge_distance, ray_check, camera_shake_settings, attached_camera_settings,
-                   attach_camera_transition_settings, detach_camera_transition_settings, player_sounds)
+                   black_out_curve, rifle_crosshair, gravity_crosshair, mine_crosshair, player_vfx_settings, barge, recharge_distance, ray_check, camera_shake_settings,
+                   attached_camera_settings, attach_camera_transition_settings, detach_camera_transition_settings, player_sounds)
 );

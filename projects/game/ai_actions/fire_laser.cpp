@@ -166,10 +166,12 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
     auto player_pos = tmt::engine.ecs.get_component<tmt::Transform>(enemy.player).get_world_position();
     player_pos += enemy.laser_target_offset;
 
+    auto* audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(enemy_entity);
+
     switch (state) {
         case SITTING_DOWN: {
-            if (enemy.audio_emitter != nullptr && !enemy.shield_slam_instance.is_valid()) {
-                enemy.shield_slam_instance = enemy.audio_emitter->play(enemy.sounds.sound_shield_slam);
+            if (audio_emitter != nullptr && !enemy.shield_slam_instance.is_valid()) {
+                enemy.shield_slam_instance = audio_emitter->play(enemy.sounds.sound_shield_slam);
                 enemy.shield_slam_instance.set_maximum_distance(enemy.aggro_range * 1.25f);  // Multiply be 1.25f to ensure the player can hear it even when at the edge of the range
             }
 
@@ -199,9 +201,8 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
             tmt::Transform& enemy_transform = tmt::engine.ecs.get_component<tmt::Transform>(enemy_entity);
             target_pos = enemy_transform.get_world_position() + enemy_transform.get_forward() * enemy.laser_range * 0.8f;
 
-            if (enemy.audio_emitter != nullptr && !enemy.laser_instance.is_valid()) {
-                enemy.laser_instance = enemy.audio_emitter->play(enemy.sounds.sound_laser);
-                enemy.laser_instance.set_maximum_distance(enemy.aggro_range * 1.25f);  // Multiply be 1.25f to ensure the player can hear it even when at the edge of the range
+            if (audio_emitter != nullptr && !enemy.laser_instance.is_valid()) {
+                enemy.laser_instance = audio_emitter->play(enemy.sounds.sound_laser);
             }
 
             enemy.height_above_ground_offset = -enemy.height_above_ground + enemy.laser_sitting_down_height_offset;
@@ -266,6 +267,10 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
                 // voxel_body.layer = enemy.projectile_layer;
                 // voxel_body.type = tmt::VoxelBody::STATIC;
 
+                if (audio_emitter != nullptr && enemy.laser_instance.is_valid()) {
+                    enemy.laser_instance.set_parameter(enemy.sounds.laser_parameter, 0.75f);
+                }
+
                 state = FIRING;
                 time = 0.0f;
             }
@@ -324,6 +329,11 @@ void FireLaser::on_tick(tmt::Entity enemy_entity, float dt) {
 
             if (time > enemy.laser_firing_time) {
                 cleanup(enemy_entity);
+
+                if (audio_emitter != nullptr && enemy.laser_instance.is_valid()) {
+                    enemy.laser_instance.stop();
+                }
+
                 return;
             }
 

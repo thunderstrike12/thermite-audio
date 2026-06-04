@@ -1,6 +1,8 @@
 #pragma once
 #include "engine/systems/gameplay/game_component.hpp"
 #include "projects/game/data_headers/events.hpp"
+#include "engine/core/audio.hpp"
+
 namespace game {
 
 enum class WeaponType { RIFLE, GRAVITY, MINING };

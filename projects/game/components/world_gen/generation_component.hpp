@@ -37,5 +37,5 @@ struct ClearanceVolume : public tmt::GameComponent<ClearanceVolume> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::ClearanceVolume, (size));
+TMT_GAME_COMPONENT(game::ClearanceVolume, (size));
 TMT_GAME_COMPONENT_EMPTY(game::GenerationComponent);

@@ -17,9 +17,11 @@
 #include "engine/shared/ray.hpp"
 #include "engine/systems/physics/physics_system.hpp"
 #include "engine/tools/player_data.hpp"
+#include "engine/tools/prefab_helper.hpp"
 #include "projects/game/components/development_tools/debug_line_helper.hpp"
 #include "projects/game/data_headers/save_entries.hpp"
 #include "projects/game/data_headers/wallet.hpp"
+#include "projects/game/components/development_tools/vfx_helper.hpp"
 
 // TODO before we have a serializer for input, you can add all the needed keybindings here.
 //  TODO we still have to add the gamepad inputs here
@@ -151,6 +153,9 @@ void Player::start() {
     audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(get().entity);
     health.value = health.max_value;
     energy.value = energy.max_value;
+
+    // Set up the vfx emitters
+    setup_vfx_emitter(recharge_emitter_entity, player_vfx_settings.recharge_vfx_prefab);
 }
 void Player::end() {
     tmt::engine.ecs.get_dispatcher().sink<AttachEvent>().disconnect<&Player::on_attach>(this);
@@ -873,10 +878,17 @@ void Player::refill(float delta) {
 
     health.value = glm::min(health.max_value, health.value + delta * health.increase_multiplier);
     energy.value = glm::min(energy.max_value, energy.value + delta * energy.increase_multiplier);
+
+    if (health.value < health.max_value || energy.value < energy.max_value) {
+        GameVFXHelper::activate_vfx_emitter(recharge_emitter_entity);
+    } else {
+        GameVFXHelper::deactivate_vfx_emitter(recharge_emitter_entity);
+    }
 }
 
 void Player::drain_energy(float delta) {
     energy.value = glm::min(energy.max_value, energy.value - delta * energy_drain_per_second);
+    GameVFXHelper::deactivate_vfx_emitter(recharge_emitter_entity);
 }
 
 void Player::on_attach(const AttachEvent& event) {
@@ -1014,6 +1026,27 @@ void Player::set_crosshair(tmt::Entity active) {
     if (ecs.valid(active)) {
         ecs.enable(active);
     }
+}
+
+void Player::setup_vfx_emitter(tmt::Entity& entity_to_set_up, tmt::ResourceRef<tmt::Json>& prefab_to_set_up) {
+    if (!prefab_to_set_up) {
+        tmt::Log::error("Didnt set up vfx prefab on player. Please check.");
+        return;
+    }
+
+    entity_to_set_up = tmt::PrefabHelper::instantiate_prefab(prefab_to_set_up.file_location);
+    auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity_to_set_up);
+
+    tmt::ParticleEmitter* emitter_component = tmt::engine.ecs.try_get_component<tmt::ParticleEmitter>(entity_to_set_up);
+    if (!emitter_component) {
+        tmt::Log::error("Cant spawn particle on emitter, check prefabs on entity: {}", entity);
+        return;
+    }
+
+    transform.set_parent(entity);
+    transform.set_world_position(tmt::engine.ecs.try_get_component<tmt::Transform>(entity)->get_world_position());
+
+    emitter_component->active = false;
 }
 
 }  // namespace game

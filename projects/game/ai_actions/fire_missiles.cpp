@@ -25,8 +25,10 @@ void FireMissiles::on_tick(tmt::Entity enemy_entity, float dt) {
     interval_timer += dt;
     if (interval_timer > enemy.burst_interval) {
         interval_timer -= enemy.burst_interval;
-        if (enemy.audio_emitter != nullptr) {
-            const tmt::AudioInstance3D instance = enemy.audio_emitter->play(enemy.sounds.sound_missile_fire);
+
+        auto* audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(enemy_entity);
+        if (audio_emitter != nullptr) {
+            const tmt::AudioInstance3D instance = audio_emitter->play(enemy.sounds.sound_missile_fire);
             instance.set_maximum_distance(enemy.aggro_range * 1.25f);  // Multiply be 1.25f to ensure the player can hear it even when at the edge of the range
         }
         auto missile_entity = tmt::engine.ecs.create_entity();

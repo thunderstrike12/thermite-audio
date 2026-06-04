@@ -464,9 +464,10 @@ void tmt::Viewport::selection_logic(const ImVec2& imgui_mouse_pos, const glm::ve
             });
 
             for (const auto& [entity, ui_comp, z_distance] : ui_entities) {
-                if (AnchorHelper::is_inside(entity, { mouse_pos.x, mouse_pos.y })) {
+                const auto& transform = engine.ecs.get_component<Transform>(entity);
+                const auto& ui_component = engine.ecs.get_component<UIComponent>(entity);
+                if (AnchorHelper::is_inside(entity, { mouse_pos.x, mouse_pos.y }, ui_component, transform)) {
                     hierarchy.add_entity_to_selection(entity);
-                    auto& transform = engine.ecs.get_component<Transform>(entity);
                     // we only want to open the tree if the selected entity has a parent
                     if (transform.has_parent()) {
                         Entity parent = transform.get_parent();

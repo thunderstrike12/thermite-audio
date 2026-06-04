@@ -74,8 +74,6 @@ void game::MediumEnemy::start() {
         available_positions[i].base_offset_from_ref_entity = ref_pos - pos;
         available_positions[i].stored_offset_from_ref_entity = available_positions[i].base_offset_from_ref_entity;
     }
-
-    audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(entity);
 }
 
 void game::MediumEnemy::update(const tmt::FrameData& time) {
@@ -99,6 +97,7 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
         auto resource = tmt::engine.ecs.get_component<tmt::VoxelRenderer>(core).resource;
         uint32_t current_core_voxels = resource->blas->voxel_count - resource->blas->voxels_wasted;
         if (current_core_voxels != core_voxels) {
+            auto* audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(entity);
             if (audio_emitter != nullptr) {
                 // Stop all other sounds playing on this emitter before playing the death sound.
                 audio_emitter->stop_instances();
@@ -168,6 +167,7 @@ void game::MediumEnemy::update(const tmt::FrameData& time) {
         // Play only once when entering aggro
         if (!played_aggro_sound) {
             // Check if the agent has an audio emitter
+            auto* audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(entity);
             if (audio_emitter != nullptr) {
                 const tmt::AudioInstance3D instance = audio_emitter->play(sounds.sound_aggroed_audio);
                 instance.set_maximum_distance(aggro_range * 1.5f);  // Multiply be 1.25f to ensure the player can hear it even when at the edge of the range
@@ -306,8 +306,9 @@ void game::MediumEnemy::kite_player() const {
     auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(enemy.walkable_asteroid);
     if (!nav_mesh.nav_nodes_valid()) return;
 
-    if (enemy.audio_emitter != nullptr && !enemy.walk_instance.is_valid()) {
-        enemy.walk_instance = enemy.audio_emitter->play(enemy.sounds.sound_walk);
+    auto* audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(entity);
+    if (audio_emitter != nullptr && !enemy.walk_instance.is_valid()) {
+        enemy.walk_instance = audio_emitter->play(enemy.sounds.sound_walk);
         enemy.walk_instance.set_maximum_distance(enemy.aggro_range * 1.5f);  // Multiply be 1.5f to ensure the player can hear it even when at the edge of the range
     }
 

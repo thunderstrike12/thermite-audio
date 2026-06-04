@@ -7,6 +7,7 @@ namespace tmt {
 
 class Stencil;
 class VoxelVolume;
+struct VoxelRenderer;
 
 class Destruction : public ISystem {
    public:
@@ -24,6 +25,8 @@ class Destruction : public ISystem {
     void on_fixed_update(const FrameData& time) override;
     void on_end() override;
 
+    void load_destructible_data(VoxelRenderer& vr, Destructible& des);
+
     void destroy_voxels(Entity entity, const Stencil* stencil, glm::ivec3 offset = glm::ivec3(0));
     std::vector<Entity> destroy_voxels(Entity entity, const std::vector<glm::uvec3>& indices);
     std::vector<Entity> destroy_voxel(Entity entity, glm::uvec3 pos);
@@ -33,6 +36,8 @@ class Destruction : public ISystem {
     static void generate_connection_graph(Destructible& graph, Svt64* tree);
 
    private:
+    bool initialized = false;
+
     // Returns true if we can skip separation
     bool seperation_early_out(VoxelVolume* volume, const glm::uvec3& pos, const std::vector<glm::uvec3>& neighbors);
 

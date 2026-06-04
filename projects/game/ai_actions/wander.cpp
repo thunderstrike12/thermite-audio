@@ -56,8 +56,9 @@ void Wander::on_tick(tmt::Entity enemy_entity, float dt) {
         }
     }
 
-    if (enemy.audio_emitter != nullptr && !enemy.walk_instance.is_valid()) {
-        enemy.walk_instance = enemy.audio_emitter->play(enemy.sounds.sound_walk);
+    auto* audio_emitter = tmt::engine.ecs.try_get_component<tmt::AudioEmitter>(enemy_entity);
+    if (audio_emitter != nullptr && !enemy.walk_instance.is_valid()) {
+        enemy.walk_instance = audio_emitter->play(enemy.sounds.sound_walk);
         enemy.walk_instance.set_maximum_distance(enemy.aggro_range * 1.5f);  // Multiply be 1.5f to ensure the player can hear it even when at the edge of the range
     }
 }

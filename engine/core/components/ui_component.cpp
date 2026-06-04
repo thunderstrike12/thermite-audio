@@ -125,27 +125,21 @@ Rect AnchorHelper::get_bounds(Entity entity) {
     return Rect { rect_center, scaled_size };
 }
 
-bool AnchorHelper::is_inside(const Entity entity, const glm::vec2& viewport_point) {
+bool AnchorHelper::is_inside(const Entity entity, const glm::vec2& viewport_point, const UIComponent& ui_component, const Transform& transform) {
     if (entity == entt::null) return false;
 
-    const auto* ui_component = engine.ecs.try_get_component<UIComponent>(entity);
-    if (!ui_component) return false;
-
-    auto* transform = engine.ecs.try_get_component<Transform>(entity);
-    if (!transform) return false;
-
     // get ui elements
-    const auto rect = ui_component->real_size;
+    const auto rect = ui_component.real_size;
     const auto offset = calculate_anchor_offset(entity);
 
     // apply transform values
     const glm::uvec2 screen_res = engine.renderer.render_view.gpu_view.resolution;
     const glm::vec2 scale_factor(static_cast<float>(screen_res.x) / UIComponent::REFERENCE_WIDTH, static_cast<float>(screen_res.y) / UIComponent::REFERENCE_HEIGHT);
-    const glm::vec2 world_pos = glm::vec2(transform->get_world_position()) * scale_factor;
-    const glm::vec2 world_scale = transform->get_world_scale();
-    const glm::vec3 world_rotation = glm::eulerAngles(transform->get_world_rotation());
+    const glm::vec2 world_pos = glm::vec2(transform.get_world_position()) * scale_factor;
+    const glm::vec2 world_scale = transform.get_world_scale();
+    const glm::vec3 world_rotation = glm::eulerAngles(transform.get_world_rotation());
 
-    return contains(rect, viewport_point, world_pos + offset, world_scale, world_rotation, ui_component->pivot);
+    return contains(rect, viewport_point, world_pos + offset, world_scale, world_rotation, ui_component.pivot);
 }
 
 }  // namespace tmt

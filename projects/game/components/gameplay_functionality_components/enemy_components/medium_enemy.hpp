@@ -22,6 +22,7 @@ struct AvailablePosEntry {
 struct Sounds {
     tmt::AudioEvent sound_aggroed_audio;      // done
     tmt::AudioEvent sound_laser;              // done
+    tmt::AudioParameter laser_parameter;
     tmt::AudioEvent sound_missile_explosion;  // done
     tmt::AudioEvent sound_missile_fire;       // done
     tmt::AudioEvent sound_random_chatter;     // not yet implemented anywhere, where do designers want this?
@@ -134,7 +135,6 @@ class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
 
     // sounds
     Sounds sounds;
-    tmt::AudioEmitter* audio_emitter;
 
     tmt::AudioInstance3D walk_instance;
     tmt::AudioInstance3D laser_instance;
@@ -150,7 +150,7 @@ class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
 TMT_OBJECT(game::AvailablePosEntry, (entity, height_offset, reference_entity));
 
 TMT_OBJECT(
-    game::Sounds, (sound_aggroed_audio, sound_laser, sound_missile_explosion, sound_missile_fire, sound_random_chatter, sound_shield_slam, sound_taunt, sound_walk, sound_core_destroyed)
+    game::Sounds, (sound_aggroed_audio, sound_laser, laser_parameter, sound_missile_explosion, sound_missile_fire, sound_random_chatter, sound_shield_slam, sound_taunt, sound_walk, sound_core_destroyed)
 );
 
 TMT_GAME_COMPONENT(

@@ -25,40 +25,37 @@ constexpr uint64_t edge_masks[6] {
     0xF000F000F000F000ULL   // +Z
 };
 
-void Destruction::on_start() {}
+void Destruction::on_start() {
+}
 
 void Destruction::on_update(const FrameData&) {
-    for (const auto& [entity, des, vb, vr] : engine.ecs.view<Destructible, VoxelBody, VoxelRenderer>().each()) {
-        if (des.initialized) continue;
+    if (!initialized) {
+        for (const auto& [entity, des, vb, vr] : engine.ecs.view<Destructible, VoxelBody, VoxelRenderer>().each()) {
+            initialized = true;
+            // If the object has a relative path, we can already generate its graph
+            if (vr.resource.file_location.relative_path.empty() == false) {
+                // We have a valid voxelscene
+                ResourceRef ref = engine.resources.load_resource<tmt::VoxelScene>(vr.resource.file_location);
+                VoxelSceneNode* model = nullptr;
+                for (VoxelSceneNode& root_node : ref->root_nodes) {
+                    model = find_model_by_uuid(root_node, vr.resource->uuid);
+                }
 
-        des.initialized = true;
+                // If we couldn't find a model (should not happen)
+                if (model == nullptr) {
+                    Log::error("[Destruction] Failed to find model with UUID {} in voxelscene '{}'", vr.resource->uuid, vr.resource.file_location.get_relative_path().string());
+                    continue;
+                }
 
-        // If we dont have a relative path, we dont have a voxelscene, so calculate a unique connection graph
-        if (vr.resource.file_location.relative_path.empty()) {
-            generate_connection_graph(des, vr.resource->blas.get());
-        } else {
-            // We have a valid voxelscene
-            ResourceRef ref = engine.resources.load_resource<tmt::VoxelScene>(vr.resource.file_location);
-            VoxelSceneNode* model = nullptr;
-            for (VoxelSceneNode& root_node : ref->root_nodes) {
-                model = find_model_by_uuid(root_node, vr.resource->uuid);
+                // Generate a new connection graph if we dont have one already
+                if (model->destructible.initialized == false) {
+                    generate_connection_graph(model->destructible, vr.resource->blas.get());
+                    model->destructible.initialized = true;
+                }
             }
-
-            // If we couldn't find a model (should not happen)
-            if (model == nullptr) continue;
-
-            if (model->destructible.initialized == false) {
-                // Generate a new connection graph
-                generate_connection_graph(model->destructible, vr.resource->blas.get());
-                model->destructible.initialized = true;
-            }
-
-            // Copy the connection graph from the model
-            des = model->destructible;
         }
-
-        // If its the voxelscene/ or has one, copy it from there else :
     }
+
 
     for (const auto& [entity, des, vb] : engine.ecs.view<Destructible, VoxelBody>().each()) {
         if (!des.initialized || !des.debug_view) continue;
@@ -124,6 +121,41 @@ void Destruction::on_fixed_update(const FrameData&) {}
 
 void Destruction::on_end() {}
 
+void Destruction::load_destructible_data(VoxelRenderer& vr, Destructible& des) {
+    if (des.initialized) return;
+
+    des.initialized = true;
+
+    // If we dont have a relative path, we dont have a voxelscene, so calculate a unique connection graph
+    if (vr.resource.file_location.relative_path.empty()) {
+        generate_connection_graph(des, vr.resource->blas.get());
+    } else {
+        // We have a valid voxelscene
+        ResourceRef ref = engine.resources.load_resource<tmt::VoxelScene>(vr.resource.file_location);
+        VoxelSceneNode* model = nullptr;
+        for (VoxelSceneNode& root_node : ref->root_nodes) {
+            model = find_model_by_uuid(root_node, vr.resource->uuid);
+        }
+
+        // If we couldn't find a model (should not happen)
+        if (model == nullptr) {
+            Log::error("[Destruction] Failed to find model with UUID {} in voxelscene '{}'", vr.resource->uuid, vr.resource.file_location.get_relative_path().string());
+            return;
+        }
+
+        if (model->destructible.initialized == false) {
+            Log::error("[Destruction] Loaded a model that has not been initialized yet");
+
+            // Generate a new connection graph
+            generate_connection_graph(model->destructible, vr.resource->blas.get());
+            model->destructible.initialized = true;
+        }
+
+        // Copy the connection graph from the model
+        des = model->destructible;
+    }
+}
+
 void Destruction::destroy_voxels(Entity entity, const Stencil* stencil, glm::ivec3 offset) {
     TMT_ZONE_SCOPED_N("Destruction")
 
@@ -131,6 +163,9 @@ void Destruction::destroy_voxels(Entity entity, const Stencil* stencil, glm::ive
     VoxelRenderer* vr = engine.ecs.try_get_component<VoxelRenderer>(entity);
     Destructible* des = engine.ecs.try_get_component<Destructible>(entity);
     if (vr == nullptr || des == nullptr) return;
+    
+    // Load destructible data if we dont have it already
+    load_destructible_data(*vr, *des);
 
     // Subtract voxels from BLAS
     auto* resource = vr->resource.resource.get();
@@ -188,6 +223,9 @@ std::vector<Entity> Destruction::destroy_voxels(Entity entity, const std::vector
     VoxelBody* vb = engine.ecs.try_get_component<VoxelBody>(entity);
     Destructible* des = engine.ecs.try_get_component<Destructible>(entity);
     if (vr == nullptr || des == nullptr) return { entity };
+
+    // Load destructible data if we dont have it already
+    load_destructible_data(*vr, *des);
 
     // Subtract voxels from BLAS
     auto* resource = vr->resource.resource.get();
@@ -297,6 +335,9 @@ std::vector<Entity> Destruction::destroy_voxel(Entity entity, glm::uvec3 pos) {
     VoxelBody* vb = engine.ecs.try_get_component<VoxelBody>(entity);
     Destructible* des = engine.ecs.try_get_component<Destructible>(entity);
     if (vr == nullptr || des == nullptr) return { entity };
+
+    // Load destructible data if we dont have it already
+    load_destructible_data(*vr, *des);
 
     // Check if the voxel is already empty
     auto* resource = vr->resource.resource.get();
