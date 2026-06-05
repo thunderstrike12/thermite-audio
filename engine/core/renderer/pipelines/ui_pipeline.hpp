@@ -33,8 +33,8 @@ class UiPipeline {
     void init(GPUAdapter& gpu);
     void enqueue(RenderGraph& render_graph, RenderView& render_view);
 
-    void enqueue_images(RenderGraph& render_graph, RenderView& render_view);
-    void enqueue_text(RenderGraph& render_graph, RenderView& render_view);
+    void enqueue_2d(RenderGraph& render_graph, RenderView& render_view);
+    void enqueue_3d(RenderGraph& render_graph, RenderView& render_view);
 
     void deinit(GPUAdapter& gpu);
 
@@ -48,7 +48,6 @@ class UiPipeline {
     uint32_t image_count = 0u;
 
     bool render_ui_pipeline = true;
-    bool render_text = true;
 };
 
 }  // namespace tmt

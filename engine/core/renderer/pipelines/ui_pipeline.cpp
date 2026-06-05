@@ -138,18 +138,14 @@ static inline void decompose_matrix(const glm::mat4& m, glm::vec2& pos, glm::vec
 void UiPipeline::enqueue(RenderGraph& render_graph, RenderView& render_view) {
     if (!render_ui_pipeline) return;
 
-    enqueue_images(render_graph, render_view);
+    enqueue_3d(render_graph, render_view);
 
-    /* Render text on top */
-    if (render_text) {
-        enqueue_text(render_graph, render_view);
-    }
+    enqueue_2d(render_graph, render_view);
 }
 
-void UiPipeline::enqueue_images(RenderGraph& render_graph, RenderView& render_view) {
+void UiPipeline::enqueue_2d(RenderGraph& render_graph, RenderView& render_view) {
     /* Temporary list of image instances */
     std::vector<GpuImage> images {};
-    std::vector<GpuImage3D> images_3d {};
 
     /* Factor to convert authored (1920x1080) positions to actual screen pixels. */
     const glm::vec2 pos_scale_factor(
@@ -245,64 +241,8 @@ void UiPipeline::enqueue_images(RenderGraph& render_graph, RenderView& render_vi
         image_pass.draw(image_vertex_buffer, 6u, 0u, image_count);
     }
 
-    { /* Collect all the images in the scene (Game ECS) */
-        const entt::basic_view view = engine.ecs.view<ImageRenderer, Transform>(entt::exclude<UIComponent>);
-
-        for (auto&& [entity, image_renderer, transform] : view.each()) {
-            /* Fill the parameters of the gpu image */
-            GpuImage3D& image = images_3d.emplace_back();
-            image.color = image_renderer.color;
-            if (image_renderer.texture) image.image_index = image_renderer.texture.resource->image.get_index();
-            image.flipbook_frame = image_renderer.current_frame;
-            image.flipbook_frames = image_renderer.texture ? image_renderer.texture.resource->flipbook_frames : 1u;
-            image.local_to_world = transform.get_world_matrix();
-        }
-    }
-
-    if (!images_3d.empty()) {
-        /* Upload the image instances */
-        render_graph.upload_buffer(images_3d_buffer, images_3d.data(), 0u, images_3d.size() * sizeof(GpuImage3D));
-        image_count += (uint32_t)images_3d.size();
-
-        /* Get Render Image */
-        const BindHandle render_image = render_view.get_render_image();
-
-        /* Get Render Resolution */
-        const glm::uvec2 render_res = render_view.gpu_view.resolution;
-
-        /* UI overlay rendering */
-        /* clang-format off */
-        const bool flip = (render_view.frame_counter & 0b1u) == 0u;
-        RasterNode& image_pass = render_graph.add_raster_pass("ui images 3d", "ui/3d_image.vx", "ui/3d_image.px")
-            /* Vertex stage */
-            .topology(Topology::TriangleList)
-            .attribute(AttrFormat::XYZ32_SFloat) /* Position */
-            .attribute(AttrFormat::XY32_SFloat)  /* UV */
-            .read(render_view.render_view_buffer, ShaderStages::Vertex)
-            /* Pixel stage */
-            .read(images_3d_buffer, ShaderStages::Vertex | ShaderStages::Pixel)
-            .read(image_sampler, ShaderStages::Pixel)
-            .depth_stencil(flip ? render_view.dbuffer.image : render_view.prev_dbuffer.image, true, true)
-            .load_op_depth(LoadOp::Load)
-            .load_op_color(LoadOp::Load)
-            .alpha_blending(true)
-            .attach(render_image)
-            .raster_extent(render_res.x, render_res.y);
-        /* clang-format on */
-
-        /* Draw all images with 1 draw call, using instancing & bindless textures. */
-        image_pass.draw(image_vertex_buffer, 6u, 0u, (uint32_t)images_3d.size());
-    }
-}
-
-void UiPipeline::enqueue_text(RenderGraph& render_graph, RenderView& render_view) {
+    /* Text */
     std::vector<GpuGlyph> glyphs {};
-    std::vector<GpuGlyph3D> glyphs_3d {};
-
-    /* Factor to convert authored (1920x1080) positions to actual screen pixels. */
-    const glm::vec2 pos_scale_factor(
-        static_cast<float>(render_view.gpu_view.resolution.x) / UIComponent::REFERENCE_WIDTH, static_cast<float>(render_view.gpu_view.resolution.y) / UIComponent::REFERENCE_HEIGHT
-    );
 
     { /* Collect all the text in the scene (Game ECS) */
         const entt::basic_view view = engine.ecs.view<TextRenderer, UIComponent, Transform>();
@@ -443,6 +383,62 @@ void UiPipeline::enqueue_text(RenderGraph& render_graph, RenderView& render_view
         /* Draw all glyphs with 1 draw call, using instancing & bindless textures. */
         text_pass.draw(glyph_vertex_buffer, 6u, 0u, glyph_count);
     }
+}
+
+void UiPipeline::enqueue_3d(RenderGraph& render_graph, RenderView& render_view) {
+    std::vector<GpuImage3D> images_3d {};
+
+    { /* Collect all the images in the scene (Game ECS) */
+        const entt::basic_view view = engine.ecs.view<ImageRenderer, Transform>(entt::exclude<UIComponent>);
+
+        for (auto&& [entity, image_renderer, transform] : view.each()) {
+            /* Fill the parameters of the gpu image */
+            GpuImage3D& image = images_3d.emplace_back();
+            image.color = image_renderer.color;
+            if (image_renderer.texture) image.image_index = image_renderer.texture.resource->image.get_index();
+            image.flipbook_frame = image_renderer.current_frame;
+            image.flipbook_frames = image_renderer.texture ? image_renderer.texture.resource->flipbook_frames : 1u;
+            image.local_to_world = transform.get_world_matrix();
+        }
+    }
+
+    if (!images_3d.empty()) {
+        /* Upload the image instances */
+        render_graph.upload_buffer(images_3d_buffer, images_3d.data(), 0u, images_3d.size() * sizeof(GpuImage3D));
+        image_count += (uint32_t)images_3d.size();
+
+        /* Get Render Image */
+        const BindHandle render_image = render_view.get_render_image();
+
+        /* Get Render Resolution */
+        const glm::uvec2 render_res = render_view.gpu_view.resolution;
+
+        /* UI overlay rendering */
+        /* clang-format off */
+        const bool flip = (render_view.frame_counter & 0b1u) == 0u;
+        RasterNode& image_pass = render_graph.add_raster_pass("ui images 3d", "ui/3d_image.vx", "ui/3d_image.px")
+            /* Vertex stage */
+            .topology(Topology::TriangleList)
+            .attribute(AttrFormat::XYZ32_SFloat) /* Position */
+            .attribute(AttrFormat::XY32_SFloat)  /* UV */
+            .read(render_view.render_view_buffer, ShaderStages::Vertex)
+            /* Pixel stage */
+            .read(images_3d_buffer, ShaderStages::Vertex | ShaderStages::Pixel)
+            .read(image_sampler, ShaderStages::Pixel)
+            .depth_stencil(flip ? render_view.dbuffer.image : render_view.prev_dbuffer.image, true, true)
+            .load_op_depth(LoadOp::Load)
+            .load_op_color(LoadOp::Load)
+            .alpha_blending(true)
+            .attach(render_image)
+            .raster_extent(render_res.x, render_res.y);
+        /* clang-format on */
+
+        /* Draw all images with 1 draw call, using instancing & bindless textures. */
+        image_pass.draw(image_vertex_buffer, 6u, 0u, (uint32_t)images_3d.size());
+    }
+
+    /* Text */
+    std::vector<GpuGlyph3D> glyphs_3d {};
 
     { /* Collect all the text in the scene (Game ECS) */
         const entt::basic_view view = engine.ecs.view<TextRenderer, Transform>(entt::exclude<UIComponent>);
