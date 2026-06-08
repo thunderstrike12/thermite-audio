@@ -202,8 +202,10 @@ void RigModelManager::on_draw_lines() const {
 
 void tmt::AnimationConstraintSystem::on_start() {
     for (const auto&& [rig_ent, rig_model] : engine.ecs.view<RigModel>().each()) {
-        auto& constrained_rig = engine.ecs.add_component<ConstrainedRig>(rig_ent);
-        constrained_rig.initial_reference_poses = rig_model.bone_keyframes;
+        auto constrained_rig = engine.ecs.try_get_component<ConstrainedRig>(rig_ent);
+        if (!constrained_rig) constrained_rig = &engine.ecs.add_component<ConstrainedRig>(rig_ent);
+        constrained_rig->initial_reference_poses = rig_model.bone_keyframes;
+        constrained_rig->constrained_poses = constrained_rig->initial_reference_poses;
     }
 
     for (const auto&& [entity, transform, damped_constraint] : engine.ecs.view<Transform, AnimConstraints::DampedTransformConstraint>().each()) {
