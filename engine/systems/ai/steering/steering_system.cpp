@@ -222,9 +222,9 @@ glm::vec3 SteeringSystem::collision_avoidance(const SteeringAgent& agent, const 
         Ray ray(r.first, r.second);
         Hit hit = physics->raycast(ray, layer_mask);
 
-        engine.polyline.use_color(1.0f, 0.0f, 0.0f);
+        /*engine.polyline.use_color(1.0f, 0.0f, 0.0f);
         engine.polyline.use_line_width(0.5f);
-        engine.polyline.draw_line(ray.origin, ray.origin + ray.dir * avoid_distance);
+        engine.polyline.draw_line(ray.origin, ray.origin + ray.dir * avoid_distance);*/
 
         if (hit) {
             float t = 1.0f - (hit.distance / avoid_distance);
