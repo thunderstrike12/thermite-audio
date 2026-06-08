@@ -4,6 +4,7 @@
 #include "projects/game/data_headers/wallet.hpp"
 #include "projects/game/components/gameplay_functionality_components/upgrade.hpp"
 #include "engine/core/components/text_renderer.hpp"
+#include "projects/game/data_headers/events.hpp"
 
 namespace game {
 
@@ -34,14 +35,17 @@ class UpgradePinButtonComponent : public tmt::GameComponent<UpgradePinButtonComp
     bool is_pinned = false;
     std::string shown_name = "Needs setup.";
 
+    bool upgrade_purchased = false;
+
    private:
-    void add_pin_to_player_data();
+    bool add_pin_to_player_data();
     void remove_pin_from_player_data();
     void handle_button_press(tmt::Button::Context context);
+    void handle_purchase_event(UpgradesWasPurchasedEvent event_data);
     PinnedUpgradeData pinned_upgrade_data;
 };
 
 }  // namespace game
 TMT_OBJECT(game::PinnedUpgradeData, (shown_name, dollar_cost, scrap_cost, copper_cost, thermite_cost, titanium_cost, upgrade_pin_button_entity, active));
 TMT_OBJECT(game::SavedUpgradePins, (pinned_upgrades))
-TMT_GAME_COMPONENT(game::UpgradePinButtonComponent, (upgrade_entity, shown_name, is_pinned));
+TMT_GAME_COMPONENT(game::UpgradePinButtonComponent, (upgrade_entity, shown_name, is_pinned, upgrade_purchased));

@@ -39,7 +39,7 @@ class Upgrade : public tmt::GameComponent<Upgrade> {
 
     // added {} to prevent warnings about missing function bodies
     void start() override;
-    void update(const tmt::FrameData& time) override {}
+    void update(const tmt::FrameData& time) override;
     void end() override;
 
     tmt::Entity upgrade_target = entt::null;
@@ -70,6 +70,7 @@ class Upgrade : public tmt::GameComponent<Upgrade> {
             tmt::engine.ecs.enable(ett_to_en);
         }
     }
+    bool event_queud = false;
 };
 
 }  // namespace game

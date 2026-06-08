@@ -8,8 +8,8 @@
 namespace game {
 
 struct GravitySounds {
-    tmt::AudioEvent gravity_activate;  // done
-    tmt::AudioEvent gravity_hold_object;     // done
+    tmt::AudioEvent gravity_activate;       // done
+    tmt::AudioEvent gravity_hold_object;    // done
     tmt::AudioEvent gravity_launch_object;  // done
 };
 

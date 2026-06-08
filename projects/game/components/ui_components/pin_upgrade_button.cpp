@@ -3,6 +3,8 @@
 namespace game {
 
 void UpgradePinButtonComponent::start() {
+    tmt::engine.ecs.get_dispatcher().sink<UpgradesWasPurchasedEvent>().connect<&UpgradePinButtonComponent::handle_purchase_event>(this);
+
     auto& saved_upgrade_pins = tmt::engine.player_data.get<SavedUpgradePins>(PINNED_UPGRADES, SavedUpgradePins());
 
     for (auto& entry : saved_upgrade_pins.pinned_upgrades) {
@@ -25,9 +27,12 @@ void UpgradePinButtonComponent::start() {
     }
 
     if (is_pinned) {
-        text_component->text = "Unpin";
+        text_component->text = "UNPIN";
     } else {
-        text_component->text = "Pin";
+        text_component->text = "PIN";
+    }
+    if (upgrade_purchased) {
+        text_component->text = "---";
     }
 
     auto* button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity);
@@ -75,7 +80,8 @@ void UpgradePinButtonComponent::end() {
     }
 }
 
-void UpgradePinButtonComponent::add_pin_to_player_data() {
+bool UpgradePinButtonComponent::add_pin_to_player_data() {
+    if (upgrade_purchased) return false;
     auto& saved_upgrade_pins = tmt::engine.player_data.get<SavedUpgradePins>(PINNED_UPGRADES, SavedUpgradePins());
 
     for (auto& entry : saved_upgrade_pins.pinned_upgrades) {
@@ -90,7 +96,9 @@ void UpgradePinButtonComponent::add_pin_to_player_data() {
 
     if (!is_pinned) {
         tmt::Log::info("[Upgrade pins] Could not pin upgrade, max upgrades reached.");
+        return false;
     }
+    return true;
 }
 
 void UpgradePinButtonComponent::remove_pin_from_player_data() {
@@ -110,17 +118,34 @@ void UpgradePinButtonComponent::remove_pin_from_player_data() {
 }
 
 void UpgradePinButtonComponent::handle_button_press(tmt::Button::Context context) {
+    if (upgrade_purchased) return;
     auto* text_component = tmt::engine.ecs.try_get_component<tmt::TextRenderer>(entity);
     if (!text_component) {
         return;
     }
 
+    // Something is wrong heres
     if (is_pinned) {
         remove_pin_from_player_data();
-        text_component->text = "Pin";
+        text_component->text = "PIN";
     } else {
-        add_pin_to_player_data();
-        text_component->text = "Unpin";
+        if (add_pin_to_player_data()) {
+            text_component->text = "UNPIN";
+        }
+    }
+}
+
+void UpgradePinButtonComponent::handle_purchase_event(UpgradesWasPurchasedEvent event_data) {
+    tmt::Entity purchased_upgrade = event_data.purchased_upgrade_entity;
+    auto* text_component = tmt::engine.ecs.try_get_component<tmt::TextRenderer>(entity);
+    if (!text_component) {
+        return;
+    }
+    if (purchased_upgrade == upgrade_entity) {
+        upgrade_purchased = true;
+        is_pinned = false;
+        text_component->text = "---";
+        remove_pin_from_player_data();
     }
 }
 

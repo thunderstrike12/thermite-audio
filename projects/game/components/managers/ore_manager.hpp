@@ -37,7 +37,7 @@ struct ThermiteOreSettings {
     float cooldown_explosion = 0.5f;
     // Determines the max toughness of ores that get destroyed by the explosion
     float explosion_strength = 20.0f;
-    float knockback_strength = 10.0f;    
+    float knockback_strength = 10.0f;
     float knockback_range = 5.0f;
     LayerMask layer_mask {};
 };

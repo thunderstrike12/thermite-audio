@@ -141,9 +141,9 @@ void Explode::on_tick(tmt::Entity agent, float dt) {
         float radius = small_enemy->logic_paramaters.push_radius;
         float force = small_enemy->logic_paramaters.explosion_force;
 
-        //for (auto [entity, body, transform] : ecs.view<tmt::VoxelBody, tmt::Transform>().each()) {
-        //    glm::vec3 pos = transform.get_world_position();
-        //    glm::vec3 dir = pos - explosion_center;
+        // for (auto [entity, body, transform] : ecs.view<tmt::VoxelBody, tmt::Transform>().each()) {
+        //     glm::vec3 pos = transform.get_world_position();
+        //     glm::vec3 dir = pos - explosion_center;
 
         //    float dist = glm::length(dir);
 

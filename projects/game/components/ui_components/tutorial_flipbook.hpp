@@ -26,7 +26,7 @@ class TutorialFlipbook : public tmt::GameComponent<TutorialFlipbook> {
     tmt::Entity open_button {};
     tmt::Entity close_button {};
     std::vector<tmt::Entity> ui_entities {};
-    
+
    private:
     std::set<uint8_t> unlocked_pages {};
     uint8_t current_page = 0;

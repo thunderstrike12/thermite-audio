@@ -30,7 +30,6 @@ class MenuController : public tmt::GameComponent<MenuController> {
     void enable_pause_menu() const;
     void disable_pause_menu() const;
 
-
     void enable_inventory_menu() const;
     void disable_inventory_menu() const;
 
