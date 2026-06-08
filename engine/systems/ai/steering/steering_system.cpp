@@ -179,47 +179,73 @@ glm::vec3 SteeringSystem::wander(const SteeringAgent& agent, const glm::vec3& po
  * Returns a steering force to avoid obstacles in 3D space.
  *
  * Steps:
- *  - Cast multiple rays: forward, forward+right, forward-right, forward+up, forward-up.
- *  - Query the Physics system to detect hits, ignoring the enemy layer.
+ *  - Treat the agent as a small volume by offsetting ray origins around its body
+ *    (center, left/right sides, top/bottom).
+ *  - Cast multiple rays from each origin: forward, forward+right, forward-right, forward+up, forward-up.
+ *  - Cast rays to check for collisions (excluding the enemy layer).
  *  - For each hit within avoidDistance, accumulate a repelling force proportional to proximity.
+ *  - If all rays from all origins are blocked, do a los check to either keep going or block
  */
-glm::vec3 SteeringSystem::collision_avoidance(const SteeringAgent& agent, const glm::vec3& position, const VoxelBody& body) {
-    if (glm::length2(body.velocity) < 0.0001f) return glm::vec3(0);
-
-    glm::vec3 forward = glm::normalize(body.velocity);
-    glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0, 1, 0)));
-    glm::vec3 up = glm::normalize(glm::cross(right, forward));
-
+glm::vec3 SteeringSystem::collision_avoidance(const SteeringAgent& agent, const glm::vec3& position, const VoxelBody& body, glm::vec3 dir) {
     auto* physics = engine.ecs.systems.try_get<Physics>();
     if (!physics) return glm::vec3(0);
 
-    uint32_t layer_mask = 0xFFFFFFFF & ~(1 << 2) & ~(1 << 1);  // ignore enemies and player
+    all_rays_blocked = false;
+
+    if (glm::length2(body.velocity) < 0.0001f) return glm::vec3(0);
+
+    glm::vec3 desired = dir;
+
+    if (glm::length2(desired) < 0.0001f) return glm::vec3(0);
+
+    glm::vec3 forward = glm::normalize(desired);
+    glm::vec3 world_up(0, 1, 0);
+
+    glm::vec3 right = glm::normalize(glm::cross(forward, world_up));
+    glm::vec3 up = glm::normalize(glm::cross(right, forward));
+
+    uint32_t layer_mask = 0xFFFFFFFF & ~(1 << 2);  // ignore enemies
+
     float avoid_distance = 15.0f;
 
-    glm::vec3 total_avoid(0.0f);
+    float back_offset = 1.5f;
+    glm::vec3 base = position - forward * back_offset;
 
-    float side_factor = 0.2f;  // smaller deviation for side/up rays
+    std::vector<std::pair<glm::vec3, glm::vec3>> rays = {
+        { base, forward }, { base - right * 0.8f, forward }, { base + right * 0.8f, forward }, { base + up * 1.2f, forward }, { base - up * 1.2f, forward }
+    };
 
-    std::vector<glm::vec3> rays = { forward, glm::normalize(forward + right * side_factor), glm::normalize(forward - right * side_factor), glm::normalize(forward + up * side_factor),
-                                    glm::normalize(forward - up * side_factor) };
+    glm::vec3 avoid(0.0f);
+    int blocked = 0;
 
-    for (auto dir : rays) {
-        Ray ray(position, dir);
+    for (auto& r : rays) {
+        Ray ray(r.first, r.second);
         Hit hit = physics->raycast(ray, layer_mask);
 
-        // debug draw
-        /*engine.polyline.use_color(1.0f, 0.0f, 0.0f);
+        engine.polyline.use_color(1.0f, 0.0f, 0.0f);
         engine.polyline.use_line_width(0.5f);
-        engine.polyline.draw_line(ray.origin, ray.origin + dir * avoid_distance);*/
+        engine.polyline.draw_line(ray.origin, ray.origin + ray.dir * avoid_distance);
 
-        if (hit && hit.distance < avoid_distance) {
-            float strength = agent.max_force * (avoid_distance - hit.distance) / avoid_distance;
-            // total_avoid += hit.normal * strength;
-            total_avoid += -dir * strength;
+        if (hit) {
+            float t = 1.0f - (hit.distance / avoid_distance);
+            t = glm::clamp(t, 0.0f, 1.0f);
+
+            float strength = agent.max_force * t;
+            glm::vec3 side = glm::normalize(glm::cross(world_up, forward));
+
+            avoid += side * strength;
+
+            blocked++;
         }
     }
 
-    return total_avoid;
+    if (blocked == (int)rays.size()) {
+        all_rays_blocked = true;
+    }
+
+    if (glm::length2(avoid) < 0.01f) avoid = glm::vec3(0.0f);
+
+    return avoid;
 }
 
 /**
@@ -271,6 +297,26 @@ glm::vec3 SteeringSystem::separation(entt::entity self, const SteeringAgent& age
 glm::vec3 SteeringSystem::calculate_force(const SteeringAgent& agent, const SteeringRequest& request, const Transform& transform, const VoxelBody& body, float dt) {
     glm::vec3 position = transform.get_world_position();
 
+    glm::vec3 to_target = request.target_position - position;
+    float dist_to_target = glm::length(to_target);
+
+    glm::vec3 dir_to_target = (dist_to_target > 0.0001f) ? to_target / dist_to_target : glm::vec3(0.0f);
+
+    auto* physics = engine.ecs.systems.try_get<Physics>();
+
+    bool has_line_of_sight = true;
+
+    uint32_t layer_mask = 0xFFFFFFFF & ~(1 << 2);  // ignore enemies
+
+    if (physics) {
+        Ray ray(position, dir_to_target);
+        Hit hit = physics->raycast(ray, layer_mask);
+
+        if (hit && hit.distance < dist_to_target) {
+            has_line_of_sight = false;
+        }
+    }
+
     glm::vec3 force(0);
 
     switch (request.mode) {
@@ -296,7 +342,16 @@ glm::vec3 SteeringSystem::calculate_force(const SteeringAgent& agent, const Stee
     }
 
     // Add avoidance on top
-    force += collision_avoidance(agent, position, body);
+    glm::vec3 avoid = collision_avoidance(agent, position, body, dir_to_target);
+
+    // If we can see the player, and not all the rays are blocked, move towards player
+    if (has_line_of_sight && all_rays_blocked) {
+        avoid *= 0.f;   // no avoidance
+    } else {
+        avoid *= 1.0f;  // full avoidance when path is blocked
+    }
+
+    force += avoid;
 
     return force;
 }
