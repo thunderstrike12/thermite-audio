@@ -3,6 +3,8 @@
 #include <steam/steam_api.h>
 namespace tmt {
 
+struct AchievementSteamData;
+
 class SteamAchievements;
 
 constexpr auto APP_ID = 4515200u;
@@ -22,6 +24,7 @@ class SteamAPI {
    private:
     bool success_init { true };
     std::string account_name { "Invalid Steam Init" };
+    std::vector<AchievementSteamData> achievement_data;
 };
 
 }  // namespace tmt

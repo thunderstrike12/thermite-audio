@@ -51,6 +51,7 @@ class Upgrade : public tmt::GameComponent<Upgrade> {
     bool apply_upgrade();
     void modify_upgrade_entities() const;
     void apply_entity_enable_disable() const;
+    void check_achievement_unlock() const;
     void button_apply(tmt::Button::Context context);
     std::vector<tmt::Entity> required_upgrade_entities = {};
 

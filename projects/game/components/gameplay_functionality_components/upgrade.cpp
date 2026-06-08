@@ -7,6 +7,8 @@
 #include "projects/game/components/gameplay_functionality_components/weapon_and_tool_components/weapon.hpp"
 #include "weapon_and_tool_components/explosion.hpp"
 #include "engine/systems/ui/ui.hpp"
+#include "engine/steam/achievements.hpp"
+#include "engine/steam/steam_api.hpp"
 
 namespace game {
 
@@ -52,6 +54,9 @@ void Upgrade::button_apply(tmt::Button::Context context) {
         if (auto* name_component { tmt::engine.ecs.try_get_component<tmt::Name>(entity) }) {
             tmt::engine.player_data.get<bool>(name_component->name) = true;
         }
+
+        // Check if we got an achievement for buying an upgrade
+        check_achievement_unlock();
     } else {
         ui->menu_sounds.sounds.insufficient_funds.play();
         tmt::Log::warn("Did not apply upgrade.");
@@ -140,6 +145,61 @@ void Upgrade::apply_entity_enable_disable() const {
         enable(curr_entity);
     }
 }
+void Upgrade::check_achievement_unlock() const {
+    // TODO: dont make it dogshit
+
+    // Check Drone upgrades
+    bool drone_upgrades_unlocked = true;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_A1", false)) drone_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_E1", false)) drone_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_E2", false)) drone_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_E3", false)) drone_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_I1", false)) drone_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_I2", false)) drone_upgrades_unlocked = false;
+
+    // Unlock drone upgrades achievement
+    if (drone_upgrades_unlocked) {
+        tmt::engine.steam.achievement->set_achievement("ACH_DRONE_UPGRADES");
+    }
+
+    // Check Drill upgrades
+    bool drill_upgrades_unlocked = true;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_DS1", false)) drill_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_DS2", false)) drill_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_DS3", false)) drill_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_DSI1", false)) drill_upgrades_unlocked = false;
+
+    // Unlock drill upgrades achievement
+    if (drill_upgrades_unlocked) {
+        tmt::engine.steam.achievement->set_achievement("ACH_DRILL_UPGRADES");
+    }
+
+    // Check Barge upgrades
+    bool barge_upgrades_unlocked = true;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_F1", false)) barge_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_F2", false)) barge_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_F2 (1)", false)) barge_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_S1", false)) barge_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_S2", false)) barge_upgrades_unlocked = false;
+
+    // Unlock barge upgrades achievement
+    if (barge_upgrades_unlocked) {
+        tmt::engine.steam.achievement->set_achievement("ACH_BARGE_UPGRADES");
+    }
+
+    // Check Rifle upgrades
+    bool rifle_upgrades_unlocked = true;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_RP1", false)) rifle_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_RP2", false)) rifle_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_RS1", false)) rifle_upgrades_unlocked = false;
+    if (!tmt::engine.player_data.get<bool>("B_Purchase_RS2", false)) rifle_upgrades_unlocked = false;
+
+    // Unlock rifle upgrades achievement
+    if (rifle_upgrades_unlocked) {
+        tmt::engine.steam.achievement->set_achievement("ACH_RIFLE_UPGRADES");
+    }
+}
+
 bool Upgrade::apply_upgrade() {
     auto* wallet_component = tmt::engine.ecs.try_get_component<Wallet>(game::Player::get().entity);
 

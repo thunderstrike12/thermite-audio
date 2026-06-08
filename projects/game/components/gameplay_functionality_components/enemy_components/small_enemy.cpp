@@ -5,6 +5,8 @@
 #include "engine/core/components/audio_emitter.hpp"
 #include "engine/systems/physics/components/voxel_body.hpp"
 #include "engine/core/polyline.hpp"
+#include "engine/steam/achievements.hpp"
+#include "engine/steam/steam_api.hpp"
 #include "engine/systems/physics/physics_system.hpp"
 #include "engine/tools/random.hpp"
 
@@ -67,6 +69,8 @@ void SmallEnemy::update(const tmt::FrameData& time) {
 }
 
 void SmallEnemy::die(tmt::Entity agent) {
+    tmt::engine.steam.achievement->stats.enemy_killed_count++;
+    tmt::engine.steam.achievement->store_stats = true;
     auto& ecs = tmt::engine.ecs;
     auto& registry = ecs.get_registry();
 
@@ -100,10 +104,7 @@ void SmallEnemy::die(tmt::Entity agent) {
                 // small random velocity forward
                 glm::vec3 forward = transform.get_forward();
                 body->velocity += -forward * Random::rand_range(0.5f, 2.5f);
-                body->angular_velocity += glm::vec3(
-                    Random::rand_range(-1.0f, 1.0f),
-                    Random::rand_range(-1.0f, 1.0f),
-                    Random::rand_range(-1.0f, 1.0f));
+                body->angular_velocity += glm::vec3(Random::rand_range(-1.0f, 1.0f), Random::rand_range(-1.0f, 1.0f), Random::rand_range(-1.0f, 1.0f));
 
                 tmt::Physics::initialize_voxel_body(*body, *renderer->resource.resource.get());
             }

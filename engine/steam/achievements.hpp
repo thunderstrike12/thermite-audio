@@ -6,13 +6,7 @@
 
 namespace tmt {
 
-enum AchievementType {
-    ACH_COMPLETE_ONE_RUN,
-    ACH_PENALTY_10_GAMES = 1,
-    ACH_KILL = 2,
-    ACH_TRAVEL_FAR_ACCUM = 3,
-    ACH_TRAVEL_FAR_SINGLE = 4,
-};
+enum AchievementType { ACH_COMPLETE_ONE_RUN, ACH_KILL_10_ENEMIES, ACH_DRONE_UPGRADES, ACH_DRILL_UPGRADES, ACH_BARGE_UPGRADES, ACH_RIFLE_UPGRADES };
 
 struct AchievementSteamData {
     AchievementType ach_type;
@@ -22,6 +16,9 @@ struct AchievementSteamData {
     bool achieved;
     int32_t icon_image;
 };
+struct GameStats {
+    int enemy_killed_count { 0 };
+};
 
 class SteamAchievements {
    public:
@@ -30,15 +27,27 @@ class SteamAchievements {
 
     bool set_achievement(const char* id) const;
 
+    // no need to update every frame
+    void update();
+    GameStats stats {};
     STEAM_CALLBACK(SteamAchievements, on_user_stats_stored, UserStatsStored_t, callback_user_stats_stored);
     STEAM_CALLBACK(SteamAchievements, on_achievement_stored, UserAchievementStored_t, callback_achievement_stored);
+    bool store_stats { false };
 
    private:
+    void load_user_stats();
+    void unlock_achievement(AchievementSteamData& achievement);
+    void check_achievement(AchievementSteamData& achievement);
+    void store_if_needed();
     AchievementSteamData* achivements_handle { nullptr };  // Achievements data
-    int32_t number_achivement {};                          // The number of Achievements
+    int32_t achievement_count {};                          // The number of Achievements
     bool initialized { false };                            // Are we ready to use the API?
+
+    ISteamUserStats* user_stats { nullptr };
+    bool valid_stats { false };
 };
 
 }  // namespace tmt
+TMT_OBJECT(tmt::GameStats, (enemy_killed_count));
 
 TMT_OBJECT(tmt::AchievementSteamData, (ach_type, ach_id, name, description, achieved, icon_image))
