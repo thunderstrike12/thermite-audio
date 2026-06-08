@@ -25,8 +25,7 @@ constexpr uint64_t edge_masks[6] {
     0xF000F000F000F000ULL   // +Z
 };
 
-void Destruction::on_start() {
-}
+void Destruction::on_start() {}
 
 void Destruction::on_update(const FrameData&) {
     if (!initialized) {
@@ -55,7 +54,6 @@ void Destruction::on_update(const FrameData&) {
             }
         }
     }
-
 
     for (const auto& [entity, des, vb] : engine.ecs.view<Destructible, VoxelBody>().each()) {
         if (!des.initialized || !des.debug_view) continue;
@@ -163,7 +161,7 @@ void Destruction::destroy_voxels(Entity entity, const Stencil* stencil, glm::ive
     VoxelRenderer* vr = engine.ecs.try_get_component<VoxelRenderer>(entity);
     Destructible* des = engine.ecs.try_get_component<Destructible>(entity);
     if (vr == nullptr || des == nullptr) return;
-    
+
     // Load destructible data if we dont have it already
     load_destructible_data(*vr, *des);
 

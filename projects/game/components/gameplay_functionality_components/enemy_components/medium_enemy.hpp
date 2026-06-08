@@ -150,7 +150,8 @@ class MediumEnemy : public tmt::GameComponent<MediumEnemy> {
 TMT_OBJECT(game::AvailablePosEntry, (entity, height_offset, reference_entity));
 
 TMT_OBJECT(
-    game::Sounds, (sound_aggroed_audio, sound_laser, laser_parameter, sound_missile_explosion, sound_missile_fire, sound_random_chatter, sound_shield_slam, sound_taunt, sound_walk, sound_core_destroyed)
+    game::Sounds,
+    (sound_aggroed_audio, sound_laser, laser_parameter, sound_missile_explosion, sound_missile_fire, sound_random_chatter, sound_shield_slam, sound_taunt, sound_walk, sound_core_destroyed)
 );
 
 TMT_GAME_COMPONENT(

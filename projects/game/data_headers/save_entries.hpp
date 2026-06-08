@@ -3,6 +3,7 @@ namespace game {
 
 constexpr auto PERSISTENT_RESOURCES = "persistent_resources";
 constexpr auto UPGRADES = "upgrades";
+constexpr auto PINNED_UPGRADES = "pinned_upgrades";
 // player
 constexpr auto PLAYER_HEALTH_DATA = "player_health_data";
 constexpr auto PLAYER_ENERGY_DATA = "player_energy_data";

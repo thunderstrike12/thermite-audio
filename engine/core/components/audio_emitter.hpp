@@ -3,6 +3,7 @@
 #include "engine/core/audio.hpp"
 #include "engine/core/reflection.hpp"
 #include "engine/events/scene.hpp"
+#include "ui_component.hpp"
 
 namespace tmt {
 
