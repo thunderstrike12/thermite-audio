@@ -45,7 +45,8 @@ class UiPipeline {
     UiPipeline(const UiPipeline&) = delete;
     UiPipeline& operator=(const UiPipeline&) = delete;
 
-    uint32_t image_count = 0u;
+    uint32_t image_count_2d = 0u;
+    uint32_t image_count_3d = 0u;
 
     bool render_ui_pipeline = true;
 };

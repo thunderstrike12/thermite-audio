@@ -36,7 +36,8 @@ void Rendering::on_inspect() {
     ImGui::Spacing();
 
     ImGui::TextColored(ImVec4(0.60f, 0.60f, 0.60f, 1.0f), "UI Statistics");
-    ImGui::Text("Images: %d", engine.renderer.ui_pipeline.image_count);
+    ImGui::Text("2D Images: %d", engine.renderer.ui_pipeline.image_count_2d);
+    ImGui::Text("3D Images: %d", engine.renderer.ui_pipeline.image_count_3d);
 }
 
 }  // namespace tmt
