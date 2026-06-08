@@ -28,8 +28,8 @@ void game::TutorialFlipbook::start() {
         tmt::Log::warn("No button component found for close button in tutorial flipbook.");
     }
 
-    // Unlock the first 3 pages
-    for (size_t i = 0; i < 3; i++) {
+    // Unlock the first 4 pages
+    for (size_t i = 0; i < 4; i++) {
         unlocked_pages.insert(i);
     }
 
