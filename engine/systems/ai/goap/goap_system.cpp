@@ -377,7 +377,9 @@ bool Goap::update_plan(Entity entity, GoapAgent& agent, WorldState& ws) {
     }
 
     if (!goal_node) {
-        Log::warn("GOAP planning failed for agent {}", entity);
+        if (show_logging) {
+            Log::warn("GOAP planning failed for agent {}", entity);
+        }
         agent.active_goal.valid = false;
         return false;
     }

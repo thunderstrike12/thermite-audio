@@ -83,7 +83,7 @@ class Goap : public ISystem {
     GoapAgentTypeRegistry agent_type_registry;
 
     // Set to true if you want more logging to see whats happening internally
-    bool show_logging = true;
+    bool show_logging = false;
 };
 
 /**
