@@ -66,6 +66,8 @@ class MiningComponent : public tmt::GameComponent<MiningComponent> {
     tmt::AudioEvent mining_sound;
     tmt::AudioInstance mining_sound_instance;
 
+    tmt::Entity player_entity = entt::null;
+
    private:
     tmt::Transform* get_transform() const;
     void on_stop_mining(const ReleaseShootEvent& e);
@@ -88,11 +90,9 @@ class MiningComponent : public tmt::GameComponent<MiningComponent> {
 
     // Ore manager for custom behaviour of mined ore
     OreManager* ore_manager = nullptr;
-
-    tmt::Entity player_entity = entt::null;
 };
 
 }  // namespace game
 TMT_OBJECT(game::RayCylinder, (base_transform_entity, base_radius, ray_distance, ray_amount, rotating_speed));
-TMT_GAME_COMPONENT(game::MiningComponent, (active, cfg, ray_cylinder, ray_mask, time_draw_rays_in_debug, mining_activate_sound, mining_sound));
+TMT_GAME_COMPONENT(game::MiningComponent, (active, cfg, ray_cylinder, ray_mask, time_draw_rays_in_debug, mining_activate_sound, mining_sound, player_entity));
 TMT_OBJECT(game::MiningData, (base_radius, ray_distance, ray_amount, rays_per_second));
