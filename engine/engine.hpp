@@ -71,7 +71,7 @@ class Engine {
     GameController game_controller;
 
     struct Config {
-        constexpr static float FIXED_TIME_STEP = 1.0f / 60.0f;
+        constexpr static float FIXED_TIME_STEP = 1.0f / 30.0f;
         constexpr static uint32_t MAX_FIXED_UPDATES_PER_FRAME = 3;
         constexpr static float MAX_DELTA_TIME = 1.0f / 30.0f;
     };
