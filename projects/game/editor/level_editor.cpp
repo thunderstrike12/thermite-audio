@@ -392,7 +392,11 @@ std::unordered_map<glm::ivec2, Cell>& LevelEditor::get_cells() {
 }  // namespace tmt
 
 inline void tag_invoke(ImReflect::ImInput_t, const char* name, tmt::CellTemplate& value, ImSettings& settings, ImResponse& response) {
-    if (ImGui::CollapsingHeader(value.name.c_str())) {
+    auto& col = value.color.get();
+    ImGui::PushStyleColor(ImGuiCol_Header, { col.r, col.g, col.b, col.a });
+    bool open = ImGui::CollapsingHeader(value.name.c_str());
+    ImGui::PopStyleColor();
+    if (open) {
         ImReflect::Detail::imgui_input_visit_field(name, value, settings, response);
     }
 }
@@ -402,5 +406,11 @@ inline void tag_invoke(ImReflect::ImInput_t, const char* name, tmt::LayerEntry& 
         ImReflect::Detail::imgui_input_visit_field(name, value, settings, response);
     }
 }
+
+// inline void tag_invoke(ImReflect::ImInput_t, const char* name, std::vector<tmt::ResourceRef<tmt::Json>>& value, ImSettings& settings, ImResponse& response) {
+//     if (ImGui::CollapsingHeader("Spawnables")) {
+//         ImReflect::Detail::imgui_input_visit_field(name, value, settings, response);
+//     }
+// }
 
 #endif

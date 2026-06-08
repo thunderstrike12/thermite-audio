@@ -87,17 +87,27 @@ struct CameraShakeSettings {
 
     void set_multiplier(float _multiplier) { multiplier = _multiplier; }
 
+    float recoil_frequency = 1.f;
+    float recoil_damping = 0.2f;
+    float recoil_initial_response = 0.f;
+
+    float shake_frequency = 1.f;
+    float shake_damping = 0.2f;
+    float shake_initial_response = 0.f;
+
+    float damage_shake_multiplier = 1.f;
+
    private:
     // loaded from the saved data
     float multiplier { 1.0f };
 };
 struct PlayerSounds {
-    tmt::AudioEvent destroyed_death;       // done
-    tmt::AudioEvent drone_boost;           // done
-    tmt::AudioEvent hit;                   // done
-    tmt::AudioEvent battery_half;          // done
-    tmt::AudioEvent battery_almost_out;    // done
-    tmt::AudioEvent battery_out;           // done
+    tmt::AudioEvent destroyed_death;     // done
+    tmt::AudioEvent drone_boost;         // done
+    tmt::AudioEvent hit;                 // done
+    tmt::AudioEvent battery_half;        // done
+    tmt::AudioEvent battery_almost_out;  // done
+    tmt::AudioEvent battery_out;         // done
 };
 
 enum class ToolType { RIFLE, GRAVITY, MINING };
@@ -271,7 +281,10 @@ TMT_OBJECT(game::RayCollisionCheck, (collision_layer, player_radius, collision_s
 TMT_OBJECT(game::AttachedCameraSettings, (distance, height_offset, look_at_height_offset, rotation_sensitivity, pitch_min, pitch_max, default_yaw, default_pitch, fov));
 TMT_OBJECT(game::AttachCameraTransitionSettings, (enabled, play_on_first_attach, inherit_player_facing_on_attach, blend_look_over_tween, start_look_blend_time, duration, ease));
 TMT_OBJECT(game::DetachCameraTransitionSettings, (enabled, align_player_to_camera, duration, ease));
-TMT_OBJECT(game::CameraShakeSettings, (enabled, max_intensity, boost_intensity, drill_intensity, decay_speed, recoil_strength, recoil_return_speed, recoil_horizontal));
+TMT_OBJECT(
+    game::CameraShakeSettings, (enabled, max_intensity, boost_intensity, drill_intensity, decay_speed, recoil_strength, recoil_return_speed, recoil_horizontal, recoil_frequency,
+                                recoil_damping, recoil_initial_response, shake_frequency, shake_damping, shake_initial_response, damage_shake_multiplier)
+);
 TMT_OBJECT(game::PlayerSounds, (destroyed_death, drone_boost, hit, battery_half, battery_almost_out, battery_out));
 TMT_OBJECT(game::PlayerVFXSettings, (recharge_vfx_prefab));
 TMT_GAME_COMPONENT(

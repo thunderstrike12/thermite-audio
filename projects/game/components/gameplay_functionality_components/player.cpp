@@ -1,14 +1,10 @@
 ﻿#include "player.hpp"
-
 #include "engine/core/polyline.hpp"
 #include "projects/game/data_headers/events.hpp"
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
 #include "engine/core/input/input.hpp"
 #include "engine/core/components/camera.hpp"
-
 #include "engine/core/window.hpp"
 #include "engine/core/components/image_renderer.hpp"
 #include "engine/core/input/input_map.hpp"
@@ -21,6 +17,8 @@
 #include "projects/game/components/development_tools/debug_line_helper.hpp"
 #include "projects/game/data_headers/save_entries.hpp"
 #include "projects/game/data_headers/wallet.hpp"
+#include "engine/tools/second_order_solver.hpp"
+#include "engine/tools/random.hpp"
 #include "projects/game/components/development_tools/vfx_helper.hpp"
 
 // TODO before we have a serializer for input, you can add all the needed keybindings here.
@@ -223,8 +221,21 @@ void Player::look_camera() {
 
         shake_offset = shake_current;
     }
+    static tmt::SecondOrderSolver::State<glm::vec3> recoil_additive { .current_state = {} };
+    tmt::SecondOrderSolver::solve(
+        recoil_additive, glm::vec3 { recoil_offset.x, recoil_offset.y, 0.f }, camera_shake_settings.recoil_frequency, camera_shake_settings.recoil_damping,
+        camera_shake_settings.recoil_initial_response, tmt::engine.frame_data().delta_time
+    );
 
-    transform.look_at(transform.get_world_position() + front + shake_offset, glm::vec3(0.0f, 1.0f, 0.0f));
+    static tmt::SecondOrderSolver::State<glm::vec3> shake_additive { .current_state = {} };
+    tmt::SecondOrderSolver::solve(
+        shake_additive, shake_offset, camera_shake_settings.shake_frequency, camera_shake_settings.shake_damping, camera_shake_settings.shake_initial_response,
+        tmt::engine.frame_data().delta_time
+    );
+
+    glm::vec3 additive = recoil_additive.current_state + shake_additive.current_state;
+
+    transform.look_at(transform.get_world_position() + front + additive, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 void Player::ensure_attached_camera() {
@@ -664,6 +675,9 @@ void Player::update(const tmt::FrameData& time) {
     // Fire event health changed
     if (previous_health != health.value) {
         tmt::engine.ecs.get_dispatcher().trigger(PlayerHealthChanged { entity, health.value, previous_health });
+
+        float diff = std::max(0.f, previous_health - health.value);
+        add_camera_shake(diff * camera_shake_settings.damage_shake_multiplier);
     }
     previous_health = health.value;
     // Fire event max energy changed
@@ -1005,8 +1019,7 @@ void Player::update_shake(float dt) {
 void Player::add_recoil() {
     recoil_offset.y += camera_shake_settings.get_recoil_strength();
 
-    float rand_x = (rand() / (float)RAND_MAX - 0.5f) * 2.0f;
-    recoil_offset.x += rand_x * camera_shake_settings.get_recoil_horizontal();
+    recoil_offset.x += Random::rand_range(-1.f, 1.f) * camera_shake_settings.get_recoil_horizontal();
 }
 
 void Player::set_crosshair(tmt::Entity active) {
