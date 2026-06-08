@@ -87,6 +87,7 @@ void tag_invoke(ImReflect::ImInput_t, const char* name, game::MediumEnemy& value
 
         /* Missiles */
         if (ImGui::TreeNode("Missiles")) {
+            ImReflect::Input("Missile VFX Prefab", value.missile_vfx_prefab, type_settings, type_response);
             ImReflect::Input("Missile Voxel Body", value.missile_voxel_object, type_settings, type_response);
             ImReflect::Input("Missile Cooldown", value.missile_cooldown, type_settings, type_response);
             ImReflect::Input("Missile Burst", value.missile_burst, type_settings, type_response);
@@ -132,6 +133,8 @@ void tag_invoke(ImReflect::ImInput_t, const char* name, game::MediumEnemy& value
         if (ImGui::TreeNode("Laser")) {
             ImReflect::Input("Laser Charge Voxel Body", value.laser_charge_voxel_object, type_settings, type_response);
             ImReflect::Input("Laser Voxel Body", value.laser_voxel_object, type_settings, type_response);
+            ImReflect::Input("Laser Charge Particle Entity", value.laser_charge_particle_entity, type_settings, type_response);
+            ImReflect::Input("Laser Fire Particle Entity", value.laser_fire_particle_entity, type_settings, type_response);
             ImReflect::Input("Laser Range", value.laser_range, type_settings, type_response);
             ImReflect::Input("Laser Cooldown", value.laser_cooldown, type_settings, type_response);
             ImReflect::Input("Laser Firing Time", value.laser_firing_time, type_settings, type_response);

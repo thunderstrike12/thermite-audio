@@ -40,8 +40,8 @@ class GravityManipulationComponent : public tmt::GameComponent<GravityManipulati
     entt::entity animated_tool_entity;     // entity with the animation state machine to animate
 
     GravitySounds sounds;
-    tmt::AudioInstance gravity_active_instance;
     GravityVFX vfx_gravity_gun;
+    tmt::AudioInstance gravity_active_instance;
 
    private:
     std::vector<entt::entity> currently_manipulated_entities;

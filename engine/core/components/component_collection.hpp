@@ -33,7 +33,6 @@ class ComponentCollection {
     requires std::is_base_of_v<IGameComponent, T>
     T& add_component(Entity entity) {
         const ComponentIndex type_id = typeid(T);
-        GameComponentRegistry::is_registered_or_throw(type_id);
 
         components[type_id] = std::make_unique<T>(entity);
         get_gameplay_system()->register_component_instance(type_id, components[type_id]);
@@ -44,7 +43,6 @@ class ComponentCollection {
     requires std::is_base_of_v<IGameComponent, T>
     T& get_component() {
         const ComponentIndex type_id = typeid(T);
-        GameComponentRegistry::is_registered_or_throw(type_id);
 
         return static_cast<T&>(*components.at(type_id));
     }
@@ -53,7 +51,6 @@ class ComponentCollection {
     requires std::is_base_of_v<IGameComponent, T>
     const T& get_component() const {
         const ComponentIndex type_id = typeid(T);
-        GameComponentRegistry::is_registered_or_throw(type_id);
 
         return static_cast<const T&>(*components.at(type_id));
     }
@@ -62,7 +59,6 @@ class ComponentCollection {
     requires std::is_base_of_v<IGameComponent, T>
     void remove_component() {
         const ComponentIndex type_id = typeid(T);
-        GameComponentRegistry::is_registered_or_throw(type_id);
 
         components.erase(type_id);
     }
@@ -71,7 +67,6 @@ class ComponentCollection {
     requires std::is_base_of_v<IGameComponent, T>
     bool has_component() const {
         const ComponentIndex type_id = typeid(T);
-        GameComponentRegistry::is_registered_or_throw(type_id);
 
         return components.contains(type_id);
     }

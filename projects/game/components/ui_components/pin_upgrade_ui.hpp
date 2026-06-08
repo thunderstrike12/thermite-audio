@@ -3,6 +3,7 @@
 #include "projects/game/data_headers/wallet.hpp"
 #include "projects/game/components/gameplay_functionality_components/upgrade.hpp"
 #include "engine/core/components/text_renderer.hpp"
+#include "engine/core/resources/texture_2d.hpp"
 #include "pin_upgrade_button.hpp"
 
 namespace game {

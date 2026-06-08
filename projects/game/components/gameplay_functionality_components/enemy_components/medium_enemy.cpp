@@ -302,6 +302,10 @@ void game::MediumEnemy::end() {}
 
 void game::MediumEnemy::kite_player() const {
     if (paused || core_destroyed) return;
+    tmt::Transform& enemy_transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
+    const auto& enemy_entity_pos = enemy_transform.get_world_position();
+    const auto& player_pos = tmt::engine.ecs.get_component<tmt::Transform>(player).get_world_position();
+    if (glm::distance(enemy_entity_pos, player_pos) > aggro_range * 1.5f) return;
 
     auto& enemy = tmt::engine.ecs.get_component<MediumEnemy>(entity);
     auto& nav_mesh = tmt::engine.ecs.get_component<tmt::NavMesh>(enemy.walkable_asteroid);
@@ -313,9 +317,6 @@ void game::MediumEnemy::kite_player() const {
         enemy.walk_instance.set_maximum_distance(enemy.aggro_range * 1.5f);  // Multiply be 1.5f to ensure the player can hear it even when at the edge of the range
     }
 
-    tmt::Transform& enemy_transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
-    const auto& enemy_entity_pos = enemy_transform.get_world_position();
-    const auto& player_pos = tmt::engine.ecs.get_component<tmt::Transform>(player).get_world_position();
     float distance = glm::distance(enemy_entity_pos, player_pos);
 
     if (std::optional<glm::vec3> direction = nav_mesh.follow_path(enemy_entity_pos, player_pos)) {

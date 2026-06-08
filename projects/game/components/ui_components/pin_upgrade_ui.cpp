@@ -2,6 +2,8 @@
 
 #include "text_component.hpp"
 
+#include "engine/core/components/image_renderer.hpp"
+
 namespace game {
 
 static tmt::Entity copy_entity(tmt::Entity peepee) {

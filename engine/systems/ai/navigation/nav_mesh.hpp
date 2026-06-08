@@ -9,6 +9,8 @@
 
 namespace tmt {
 
+struct GenerateClosestNavMeshToThis {};
+
 class Volume {
    public:
     glm::uvec3 size;
@@ -35,6 +37,7 @@ enum class NavMeshGenerationState {
     GENERATING_NORMALS,
     AVERAGING_NORMALS1,
     AVERAGING_NORMALS2,
+    AVERAGING_NORMALS3,
     FINISHED_AVERAGING_NORMALS,
     FINISHED
 };
@@ -74,7 +77,7 @@ class NavMesh {
     // tmt::ResourceRef<tmt::VoxelVolume> voxel_volume;
     std::vector<Entity> nav_mesh_entities;
     int selected_entity_index = 0;
-    int lod_level = 0;
+    /*static constexpr */int lod_level = 2;
     glm::vec3 inflation = glm::vec3(1.0f);
 
     bool draw_nodes = false;
@@ -82,6 +85,9 @@ class NavMesh {
     bool draw_path = false;
 
    private:
+    int last_starting_node = -1;
+    int last_ending_node = -1;
+
     std::unordered_map<uint32_t, int>* node_map;
     int generating_entity_index = 0;
     Volume volume;
@@ -118,10 +124,15 @@ class NavMesh {
     void generate_mesh(int iterations = std::numeric_limits<int>::max());
     std::vector<int> find_path(const int starting_node_id, const int ending_node_id);
     int find_closest_node(const glm::vec3& position);
+    int find_closest_node_cached(const glm::vec3& position, int hint);
     std::optional<glm::vec3> follow_path(glm::vec3 start, glm::vec3 end);
     void check_if_should_regenerate();
     void inspect();
 };
 
 }  // namespace tmt
-TMT_COMPONENT(tmt::NavMesh, "Navigation Mesh", (lod_level, draw_nodes, draw_gen_nodes, draw_path));
+
+TMT_COMPONENT_NAME(tmt::GenerateClosestNavMeshToThis, "Generate Closest Nav Mesh To This");
+TMT_COMPONENT_SERIALIZE_EMPTY(tmt::GenerateClosestNavMeshToThis);
+TMT_COMPONENT_INSPECT_EMPTY(tmt::GenerateClosestNavMeshToThis);
+TMT_COMPONENT(tmt::NavMesh, "Navigation Mesh", (draw_nodes, draw_gen_nodes, draw_path));

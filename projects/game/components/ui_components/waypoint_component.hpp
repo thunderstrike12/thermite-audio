@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/systems/gameplay/game_component.hpp"
+#include "engine/tools/types/bezier_curve.hpp"
 namespace game {
 
 class Waypoint : public tmt::GameComponent<Waypoint> {
