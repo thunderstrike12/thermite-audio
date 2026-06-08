@@ -6,7 +6,9 @@
 
 namespace tmt {
 
-void UI::on_start() {}
+void UI::on_start() {
+    menu_sounds.load();
+}
 
 void UI::on_update(const FrameData&) {
     const glm::uvec2 screen_size = engine.renderer.viewport_size();

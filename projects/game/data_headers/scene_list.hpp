@@ -1,20 +1,39 @@
 #pragma once
 #include "engine/core/scene.hpp"
 #include "engine/core/scenes.hpp"
+#include "engine/systems/ui/ui.hpp"
 
 class MainMenuScene : public tmt::Scene<MainMenuScene> {
    public:
     static constexpr std::string_view scene_name() { return "MainMenuScene"; }
+    void on_start() override {
+        auto* ui = tmt::engine.ecs.systems.try_get<tmt::UI>();
+        if (ui && ui->loading_instance.is_valid()) {
+            ui->loading_instance.stop();
+        }
+    }
 };
 
 class MainGameScene : public tmt::Scene<MainGameScene> {
    public:
     static constexpr std::string_view scene_name() { return "MainGameScene"; }
+    void on_start() override {
+        auto* ui = tmt::engine.ecs.systems.try_get<tmt::UI>();
+        if (ui && ui->loading_instance.is_valid()) {
+            ui->loading_instance.stop();
+        }
+    }
 };
 
 class HubScene : public tmt::Scene<MainGameScene> {
    public:
     static constexpr std::string_view scene_name() { return "HubScene"; }
+    void on_start() override {
+        auto* ui = tmt::engine.ecs.systems.try_get<tmt::UI>();
+        if (ui && ui->loading_instance.is_valid()) {
+            ui->loading_instance.stop();
+        }
+    }
 };
 
 class Zoo : public tmt::Scene<Zoo> {

@@ -8,6 +8,7 @@
 #include "engine/core/components/transform.hpp"
 #include "engine/core/polyline.hpp"
 #include "engine/core/renderer/renderer.hpp"
+#include "ui.hpp"
 #include "engine/shared/ray.hpp"
 #include <cmath>
 
@@ -27,6 +28,8 @@ void UIElementManager::on_update(const tmt::FrameData& time) {
 }
 
 void UIElementManager::update_states(const tmt::FrameData& time) {
+    auto* ui = engine.ecs.systems.try_get<tmt::UI>();
+
     /* group with buttons and image renderers */
     auto button_view = engine.ecs.view<Button, UIInteractable, ImageRenderer>();
     for (const auto& [entity, button, interactable, image_renderer] : button_view.each()) {
@@ -37,6 +40,7 @@ void UIElementManager::update_states(const tmt::FrameData& time) {
             case ButtonState::IDLE:
                 break;
             case ButtonState::ON_SELECT:
+                ui->menu_sounds.sounds.button_hover.play();
                 interactable.on_select({ entity, interactable.state, interactable.disabled });
                 interactable.state = ButtonState::SELECTED;
                 break;
@@ -50,6 +54,7 @@ void UIElementManager::update_states(const tmt::FrameData& time) {
             case ButtonState::DISABLED:
                 break;
             case ButtonState::ON_CLICK:
+                ui->menu_sounds.sounds.button_click.play();
                 button.on_click(context);
                 interactable.state = ButtonState::ON_HOLD;
                 break;
@@ -125,7 +130,14 @@ void UIElementManager::update_states(const tmt::FrameData& time) {
         /* Round to step */
         new_value = std::round(new_value / slider.step) * slider.step;
 
+        float previous_value = slider.value;
+
         slider.value = new_value;
+
+        if (!ui->slider_instance.is_valid() && previous_value != slider.value) {
+            ui->slider_instance = ui->menu_sounds.sounds.slider_move.play();
+        }
+
         slider.on_value_changed(context);
     }
 }

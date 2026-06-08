@@ -4,6 +4,7 @@
 #include "projects/game/components/gameplay_functionality_components/player.hpp"
 #include "projects/game/components/managers/weapon_manager.hpp"
 #include "engine/core/audio.hpp"
+#include "engine/systems/ui/ui.hpp"
 
 // systems to disable for pause
 #include "engine/systems/ai/goap/goap_system.hpp"
@@ -113,6 +114,7 @@ void MenuController::enable_pause_menu() const {
     if (check_for_open_menus()) return;
     /*unlock_mouse();
     tmt::engine.ecs.enable(pause_menu_entity);*/
+
     auto& player = tmt::engine.ecs.get_component<Player>(player_entity);
 
     player.set_state_before_pause(player.get_state());
@@ -151,6 +153,9 @@ void MenuController::enable_pause_menu() const {
 
     // unpause any running sounds
     tmt::engine.audio.pause_game_audio();
+
+    auto* ui = tmt::engine.ecs.systems.try_get<tmt::UI>();
+    ui->menu_sounds.sounds.open_menu.play();
 }
 
 void MenuController::disable_pause_menu() const {
@@ -209,6 +214,7 @@ void MenuController::enable_inventory_menu() const {
         return;
     }
     if (check_for_open_menus()) return;
+
     unlock_mouse();
     tmt::engine.ecs.enable(inventory_menu_entity);
 }
@@ -228,6 +234,7 @@ void MenuController::enable_upgrade_menu() const {
         return;
     }
     if (check_for_open_menus()) return;
+
     unlock_mouse();
     tmt::engine.ecs.enable(upgrade_menu_entity);
 }

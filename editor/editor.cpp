@@ -45,6 +45,7 @@
 #include "editor/windows/physics_layers_editor.hpp"
 #include "editor/windows/font_control.hpp"
 #include "editor/windows/profiler_tracy.hpp"
+#include "editor/windows/menu_sounds_editor.hpp"
 #include "editor/windows/audio_mixer.hpp"
 #include "editor/windows/scenes.hpp"
 #include "editor/windows/asset_browser.hpp"
@@ -109,6 +110,7 @@ void Editor::on_engine_init(const ApplicationSpecs&) {
     systems[Mode::SCENE].add<PhysicsLayersEditor>();
     systems[Mode::SCENE].add<FontControl>();
     systems[Mode::SCENE].add<AudioMixer>();
+    systems[Mode::SCENE].add<MenuSoundsEditor>();
     systems[Mode::SCENE].add<ScenesWindow>();
     systems[Mode::SCENE].add<AssetBrowser>();
     systems[Mode::SCENE].add<Console>();

@@ -6,6 +6,7 @@
 #include "projects/game/components/development_tools/save_data.hpp"
 #include "projects/game/components/gameplay_functionality_components/weapon_and_tool_components/weapon.hpp"
 #include "weapon_and_tool_components/explosion.hpp"
+#include "engine/systems/ui/ui.hpp"
 
 namespace game {
 
@@ -43,13 +44,16 @@ void Upgrade::button_apply(tmt::Button::Context context) {
         }
     }
 
+    auto* ui = tmt::engine.ecs.systems.try_get<tmt::UI>();
     if (apply_upgrade()) {
+        ui->menu_sounds.sounds.button_accept.play();
         tmt::engine.ecs.disable(entity);
         tmt::Log::info("Applied upgrade.");
         if (auto* name_component { tmt::engine.ecs.try_get_component<tmt::Name>(entity) }) {
             tmt::engine.player_data.get<bool>(name_component->name) = true;
         }
     } else {
+        ui->menu_sounds.sounds.insufficient_funds.play();
         tmt::Log::warn("Did not apply upgrade.");
     }
 }

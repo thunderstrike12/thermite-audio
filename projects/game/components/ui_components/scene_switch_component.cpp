@@ -1,6 +1,7 @@
 #include "scene_switch_component.hpp"
 #include "engine/core/components/button.hpp"
 #include "engine/core/ecs.hpp"
+#include "engine/systems/ui/ui.hpp"
 
 namespace game {
 
@@ -24,6 +25,11 @@ void game::SceneSwitchComponent::end() {
 // Cannot be made const because its being used in the button callback and on_click.add doesnt take const functions
 void SceneSwitchComponent::switch_scene(tmt::Button::Context context) {
     if (context.disabled) return;
+
+    auto* ui = tmt::engine.ecs.systems.try_get<tmt::UI>();
+    if (ui && !ui->loading_instance.is_valid()) {
+        ui->loading_instance = ui->menu_sounds.sounds.loading.play();
+    }
 
     switch (target_scene) {
         case TargetSceneEnum::MAIN_MENU:

@@ -1,6 +1,7 @@
 #include "button_resource_limit_checker.hpp"
 
 #include "engine/core/components/button.hpp"
+#include "engine/systems/ui/ui.hpp"
 #include "projects/game/components/gameplay_functionality_components/player.hpp"
 
 namespace game {
@@ -98,6 +99,10 @@ void ResourceLimitChecker::button_click(tmt::Button::Context context) {
             button_component->disabled = false;
         } else {
             tmt::Log::info("Button stays disabled, resource check failed, sell some ores.");
+
+            auto* ui = tmt::engine.ecs.systems.try_get<tmt::UI>();
+            if (!ui->insufficient_funds_instance.is_valid()) ui->insufficient_funds_instance = ui->menu_sounds.sounds.insufficient_funds.play();
+
             is_flashing = true;
 
             if (pop_up_entity != entt::null) {
