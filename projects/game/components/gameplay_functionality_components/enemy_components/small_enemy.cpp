@@ -6,6 +6,7 @@
 #include "engine/systems/physics/components/voxel_body.hpp"
 #include "engine/core/polyline.hpp"
 #include "engine/systems/physics/physics_system.hpp"
+#include "engine/tools/random.hpp"
 
 namespace game {
 
@@ -95,6 +96,14 @@ void SmallEnemy::die(tmt::Entity agent) {
                 body->type = tmt::VoxelBody::DYNAMIC;
                 body->position = pos;
                 body->rotation = rot;
+
+                // small random velocity forward
+                glm::vec3 forward = transform.get_forward();
+                body->velocity += -forward * Random::rand_range(0.5f, 2.5f);
+                body->angular_velocity += glm::vec3(
+                    Random::rand_range(-1.0f, 1.0f),
+                    Random::rand_range(-1.0f, 1.0f),
+                    Random::rand_range(-1.0f, 1.0f));
 
                 tmt::Physics::initialize_voxel_body(*body, *renderer->resource.resource.get());
             }

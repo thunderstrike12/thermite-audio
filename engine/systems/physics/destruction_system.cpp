@@ -1124,6 +1124,8 @@ std::vector<Entity> Destruction::find_seperations(Entity entity, const std::vect
         new_vb.gravity = 0.0f;
         new_vb.velocity = vb.velocity;
         new_vb.angular_velocity = vb.angular_velocity;
+        new_vb.stored_velocity = vb.stored_velocity;
+        new_vb.stored_torque = vb.stored_torque;
     }
 
     // Fill the entities with the voxels from the original entities

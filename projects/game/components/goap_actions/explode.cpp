@@ -141,25 +141,25 @@ void Explode::on_tick(tmt::Entity agent, float dt) {
         float radius = small_enemy->logic_paramaters.push_radius;
         float force = small_enemy->logic_paramaters.explosion_force;
 
-        for (auto [entity, body, transform] : ecs.view<tmt::VoxelBody, tmt::Transform>().each()) {
-            glm::vec3 pos = transform.get_world_position();
-            glm::vec3 dir = pos - explosion_center;
+        //for (auto [entity, body, transform] : ecs.view<tmt::VoxelBody, tmt::Transform>().each()) {
+        //    glm::vec3 pos = transform.get_world_position();
+        //    glm::vec3 dir = pos - explosion_center;
 
-            float dist = glm::length(dir);
+        //    float dist = glm::length(dir);
 
-            if (dist <= radius && dist > 0.001f) {
-                glm::vec3 normal = glm::normalize(dir);
+        //    if (dist <= radius && dist > 0.001f) {
+        //        glm::vec3 normal = glm::normalize(dir);
 
-                // falloff, less force further away
-                float strength = 1.0f - (dist / radius);
+        //        // falloff, less force further away
+        //        float strength = 1.0f - (dist / radius);
 
-                glm::vec3 explosion_velocity = normal * force * strength;
+        //        glm::vec3 explosion_velocity = normal * force * strength;
 
-                // apply an impulse, not for enemies
-                // if (body.layer != (1 << 2))
-                body.velocity += explosion_velocity;
-            }
-        }
+        //        // apply an impulse, not for enemies
+        //        // if (body.layer != (1 << 2))
+        //        body.velocity += explosion_velocity;
+        //    }
+        //}
 
         if (ecs.valid(player_entity)) {
             auto& player_transform = ecs.get_component<tmt::Transform>(player_entity);
@@ -184,16 +184,6 @@ void Explode::on_tick(tmt::Entity agent, float dt) {
             }
         }
 
-        // Explosion component
-        auto& explosion = ecs.add_component<Explosion>(explosion_entity);
-
-        // Copy params from agent
-        explosion.param = small_enemy->explosion_parameters;
-        explosion.explode();
-
-        // destroy core entity & explosion
-        ecs.destroy_entity(thermite);
-
         tmt::engine.ecs.remove_component<SteeringAgent>(agent);
         tmt::engine.ecs.remove_component<tmt::GoapAgent>(agent);
 
@@ -207,6 +197,16 @@ void Explode::on_tick(tmt::Entity agent, float dt) {
         }
 
         small_enemy->die(agent);
+
+        // Explosion component
+        auto& explosion = ecs.add_component<Explosion>(explosion_entity);
+
+        // Copy params from agent
+        explosion.param = small_enemy->explosion_parameters;
+        explosion.explode();
+
+        // destroy core entity & explosion
+        ecs.destroy_entity(thermite);
     }
 }
 

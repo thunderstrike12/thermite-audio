@@ -37,6 +37,8 @@ struct ThermiteOreSettings {
     float cooldown_explosion = 0.5f;
     // Determines the max toughness of ores that get destroyed by the explosion
     float explosion_strength = 20.0f;
+    float knockback_strength = 10.0f;    
+    float knockback_range = 5.0f;
     LayerMask layer_mask {};
 };
 
@@ -73,6 +75,6 @@ class OreManager : public tmt::GameComponent<OreManager> {
 };
 
 }  // namespace game
-TMT_OBJECT(game::ThermiteOreSettings, (radius_explosion, damage_explosion, cooldown_explosion, explosion_strength, layer_mask));
+TMT_OBJECT(game::ThermiteOreSettings, (radius_explosion, damage_explosion, cooldown_explosion, explosion_strength, knockback_strength, layer_mask));
 TMT_OBJECT(game::VFXSettings, (explosion_vfx_prefab));
 TMT_GAME_COMPONENT(game::OreManager, (thermite_ore_settings, vfx_settings));

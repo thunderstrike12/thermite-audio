@@ -9,6 +9,8 @@
 #include "engine/systems/physics/components/voxel_body.hpp"
 #include "engine/tools/prefab_helper.hpp"
 #include "projects/game/components/gameplay_functionality_components/player.hpp"
+#include <engine/tools/random.hpp>
+#include "engine/core/polyline.hpp"
 
 namespace game {
 
@@ -138,6 +140,25 @@ void OreManager::process_thermite_ore_explosion(tmt::Entity voxel_entity, glm::u
             }
         }
         tmt::engine.ecs.systems.get<tmt::Destruction>().destroy_voxels(result_pair.first, voxel_list);
+    }
+
+    sphere_check_result = tmt::engine.ecs.systems.get<tmt::Physics>().overlap_sphere(explosion_world_pos, thermite_ore_settings.knockback_range, thermite_ore_settings.layer_mask);
+    for (auto& result_pair : sphere_check_result) {
+        auto result_entity_world_pos = tmt::engine.ecs.get_component<tmt::Transform>(result_pair.first).get_world_position();
+        //auto result_entity_local_pos = tmt::engine.ecs.get_component<tmt::Transform>(result_pair.first).get_local_position();
+
+        // apply knockback to voxel entity if it has a voxel body
+        if (auto* result_voxel_body = tmt::engine.ecs.try_get_component<tmt::VoxelBody>(result_pair.first)) {
+            //if (result_voxel_body->type == tmt::VoxelBody::STATIC) continue;  // skip static bodies, they should not be affected by knockback
+            //tmt::engine.polyline.use_color(0.0f, 0.0f, 1.0f, 1.0f);
+            //tmt::engine.polyline.draw_line(explosion_world_pos, result_entity_world_pos, 10.0f);
+            glm::vec3 diff = (result_entity_world_pos) - explosion_world_pos;
+            float falloff = std::clamp(1.0f - (glm::length(diff) / thermite_ore_settings.knockback_range), 0.1f, 1.0f);
+            //tmt::Log::info("Applying knockback to entity {}, diff: x:{} y:{} z:{}, falloff: {}", result_pair.first, diff.x, diff.y, diff.z, falloff);
+            result_voxel_body->velocity = glm::normalize(diff) * thermite_ore_settings.knockback_strength * falloff;
+            // Add a tiny bit of random torque
+            result_voxel_body->angular_velocity = glm::vec3(Random::rand_range(-1.0f, 1.0f), Random::rand_range(-1.0f, 1.0f), Random::rand_range(-1.0f, 1.0f));
+        }
     }
 }
 
