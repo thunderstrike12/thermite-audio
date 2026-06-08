@@ -110,6 +110,10 @@ void game::WeaponManager::on_overheat(const game::WeaponFiredEvent& event) {
     }
 }
 
+bool game::WeaponManager::gravity_overheated() const {
+    return current_weapon == game::WeaponType::GRAVITY && overheat_remaining_time >= 0.0f;
+}
+
 void game::WeaponManager::check_trigger_shoot_event() {
     auto& input = tmt::engine.input;
     auto* player = tmt::engine.ecs.try_get_component<game::Player>(shooting_entity);
@@ -120,7 +124,8 @@ void game::WeaponManager::check_trigger_shoot_event() {
         return;
     }
 
-    if (input.is_action_pressed(action::SHOOT)) {
+    // Only update the shoot event if the weapon isn't a gravity gun or if it is a gravity gun and is not overheated.
+    if (input.is_action_pressed(action::SHOOT) && !gravity_overheated()) {
         if (switching) return;
         tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, false });
 
@@ -182,9 +187,8 @@ void game::WeaponManager::update(const tmt::FrameData& time) {
                 break;
             case game::WeaponType::GRAVITY:
                 if (!is_attached) {
-                    if (overheat_remaining_time < 0.0f) {
-                        check_trigger_shoot_event();
-                    }
+                    check_trigger_shoot_event();
+
                     if (tmt::engine.input.is_action_pressed(action::SECONDARY_TOOL_USE)) {
                         tmt::engine.ecs.get_dispatcher().trigger(ShootEvent { shooting_entity, true });
                     }

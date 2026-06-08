@@ -17,7 +17,6 @@ namespace game {
 
 void GravityManipulationComponent::start() {
     tmt::engine.ecs.get_dispatcher().sink<WeaponFiredEvent>().connect<&GravityManipulationComponent::on_weapon_fired>(this);
-    tmt::engine.ecs.get_dispatcher().sink<ReleaseShootEvent>().connect<&GravityManipulationComponent::on_release>(this);
 
     max_mass = tmt::engine.player_data.get<float>(GRAVITY_GUN_DATA, max_mass);
 
@@ -28,7 +27,6 @@ void GravityManipulationComponent::update(const tmt::FrameData& time) {}
 
 void GravityManipulationComponent::end() {
     tmt::engine.ecs.get_dispatcher().sink<WeaponFiredEvent>().disconnect<&GravityManipulationComponent::on_weapon_fired>(this);
-    tmt::engine.ecs.get_dispatcher().sink<ReleaseShootEvent>().disconnect<&GravityManipulationComponent::on_release>(this);
 }
 void GravityManipulationComponent::draw_debug_lines() const {
     if (attraction_point_entity == entt::null) return;
@@ -57,8 +55,6 @@ void GravityManipulationComponent::on_weapon_fired(const WeaponFiredEvent& e) {
         }
     }
 }
-
-void GravityManipulationComponent::on_release(const ReleaseShootEvent& e) {}
 
 void GravityManipulationComponent::grav_point_check() {
     const auto start_size = currently_manipulated_entities.size();

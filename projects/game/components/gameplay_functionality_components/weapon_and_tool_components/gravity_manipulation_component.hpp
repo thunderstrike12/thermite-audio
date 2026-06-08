@@ -57,7 +57,6 @@ class GravityManipulationComponent : public tmt::GameComponent<GravityManipulati
     void apply_enemy_override();
     void clear_enemy_override();
 
-    void on_release(const ReleaseShootEvent& e);
     // TODO the same, this could be primarily handled through weapon, a second timer could be used for the second shot
 };
 
