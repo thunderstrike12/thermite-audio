@@ -12,7 +12,7 @@ class CameraMouse : public tmt::GameComponent<CameraMouse> {
     void update(const tmt::FrameData& time) override;
     void end() override;
 
-    float distance = 10.0f;
+    float distance = 1.785f;
     float sway_radius_x = 0.3f;
     float sway_radius_y = 0.165f;
     float smoothing = 6.0f;

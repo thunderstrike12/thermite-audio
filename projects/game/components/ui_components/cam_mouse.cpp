@@ -10,20 +10,12 @@ namespace game {
 
 void CameraMouse::start() {
     const auto& transform = tmt::engine.ecs.get_component<tmt::Transform>(entity);
-    const tmt::Ray ray { transform.get_world_position(), transform.get_forward() };
-    const tmt::Hit result = tmt::engine.renderer.trace_ray(ray);
 
     base_position = transform.get_world_position();
     base_right = transform.get_right();
     base_up = transform.get_up();
 
-    if (result) {
-        initial_look_at_position = ray.origin + ray.dir * result.distance;
-        distance = glm::distance(initial_look_at_position, base_position);
-        tmt::Log::info("CameraMouse: hit entity {} at distance {}, look-at: {}", result.entity, result.distance, initial_look_at_position);
-    } else {
-        initial_look_at_position = ray.origin + ray.dir * distance;
-    }
+    initial_look_at_position = base_position + transform.get_forward() * distance;
 }
 
 void CameraMouse::update(const tmt::FrameData& time) {
