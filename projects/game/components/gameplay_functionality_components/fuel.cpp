@@ -43,5 +43,5 @@ void game::FuelComponent::on_trigger_movement(const MovementUpdateEvent& event) 
         tmt::engine.ecs.get_dispatcher().sink<TriggerMovementEvent>().disconnect<&MoverComponent::update_movement>(get_mover_component(mover_entity));
         tmt::engine.ecs.get_dispatcher().trigger<TriggerMovementStopEvent>();
     }
-    tmt::engine.ecs.get_dispatcher().trigger<BargeFuelChanged>({ .barge_fuel_entity = entity, .new_value = current_fuel });
+    tmt::engine.ecs.get_dispatcher().trigger<BargeFuelChanged>({ .barge_fuel_entity = entity, .new_value = current_fuel ,.max_value = fuel_data.max_fuel});
 }

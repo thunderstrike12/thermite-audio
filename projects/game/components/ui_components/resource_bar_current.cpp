@@ -50,6 +50,8 @@ void ResourceBarCurrentComponent::end() {
         tmt::engine.ecs.get_dispatcher().sink<PlayerHealthChanged>().disconnect<&ResourceBarCurrentComponent::health_changed>(this);
     } else if (resource == DisplayTypeResourceBar::ENERGY) {
         tmt::engine.ecs.get_dispatcher().sink<PlayerEnergyChanged>().disconnect<&ResourceBarCurrentComponent::energy_changed>(this);
+    } else if (resource == DisplayTypeResourceBar::FUEL) {
+        tmt::engine.ecs.get_dispatcher().sink<BargeFuelChanged>().disconnect<&ResourceBarCurrentComponent::fuel_changed>(this);
     }
 }
 
@@ -78,12 +80,8 @@ void ResourceBarCurrentComponent::energy_changed(PlayerEnergyChanged player_ener
 
 void ResourceBarCurrentComponent::fuel_changed(BargeFuelChanged fuel_changed) {
     int new_val = static_cast<int>(fuel_changed.new_value);
-    auto* fuel_component = tmt::engine.ecs.try_get_component<FuelComponent>(barge_fuel_entity);
-    if (!fuel_component) {
-        tmt::Log::error("Fuel component not found for resource bar please check entity: {} (resource bar) and {} (barge fuel entity)", entity, barge_fuel_entity);
-        return;
-    }
-    float max_resource_value = fuel_component->fuel_data.max_fuel;
+
+    float max_resource_value = fuel_changed.max_value;
 
     resource_bar_update(new_val, max_resource_value);
 }

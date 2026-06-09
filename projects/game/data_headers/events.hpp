@@ -29,6 +29,7 @@ struct ProjectileHitEvent {
 struct BargeFuelChanged {
     tmt::Entity barge_fuel_entity;
     float new_value;
+    float max_value;
 };
 
 struct TriggerCollisionEvent {

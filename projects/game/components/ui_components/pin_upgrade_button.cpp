@@ -78,6 +78,8 @@ void UpgradePinButtonComponent::end() {
     if (auto* button_component = tmt::engine.ecs.try_get_component<tmt::Button>(entity)) {
         button_component->on_click.clear();
     }
+
+    tmt::engine.ecs.get_dispatcher().sink<UpgradesWasPurchasedEvent>().disconnect<&UpgradePinButtonComponent::handle_purchase_event>(this);
 }
 
 bool UpgradePinButtonComponent::add_pin_to_player_data() {
