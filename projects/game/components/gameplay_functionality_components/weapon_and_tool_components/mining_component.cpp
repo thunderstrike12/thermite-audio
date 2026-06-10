@@ -12,6 +12,9 @@
 #include "engine/systems/physics/destruction_system.hpp"
 #include "projects/game/data_headers/save_entries.hpp"
 
+#include "engine/steam/achievements.hpp"
+#include "engine/steam/steam_api.hpp"
+
 #include <engine/tools/fmt/glm.hpp>
 #include <glm/detail/_noise.hpp>
 
@@ -179,6 +182,9 @@ void MiningComponent::handle_voxel(const VoxelID& voxel_id) {
                 if (entities.size() > 1) {
                     tmt::Log::info("Mining has separated objects");
                 }
+
+                tmt::engine.steam.achievement->stats.voxels_mined_count++;
+                tmt::engine.steam.achievement->store_stats = true;
             }
             break;
     }

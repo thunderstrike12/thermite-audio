@@ -73,6 +73,8 @@ void tmt::SteamAchievements::load_user_stats() {
     // Add other stats here:
     bool get_state_success { true };
     get_state_success &= user_stats->GetStat("enemy_killed_count", &stats.enemy_killed_count);
+    get_state_success &= user_stats->GetStat("voxels_mined", &stats.voxels_mined_count);
+    get_state_success &= user_stats->GetStat("distance_traveled", &stats.distance_traveled);
 
     valid_stats = get_state_success;
 }
@@ -95,6 +97,16 @@ void tmt::SteamAchievements::check_achievement(AchievementSteamData& achievement
                 unlock_achievement(achievement);
             }
             break;
+        case ACH_VOXELS_MINED:
+            if (stats.voxels_mined_count >= 1'000'000) {
+                unlock_achievement(achievement);
+            }
+            break;
+        case ACH_MARATHON:
+            if (stats.distance_traveled >= 42'195) {
+                unlock_achievement(achievement);
+            }
+            break;
         case ACH_COMPLETE_ONE_RUN:
             // handled directly right now, could change it to use stats?
             break;
@@ -108,6 +120,8 @@ void tmt::SteamAchievements::store_if_needed() {
     }
     // set everything here
     user_stats->SetStat("enemy_killed_count", stats.enemy_killed_count);
+    user_stats->SetStat("voxels_mined", stats.voxels_mined_count);
+    user_stats->SetStat("distance_traveled", stats.distance_traveled);
 
     bool success = user_stats->StoreStats();
     store_stats = !success;

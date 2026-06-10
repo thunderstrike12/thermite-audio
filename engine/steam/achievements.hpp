@@ -6,7 +6,7 @@
 
 namespace tmt {
 
-enum AchievementType { ACH_COMPLETE_ONE_RUN, ACH_KILL_10_ENEMIES, ACH_DRONE_UPGRADES, ACH_DRILL_UPGRADES, ACH_BARGE_UPGRADES, ACH_RIFLE_UPGRADES };
+enum AchievementType { ACH_COMPLETE_ONE_RUN, ACH_KILL_10_ENEMIES, ACH_DRONE_UPGRADES, ACH_DRILL_UPGRADES, ACH_BARGE_UPGRADES, ACH_RIFLE_UPGRADES, ACH_MARATHON, ACH_VOXELS_MINED };
 
 struct AchievementSteamData {
     AchievementType ach_type;
@@ -18,6 +18,8 @@ struct AchievementSteamData {
 };
 struct GameStats {
     int enemy_killed_count { 0 };
+    int voxels_mined_count { 0 };
+    int distance_traveled { 0 };
 };
 
 class SteamAchievements {
@@ -48,6 +50,6 @@ class SteamAchievements {
 };
 
 }  // namespace tmt
-TMT_OBJECT(tmt::GameStats, (enemy_killed_count));
+TMT_OBJECT(tmt::GameStats, (enemy_killed_count, voxels_mined_count, distance_traveled));
 
 TMT_OBJECT(tmt::AchievementSteamData, (ach_type, ach_id, name, description, achieved, icon_image))

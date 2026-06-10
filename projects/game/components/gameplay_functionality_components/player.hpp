@@ -155,6 +155,7 @@ class Player : public tmt::GameComponent<Player> {
     float energy_drain_per_second = 0.5f;
     float out_of_energy_time_till_death = 10.0f;
     tmt::BezierCurve black_out_curve;
+    float distance_traveled = 0.0f;
 
     // Helper functions
     tmt::Transform& get_transform() const { return tmt::engine.ecs.get_component<tmt::Transform>(entity); }

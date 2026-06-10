@@ -20,6 +20,8 @@
 #include "engine/tools/second_order_solver.hpp"
 #include "engine/tools/random.hpp"
 #include "projects/game/components/development_tools/vfx_helper.hpp"
+#include "engine/steam/achievements.hpp"
+#include "engine/steam/steam_api.hpp"
 
 // TODO before we have a serializer for input, you can add all the needed keybindings here.
 //  TODO we still have to add the gamepad inputs here
@@ -156,6 +158,10 @@ void Player::start() {
     setup_vfx_emitter(recharge_emitter_entity, player_vfx_settings.recharge_vfx_prefab);
 }
 void Player::end() {
+    tmt::engine.steam.achievement->stats.distance_traveled += distance_traveled;
+    tmt::engine.steam.achievement->store_stats = true;
+    distance_traveled = 0.0f;
+
     tmt::engine.ecs.get_dispatcher().sink<AttachEvent>().disconnect<&Player::on_attach>(this);
     // this is a forced closing of the game, behaves like the player just dies
 }
@@ -533,6 +539,8 @@ void Player::move_player() {
 
     // Move
     transform.translate(velocity * delta_time);
+
+    distance_traveled += glm::length(velocity * delta_time);
 
     resolve_penetration();
 
