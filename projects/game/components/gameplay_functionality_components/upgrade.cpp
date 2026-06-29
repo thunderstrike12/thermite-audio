@@ -218,7 +218,7 @@ bool Upgrade::apply_upgrade() {
             return false;
         }
     }
-    if (wallet_component->currencies.dollars <= dollar_cost) {
+    if (wallet_component->currencies.dollars < dollar_cost) {
         tmt::Log::info("Unable to buy upgrade, insufficient {} dollars", wallet_component->currencies.dollars);
         return false;
     }
