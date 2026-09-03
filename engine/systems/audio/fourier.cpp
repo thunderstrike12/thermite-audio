@@ -11,6 +11,72 @@ namespace {}
 
 namespace tmt {
 
+void Fourier::construct_chunks_from_audio_data() {
+    chunks.clear();
+    if (data == nullptr) return;
+
+    int total_samples = (int)data->samples.size();
+    int chunk_nyquist = std::min(data->sample_rate / 2, max_nyquist);
+
+    for (int start = 0; start + detail <= total_samples; start += detail) {
+        Chunk c;
+        c.time_offset = (float)start / (float)data->sample_rate;
+        c.nyquist = chunk_nyquist;
+
+        c.xf.resize(detail);
+        c.yf.resize(detail);
+        c.yh.resize(detail);
+        c.xc.resize(c.nyquist);
+        c.yc.resize(c.nyquist);
+        c.xch.resize(c.nyquist);
+        c.ych.resize(c.nyquist);
+
+        // fourier curve for this chunk
+        for (int i = 0; i < detail; i++) {
+            float t = (float)i / (float)detail;
+            c.xf[i] = t;
+            c.yf[i] = data->samples[start + i];
+        }
+
+        // hann window
+        for (int i = 0; i < detail; i++) {
+            float t = (float)i / ((float)detail - 1.0f);
+            float w = 0.5f * (1.0f - glm::cos(2.0f * glm::pi<float>() * t));
+            c.yh[i] = c.yf[i] * w;
+        }
+
+        // frequency sweep, raw + smoothed
+        for (int j = 0; j < c.nyquist; j++) {
+            float test_freq = (float)j;
+            float real_sum = 0.0f, imag_sum = 0.0f;
+            float real_sum_h = 0.0f, imag_sum_h = 0.0f;
+            for (int i = 0; i < detail; i++) {
+                float t = (float)i / (float)data->sample_rate;
+                float angle = t * 2.0f * glm::pi<float>() * test_freq;
+                float cs = glm::cos(angle), sn = glm::sin(angle);
+                real_sum += c.yf[i] * cs;
+                imag_sum += c.yf[i] * sn;
+                real_sum_h += c.yh[i] * cs;
+                imag_sum_h += c.yh[i] * sn;
+            }
+            c.xc[j] = test_freq;
+            c.yc[j] = glm::sqrt(real_sum * real_sum + imag_sum * imag_sum) / detail;
+            c.xch[j] = test_freq;
+            c.ych[j] = glm::sqrt(real_sum_h * real_sum_h + imag_sum_h * imag_sum_h) / detail;
+        }
+
+        // peaks for this chunk
+        for (int j = 1; j < c.nyquist - 1; j++) {
+            if (c.ych[j] > c.ych[j - 1] && c.ych[j] > c.ych[j + 1]) {
+                c.peaks.push_back({ c.xch[j], c.ych[j], 0.0f });
+            }
+        }
+        std::sort(c.peaks.begin(), c.peaks.end(), [](const Peak& a, const Peak& b) { return a.magnitude > b.magnitude; });
+
+        chunks.push_back(std::move(c));
+    }
+}
+
 void Fourier::construct_fourier_curve() {
     constructed = true;
 
@@ -123,12 +189,12 @@ void Fourier::construct_fourier_curve() {
     std::sort(peaks.begin(), peaks.end(), [](const Peak& a, const Peak& b) { return a.magnitude > b.magnitude; });
 }
 
-FMOD::Sound* Fourier::make_fourier_sound(FMOD::System* system, int sampleRate) {
-    int period_samples = (int)(sampleRate);  // samples in one full period
+FMOD::Sound* Fourier::make_fourier_sound(FMOD::System* system) {
+    int period_samples = (int)(data->sample_rate);  // samples in one full period
 
     std::vector<float> buffer(period_samples, 0.0f);
     for (int i = 0; i < period_samples; i++) {
-        float t = (float)i / sampleRate;  // real time in seconds
+        float t = (float)i / data->sample_rate;  // real time in seconds
         float sample = 0.0f;
         if (use_wave_data) {
             for (auto& wave : waves) {
@@ -150,7 +216,7 @@ FMOD::Sound* Fourier::make_fourier_sound(FMOD::System* system, int sampleRate) {
     FMOD_CREATESOUNDEXINFO exinfo = {};
     exinfo.cbsize = sizeof(exinfo);
     exinfo.numchannels = 1;
-    exinfo.defaultfrequency = sampleRate;
+    exinfo.defaultfrequency = data->sample_rate;
     exinfo.format = FMOD_SOUND_FORMAT_PCMFLOAT;
     exinfo.length = (unsigned int)(buffer.size() * sizeof(float));
 
@@ -161,6 +227,46 @@ FMOD::Sound* Fourier::make_fourier_sound(FMOD::System* system, int sampleRate) {
     // FMOD::Channel* channel = nullptr;
     // system->playSound(sound, nullptr, false, &channel);
 
+    return sound;
+}
+
+FMOD::Sound* Fourier::make_fourier_sound_from_chunks(FMOD::System* system) {
+    if (chunks.empty()) return nullptr;
+
+    int chunk_samples = detail;  // samples per chunk at the audio's native rate
+    int total_samples = (int)chunks.size() * chunk_samples;
+    std::vector<float> buffer(total_samples, 0.0f);
+
+    for (int c = 0; c < (int)chunks.size(); c++) {
+        auto& chunk = chunks[c];
+        int top_n =(int)chunk.peaks.size();
+
+        for (int i = 0; i < chunk_samples; i++) {
+            float t = (float)i / data->sample_rate;  // local time within this chunk
+            float sample = 0.0f;
+            for (int p = 0; p < top_n; p++) {
+                auto& peak = chunk.peaks[p];
+                sample += glm::sin(2.0f * glm::pi<float>() * peak.freq * t + peak.phase) * peak.magnitude;
+            }
+            buffer[c * chunk_samples + i] = sample;
+        }
+    }
+
+    // normalize
+    float max_abs = 0.0f;
+    for (float s : buffer) max_abs = std::max(max_abs, std::abs(s));
+    if (max_abs > 1.0f)
+        for (float& s : buffer) s /= max_abs;
+
+    FMOD_CREATESOUNDEXINFO exinfo = {};
+    exinfo.cbsize = sizeof(exinfo);
+    exinfo.numchannels = 1;
+    exinfo.defaultfrequency = data->sample_rate;
+    exinfo.format = FMOD_SOUND_FORMAT_PCMFLOAT;
+    exinfo.length = (unsigned int)(buffer.size() * sizeof(float));
+
+    FMOD::Sound* sound = nullptr;
+    system->createSound((const char*)buffer.data(), FMOD_OPENMEMORY | FMOD_OPENRAW | FMOD_CREATESAMPLE, &exinfo, &sound);
     return sound;
 }
 

@@ -40,7 +40,6 @@ inline void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Fourier& value, I
     auto& type_response = response.get<tmt::Wave>();
 
     ImReflect::Input("data", value.data, type_settings, type_response);
-    ImReflect::Input("waves", value.waves, type_settings, type_response);
 
     if (ImGui::Button("Construct Fourier")) {
         value.construct_fourier_curve();
@@ -57,6 +56,12 @@ inline void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Fourier& value, I
     if (ImGui::Button("Play")) {
         if (fourier_sound) fourier_sound->release();
         fourier_sound = value.make_fourier_sound(tmt::engine.audio.get_core_system());
+        tmt::engine.audio.get_core_system()->playSound(fourier_sound, nullptr, false, &fourier_channel);
+    }
+
+    if (ImGui::Button("Play Chunks")) {
+        if (fourier_sound) fourier_sound->release();
+        fourier_sound = value.make_fourier_sound_from_chunks(tmt::engine.audio.get_core_system());
         tmt::engine.audio.get_core_system()->playSound(fourier_sound, nullptr, false, &fourier_channel);
     }
 
@@ -140,6 +145,51 @@ inline void tag_invoke(ImReflect::ImInput_t, const char*, tmt::Fourier& value, I
         ImPlot::PlotScatter("center", &graph_center.x, &graph_center.y, 1);
         ImPlot::EndPlot();
     }
+    
+    if (ImGui::Button("Construct Chunks")) {
+        value.construct_chunks_from_audio_data();
+    }
+
+    if (!value.chunks.empty()) {
+        static int selected_chunk = 0;
+        if (selected_chunk >= (int)value.chunks.size()) selected_chunk = 0;
+
+        ImGui::SliderInt("Chunk", &selected_chunk, 0, (int)value.chunks.size() - 1);
+        auto& c = value.chunks[selected_chunk];
+        ImGui::Text("Time offset: %.3fs", c.time_offset);
+
+        // per-chunk fourier curve (time domain)
+        label = "Chunk Fourier Curve";
+        ImGui::Text("%s", label);
+        if (ImPlot::BeginPlot(label, ImVec2(-1, 150))) {
+            ImPlot::SetupAxes("t", "value");
+            ImPlot::SetupAxisLimits(ImAxis_X1, 0, 1, ImGuiCond_Always);
+            ImPlot::PlotLine("curve", c.xf.data(), c.yf.data(), (int)c.xf.size());
+            ImPlot::PlotLine("smooth curve", c.xf.data(), c.yh.data(), (int)c.yh.size());
+            ImPlot::EndPlot();
+        }
+
+        // per-chunk spectrum
+        label = "Chunk Strong Frequencies";
+        ImGui::Text("%s", label);
+        if (ImPlot::BeginPlot(label, ImVec2(-1, 500))) {
+            ImPlot::SetupAxes("t", "value");
+            ImPlot::PlotLine("curve", c.xc.data(), c.yc.data(), c.nyquist);
+            ImPlot::PlotLine("smooth curve", c.xch.data(), c.ych.data(), c.nyquist);
+            ImPlot::EndPlot();
+        }
+
+        // top peaks for this chunk
+        if (ImGui::TreeNode("Peaks")) {
+            int show_count = std::min((int)c.peaks.size(), 10);
+            for (int i = 0; i < show_count; i++) {
+                ImGui::Text("%.1f Hz  (mag %.4f)", c.peaks[i].freq, c.peaks[i].magnitude);
+            }
+            ImGui::TreePop();
+        }
+    }
+
+    ImReflect::Input("waves", value.waves, type_settings, type_response);
 
     // --- Visible resize handle ---
     ImVec2 handle_pos = ImGui::GetCursorScreenPos();
