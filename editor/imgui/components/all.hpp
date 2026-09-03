@@ -10,3 +10,4 @@
 #include "editor/imgui/components/nav_mesh.hpp"
 #include "editor/imgui/components/emitter.hpp"
 #include "editor/imgui/components/image_renderer.hpp"
+#include "editor/imgui/components/fourier.hpp"

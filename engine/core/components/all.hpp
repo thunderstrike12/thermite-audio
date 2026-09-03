@@ -13,6 +13,7 @@
 #include "engine/systems/animation/components/constraints.hpp"
 #include "engine/systems/animation/components/bone_hierarchy_renderer.hpp"
 #include "engine/systems/ai/navigation/nav_mesh.hpp"
+#include "engine/systems/audio/fourier.hpp"
 #include "engine/core/components/audio_listener.hpp"
 #include "engine/core/components/audio_emitter.hpp"
 #include "engine/core/components/prefab.hpp"
@@ -74,7 +75,8 @@ using SerializeComponents = ComponentRegistry<
 	GoapAgentType,
 	GoapAgentTypeRef,
 	WorldState,
-	RigController
+	RigController,
+	Fourier
 >;
 // clang-format on
 
@@ -114,7 +116,8 @@ using InspectComponents = ComponentRegistry<
 	GoapAgentType,
 	GoapAgentTypeRef,
 	WorldState,
-	RigController
+	RigController,
+	Fourier
 >;
 // clang-format on
 

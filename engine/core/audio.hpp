@@ -249,6 +249,10 @@ class Audio : public OnGamePause, public OnGameResume, public OnGameEnd, public 
     FMOD::Studio::System* system;
     FMOD::System* core_system;
 
+   public:
+    [[nodiscard]] FMOD::System* get_core_system() const { return core_system; }
+
+   private:
     std::vector<AudioInstance3D> active_instances_3d;
     std::vector<AudioInstance> active_instances_2d;
 

@@ -28,13 +28,13 @@
 #include "systems/motion_math/motion_math_system.hpp"
 #include "systems/ui/ui.hpp"
 #include "systems/ui/button_manager.hpp"
+#include "systems/audio/audio_system.hpp"
 #include "events/engine.hpp"
 #include "events/game.hpp"
 #include "events/scene.hpp"
 #include "core/resources.hpp"
 #include "core/salvo.hpp"
 #include "core/input/input_map.hpp"
-#include "steam/steam_api.hpp"
 #include "tools/profiler.hpp"
 #include "tools/timer.hpp"
 #include "tools/tweening.hpp"
@@ -45,7 +45,7 @@ tmt::Engine tmt::engine;
 namespace tmt {
 
 Engine::Engine() :
-    steam(*new SteamAPI()),
+    //steam(*new SteamAPI()),
     window(*new Window()),
     audio(*new Audio()),
     input_map(*new InputMap()),
@@ -75,7 +75,6 @@ Engine::~Engine() {
     delete &input_map;
     delete &audio;
     delete &window;
-    delete &steam;
 }
 
 void Engine::init(std::unique_ptr<Application> user_app) {
@@ -88,7 +87,6 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     std::string build_ver = BUILD_VERSION;
     if (build_ver == "") build_ver = "dev";
     Log::info(Log::Scope::GLOBAL, "Build version: {}", build_ver);
-    Log::info("Steam is {}, account name is {}", steam.get_success_init(), steam.get_persona_name());
     IO::init_mounts(app->specs.organization, app->specs.name);
     player_data.init();
     window.init(app->specs);
@@ -111,10 +109,10 @@ void Engine::init(std::unique_ptr<Application> user_app) {
     ecs.systems.add<UIElementManager>();
     ecs.systems.add<Tweener>();
     ecs.systems.add<RendererSerializer>();
+    ecs.systems.add<AudioSystem>();
     ecs.systems.add<Gameplay>(); /* Should be last */
 
     OnEngineInit::dispatch(app->specs);
-    engine.steam.init_achievements();
 }
 
 // Example stuff
@@ -127,7 +125,6 @@ void Engine::run() {
     while (is_running) {
         TMT_ZONE_SCOPED_N("Frame");
         fps_limiter.begin();
-        steam.update();
 
         if (game_controller.should_game_end()) {
             end_game();

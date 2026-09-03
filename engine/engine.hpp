@@ -52,7 +52,7 @@ class Engine {
 
     ~Engine() { delete &my_system; };
     */
-    SteamAPI& steam;
+    //SteamAPI& steam;
     Window& window;
     Audio& audio;
 
