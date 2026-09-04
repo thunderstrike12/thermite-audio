@@ -26,10 +26,11 @@ void Fourier::construct_chunks_from_audio_data() {
         c.xf.resize(detail);
         c.yf.resize(detail);
         c.yh.resize(detail);
+        c.yr.resize(detail);
         c.xc.resize(c.nyquist);
         c.yc.resize(c.nyquist);
-        c.xch.resize(c.nyquist);
         c.ych.resize(c.nyquist);
+        c.phase_h.resize(c.nyquist);
 
         // fourier curve for this chunk
         for (int i = 0; i < detail; i++) {
@@ -61,17 +62,46 @@ void Fourier::construct_chunks_from_audio_data() {
             }
             c.xc[j] = test_freq;
             c.yc[j] = glm::sqrt(real_sum * real_sum + imag_sum * imag_sum) / detail;
-            c.xch[j] = test_freq;
             c.ych[j] = glm::sqrt(real_sum_h * real_sum_h + imag_sum_h * imag_sum_h) / detail;
+            c.phase_h[j] = glm::atan(imag_sum_h, real_sum_h);
         }
 
         // peaks for this chunk
         for (int j = 1; j < c.nyquist - 1; j++) {
             if (c.ych[j] > c.ych[j - 1] && c.ych[j] > c.ych[j + 1]) {
-                c.peaks.push_back({ c.xch[j], c.ych[j], 0.0f });
+                c.peaks.push_back({ (float)j, c.ych[j], c.phase_h[j] });
             }
         }
         std::sort(c.peaks.begin(), c.peaks.end(), [](const Peak& a, const Peak& b) { return a.magnitude > b.magnitude; });
+
+        // reconstruct the fourier curve from the peaks
+        for (int j = 0; j < (int)c.peaks.size(); j++) {
+            auto& peak = c.peaks[j];
+            for (int i = 0; i < detail; i++) {
+                float t = (float)i / (float)detail;
+                float sample = glm::sin(2.0f * glm::pi<float>() * t * peak.freq + peak.phase) * peak.magnitude;
+                if (j == 0)
+                    c.yr[i] = sample;
+                else
+                    c.yr[i] += sample;
+            }
+        }
+
+        // frequency reconstruction from the peaks
+        c.xcr.clear();
+        c.ycr.clear();
+        c.xcr.resize(c.peaks.size() * 3);
+        c.ycr.resize(c.peaks.size() * 3);
+
+        for (int j = 0; j < (int)c.peaks.size(); j++) {
+            auto& peak = c.peaks[j];
+            c.xcr[j * 3] = peak.freq;
+            c.ycr[j * 3] = 0.0f;
+            c.xcr[j * 3 + 1] = peak.freq;
+            c.ycr[j * 3 + 1] = peak.magnitude;
+            c.xcr[j * 3 + 2] = peak.freq;
+            c.ycr[j * 3 + 2] = 0.0f;
+        }
 
         chunks.push_back(std::move(c));
     }
@@ -189,21 +219,12 @@ void Fourier::construct_fourier_curve() {
     std::sort(peaks.begin(), peaks.end(), [](const Peak& a, const Peak& b) { return a.magnitude > b.magnitude; });
 }
 
-FMOD::Sound* Fourier::make_fourier_sound(FMOD::System* system) {
+FMOD::Sound* Fourier::make_fourier_sound_from_audio_data(FMOD::System* system) {
     int period_samples = (int)(data->sample_rate);  // samples in one full period
 
     std::vector<float> buffer(period_samples, 0.0f);
     for (int i = 0; i < period_samples; i++) {
-        float t = (float)i / data->sample_rate;  // real time in seconds
-        float sample = 0.0f;
-        if (use_wave_data) {
-            for (auto& wave : waves) {
-                float freq_hz = wave.frequency;
-                sample += glm::sin(2.0f * glm::pi<float>() * freq_hz * t + wave.phase) * wave.amplitude;
-            }
-        } else {
-            sample += data->samples[i % data->samples.size()];
-        }
+        float sample = data->samples[i % data->samples.size()];
         buffer[i] = sample;
     }
 
@@ -221,11 +242,39 @@ FMOD::Sound* Fourier::make_fourier_sound(FMOD::System* system) {
     exinfo.length = (unsigned int)(buffer.size() * sizeof(float));
 
     FMOD::Sound* sound = nullptr;
-    // system->createSound((const char*)buffer.data(), FMOD_OPENMEMORY | FMOD_LOOP_NORMAL | FMOD_CREATESAMPLE, &exinfo, &sound);
     system->createSound((const char*)buffer.data(), FMOD_OPENMEMORY | FMOD_OPENRAW | FMOD_LOOP_NORMAL | FMOD_CREATESAMPLE, &exinfo, &sound);
 
-    // FMOD::Channel* channel = nullptr;
-    // system->playSound(sound, nullptr, false, &channel);
+    return sound;
+}
+
+FMOD::Sound* Fourier::make_fourier_sound_from_waves(FMOD::System* system) {
+    int period_samples = (int)(data->sample_rate);
+
+    std::vector<float> buffer(period_samples, 0.0f);
+    for (int i = 0; i < period_samples; i++) {
+        float t = (float)i / data->sample_rate;
+        float sample = 0.0f;
+        for (auto& wave : waves) {
+            float freq_hz = wave.frequency;
+            sample += glm::sin(2.0f * glm::pi<float>() * freq_hz * t + wave.phase) * wave.amplitude;
+        }
+        buffer[i] = sample;
+    }
+
+    float max_abs = 0.0f;
+    for (float s : buffer) max_abs = std::max(max_abs, std::abs(s));
+    if (max_abs > 1.0f)
+        for (float& s : buffer) s /= max_abs;
+
+    FMOD_CREATESOUNDEXINFO exinfo = {};
+    exinfo.cbsize = sizeof(exinfo);
+    exinfo.numchannels = 1;
+    exinfo.defaultfrequency = data->sample_rate;
+    exinfo.format = FMOD_SOUND_FORMAT_PCMFLOAT;
+    exinfo.length = (unsigned int)(buffer.size() * sizeof(float));
+
+    FMOD::Sound* sound = nullptr;
+    system->createSound((const char*)buffer.data(), FMOD_OPENMEMORY | FMOD_OPENRAW | FMOD_LOOP_NORMAL | FMOD_CREATESAMPLE, &exinfo, &sound);
 
     return sound;
 }
@@ -239,7 +288,7 @@ FMOD::Sound* Fourier::make_fourier_sound_from_chunks(FMOD::System* system) {
 
     for (int c = 0; c < (int)chunks.size(); c++) {
         auto& chunk = chunks[c];
-        int top_n =(int)chunk.peaks.size();
+        int top_n = std::min(max_peaks_per_chunk, (int)chunk.peaks.size());
 
         for (int i = 0; i < chunk_samples; i++) {
             float t = (float)i / data->sample_rate;  // local time within this chunk
@@ -267,6 +316,45 @@ FMOD::Sound* Fourier::make_fourier_sound_from_chunks(FMOD::System* system) {
 
     FMOD::Sound* sound = nullptr;
     system->createSound((const char*)buffer.data(), FMOD_OPENMEMORY | FMOD_OPENRAW | FMOD_CREATESAMPLE, &exinfo, &sound);
+    return sound;
+}
+
+FMOD::Sound* Fourier::make_fourier_sound_from_single_chunk(FMOD::System* system, const Chunk& c, int repeat_count) {
+    int n = detail;  // one chunk's worth of samples, matching how the chunk was analyzed
+    int top_n = std::min(max_peaks_per_chunk, (int)c.peaks.size());
+
+    std::vector<float> single(n, 0.0f);
+    for (int i = 0; i < n; i++) {
+        float t = (float)i / (float)data->sample_rate;
+        float sample = 0.0f;
+        for (int p = 0; p < top_n; p++) {
+            auto& peak = c.peaks[p];
+            sample += glm::sin(2.0f * glm::pi<float>() * peak.freq * t + peak.phase) * peak.magnitude;
+        }
+        single[i] = sample;
+    }
+
+    // normalize so stacking peaks doesn't clip
+    float max_abs = 0.0f;
+    for (float s : single) max_abs = std::max(max_abs, std::abs(s));
+    if (max_abs > 1.0f)
+        for (float& s : single) s /= max_abs;
+
+    // repeat so it's audible
+    std::vector<float> buffer(n * repeat_count);
+    for (int r = 0; r < repeat_count; r++) {
+        std::copy(single.begin(), single.end(), buffer.begin() + r * n);
+    }
+
+    FMOD_CREATESOUNDEXINFO exinfo = {};
+    exinfo.cbsize = sizeof(exinfo);
+    exinfo.numchannels = 1;
+    exinfo.defaultfrequency = data->sample_rate;
+    exinfo.format = FMOD_SOUND_FORMAT_PCMFLOAT;
+    exinfo.length = (unsigned int)(buffer.size() * sizeof(float));
+
+    FMOD::Sound* sound = nullptr;
+    system->createSound((const char*)buffer.data(), FMOD_OPENMEMORY | FMOD_OPENRAW | FMOD_LOOP_NORMAL | FMOD_CREATESAMPLE, &exinfo, &sound);
     return sound;
 }
 

@@ -8,7 +8,7 @@
 #include "audio_data.hpp"
 #include <fmod.hpp>
 
-constexpr int detail = 1000;
+constexpr int detail = 500;
 constexpr int render_detail = 44100;
 constexpr int max_nyquist = 24000;
 
@@ -31,9 +31,12 @@ struct Chunk {
     float time_offset;            // seconds into the audio this chunk starts at
     int nyquist;                  // valid bin count for this chunk
     std::vector<float> xc, yc;    // raw spectrum
-    std::vector<float> xch, ych;  // smoothed spectrum
+    std::vector<float> ych;       // smoothed spectrum
+    std::vector<float> xcr, ycr;  // spike spectrum from peaks
     std::vector<float> xf, yf;    // fourier curve
     std::vector<float> yh;        // smoothed fourier curve
+    std::vector<float> yr;        // reconstructed fourier curve from peaks
+    std::vector<float> phase_h;   // phase of the smoothed spectrum
     std::vector<Peak> peaks;      // peaks found in this chunk
 };
 
@@ -43,6 +46,7 @@ class Fourier {
 
     std::vector<Wave> waves;
     std::vector<Chunk> chunks;
+    int max_peaks_per_chunk = 10;
 
     int nyquist = 0;
 
@@ -66,8 +70,10 @@ class Fourier {
     void construct_chunks_from_audio_data();
     void construct_fourier_curve();
 
-    FMOD::Sound* make_fourier_sound(FMOD::System* system);
+    FMOD::Sound* make_fourier_sound_from_audio_data(FMOD::System* system);
+    FMOD::Sound* make_fourier_sound_from_waves(FMOD::System* system);
     FMOD::Sound* make_fourier_sound_from_chunks(FMOD::System* system);
+    FMOD::Sound* make_fourier_sound_from_single_chunk(FMOD::System* system, const Chunk& c, int repeat_count);
 };
 
 }  // namespace tmt
